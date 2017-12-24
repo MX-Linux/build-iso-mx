@@ -1,0 +1,260 @@
+#!/bin/bash
+ME=${0##*/}
+
+DATA_FILE=antiX-data
+
+SEP="/"
+
+VAR_NAMES="
+ASCII_CODE_NAME
+CODE_NAME
+CORE_OPTIONS
+DISTO_VERSION
+DISTRO
+DISTRO_NAME
+FLAV
+FULL_DISTRO_NAME
+FULL_DISTRO_NAME_SPACE
+ISO_ARCH
+OPTIONS
+RELEASE_DATE
+"
+
+CONF_FILES="
+boot/grub/grub.cfg
+boot/grub/theme/help.txt
+boot/grub/theme/theme.txt
+boot/isolinux/isolinux.cfg
+boot/isolinux/readme.msg
+boot/syslinux/readme.msg
+boot/syslinux/syslinux.cfg
+"
+
+usage() {
+    local ret=${1:-0}
+
+     cat <<Usage
+Usage:  $ME [options] file1, file2, dir, ...
+
+Perform simple string substitutions on the files listed on the command line
+based on the information in the data file.
+
+If a directory is specified then we operate on these files under that
+directory:$(echo "$CONF_FILES" | sed 's/^/    /')
+These variables are processed:$(echo "$VAR_NAMES" | sed 's/^/    /')
+Note that FULL_DISTRO_NAME, DISTRO, and RELEASE_DATE are created if they do
+not already exist in the data file.
+
+Options:
+  -a  --antiX              Use antiX-data data file
+  -d  --data=<file>        Use <file> as the data file
+  -f  --flavour=<flav>     Use <flav> as the flavour
+  -h  --help               Show this usage
+  -i  --in-place<=SUFFIX>  Change files in-place
+                           Make backup of suffix is supplied
+  -m  -MX                  Use MX-data data file
+  -p  --pretend            Don't Change the files, just show the new lines
+  -r  --release=<date>     Use <date> as the release date
+  -s  --strict             Error out if a file is not found
+Usage
+
+    exit $ret
+}
+
+eval_argument() {
+    local arg=$1 val=$2
+    case $arg in
+           -antiX|a)  DATA_FILE=antiX-data   ;;
+            -data|d)  DATA_FILE=$val         ;;
+        -data=*|d=*)  DATA_FILE=$val         ;;
+         -flavour|f)  FLAVOUR=$val           ;;
+     -flavour=*|f=*)  FLAVOUR=$val           ;;
+            -help|h)  usage                  ;;
+         -inplace|i)  IN_PLACE=--in-place    ;;
+                 i*)  IN_PLACE=${arg#i}      ;;
+         -inplace=*)  IN_PLACE=$val          ;;
+              -MX|m)  DATA_FILE=MX-data      ;;
+         -pretend|p)  PRETEND=true           ;;
+         -release|r)  RELEASE_DATE=$val      ;;
+     -release=*|r=*)  RELEASE_DATE=$val      ;;
+          -strict|s)  STRICT=true            ;;
+                  *)  fatal "Unknown argument: -$arg" ;;
+    esac
+}
+
+takes_param() {
+    case $1 in
+        -data|-flavour|-release|[dfr]) return 0 ;;
+    esac
+    return 1
+}
+
+main() {
+    local SHIFT SHORT_STACK="adfhmprs"
+    [ $# -eq 0 ] && usage
+    local fcnt=0
+
+    while [ $# -gt 0 ]; do
+        read_params "$@"
+        shift $SHIFT
+
+        while [ $# -gt 0 -a ${#1} -gt 0 -a -n "${1##-*}" ]; do
+            files="$files$1\n"
+            shift
+            fcnt=$((fcnt + 1))
+        done
+    done
+
+    [ $fcnt -lt 1 ] && fatal "Expected at least one filename"
+
+    test -r $DATA_FILE || fatal "Could not read data file: $DATA_FILE"
+    
+    . $DATA_FILE
+    
+    : ${DISTRO:=$DISTRO_NAME-${DISTRO_VERSION}}
+    : ${ASCII_CODE_NAME:=$(echo "$CODE_NAME" | utf8_to_ascii)}
+
+    if [ -z "$FULL_DISTRO_NAME" ]; then
+        : ${FULL_DISTRO_NAME:=${DISTRO}_$ISO_ARCH}
+        [ "$FLAV" ] && FULL_DISTRO_NAME=$FULL_DISTRO_NAME-$FLAV
+    fi
+
+    : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
+
+    : ${FULL_DISTRO_NAME_SPACE:=$FULL_DISTRO_NAME}
+    FULL_DISTRO_NAME_SPACE=${FULL_DISTRO_NAME_SPACE//_/ }
+
+    build_sed_exprs
+
+    #echo $SED; echo $SED_P
+    #exit
+
+    files=$(expand_dirs "$files")
+
+    while read file; do
+
+        test -e "$file" || loop_warn "Could not find file: $file" || continue
+        test -r "$file" || loop_warn "Can not read file: $file"   || continue
+        [ -z "$IN_PLACE" ] \
+            || test -r "$file" || loop_warn "Can not write to file: $file" || continue
+
+        if [ "$PRETEND" ]; then
+            echo "FILE $file:"
+            eval "sed -n $SED_P \"$file\"" | egrep -v "%[A-Z_]+%"
+            echo
+        else
+            eval "sed $IN_PLACE $SED $file"
+        fi
+
+    done<<Files
+$(echo -e "$files")
+Files
+
+}
+
+build_sed_exprs() {
+    local name val
+    for name in $VAR_NAMES; do
+        eval val=\$$name
+        SED="$SED -e \"s$SEP%$name%$SEP$val${SEP}g\""
+        SED_P="$SED_P -e \"s$SEP%$name%$SEP$val${SEP}gp\""
+    done
+}
+
+expand_dirs() {
+    local file files=$1
+
+    while read file; do
+        if ! test -d $file; then
+        echo "$file"
+        continue
+    fi
+
+    local dir=$file
+    local found= conf 
+    for conf in $CONF_FILES; do
+        file="$dir/$conf"
+        test -e "$file" || continue
+        echo "$file"
+        found=true
+    done
+
+    [ "$found" ] || loop_warn "No config files found under directory: $dir"
+
+    done<<Files
+$(echo -e "$files")
+Files
+
+}
+
+utf8_to_ascii() {
+    iconv -f utf-8 -t ascii//translit
+}
+
+#-------------------------------------------------------------------------------
+# Send "$@".  Expects
+#
+#   SHORT_STACK               variable, list of single chars that stack
+#   fatal(msg)                routine,  fatal("error message")
+#   takes_param(arg)          routine,  true if arg takes a value
+#   eval_argument(arg, [val]) routine,  do whatever you want with $arg and $val
+#
+# Sets "global" variable SHIFT to the number of arguments that have been read.
+#-------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-}
+        shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal "Suspicious argument after -$arg: $val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+    done
+}
+
+loop_warn() {
+    [ "$STRICT" ] && fatal "$@"
+    echo "$ME warning: $*" >&2
+    return 1
+}
+
+
+fatal() {
+    echo "$ME fatal error: $*" >&2
+    exit 2
+}
+
+main "$@"
+

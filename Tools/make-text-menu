@@ -1,0 +1,34 @@
+#!/bin/bash
+
+make_boot_menu() {
+    local name=$1 dir=${2:-.}
+    shift 2
+
+    local dfile=$dir/$name.data
+    local mfile=$dir/$name.menu
+    local tfile=$dir/$name.menu.tmp
+    rm -f $dfile $mfile $tfile
+
+    mkdir -p $dir
+    local line label param cnt=1
+    while read line; do
+        label=$(echo "$line" | cut -d\` -f1)
+        param=$(echo "$line" | cut -d\` -f2)
+        [ "$param" ] || param=default
+        if [ $cnt -eq 1 ]; then
+            echo "$cnt:$param"        >> $dfile
+        else
+            echo "$cnt:$param:$label" >> $dfile
+        fi
+        printf "%3d) %s\n" $cnt "$label" >> $tfile
+        cnt=$((cnt + 1))
+    done <<Old_menu
+$(cat "$@")
+Old_menu
+
+    # FIXME: I'm not certain the sed will always work
+    cat $tfile | column -c 75  | sed "s/\t/   /g" > $mfile
+    rm $tfile
+}
+
+make_boot_menu "$@"

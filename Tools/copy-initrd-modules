@@ -1,0 +1,263 @@
+#!/bin/bash
+
+ME=${0##*/}
+MP_ARGS="-D -a"
+
+usage() {
+        cat <<Usage
+Usage: $ME [options] [file]
+Copies modules listed in file from /lib/modules/\$KERN to 
+./lib/modules/\$KERN in the CWD.  Also copies all dependencies.
+
+If only one kernel directory exists then we choose that kernel
+automatically.  
+
+If no --dir or -- option is given and there are no files on
+the command line then "default mode" is used.  The list of
+modules is from a default list and the kernel/drivers/ata
+directory is included automatically.
+
+Options:
+    --                 Read modules list on stdin
+    -c --count         Display a count of the modules found
+    -d --dir=DIR       Grab all modules found under DIR
+    -e --encrypt       Include extra modules for encrypted live-usb
+    -f --from=FROM     copy from lib/modules under FROM/
+    -h --help          Show this usage
+    -k --kernel=KERN   Use KERN instead of \`uname -r\`
+    -O --only-encrypt  Only add encryption modules
+    -p --pretend       Don't actually copy anything
+    -q --quiet         Supress modprobe warnings
+    -s --show          Show the default list
+    -Q --very-quiet    Also suppress warnins about duplicate inputs
+    -t --to=TODIR      Copy to TODIR instead of CWD
+    -v --verbose       List modules as they are copied
+
+Usage
+    exit ${1:-0}
+}
+
+DEFAULT_LIST="
+aufs
+battery
+block
+btrfs
+cdrom
+crc16
+crc32c-generic
+crct10dif-common
+crct10dif-generic
+crct10dif-pclmul
+ecb
+ehci-hcd
+ehci-pci
+ext2
+ext3
+ext4
+fat
+fotg210-hcd
+fusbh200-hcd
+fuse
+hid
+hid-apple
+hid-belkin
+hid-cherry
+hid-generic
+hid-lenovo-tpkbd
+hid-logitech
+hid-logitech-dj
+hid-logitech-hidpp
+hid-microsoft
+hid-monterey
+hid-samsung
+isofs
+jbd
+jbd2
+jfs
+libcrc32c
+loop
+mbcache
+msdos
+nls-ascii
+nls-cp437
+nls-utf8
+ntfs
+nvme
+ohci-hcd
+ohci-pci
+overlay
+pcie-aspm
+printk
+pstore
+reiserfs
+rts5139
+scsi-mod
+sd-mod
+sg
+shpchp
+squashfs
+sr-mod
+uas
+udf
+ufshcd-pci
+uhci-hcd
+ums-realtek
+usb-common
+usb-storage
+usbcore
+usbhid
+usbmon
+vfat
+whc-rc
+whci-hcd
+xcbc
+xfs
+xhci-hcd
+xhci-pci
+"
+
+CRYPT_LIST="
+aes
+blowfish
+dm-crypt
+dm-mod
+serpent
+sha256
+"
+# i915
+# nouveau
+# radeon
+
+main() {
+
+    local to_dir from_dir kernel
+
+    local short_stack="defhkOpqQstv"
+    while [ $# -gt 0 -a -n "$1" -a -z "${1##-*}" ]; do
+        local arg=${1#-} val=
+        shift
+
+        case $arg in
+            [$short_stack][$short_stack]*)
+                if echo "$arg" | grep -q "^[$short_stack]\+$"; then
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    continue
+                fi;;
+        esac
+
+        case $arg in 
+            -dir|-from|-kernel|-to|[dfkt])
+                [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+                val=$1
+                shift;;
+            *=*) 
+                val=${arg#*=}
+                arg=${arg%%=*} ;;
+             *) 
+                 val="???" ;;
+        esac
+
+        case $arg in
+                  -) USE_STDIN=true                  ;;
+           -count|c) SHOW_COUNT=true                 ;;
+             -dir|d) DIRS="$DIRS,$val"               ;;
+         -encrypt|e) ADD_ENCRYPT=true                ;;
+            -help|h) usage                           ;;
+            -from|f) from_dir=${val%/}               ;;
+          -kernel|k) kernel=$val                     ;;
+    -only-encrypt|O) ONLY_ENCRYPT=true               ;;
+         -pretend|p) PRETEND=true                    ;;
+           -quiet|q) QUIET=true                      ;;
+      -very-quiet|Q) VERY_QUIET=true                 ;;
+            -show|s) echo "$DEFAULT_LIST" ; exit     ;;
+              -to|t) to_dir=${val%/}                 ;;
+         -verbose|v) VERBOSE=true                    ;;
+                  *) fatal "Unknown argument -$arg"  ;;
+        esac
+    done
+
+    [ "$QUIET" -o "$VERY_QUIET" ] && MP_ARGS="$MP_ARGS --quiet"
+    # fill in default kernel if there is only one
+    if [ -z "$kernel" ]; then
+        local d="$from_dir/lib/modules"
+        test -d "$d" || fatal "Could not find directory \"$d\""
+        [ "$(ls "$d" | wc -l)" = 1 ] && kernel=$(ls "$d")
+    fi
+
+    [ "$kernel"   ] && MP_ARGS="$MP_ARGS -S $kernel"
+    [ "$from_dir" ] && MP_ARGS="$MP_ARGS -d \"$from_dir\""
+
+    : ${kernel:=$(uname -r)}
+    : ${to_dir:=.}
+
+    local mod_dir="$from_dir/lib/modules/$kernel"
+    test -d "$mod_dir" || fatal "Directory $mod_dir does not exist"
+
+    local list1 list2 repeats default_mode
+    # grab list from files or stdin and strip comments
+
+    if [ "$ADD_ENCRYPT" ]; then
+        DEFAULT_LIST=$DEFAULT_LIST$CRYPT_LIST
+    elif [ "$ONLY_ENCRYPT" ]; then
+        DEFAULT_LIST=$CRYPT_LIST
+    fi
+
+    if [ -z "$USE_STDIN" -a $# -eq 0 ]; then
+        default_mode=true
+        list1=$(echo "$DEFAULT_LIST" | grep -v "^\s*#" | sed 's/\s*#.*//')
+    else
+        list1=$(cat "$@" | grep -v "^\s*#" | sed -e 's/\s*#.*//' -e "s/,/ /g")
+    fi
+
+    [ "$default_mode" -a -z "$DIRS" ] && DIRS="kernel/drivers/ata kernel/drivers/mmc"
+    local d
+    for d in $(echo $DIRS | sed 's/,/ /g'); do
+        local dir=$mod_dir/$d
+        test -d "$dir" || fatal "Subdirectory $dir does not exist"
+        list1="$list1
+$(find "$dir" -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
+    done
+
+    repeats=$(echo "$list1" | sed 's/_/-/g' | sort | uniq --repeated | grep .)
+    if [ "$repeats" -a -z "$VERY_QUIET" ]; then
+        local cnt=$(echo "$repeats" | wc -l)
+        warn "$cnt repeated module(s) in input"
+        echo "$repeats" >&2
+    fi
+
+    list2=$(echo "$list1" | sed 's/_/-/g' | sort -u \
+        | eval "xargs modprobe $MP_ARGS" | sed -n 's/^insmod //p' | sort -u)
+
+    local full cnt=0
+    [ -z "${from_dir##/*}" ] || from_dir="$PWD/$from_dir"
+    while read full; do
+        [ "$VERBOSE" ] && printf "  %s\n" "$(basename "$full")"
+        local dir=$(dirname "$full")
+        dir="$to_dir/${dir##$from_dir/}"
+        test -d "$dir" || echo_cmd mkdir -p "$dir"
+        echo_cmd cp "$full" "$dir/"
+        cnt=$((++cnt))
+    done<<List_2
+$(echo "$list2")
+List_2
+
+    [ "$SHOW_COUNT" ] && printf "$ME: %s module(s)\n" "$cnt"
+
+    exit 0
+}
+
+echo_cmd() {
+    [ "$PRETEND" ] && return
+    "$@"
+}
+
+fatal() {
+    echo "$ME error: $*" >&2
+    exit 3
+}
+
+warn() {
+    echo "$ME warning: $*" >&2
+}
+
+main "$@"

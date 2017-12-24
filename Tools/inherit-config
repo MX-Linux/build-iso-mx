@@ -1,0 +1,302 @@
+#!/bin/bash
+
+# Allow relative and absolute paths.
+# Allow optional leading $BASE
+
+# optional config
+# if /xx does not exit then look for /config.xx
+#
+# Leading / --> $base$fname
+# Else if leading T/ then also absolute
+# Else, if cwd then $cwd/$fname
+# 
+
+ME=${0##*/}
+
+ORIG_BASE="T"
+CONFIG="config"
+VAR_NAME="INHERIT_CONFIG|INHERIT_ALL"
+
+usage() {
+    local ret=${1:-0}
+
+     cat <<Usage
+Usage:  $ME [options] config-file-spec
+
+Create a list of config files sorted by priority starting with the one
+specified on the command line.
+
+Shortcuts:
+
+  o A specificed directory defaults to the-directory/$CONFIG
+  o ".." is relative to the directory of the current config file
+  o For absolute directories, the leading "$ORIG_BASE/" is optional
+  o A filename "xyz" is a shortcut for "config.xyz"
+  o If a directory is specified and no $CONFIG file exists in it then the
+    directory itself is used with trailing slash.  if --strict is used then
+    a specified directory without a $CONFIG file is an error
+    
+Notes:
+    Sending the output through grep '[^/]$' will cause get only config files.
+    Sending it through sed 's=/[^/]*$==' will give just directory names.
+    BUT they are not unique!  Drat.
+
+Options
+  -b --base=<dir>       The base directory.        Default: "$ORIG_BASE"
+
+  -c --config=<name>    Set the config file name.  Default: "$CONFIG"
+  -d --dirs             Output directories instead of config files
+  -D --debug            Show debugging information on stderr
+  -h --help             Show this usage.
+  -n --name=<base>      Create filename that matches the config file based on <base>.
+                        Don't do anything else.
+  -o --ofile=<base>     Output to the output file specified that matches
+                        the config file.  Write the name of this file
+                        on stdout?
+  -s --strict           Error out of a directory is specified by it has no $CONFIG file
+  -v -var-name=<name>   Use <name> as the variable name in the config files
+                        Default: $VAR_NAME
+Usage
+
+    exit $ret
+}
+
+eval_argument() {
+    local arg=$1 val=$2
+    case $arg in
+                -base|b)  ORIG_BASE=$val                    ;;
+            -base=*|b=*)  ORIG_BASE=$val                    ;;
+              -config|c)  CONFIG=$val                       ;;
+          -config=*|c=*)  CONFIG=$val                       ;;
+                -dirs|d)  DIR_OUTPUT=true                   ;;
+               -debug|D)  DEBUG=true                        ;;
+                -help|h)  usage                             ;;
+                -name|n)  MAKE_NAME=$val                    ;;
+           --name=*|n=*)  MAKE_NAME=$val                    ;;
+               -ofile|o)  OUTPUT_NAME=$val                  ;;
+           -ofile=*|o=*)  OUTPUT_NAME=$val                  ;;
+              -strict|s)  STRICT=true                       ;;
+                      *)  fatal "Unknown argument: -$arg"   ;;
+    esac
+}
+
+takes_param() {
+    case $1 in
+        -base|-config|-name|-ofile|[bcno]) return 0 ;;
+    esac
+    return 1
+}
+
+main() {
+    local SHIFT SHORT_STACK="bcdDhnos"
+    [ $# -eq 0 ] && usage
+
+    read_params "$@"
+    shift $SHIFT
+
+    [ $# -eq 0 ] && fatal "Expected a config-file-spec"
+    local orig_fname=$1
+    shift
+
+    read_params "$@"
+    shift $SHIFT
+
+    [ $# -gt 0 ] && fatal "Extra command line parameters: $*"
+
+    BASE=$(readlink -f $ORIG_BASE)
+    BASE_BASENAME=$(basename $BASE)
+    BASE_DIRNAME=$(dirname $BASE)
+
+    if [ "$MAKE_NAME" ]; then
+        expand_fname "$orig_fname" "$BASE_DIRNAME" "command-line"
+        make_name $MAKE_NAME
+        exit 0
+    fi
+
+    inherit_config "$orig_fname"
+    [ "$DEBUG" ] && echo >&2
+
+    local out=$CONFIG_PRIORITY
+    [ "$DIR_OUTPUT" ] && out=$DIR_PRIORITY
+    printf "$out"
+}
+
+make_name() {
+    local name=$1
+    echo $FNAME_DIR/$name$FNAME_EXT
+}
+
+inherit_config() {
+    local name=$1  parent=${2:-command-line}  cwd=${3:-$BASE_DIRNAME}
+    expand_fname "$name" "$cwd" "$parent" || error "Could not find file matching $name"
+    CONFIG_PRIORITY="$CONFIG_PRIORITY$FNAME\n"
+    local new_fname=$(trim $FNAME)
+    _inherit_config "$new_fname"
+}
+
+_inherit_config() {
+    local fname=$1
+    local dirname=$(trim $(dirname $fname))
+    local line new_fname config_priority new_list
+    while read new_list; do
+        for new_fname in $new_list; do
+            expand_fname $new_fname $dirname $fname
+
+            local dir=$(trim $FNAME_DIR)
+            printf "$DIR_PRIORITY" | grep -q "^$dir$" || DIR_PRIORITY="$DIR_PRIORITY$dir\n"
+
+            [ -z "$FNAME" ] && continue
+
+            if printf "$CONFIG_PRIORITY" | grep -q "^$FNAME$"; then
+                continue
+            fi
+
+            CONFIG_PRIORITY="$CONFIG_PRIORITY$FNAME\n"
+            config_priority="$config_priority$FNAME "
+        done
+
+        for new_fname in $config_priority; do
+            _inherit_config $new_fname $dirname $fname
+        done
+    done<<Read_Config_File
+    $(sed -n -r "s/^\s*($VAR_NAME)=[\"']([^\"\']*)[\"\'].*/\2/p" $fname)
+Read_Config_File
+
+}
+
+# Error out on an error
+# Return 1 if we found a directory without a config file
+# Return 0 on success
+expand_fname() {
+    local orig=$1  cwd=$2  caller=$3  base=${4:-$BASE}
+
+    unset FNAME FNAME_EXT FNAME_DIR
+
+    [ -z "$orig" ] && call_error $caller "Empty $CONFIG fname"
+
+    orig=${orig%/}
+
+    #echo ">>$fname<<"
+    local abs_name
+    if [ -z "${orig##/*}" ]; then 
+        abs_name=$base$orig
+    elif [ -z "${orig##$BASE_BASENAME/*}" ]; then
+        abs_name=$BASE_DIRNAME/$orig
+    else
+        abs_name=$(readlink -f $cwd/$orig)
+    fi
+
+    local fname
+    if ! test -e $abs_name; then
+        fname=$(dirname $abs_name)/$CONFIG.$(basename $abs_name)
+        test -e $fname \
+            || call_error $caller "Could not find $(trim $abs_name)/ or $(trim $fname)"
+    fi
+
+    if test -d $abs_name; then
+        fname=$abs_name/$CONFIG
+        if ! test -f $fname; then
+            [ "$STRICT" ] && call_error $caller "Could not find '$CONFIG' file in directory $(trim $abs_name)/"
+            FNAME_DIR=$abs_name
+            return 1
+        fi
+    fi
+
+    debug "%-30s %30s --> %s\n" $(trim $caller): $(trim $orig) $(trim $fname)
+    # pass results out via variables
+    FNAME=$fname
+    FNAME_DIR=$(dirname $fname)
+    FNAME_EXT=${fname##*$CONFIG}
+    #[ -n "$FNAME_EXT" ] && echo "ext: $FNAME_EXT"
+    return 0
+}
+
+trim() {
+    echo ${1#$BASE_DIRNAME/}
+}
+
+#-------------------------------------------------------------------------------
+# Send "$@".  Expects
+#
+#   SHORT_STACK               variable, list of single chars that stack
+#   fatal(msg)                routine,  fatal("error message")
+#   takes_param(arg)          routine,  true if arg takes a value
+#   eval_argument(arg, [val]) routine,  do whatever you want with $arg and $val
+#
+# Sets "global" variable SHIFT to the number of arguments that have been read.
+#-------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-}
+        shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal "Suspicious argument after -$arg: $val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+    done
+}
+
+debug() {
+    [ "$DEBUG" ] || return
+    printf "$@" >&2
+}
+
+call_error() {
+    local caller=$1
+    shift
+    echo "$ME error: in $(trim $caller)" >&2
+    echo "$*" >&2
+    exit 3
+}
+
+error() {
+    echo "$ME error: $*" >&2
+    exit 3
+}
+
+warn() {
+    #echo "$ME warning: $*" >&2
+    echo "    $*" >&2
+}
+
+fatal() {
+    echo "$ME fatal error: $*" >&2
+    exit 2
+}
+
+main "$@"
+#inherit_config "$1"
+#printf "CONFIG_PRIORITY:\n"
+#printf "$CONFIG_PRIORITY"

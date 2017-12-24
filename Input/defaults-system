@@ -1,0 +1,24 @@
+#----------------------------------------------------------------------
+# defaults-system file for build-antiX-iso
+#
+# This file has the lowest priority.  In addition, values that are only
+# set in this file will not show up in --pretend mode are at the end of
+# stage-0 unless you use the --verbose flag.
+#
+# It is designed to hold values that almost never change except when
+# the build-antiX-iso program goes through a major update.  These
+# values can be changed but they are kept out of the way here because
+# they seldom need to be changed.
+#----------------------------------------------------------------------
+
+    APT_GET_OPTS="-q -y --force-yes -o DPkg::Options::=--force-confold"
+           CACHE="debootstrap,chroot"
+    CACHE_EXPIRE="7"
+
+# Fixed amount plus X times number of packages. Both in units of 100K.
+      TMPFS_SIZE="2500 + 70"
+
+  MAKE_ISO_PROGS="xorriso mkisofs genisoimage"
+      GZIP_PROGS="pigz gzip"
+  DUMMY_SERVICES="initctl invoke-rc.d restart start stop start-stop-daemon service"
+       PS_FORMAT="pid,user,etimes,args"

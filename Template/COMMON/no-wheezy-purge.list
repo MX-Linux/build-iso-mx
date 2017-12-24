@@ -1,0 +1,13 @@
+#gcc-4.7-base
+#gcc-4.8
+gcc-4.8-base
+#cpp-4.8
+#nmap
+#gnome-themes-standard-data
+systemd
+libsystemd0
+#systemd-shim
+#libpam-systemd
+#libsystemd-daemon0
+#libsystemd-journal0
+#libsystemd-login0

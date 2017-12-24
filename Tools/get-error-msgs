@@ -1,0 +1,18 @@
+#!/bin/bash
+
+error() { echo "$*"; exit; }
+
+
+[ $# -eq 1 ] || error "Must supply a single filename"
+[ -r $1    ] || error "cannot find/read file $1"
+
+echo "Normal Errors"
+echo "-------------"
+
+sed -n -r -e 's/.*\<error\s+"([^"]+)".*/  \1/p' $1
+
+echo
+echo "Fatal Errors"
+echo "------------"
+
+sed -r -n 's/.*\<fatal\s+"([^"]+)".*/  \1/p' $1

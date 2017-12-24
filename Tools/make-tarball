@@ -1,0 +1,98 @@
+#!/bin/bash
+
+ME=${0##*/}
+
+prog=build-antiX-iso
+changes=Misc/CHANGES
+tball_dir=Remaster/Tarballs
+
+cp_files="$prog $prog-all Tools Examples"
+
+say()    { echo -e "$cyan$@$nc"; }
+pq()     { echo -ne "$yellow$@$cyan"; }
+warn()   { echo -e  "$ME: $red Warning:$yellow $@$nc"; }
+error()  { echo -e  "$ME:$red Error:$yellow $@$nc"; exit; }
+
+e=$(printf "\e")
+red="$e[1;31m"
+cyan="$e[1;36m"
+yellow="$e[1;33m"
+nc="$e[0m"
+
+mkdir -p $tball_dir
+
+version=$(sed -n -r 's/^VERSION="?(.*)"?/\1/p' $prog)
+
+[ "$version" ] || error "Could not find VERSION= in $prog"
+
+say "Found version $(pq $version) in $prog"
+
+if ! [ -z "${version##*test*}" ]; then
+    version_re=$(echo $version | sed 's/\./\\./g')
+    grep -E -q "^$version_re( |$)" $changes || error "VERSION $(pq $version) not in CHANGES file"
+fi
+
+NAME=$prog-$version
+dir=$tball_dir/work/$NAME
+
+[ -e $dir ] && error "Directory $dir already exists!"
+mkdir -p $dir
+
+ext=.tar.bz2
+
+file=$tball_dir/$NAME$ext
+
+say "Making $(pq $NAME) in $(pq $tball_dir)"
+
+if ! [ -z "${version##*test*}" ]; then
+    date=$(date)
+    say "Setting version date to $(pq $date) in $(pq $prog) and $(pq CHANGES)"
+    sed -i -r "s/^(VERSION_DATE=).*/\1\"$date\"/" $prog
+    sed -i -r "s/^($version_re).*/\1 @ $date/"    $changes
+fi
+
+say "Copy files and directories"
+for f in $cp_files; do
+    if [ -e Misc/$f ]; then
+        cp -a Misc/$f $dir/
+
+    elif [ -e $f ]; then
+        cp -a $f $dir/
+
+    else
+        error "File/directory $(pq $f) does not exist"
+    fi
+done
+
+mkdir -p $dir/Input
+cp $(find Input -type f) $dir/Input
+for fname in "" -system -local; do
+    cp Examples/defaults$fname.orig $dir/Input/defaults$fname
+done
+
+touch $dir/Input/first-time
+
+
+say "Copy Template"
+tar cf - Template      \
+    --exclude xtra     \
+    | (cd $dir && tar xBf -)
+
+pwd
+
+find $dir \( -name ".*.swp" -o -name ".*.un~" -o -name ".*.swo" \) -delete
+find $dir -name ".*.swp" -o -name ".*.un~" -o -name ".*.swo"
+
+say "Create tarball"
+(cd $tball_dir/work && tar cjf $NAME$ext $NAME)
+
+mv $tball_dir/work/*$ext $tball_dir
+
+say "Done"
+du -sh $file 
+
+cp $dir/$prog $tball_dir/$prog-version-$version
+
+tar tjf $tball_dir/$NAME$ext | sort | grep -v Template/
+echo "made $NAME$ext"
+#rm -rf $dir

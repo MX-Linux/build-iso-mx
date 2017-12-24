@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my $ME = $0; $ME =~ s{.*/}{};
+sub error($);
+
+my %ARG = (
+    ext  => "",
+    start => 0,
+);
+
+sub usage {
+    print <<Usage;
+Usage: $ME: [options] bulid-antiX-iso
+
+    Renumber do_part and skip_part calls so the are consectutive.  Also make
+    skip_part number and title match those of the preceding do_part call.
+
+Options:
+    --ext  <ext> If modifying in-place then make backups with this extension
+    --help       Show this help
+    --in-place   Modify files in-place
+    --undo       Try to undo what was done
+
+Examples:
+    cat file.pot | $ME > file.xpot
+    $ME file.pot > file.xpot
+    $ME -i -e .bak file.pot
+Usage
+    exit 0;
+}
+
+my @orig_args = ( grep { $_ !~ /^--?[ie]/} @ARGV);
+
+#@ARGV or usage();
+GetOptions(\%ARG, qw/help in-place ext=s test start=i/);
+
+$ARG{help} and usage();
+
+$ARG{ext} and $ARG{ext} !~ m/^\./ and $ARG{ext} = ".$ARG{ext}";
+
+$ARG{"in-place"} || $ARG{ext} and do {
+    $ARG{test} and die "Will not do --test in-place!\n";
+    @ARGV or error "Must provide filename(s) on command line for --in-place.";
+    exec "/usr/bin/perl","-i$ARG{ext}", $0, @orig_args;
+};
+
+my $cnt = $ARG{start} - 1;
+
+my ($title, $raw_title);
+while (<>) {
+
+    s/^(\s.*do_part\s+)(\d+)(\s+"!?([^"]+)")/$1 . ++$cnt . $3/e and do {
+        $raw_title = $4;
+        $title = qq{ "$4"};
+        $ARG{test} and $_ = sprintf "%10s %2d: %s\n",  "do_part", $cnt, $4;
+        print;
+        next;
+    };
+
+    s/^(\s.*skip_part\s+)(\d+).*/$1 . $cnt . $title/e and do {
+        $ARG{test} and $_ = sprintf "%10s %2d: %s\n",  "skip", $cnt, $raw_title;
+        print;
+        next;
+    };
+
+    $ARG{test} or print;
+}
+
+
+sub error($) {
+    my $msg = shift;
+    die "$ME: $msg\n";
+}
+

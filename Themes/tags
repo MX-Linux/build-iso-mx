@@ -1,0 +1,40 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+YES_no	theme-functions.sh	/^YES_no()      { _yes_no_  0  0  "(Y\/n)"  "$1"; }$/;"	f
+YES_no_loud	theme-functions.sh	/^YES_no_loud() { _yes_no_ -1  0 "((Y\/n))" "$1"; }$/;"	f
+_yes_no_	theme-functions.sh	/^_yes_no_() {$/;"	f
+append	theme-functions.sh	/^append() {$/;"	f
+check_targ_dir	theme-functions.sh	/^check_targ_dir() {$/;"	f
+check_targ_file	theme-functions.sh	/^check_targ_file() {$/;"	f
+copy_dir	theme-functions.sh	/^copy_dir() {$/;"	f
+copy_file	theme-functions.sh	/^copy_file() {$/;"	f
+do_usage	theme-functions.sh	/^do_usage() {$/;"	f
+do_version	theme-functions.sh	/^do_version() { echo "theme-functions.sh version $VERSION ($VERSION_DATE)";  exit ;}$/;"	f
+echo_run	theme-functions.sh	/^echo_run() {$/;"	f
+edit	theme-functions.sh	/^edit() {$/;"	f
+error	theme-functions.sh	/^error()  {$/;"	f
+escape_regex	theme-functions.sh	/^escape_regex() { echo "$1" | sed -r "$ESCAPE_REGEX" ;}$/;"	f
+fatal	theme-functions.sh	/^fatal()  {$/;"	f
+local_create	theme-functions.sh	/^local_create() {$/;"	f
+pq	theme-functions.sh	/^pq()     { echo "$high_co$*$text_co"  ;}$/;"	f
+pqh	theme-functions.sh	/^pqh()    { echo "$text_co$*$high_co"  ;}$/;"	f
+pqn	theme-functions.sh	/^pqn()    { echo  "$num_co$*$text_co"  ;}$/;"	f
+pqnh	theme-functions.sh	/^pqnh()   { echo  "$num_co$*$high_co"  ;}$/;"	f
+pqnw	theme-functions.sh	/^pqnw()   { echo  "$num_co$*$bold_co"  ;}$/;"	f
+pqw	theme-functions.sh	/^pqw()    { echo "$text_co$*$bold_co"  ;}$/;"	f
+read_args	theme-functions.sh	/^read_args() {$/;"	f
+read_my_args	theme-functions.sh	/^read_my_args() {$/;"	f
+report_status	theme-functions.sh	/^report_status() {$/;"	f
+require_args	theme-functions.sh	/^require_args() {$/;"	f
+say	theme-functions.sh	/^say()    { echo "$text_co$*$nc"       ;}$/;"	f
+set_colors	theme-functions.sh	/^set_colors() {$/;"	f
+start_theme	theme-functions.sh	/^start_theme() {$/;"	f
+warn	theme-functions.sh	/^warn()   { echo "${bold_co}Warning:$bold_co $*$nc" ;}$/;"	f
+yell	theme-functions.sh	/^yell()   { echo "$bold_co$*$nc"       ;}$/;"	f
+yes_NO	theme-functions.sh	/^yes_NO()      { _yes_no_  1  1  "(y\/N)"  "$1"; }$/;"	f
+yes_NO_loud	theme-functions.sh	/^yes_NO_loud() { _yes_no_ -1  1 "((y\/N))" "$1"; }$/;"	f
+yes_no_loud	theme-functions.sh	/^yes_no_loud() { _yes_no_ -1 -1 "((y\/n))" "$1"; }$/;"	f

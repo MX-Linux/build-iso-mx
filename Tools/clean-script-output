@@ -1,0 +1,34 @@
+#!/bin/bash
+
+ME=${0##*/}
+
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+    cat<<Usage
+Usage: $ME [option] file1 file2 file2
+
+  Use sed to strip out extra carriage-returns (\r)at the end of lines
+  and strip out text preceding carriage-returns that are not at the
+  end of the line.  This cleans out very long lines that can get
+  created when programs use use \r repeatedly to overwrite the last
+  line written.
+
+  Note: all command line args (except -h, --help) are sent to sed.
+  Two useful sed options are given below.  Do "sed --help" to get the
+  full list.
+
+Options:
+  -h --help    
+        Show this usage
+
+  -i[SUFFIX], --in-place[=SUFFIX]
+        Edit files in place.  Make backup first if SUFFIX is given.
+
+  -n, --quiet, --silent
+        Only print lines that were edited.
+Usage
+    exit 0
+fi
+
+
+sed -r -e 's/\x0d+$//' -e 's/.*\x0d(.)/\1/' "$@"
+

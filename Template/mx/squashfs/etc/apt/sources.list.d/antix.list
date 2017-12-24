@@ -1,0 +1,3 @@
+# Use with Debian Stable/stretch repositories. Set as default for antiX-17. Note new repos
+deb http://repo.antixlinux.com/stretch stretch main 
+#deb-src http://repo.antixlinux.com/stretch stretch main 

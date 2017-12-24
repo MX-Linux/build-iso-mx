@@ -1,0 +1,33 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+
+# Make sure disabled live services are restored
+restore=/live/etc/init.d/live-restore-services
+
+[ -x $restore ] && $restore start
+
+# Detect and set up correct broadcom
+/usr/local/bin/BroadcomStartup
+
+# localize thunar custom actions
+/usr/local/bin/thunar_custom_actions_localize
+
+# Set up 12 hour clock format for some countries eg US
+/usr/local/bin/clock12or24
+
+#make sure an apt cache archive partial folder exists for apt-notifier
+ [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
+
+# Automatically switch to vt2 when fdb+ cheat is used
+egrep -q "(^| )fdb\+( |$)" /proc/cmdline && chvt 2
+
+exit 0

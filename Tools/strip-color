@@ -1,0 +1,10 @@
+#!/usr/bin/perl -p
+
+s/\e\[+(:?\d+;)?\d+m//g;
+
+__END__
+while gets
+    print $_.gsub(/\e\[([34][0-7]|[0-9])m/, "")
+end
+
+

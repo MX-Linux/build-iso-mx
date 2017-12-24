@@ -1,0 +1,17 @@
+/etc/desktop-session/startup
+/etc/init.d/checkfs.sh
+/etc/init.d/cron
+/etc/init.d/debian/*
+/etc/init.d/gpm
+/etc/init.d/hwclock.sh
+/etc/init.d/keyboard-setup
+/etc/init.d/umountfs
+/etc/init.d/sendsigs
+/etc/issue
+/etc/lightdm/lightdm.conf
+/etc/rc.local
+/etc/skel/.fluxbox/menu
+/etc/skel/.icewm/menu
+/etc/skel/.jwm/menu
+/etc/slim.conf
+/etc/udev/rules.d/90-fstab-automount.rules

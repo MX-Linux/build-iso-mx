@@ -1,0 +1,172 @@
+#!/bin/bash
+ME=${0##*/}
+
+DATA_FILE=antiX-data
+
+LEFT="250"
+#SIZE=16
+COLOR="#FFFFFF"
+
+# font sizes @  800x600: 16, 20
+# font sizes @ 1024x768: 13, 16
+
+usage() {
+    local ret=${1:-0}
+
+     cat <<Usage
+Usage:  $ME [options] from.img to.img
+Add text to a background image.
+
+Options:
+  -a  --antiX              Use antiX-data data file
+  -d  --data=<file>        Use <file> as the data file
+  -h  --help               Show this usage
+  -m  -MX                  Use MX-data data file
+Usage
+
+    exit $ret
+}
+
+eval_argument() {
+    local arg=$1 val=$2
+    case $arg in
+           -antiX|a)  DATA_FILE=antiX-data   ;;
+            -data|d)  DATA_FILE=$val         ;;
+        -data=*|d=*)  DATA_FILE=$val         ;;
+            -help|h)  usage                  ;;
+              -MX|m)  DATA_FILE=MX-data      ;;
+                  *)  fatal "Unknown argument: -$arg" ;;
+    esac
+}
+
+takes_param() {
+    case $1 in
+        -data|[d]) return 0 ;;
+    esac
+    return 1
+}
+
+main() {
+    local SHIFT SHORT_STACK="adhm"
+    [ $# -eq 0 ] && usage
+    local fcnt=0
+
+    while [ $# -gt 0 ]; do
+        read_params "$@"
+        shift $SHIFT
+
+        while [ $# -gt 0 -a ${#1} -gt 0 -a -n "${1##-*}" ]; do
+            fcnt=$((fcnt + 1))
+            eval file_$fcnt=\$1
+            shift
+        done
+    done
+
+    [ $fcnt -ne 2 ] && fatal "Expected two filenames"
+
+    test -r $DATA_FILE || fatal "Could not read data file: $DATA_FILE"
+    
+    . $DATA_FILE
+    
+    : ${DISTRO:=$DISTRO_NAME-${DISTRO_VERSION}}
+    : ${ASCII_CODE_NAME:=$CODE_NAME}
+
+    if [ -z "$FULL_DISTRO_NAME" ]; then
+        : ${FULL_DISTRO_NAME:=${DISTRO}_$ISO_ARCH}
+        [ "$FLAV" ] && FULL_DISTRO_NAME=$FULL_DISTRO_NAME-$FLAV
+    fi
+
+    : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
+
+    local size_1=20
+    local size_2=16
+    local left=250
+    local pos_1=$left,70
+    local pos_2=$left,480
+    local pos_3=$left,510
+    if [ -n "$file_1" -a -z "${file_1##*1024*}" ]; then
+        size_1=22
+        size_2=18
+        left=320
+        pos_1=$left,90
+        pos_2=$left,610
+        pos_3=$left,640
+    fi
+    convert \
+        -pointsize $size_1 -draw \
+        "text $pos_1 'Welcome to $DISTRO ($CODE_NAME)!'" \
+        -pointsize $size_2 -draw \
+        "text $pos_3 'Press \'e\' to edit, <Esc> to return to main menu'" \
+        -fill "$COLOR" $file_1 $file_2
+}
+
+        # "text $pos_2 'Press \'e\' to edit, \'P\' to poweroff, \'R\' to reboot, \'H\' for help'" \
+        # -draw \
+
+#-------------------------------------------------------------------------------
+# Send "$@".  Expects
+#
+#   SHORT_STACK               variable, list of single chars that stack
+#   fatal(msg)                routine,  fatal("error message")
+#   takes_param(arg)          routine,  true if arg takes a value
+#   eval_argument(arg, [val]) routine,  do whatever you want with $arg and $val
+#
+# Sets "global" variable SHIFT to the number of arguments that have been read.
+#-------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-}
+        shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal "Suspicious argument after -$arg: $val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+    done
+}
+
+loop_warn() {
+    [ "$STRICT" ] && fatal "$@"
+    echo "$ME warning: $*" >&2
+    return 1
+}
+
+
+fatal() {
+    echo "$ME fatal error: $*" >&2
+    exit 2
+}
+
+main "$@"
+

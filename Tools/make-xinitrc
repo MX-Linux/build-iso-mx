@@ -1,0 +1,350 @@
+#!/bin/bash
+
+# NOTE: IFS=, for almost the entire program
+
+VERSION=00.06
+VERSION_DATE="Sun Apr 21 18:49:24 MDT 2013"
+
+ICON_MANAGERS=rox,space
+  rox_ENABLED=fluxbox,icewm,jwm
+space_ENABLED=fluxbox,icewm,jwm
+  rox_MANAGER='rox --pinboard=antiX-${code##rox-}'
+space_MANAGER='spacefm --desktop &'
+
+xs_dir=/usr/share/xsessions
+slim_conf=/etc/slim.conf
+
+ME=${0##*/}
+
+usage() {
+    cat <<Usage
+Usage: $ME [options] default-desktop|[slim.conf]
+
+Output an xinitrc file to stdout that contains entries for all of the
+.desktop files found in the directory: $xs_dir.
+Include <icon>-<wm> versions as applicable.
+
+Options:
+  -h  --help      show this help
+  -l  --list      list available desktops on one line
+  -L  --long      list available desktops, one per line
+  -p  --prefix=   Set prefix for finding xsessions dir and slim.conf
+  -s  --slim      update slim.conf instead of outputing xinitrc
+
+Default SLiM conf file: $slim_conf
+
+Return success if xinitrc was created without error or if the slim.conf
+file was updated without error.  In all other cases return failure.
+Usage
+}
+
+#------------------------------------------------------------------------------
+# Function: main
+#
+# Process commmand line args and then do what needs to be done.
+#------------------------------------------------------------------------------
+main() {
+
+    local arg slim_mode help_mode list_mode long_mode prefix quick_exit
+
+    while [ $# -gt 0 -a -z "${1##-*}" ]; do
+        arg="${1#-}"; shift
+
+        case "$arg" in
+            -help|h) help_mode=true ; quick_exit=true ;;
+            -list|l) list_mode=true ; quick_exit=true ;;
+            -long|L) long_mode=true ; quick_exit=true ;; 
+
+            -slim|s) slim_mode=true ;;
+
+          -prefix|p) [ $# -lt 1 ] && error "Expected prefix after -$arg"
+                     prefix="$1"     ; shift          ;;
+
+      -prefix=*|p=*) prefix="${arg#*=}"               ;;
+                  *) error "Unknown argument: -$arg"  ;;
+        esac
+    done
+
+    local orig_ifs=$IFS
+    local IFS=,
+
+    if [ "$prefix" ]; then
+        xs_dir=$prefix$xs_dir
+        slim_conf=$prefix$slim_conf
+    fi
+
+    if [ "$quick_exit" ]; then
+        [ -n "$slim_mode" -o $# -gt 0 ] && error "Extra/conflicting command line parameters"
+
+        [ "$help_mode" ] && usage
+        [ "$list_mode" ] && full_desktop_list
+        [ "$long_mode" ] && full_desktop_list | sed 's/,/\n/g'
+
+        exit 1
+    fi
+
+    [ $# -gt 1 ] && error "Extra command line parameters: $@"
+
+    if [ "$slim_mode" ]; then
+        edit_slim "$@"
+    else
+        [ $# -lt 1 ] && error "Expected a default-desktop on command line"
+        make_xinitrc "$1"
+    fi
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+# Function: edit_slim [slim-config-file]
+#
+# Edit the "sessions" line in the slim-config-file to include all (and only)
+# the installed windows managers and valid <icon>- versions.
+#------------------------------------------------------------------------------
+edit_slim() {
+    local slim=${1:-$slim_conf}
+    #[ $UID -eq 0 ] || error "Only root can update slim.conf"
+    
+    [ -e $slim ] || error "SLiM conf file does not exist: $slim"
+    [ -w $slim ] || error "Cannot write to $slim"
+
+    local list=$(full_desktop_list)
+    sed -r -i "s=^(sessions ).*=\1$list=" $slim
+}
+
+#------------------------------------------------------------------------------
+# Function: get_wm <desktop>
+#
+# Print the <wm> part of <icon>-<wm>.  Only strip off leading <icon>- if <icon>
+# is a recognized icon manager.
+#------------------------------------------------------------------------------
+get_wm() {
+    [ "$1" ] || return
+    for icon in $ICON_MANAGERS; do
+        [ -z "${1##$icon-*}" ] || continue
+        echo "${1#$icon-}"
+        return
+    done
+        
+    echo "$1"
+}
+
+#------------------------------------------------------------------------------
+# Function: get_icon <desktop>
+#
+# Print the <icon> part of <icon>-<wm> where <icon> must be the code for an
+# icon managers in the ICON_MANAGERS list.
+#------------------------------------------------------------------------------
+get_icon() {
+    for icon in $ICON_MANAGERS; do
+        [ -z "${1##$icon-*}" ] || continue
+        echo $icon
+        return
+    done
+}
+
+#------------------------------------------------------------------------------
+# Function: xinitrc_header <default-desktop>
+#
+# Print start of xinitrc file to stdout.
+#------------------------------------------------------------------------------
+xinitrc_header() {
+    local default="$1"
+
+    cat <<Header
+#----------------------------------------------------------------------
+# .xinitrc 
+#
+# Created by $(readlink -f $0)
+# on $(date +"%-e %B %Y @ %T %Z")
+# Please add any modifications to .xinitrc-custom and not this file.
+# This file will be re-written by update-default-desktop.  The
+# DEFAULT_DESKTOP line will be edited by antiX-init if you select
+# a desktop via the bootloader menu or a "desktop=xxx" boot parameter.
+#----------------------------------------------------------------------
+
+[ -x ~/.xinitrc-custom ] && ~/.xinitrc-custom
+
+[ -f ~/.Xmodmap ] && xmodmap ~/.Xmodmap
+
+DEFAULT_DESKTOP="$default"
+
+
+DESKTOP_CODE="\$(echo "\${1:-\$DEFAULT_DESKTOP}" | tr "[A-Z]" "[a-z]")"
+
+sdir=\$HOME/.antix-session
+mkdir -p \$sdir
+display=\${DISPLAY%.[0-9]}
+echo "\$DESKTOP_CODE" > \$sdir/desktop-code\$DISPLAY
+echo \$\$              > \$sdir/xinitrc-pid:\$display
+
+case "\$DESKTOP_CODE" in
+Header
+}
+
+
+#------------------------------------------------------------------------------
+# Function: make_xinitrc <default-desktop>
+#
+# Print a xinitrc file to stdout including entries for all the installed wm's
+#------------------------------------------------------------------------------
+make_xinitrc() {
+    local default=$(echo "$1" | tr "[A-Z]" "[a-z]")
+    local default_wm=$(get_wm "$default")
+    local default_icon=$(get_icon "$default")
+    local default_cmd
+
+    valid_desktops | grep -q "^$default_wm$" || error "\"$default_wm\" not an installed window manager"
+
+    if [ "$default_icon" ]; then
+        eval local valid=\$${default_icon}_ENABLED
+        case ",$valid," in
+            *,$default_wm,*) ;;
+            *) error "Icon manager \"$default_icon\" cannot be used with window manager \"$default_wm\"";;
+        esac
+    fi
+
+    desktop_cmd "$default_wm" && default_cmd=$DESKTOP_CMD
+
+    xinitrc_header "$default"
+
+    local wm cmd icon valid
+    for wm in $(desktop_list); do
+
+        desktop_cmd "$wm" && cmd=$DESKTOP_CMD
+
+        for icon in $ICON_MANAGERS; do
+
+            eval valid=\$${icon}_ENABLED
+            case ",$valid," in
+                *,$wm,*) print_entry "$icon-$wm" "$cmd" ;;
+            esac
+        done
+        print_entry "$wm" "$cmd"
+    done
+
+    local err_hand=$(cat <<Error_Handling
+
+        echo "Unknown DESKTOP_CODE: \$DESKTOP_CODE" >&2
+        echo "Setting DESKTOP_CODE to $default" >&2
+        DESKTOP_CODE="$default"
+        echo "\$DESKTOP_CODE" > \$HOME/.antix-session/desktop-code\$DISPLAY
+Error_Handling
+)
+
+    print_entry "$default" "$default_cmd" "*" "$err_hand"
+    echo "esac"
+}
+
+#------------------------------------------------------------------------------
+# Function: print_entry <desktop-code> <command> <entry> <error-handling>
+#
+# Print one "case" statement clause.
+#------------------------------------------------------------------------------
+print_entry() {
+    local code="$1" cmd="$2" entry="${3:-$1}" err="$4"
+    local icon=$(get_icon "$code")
+
+    if [ "$icon" ]; then
+        eval local icon_mg=\$${icon}_MANAGER
+        eval icon_mg=\"$icon_mg\"
+        icon_mg="$(echo -e "\n        $icon_mg")"
+    fi
+
+    [ "$err" ] && icon_mg="$err$icon_mg"
+
+    cat <<Entry
+    $entry)$icon_mg
+        exec $cmd
+        ;;
+Entry
+}
+
+#------------------------------------------------------------------------------
+# Function: desktop_list
+#
+# A comma delimited version of valid_desktops()
+#------------------------------------------------------------------------------
+desktop_list() {
+    local list
+    while read wm; do
+        list=$list,$wm
+    done <<Read
+$(valid_desktops)
+Read
+    echo "${list#,}"
+}
+
+#------------------------------------------------------------------------------
+# Function: full_desktop_list
+#
+# A comma delimited list of all valid desktops with <icon>- prefixes as needed.
+# This list can be significantly longer than the valid_desktops() list.
+#------------------------------------------------------------------------------
+full_desktop_list() {
+    local list
+    while read wm; do        
+        for icon in $ICON_MANAGERS; do
+            eval local valid=\$${icon}_ENABLED
+            case ",$valid," in
+                *,$wm,*) list="$list,$icon-$wm" ;;
+            esac
+        done
+        list="$list,$wm"
+    done <<Read
+$(valid_desktops)
+Read
+    echo "${list#,}"
+}
+
+#------------------------------------------------------------------------------
+# Function: valid_desktops
+#
+# Create a list of desktop names converted to lowercase from *.desktop files
+# in /usr/share/xssessions.  We cache the result in the VALID_DESKTOP variable
+# so we only query the filesystem once.
+#------------------------------------------------------------------------------
+valid_desktops() {
+    [ "$VALID_DESKTOPS" ] \
+        ||  VALID_DESKTOPS=$(grep -h ^Name= $xs_dir/* | cut -d= -f2 | tr "[A-Z]" "[a-z]" \
+            | sed -r -e 's/ (desktop|session)$//' -e 's/ /_/g' | sort -u)
+    echo "$VALID_DESKTOPS"
+}
+
+#------------------------------------------------------------------------------
+# Function: desktop_cmd <desktop-code>
+#
+# fill DESKTOP_CMD variable with the program to run to launch the window manager
+# associated with the <desktop-code> = <icon>-<wm> where the leading <icon>- is
+# optional.  Always exits if there is an error so you can be sure DESKTOP_CMD
+# contains the correct code to run.
+#------------------------------------------------------------------------------
+desktop_cmd() {
+    DESKTOP_CMD=
+    local wm=$(get_wm "$1")
+    local wm_any=$(echo "$wm" | sed 's/_/[_ ]/g')
+
+    local file=$(grep -i -l ^Name=$wm_any$ $xs_dir/* | head -n 1)
+    [ -z "$file" ] && file=$(grep -i -l "^Name=$wm_any desktop$" $xs_dir/* | head -n 1)
+    [ -z "$file" ] && file=$(grep -i -l "^Name=$wm_any session$" $xs_dir/* | head -n 1)
+
+    [ "$file" ] || error "No file found in $xs_dir with \"Name=$wm\""
+    #[ "$(echo "$file" | wc -w)" = "1" ] || error "Two or more $xs_dir files contain \"Name=$wm\""
+   
+    local cmd=$(grep ^Exec= "$file" | cut -d= -f2)
+    [ "$cmd" ] || error "Could not find \"Exec=\" in file $file"
+    DESKTOP_CMD=$cmd
+}
+
+#------------------------------------------------------------------------------
+# Function: error <error-message>
+#
+# Print error-messge on stderr and then exit with failed return status.
+#------------------------------------------------------------------------------
+error() {
+    echo "$ME Error: $@" >&2
+    exit 2
+}
+
+
+main "$@"
+

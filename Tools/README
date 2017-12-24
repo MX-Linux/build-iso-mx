@@ -1,0 +1,60 @@
+
+README
+    This file.
+
+add-border.sh  
+    USED
+    Adds a border and text to gfxboot background image.  
+
+clean-script-output
+    Use sed to strip out extra carriage-returns (\r)at the end of
+    lines and strip out text preceding carriage-returns that are
+    not at the end of the line.  This cleans out very long lines
+    that can get created when programs use use \r repeatedly to
+    overwrite the last line written.
+
+dedupe-list
+    NOT USED
+    Not working ATM.  Was original used to combine common
+    packages in flavour lists into COMMON and base-AND-full
+    lists.
+
+extract-vmlinux
+    Copied from the Linux source scripts/ directory.  Used to get
+    an uncompressed copy of a vmlinuz kernel so we can get the
+    version of gcc used to compile the kernel.
+
+get-error-msgs
+    Print all fatal and non-fatal error messages
+
+isolinux-to-grub.pl
+    USED
+    convert an isolinux menu into a Grub menu.
+
+make-tarball
+    USED
+    Create a tarball of the entire project.
+
+make-xinitrc
+    COULD BE USED
+    Update the slim.conf file and create a .xinitrc file based on
+    the installed WMs. We use a local copy if it exists.  This
+    version may be out of date.
+
+re-number-parts
+    Make the numbering of the do_part calls sequential.  Make
+    sure any skip_part call jives with the previous do_part
+
+rename-list-files
+    renames *-list files in the template to *.list
+
+strip-color
+    Remove ANSI colors escape sequences.
+
+summary-of-code
+    Print out some comment blocks and the names of all functions.
+
+vmlinuz-gcc-version
+    Print out the version of gcc that was used to compile the
+    kernel stored in a vmlinuz file.  Relies on having the
+    extract-vmlinux in the same directory or on the path.

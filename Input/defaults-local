@@ -1,0 +1,12 @@
+#----------------------------------------------------------------------
+# defaults-local file for build-antiX-iso
+#
+# This file has the highest priority.  Settings here will override
+# settings in defaults and defaults-system.  This is designed to hold
+# over-riding values for your local system.  These variables should not
+# affect what gets bulit, only how it gets built.
+#----------------------------------------------------------------------
+
+ENABLE_LOCALES="Default"
+ISO_SYMLINK="/data/ISO/test-antiX.iso"
+LOCAL_MIRROR="us"

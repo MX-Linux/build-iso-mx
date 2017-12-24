@@ -1,0 +1,140 @@
+#!/bin/bash
+# File Name: set-screen-blank
+# Dependencies: xset, yad
+# Version: 1.0
+# Purpose: Set different xset screen blank times and toggle blanking on
+# and off.
+# Authors: Dave (david.dejong02@gmail.com  or david@daveserver.info)
+# Contributor: BitJam (bitjam@gmail.com)
+# NOTES: This script has a hidden -tq (toggle quietly) option
+
+# Copyright (C) Tuesday, Feb. 7, 2011  by Dave / 
+# david.dejong02@gmail.com  or david@daveserver.info
+# License: gplv2
+# This file is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#############################################################################
+
+CONF_DIR="$HOME/.desktop-session"
+CONF_FILE="$CONF_DIR/desktop-session.conf"
+GLOBAL_CONF_FILE="/etc/desktop-session/desktop-session.conf"
+MY_PID="$$"
+
+: ${SAVED_TIME:=0}
+
+TEXTDOMAINDIR=/usr/share/locale
+TEXTDOMAIN=set-screen-blank
+
+#Check the results of the ok / yes no questions and apply accordingly
+function check_results {
+    CANOK="$?";
+    case $CANOK in
+    0)
+        #SET a time based on selection
+        minutes=$(echo "$TimeScale" |cut -d "|" -f4|cut -d "." -f1);
+        #MOVE HERE
+        seconds=$((minutes * 60))
+        xset dpms $seconds $seconds $seconds s $seconds $seconds; 
+        if [ "$minutes" -ge "1" ]; then
+            #Uncomment below and move if statement to #MOVE HERE line above to enable a change to 10 minutes instead of turning off the screen blank
+            #minutes="10";
+            #yad --image="info" --text=$"Setting a value of 0 is the blank the screen,\n Why not use the turn off button? \n\nI am changing 0 to a resonable time value of 10."  --button="gtk-ok:0";
+            sed -ir "s/^SCREEN_BLANK_TIME=\".*\"/SCREEN_BLANK_TIME=\"$seconds\"/" $CONF_FILE;
+        fi
+        exec $0 &
+        exit;
+        ;;
+    1)
+        #exit when exit flag is passed
+        echo $"Ok Closing";
+        exit; 
+        ;;
+    esac
+    }
+
+#OFF Interface, 
+#ON button -> set with save value, close yad, restart script, exit old script
+function currently_off {
+    TimeScale=$(yad --title=$"Screen Blanking" \
+    --image="info" \
+    --form \
+    --field=$"Screen blanking is currently OFF:LBL" \
+    --field=$"Turn ON:BTN" "" "bash -c 'xset dpms $SAVED_TIME $SAVED_TIME $SAVED_TIME s $SAVED_TIME $SAVED_TIME; kill $(pgrep -P $MY_PID); exec $0 & kill $MY_PID'" \
+    --width=300 \
+    --button="gtk-close:1"  \
+    );
+    check_results;
+    }
+   
+#ON Interface
+#OFF button -> set with 0, close yad, restart script, exit old script 
+function currently_on {
+	SAVED_TIME_M=$(($SAVED_TIME / 60))
+    TimeScale=$(yad --title=$"Screen Blanking" \
+    --image="info" \
+    --form \
+    --field=$"$DIFFERING_VALUES\nScreen blanking is currently ON.:LBL" \
+    --field=$"Turn OFF:BTN" "" "bash -c 'xset dpms 0 0 0 s 0 0; kill $(pgrep -P $MY_PID); exec $0 & kill $MY_PID'"\
+    --field=$"Set the screen blank time.\nValue in minutes:LBL" \
+    --field=":NUM" "" "$SAVED_TIME_M" \
+    --width=300 \
+    --height=200 \
+    --button="gtk-apply:0"  \
+    --button="gtk-close:1"  \
+    );
+    check_results;
+    }
+
+#Get current blank times    
+CURRENT_BLANK_TIME_S=$(xset q |grep "Standby:" |cut -d " " -f4)
+
+#Check to see if the state file exists if not make it and fill it
+if [ -f $CONF_FILE ]; then
+    if grep -q "^SCREEN_BLANK_TIME=.*" "$CONF_FILE"; then
+        SAVED_TIME=$(cat $CONF_FILE |grep "^SCREEN_BLANK_TIME=\".*\"" |cut -d "=" -f2 |sed "s/\"//ig");
+        if [ "$SAVED_TIME" -le "0" ];then
+            SAVED_TIME="600";
+            sed -ir "s/^SCREEN_BLANK_TIME=\".*\"/SCREEN_BLANK_TIME=\"$SAVED_TIME\"/" $CONF_FILE;
+        fi
+    else
+        echo $"Screen blank time was not found by set-screen-blank. Therefore we make the config option" > $CONF_FILE
+        echo "SCREEN_BLANK_TIME=\"600\"" >> $CONF_FILE
+    fi
+else
+    mkdir -p $CONF_DIR;
+    if [ -e $GLOBAL_CONF_FILE ]; then
+        cp $GLOBAL_CONF_FILE $CONF_FILE
+    else
+        echo "SCREEN_BLANK_TIME=\"3600\"" >> $CONF_FILE
+    fi
+fi
+
+#Check Current blank time to see what the interface should be
+if [ "$CURRENT_BLANK_TIME_S" = "0" ]; then
+    if [ "$1" = "-tq" ]; then 
+        xset dpms $SAVED_TIME $SAVED_TIME $SAVED_TIME s $SAVED_TIME $SAVED_TIME;
+    else
+        currently_off;
+    fi
+else
+    if [ "$1" = "-tq" ]; then 
+        xset dpms 0 0 0 s 0 0;
+    else
+        if [ "$SAVED_TIME" != "$CURRENT_BLANK_TIME_S" ];then    
+            DIFFERING_VALUES=$"The saved and set times were different! \nI have adjusted the set time to saved time. \n"
+            xset dpms $SAVED_TIME $SAVED_TIME $SAVED_TIME s $SAVED_TIME $SAVED_TIME;
+        fi
+    currently_on;
+    fi
+fi

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+make_boot_menu() {
+    local name=$1 dir=${2:-.}
+    shift 2
+
+    local dfile=$dir/$name.data
+    local mfile=$dir/$name.menu
+    rm -f $dfile $mfile
+
+    mkdir -p $dir
+    local line label param cnt=0
+    while read line; do
+        label=$(echo "$line" | cut -d\` -f1)
+        param=$(echo "$line" | cut -d\` -f2)
+        [ "$param" ] || param=default
+        echo $cnt:$param >> $dfile
+        printf "%3d) %s\n" $cnt "$label" >> $mfile
+        cnt=$((cnt + 1))
+    done <<Old_menu
+$(cat "$@")
+Old_menu
+}
+
+make_boot_menu "$@"

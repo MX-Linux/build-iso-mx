@@ -1,0 +1,73 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my $ME = $0; $ME =~ s{.*/}{};
+@ARGV == 2 or do {
+print <<Usage};
+Usage: ME infile-name outfile-name
+
+   Dedupe the list held in infile-name and put the results
+   in outfile-name
+Usage
+
+my ($in_file, $out_file) = @ARGV;
+
+$in_file eq $out_file and die "Will not dedupe when in_file == out_file\n";
+
+my %DIR = (
+    base_full => "Template/base-AND-full",
+);
+
+my ($HASH, $ORIG, $COUNT);
+for my $flav (qw/base core full COMMON base-AND-full/) {
+    my $file =  "Template/$flav/$in_file";
+
+    open( my $FILE, "<", $file) or die "Could not open($file) $!\n";
+    while (<$FILE>) {
+        chomp;
+        $HASH->{$flav}->{$_}++;
+        $ORIG->{$flav}->{$_}++;
+        $COUNT->{$flav}++;
+    }
+    close $FILE or die "Could not close($file) $!\n";
+}
+
+for (sort keys %{ $HASH->{full} }) {
+    exists $HASH->{base}{$_} or next;
+    delete $HASH->{full}{$_};
+    delete $HASH->{base}{$_};
+
+    if  (exists $HASH->{core}{$_}) {
+        $HASH->{COMMON}{$_}++;
+        delete $HASH->{core}{$_};
+    }
+    else {
+        $HASH->{base_full}{$_}++;
+    }
+}
+
+for my $flav (qw/full base/) {
+    printf "%18s: %3d\n", $flav, scalar keys %{$ORIG->{$flav}};
+}
+
+printf "%18s: %3d\n", "COMMON",    scalar keys %{ $HASH->{COMMON} };
+printf "%18s: %3d\n", "base-full", scalar keys %{ $HASH->{base_full} };
+printf "%18s: %3d\n", "core",      scalar keys %{ $HASH->{core} };
+printf "%18s: %3d\n", "base",      scalar keys %{ $HASH->{base} };
+printf "%18s: %3d\n", "full",      scalar keys %{ $HASH->{full} };
+
+for my $flav (qw/base core full base_full COMMON/) {
+    my $dir = $DIR{$flav} || "Template/$flav";
+    my $file = "$dir/$out_file";
+    print "writing $file\n";
+    open(my $FILE, ">", $file) or do {
+        warn "Could not open($file) $!\n";
+        next;
+    };
+    for (sort keys %{ $HASH->{$flav} }) {
+        print $FILE "$_\n";
+    }
+    close $FILE or die "Could not close($file) $!\n";
+}

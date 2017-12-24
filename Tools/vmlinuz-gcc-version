@@ -1,0 +1,20 @@
+#!/bin/bash
+
+dir=
+for d in $(dirname $0) $(echo $PATH | sed 's/:/ /g'); do
+    test -e $d/extract-vmlinux || continue
+    dir=$d
+done
+
+if [ -z "$dir" ]; then
+    echo "No extract-vmlinux program found"
+    exit 1
+fi
+
+for vmlinuz; do
+    version=$($dir/extract-vmlinux $vmlinuz 2>/dev/null | strings \
+        | sed -n -r '/gcc version/ s/.*gcc version ([0-9.]+).*/\1/p' | head -n 1)
+    gcc="?"
+    [ "$version" ] && gcc=gcc-$version
+    printf "%40s: %s\n" "$(basename $vmlinuz)" $gcc
+done

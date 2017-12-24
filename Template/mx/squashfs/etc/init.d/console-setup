@@ -1,0 +1,26 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          console-setup
+# Required-Start:    $remote_fs
+# Required-Stop:
+# Should-Start:      console-screen kbd
+# Default-Start:     S
+# Default-Stop:
+# X-Interactive:     true
+# Short-Description: Set console font and keymap
+### END INIT INFO
+
+for param in $(cat /live/config/proc-cmdline /live/config/cmdline 2>/dev/null); do
+    case "$param" in
+                       lang=*) should_run=true ;;
+        kbd=*|kbopt=*|kbvar=*) should_run=true ;;
+    esac
+done
+
+[ -z "$should_run" -o -n "$dont_run" ] && exit 0
+
+echo "Setting up live keymap"
+
+/bin/setupcon -k
+
+exit 0

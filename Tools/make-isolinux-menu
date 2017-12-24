@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while read code line; do
+    printf "%15s   %s\n" $code "$line"
+done <<Labels
+$(sed -r -n -e 's/^LABEL //p' -e s'/^\s*MENU LABEL (.*)/\1ZZZ/p' "$@" \
+    | tr '_\n' ' ' | sed 's/ZZZ /\n/g')
+Labels

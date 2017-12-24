@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my %ARGS;
+
+GetOptions(\%ARGS, qw/verbose/);
+my @out;
+
+while (<>) {
+    m/^\s*(\w+)\s*\(/  and push @out, "  $1\n";
+    m/^#=/ ... m/^#=/  and push @out, $_;
+
+    $ARGS{verbose} or next;
+
+    m/^#-/ ... m/^#-/ and push @out, $_;
+}
+
+my $prev = "";
+
+for (@out) {
+    m/^#/ and $prev =~ m/^[^#]/ and print "\n";
+    $prev = $_;
+    print;
+}

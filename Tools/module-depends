@@ -1,0 +1,153 @@
+#!/bin/bash
+
+ME=${0##*/}
+MP_ARGS="-D -a"
+
+#MP_ARGS="-D -a -S 3.18.1-antix.1-486-smp -d /mnt/sq1"
+
+usage() {
+        cat <<Usage
+Usage: $ME [file1 file2 ...]
+
+Output list of all modules needed by the modules listed in the files on
+the command line.  If no files are given then it acts like a filter and
+expects modules (not filenames) on stdin.
+
+Options:
+    -b --builtin              Show modules that are built into kernel
+    -d --dir=DIR              Pull in all module under subdirectory DIR
+    -f --from=DIR             Use DIR (not /) as parent directory
+    -h --help                 Show this usage
+    -r --repeats              Only show repeated modules (pure dependencies)
+    -R --raw                  Show raw list (unsorted with dupes)
+    -k --kernel=VERSION       Use VERSION instead of \`uname -r\`
+    -u --unique               Only show unique modules (no dependencies)
+    -q --quiet                Suppress modprobe warnings
+    -Q --very-quiet           Also suppress warnins about duplicate inputs
+    --                        Don't wait for stdin (??)
+
+Examples:
+    $ME list.txt
+
+    cat list.txt | $ME
+
+    $ME -S 3.18.1-antix.1-486-smp -d /mnt/sq1 list.txt
+
+    $ME -d /mnt/sq1 list.txt
+Usage
+
+    exit ${1:-0}
+}
+
+main() {
+
+    local kernel from_dir
+    local mode short_stack="bdhkrRuqQ"
+
+    while [ $# -gt 0 -a -n "$1" -a -z "${1##-*}" ]; do
+        local arg=${1#-} val=; shift
+
+        case $arg in
+            [$short_stack][$short_stack]*)
+                if echo "$arg" | grep -q "^[$short_stack]\+$"; then
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    continue
+                fi;;
+        esac
+
+        case $arg in 
+            -dir|-from|-kernel|[dfk])
+                [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+                val=$1
+                shift;;
+            *=*) 
+                val=${arg#*=}
+                arg=${arg%%=*} ;;
+             *) 
+                 val="???" ;;
+        esac
+
+        case $arg in
+            -builtin|b) mode=builtin                   ;;
+                -dir|d) DIRS="$DIRS,$val"              ;;
+               -help|h) usage                          ;;
+            -repeats|r) mode=repeats                   ;;
+                -raw|R) mode=raw                       ;;
+             -unique|u) mode=unique                    ;;
+             -kernel|k) kernel=$val                    ;;
+               -from|f) from_dir=$val                  ;;
+              -quiet|q) QUIET=true                     ;;
+         -very-quiet|Q) VERY_QUIET=true                ;;
+                     -) NO_CAT=true                    ;;
+                     *) fatal "Unknown argument -$arg" ;;
+        esac
+    done
+
+    [ "$QUIET" -o "$VERY_QUIET" ] && MP_ARGS="$MP_ARGS --quiet"
+
+    # Fill in default kernel if there is only one
+    if [ -z "$kernel" ]; then
+         local d=$from_dir/lib/modules
+         test -d $d || fatal "Could not find directory $d"
+         [ "$(ls $d | wc -l)" = 1 ] && kernel=$(ls $d)
+    fi
+
+    [ "$kernel"   ] && MP_ARGS="$MP_ARGS -S $kernel"
+    [ "$from_dir" ] && MP_ARGS="$MP_ARGS -d $from_dir"
+
+    : ${kernel:=$(uname -r)}
+    local mod_dir=$from_dir/lib/modules/$kernel
+    test -d "$mod_dir" || fatal "Directory $mod_dir does not exist"
+
+    local list1 list2 list3 repeats
+
+    # Grab input from files or stdin and strip comments
+    [ "$NO_CAT" ] || list1=$(cat "$@" | grep -v "^\s*#" | sed 's/\s*#.*//')
+
+    local d
+    for d in $(echo $DIRS | sed 's/,/ /g'); do
+        local dir=$mod_dir/$d
+        test -d $dir || fatal "Subdirectory $dir does not exist"
+        list1="$list1
+$(find $dir -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
+    done
+
+    #echo "$list1" ; exit
+
+    repeats=$(echo "$list1" | sed 's/_/-/g' | sort | uniq --repeated | grep .)
+    if [ "$repeats" -a -z "$VERY_QUIET" ]; then
+        local cnt=$(echo "$repeats" | wc -l)
+        warn "$cnt repeated module(s) in input"
+        echo "$repeats" >&2
+    fi
+
+    # Cononicalize names, make unique, and send to modprobe
+    list2=$(echo "$list1" | sed 's/_/-/g' | sort -u | xargs modprobe $MP_ARGS)
+
+    case $mode in
+          raw) ;;
+      builtin) list3=$(echo "$list2" |grep "^builtin" \
+              | sed -e 's=.* ==' -e 's/\.ko\> *//' -e 's/_/-/g') ;;
+
+            *) list3=$(echo "$list2" |grep "^insmod" \
+              | sed -e 's=.*/==' -e 's/\.ko\> *//' -e 's/_/-/g') ;;
+    esac
+
+    case $mode in
+            raw) echo "$list2"                                        ;;
+        repeats) echo "$list3" | sort | uniq --repeated               ;;
+         unique) comm -12 <(echo "$list1") <(echo "$list3" | sort -u) ;;
+              *) echo "$list3" | sort -u                              ;;
+    esac
+}
+
+fatal() {
+    echo "$ME error: $*" >&2
+    exit 3
+}
+
+warn() {
+    echo "$ME warning: $*" >&2
+}
+
+main "$@"

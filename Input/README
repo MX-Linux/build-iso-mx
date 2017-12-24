@@ -1,0 +1,135 @@
+README file for Input/ directory for build-antiX-iso
+====================================================
+
+Besides the files under the Template/ directory, almost all of
+the inputs to the program are in files under this directory.
+
+The Files
+---------
+
+README
+    This file.
+
+Deb/
+    A subdirectory (with its own subdirectories) that are created
+    whenever the program runs stage-0.  These are for holding
+    last-minute .deb files that have not made it into the repos.
+    We do some clever filtering so usually you can just dump all
+    the .deb files into Deb/COMMON/
+
+defaults
+    The main default settings.  These are almost all the settings
+    that determine what will end up in the iso file.   The idea
+    is that these files can be passed around and shared without
+    the need for the recipients to make any modifications.
+
+defaults-local
+    These are settings that are customized to this local system.
+    Settings in this file will override settings in "defaults"
+    and in "defaults-system".  They include:
+
+    ENABLE_LOCALES  Which set of locales to enable on the iso.
+                    This is one of the few exceptions where a
+                    setting that is not in "defaults" can affect
+                    what is on the iso file.
+
+    ISO_SYMLINK     A symlink created after an iso file is made.
+                    I use this for running the most recent iso
+                    file in Virtual Box.
+
+    LOCAL_MIRROR    The Debian mirror used by the host system.
+
+defaults-system
+    These are settings on the opposite end of the spectrum.
+    These seldom need to change unless there is a major new
+    feature added to the program.  Because these seldom change,
+    these variables won't show up in the --pretend output or at
+    the end of stage-0 unless you add the --verbose option.
+    These settings will get overridden by settings in "defaults"
+    and in "defaults-local".
+
+    APT_GET_OPTS    Standard option sent to apt-get
+
+    CACHE           What should be cached.  Currently,
+                    "debootstrap" is the only option
+
+    CACHE_EXPIRE    How many days to wait before expiring cache
+                    files.
+
+lax-errors.regex
+    This file consists of "sed" regular expression, one per line.
+    When we are in lax error checking mode (this is usually
+    synonymous with running apt-get or its brethren) then any
+    line of stderr output that matches any one of these
+    expressions will be flagged as an error.  There is is so much
+    stderr output from apt-get that it is not practical to make a
+    list of regular expressions for everything that should be
+    ignored.  So we ignore all stderr output by default and only
+    pay attention to messages that match one or more of the
+    expressions in this file.
+
+strict-exceptions.regex
+    For most of the rest of the processing *inside* the stages,
+    we are in strict error checking mode where any stderr will be
+    treated as an actually error, *except* for messages that
+    match one or more of the regular expressions in this file.
+
+
+Notes
+-----
+
+NOTE: The adventuresome user has some flexibility over where
+they put variables in the 3 defaults files.  Some of the
+variables you can leave out altogether in which case you will
+be prompted for the value every time the program runs stage-0.
+
+For example the Examples/defaults.music file defines both
+ISO_FLAV and ISO_RESPIN_OF so if this file is used then the user
+won't be prompted to give values for these variables.
+
+The variables we prompt for are:
+
+    ARCH
+    CODE_NAME
+    DEBIAN_RELEASE
+    DISTRO_NAME
+    DISTRO_VERSION
+    ENABLE_LOCALES
+    ISO_FLAV
+    ISO_RESPIN_OF
+    K_REVISION
+    K_TEMPLATE
+    K_VERSION
+    LOCAL_MIRROR
+    NEW_HOSTNAME
+
+The variables we DO NOT prompt for are:
+
+    APT_GET_OPTS
+    CACHE
+    CACHE_EXPIRE
+
+    K_TEMPLATE
+    LIVE_USER
+    LOCALE
+    MIRROR
+    RELEASE_DATE
+    TIME_ZONE
+    X_TERM_EMULATOR
+
+The first 3 are the 3 variables that are in the defaults-system
+file.  It would be trivial to add yet another defaults file for
+the other 7 variables in this list.  Things like LOCALE, MIRROR,
+and TIME_ZONE could go into defaults-local if someone wants to
+over-ride the default US oriented values.
+
+If we prompt for a variable then we automatically save the answer
+in a defaults file if the variable is defined in at least one
+file.  If a variable is defined in more than one file then we
+change the file that has the highest priority.  In order of
+priority, the files are:
+
+    defaults-local
+    defaults
+    defaults-system
+

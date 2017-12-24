@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for old in $(find Template -name "*-list"); do
+    new=$(echo $old | sed 's/-list$/.list/')
+    [ "$new" ] || next
+    echo mv $old $new
+done

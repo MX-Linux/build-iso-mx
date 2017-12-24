@@ -1,0 +1,8 @@
+#!/bin/bash
+
+x=$(sort -u $1)
+shift
+for y; do
+    x=$(comm -12 <(echo "$x") <(sort -u $y))
+done
+echo "$x"
