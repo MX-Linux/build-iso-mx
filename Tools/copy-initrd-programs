@@ -210,7 +210,7 @@ main() {
 # complicated for what it does.
 #------------------------------------------------------------------------------
 copy_symlink() {
-    local from_dir=$1  symlink=$2  dest_dir=$3
+    local from_dir=${1:-/}  symlink=$2  dest_dir=$3
 
     # This works for relative symlinks and absolute symlinks that are also
     # exist on the host
