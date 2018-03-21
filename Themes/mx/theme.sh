@@ -26,6 +26,7 @@ copy_file synaptic.desktop 		/usr/share/applications/
 copy_file synaptic-kde.desktop		/usr/share/applications/
 copy_file nano.desktop		/usr/share/applications/
 copy_file lightdm.conf		/etc/lightdm/
+copy_file lightdm-gtk-greeter.conf /etc/lightdm/
 copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file desktop.data          /usr/local/share/boot-menus/
 copy_file desktop.menu          /usr/local/share/boot-menus/

@@ -1133,7 +1133,7 @@ do_stage_4() {
     fi
 
     ##specific for mx
-    ln -fs /usr/share/zoneinfo/posixrules /etc/localtime
+    ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
     
 
     say "Customize Mozilla Browser"
@@ -1144,6 +1144,7 @@ do_stage_4() {
     write_version_files
     cp /etc/antix-version /etc/mx-version
     rm /etc/antix-version
+    ln -fs /etc/mx-version /etc/antix-version
     
     mkdir -p /usr/share/antiX
 

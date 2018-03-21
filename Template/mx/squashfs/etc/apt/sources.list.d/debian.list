@@ -3,9 +3,5 @@ deb http://ftp.us.debian.org/debian/ stretch main contrib non-free
 deb http://security.debian.org/ stretch/updates main contrib non-free
 #deb-src http://ftp.us.debian.org/debian/ stretch main contrib non-free 
 
-# Multimedia Stable.
-# Use to install libdvdcss2 and codecs.
-#deb http://www.deb-multimedia.org stretch main non-free
-
 #stretch backports
 #deb http://deb.debian.org/debian stretch-backports main

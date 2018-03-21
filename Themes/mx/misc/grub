@@ -33,4 +33,4 @@ GRUB_DISABLE_RECOVERY="true"
 
 GRUB_DISABLE_OS_PROBER=false
 #GRUB_BACKGROUND=/usr/local/share/backgrounds/MXLinux/grub/MX_Linux_Dark_City.png
-export GRUB_MENU_PICTURE="/usr/share/backgrounds/MXLinux/grub/mxreflection_by_ant_ony.png"
+export GRUB_MENU_PICTURE="/usr/share/backgrounds/MXLinux/grub/MX-Gold1080P.png"

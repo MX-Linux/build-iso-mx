@@ -209,7 +209,7 @@ gnome-mahjongg
 gnome-hearts
 gnome-mime-data
 gnome-ppp
-#gnome-schedule
+gnome-schedule
 gnome-themes-standard
 gnome-themes-standard-data
 gnupg-agent 
@@ -310,7 +310,7 @@ lightdm-gtk-greeter-settings
 lightdm-gtk-greeter-mx17
 linux-base
 linux-libc-dev
-live-usb-maker-gui
+#live-usb-maker-gui
 lm-sensors
 lp-solve
 lsb-release
@@ -484,6 +484,7 @@ sgml-base
 sgml-data 
 shared-mime-info 
 #shotwell 
+simple-scan
 #simsu  
 smbclient
 smtube
@@ -552,7 +553,7 @@ virtualbox-guest-utils
 virtualbox-guest-x11
 vlc  
 vlc-data 
-vlc-nox 
+#vlc-nox 
 volumeicon-alsa 
 vorbis-tools 
 vpnc 
