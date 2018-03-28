@@ -15,11 +15,13 @@ restore=/live/etc/init.d/live-restore-services
 
 [ -x $restore ] && $restore start
 
+# Restore files under /sys *after* udev has run, otherwise
+# the module we want to manipulate may not be loaded yet.
+usb_save=/live/etc/init.d/live-usb-save
+[ -x $usb_save ] && $usb_save sys
+
 # Detect and set up correct broadcom
 /usr/local/bin/BroadcomStartup
-
-# localize thunar custom actions
-/usr/local/bin/thunar_custom_actions_localize
 
 # Set up 12 hour clock format for some countries eg US
 /usr/local/bin/clock12or24
