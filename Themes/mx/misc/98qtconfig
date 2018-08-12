@@ -1,3 +1,16 @@
-export QT_QPA_PLATFORMTHEME=gtk2
-export QT_PLATFORMTHEME=gtk2
-export QT_PLATFORM_PLUGIN=gtk2
+# For Xfce, we need to set qt environment variables to follow gtk2
+
+BASESTARTUP=$(basename "$STARTUP" | cut -d\  -f1)
+if [ "$BASESTARTUP" = x-session-manager ]; then
+    BASESTARTUP=$(basename $(readlink /etc/alternatives/x-session-manager))
+fi
+case "$XDG_CURRENT_DESKTOP" in
+   XFCE)
+      #set qt environment variables to follow gtk2
+      export QT_QPA_PLATFORMTHEME=gtk2
+      export QT_PLATFORMTHEME=gtk2
+      export QT_PLATFORM_PLUGIN=gtk2
+      ;;
+esac
+
+
