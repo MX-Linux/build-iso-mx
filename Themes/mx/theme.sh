@@ -40,6 +40,7 @@ copy_file compton.desktop /etc/skel/.local/share/applications/
 copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 copy_file ndisgtk.desktop /usr/share/applications/
 copy_file uswsusp.conf /etc/
+copy_file plymouthd.conf /etc/plymouth/
 
 copy_dir Desktop/               /etc/skel/Desktop/           --create
 

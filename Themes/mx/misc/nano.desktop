@@ -68,6 +68,9 @@ Comment[vi]=Soạn thảo tập tin văn bản
 Comment[wa]=Asspougnî des fitchîs tecses
 Comment[zh_CN]=编辑文本文件
 Comment[zh_TW]=編輯文字檔
-Exec=xfce4-terminal -x nano %f
+Exec=nano %f
 Type=Application
 NoDisplay=True
+MimeType=text/plain
+Terminal=true
+

@@ -284,6 +284,7 @@ libc-dev-bin
 libgnome2-perl 
 libmtp-runtime
 libnss-myhostname
+libpam-gnome-keyring
 libreoffice-avmedia-backend-gstreamer
 libreoffice-base
 libreoffice-base-core
@@ -304,6 +305,7 @@ libreoffice-style-galaxy
 libreoffice-writer 
 libsox-fmt-all
 libsox2
+libtxc-dxtn-s2tc
 lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-settings
@@ -450,6 +452,10 @@ printer-driver-pxljr
 printer-driver-sag-gdi    
 printer-driver-splix  
 projectm-data
+plymouth
+plymouth-themes-mx
+plymouth-themes
+plymouth-x11
 pulseaudio
 pulseaudio-module-bluetooth
 #pulseaudio-module-x11
