@@ -6,9 +6,10 @@ start_theme "$@"
 
 copy_file grub                  /etc/default/
 copy_file 10_linux              /etc/grub.d/
+copy_file 20_memtest86+         /etc/grub.d/
 copy_dir desktop-base/               /usr/share/desktop-base/          --create
 copy_dir conky/               /etc/skel/.conky/          --create
-copy_dir fonts/               /etc/skel/.fonts/          --create
+copy_dir extra/               /usr/share/fonts/extra       --create
 copy_file alsamixer.desktop /usr/share/applications/
 #copy_file conky-toggle.desktop /usr/share/applications/
 #copy_file conkytoggle.sh /usr/local/bin/
@@ -35,7 +36,7 @@ copy_file pppoeconf.desktop     /usr/share/applications/
 #copy_file daemon.conf 		/etc/pulse/
 #copy_file i915-power-saving.conf 	/etc/modprobe.d/
 #copy_file hang-on-shutdown.conf  	/etc/modprobe.d/
-copy_file 98qtconfig /etc/X11/Xsession.d/
+#copy_file 98qtconfig /etc/X11/Xsession.d/
 copy_file compton.desktop /etc/skel/.local/share/applications/
 copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 copy_file ndisgtk.desktop /usr/share/applications/

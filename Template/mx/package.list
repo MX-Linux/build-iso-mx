@@ -88,6 +88,7 @@ dc
 dconf-gsettings-backend
 dconf-service
 dctrl-tools 
+dconf-tools
 ddm-mx
 deborphan
 desktop-defaults-xfce-mx17
@@ -116,6 +117,7 @@ exfat-fuse
 exfat-utils 
 exo-utils
 extlinux
+extundelete
 #faenza-icon-theme 
 faenza-cupertino-icons
 #faenza-cupertino-mini-icons
@@ -190,6 +192,7 @@ gddrescue
 gdebi 
 gdebi-core
 gdisk
+geany
 #geary
 ghostscript 
 ghostscript-x 
@@ -218,7 +221,8 @@ gocr
 #gottet 
 gparted  
 growisofs 
-grub-customizer
+#grub-customizer
+grub-themes-mx
 gscan2pdf 
 gsettings-desktop-schemas
 gsfonts 
@@ -281,6 +285,7 @@ libcanberra-gtk-module
 libcanberra-gtk3-module
 libcanberra-pulse
 libc-dev-bin
+libelf-dev
 libgnome2-perl 
 libmtp-runtime
 libnss-myhostname
@@ -293,6 +298,7 @@ libreoffice-common
 libreoffice-core
 libreoffice-draw 
 libreoffice-gtk2
+libreoffice-gnome
 libreoffice-help-en-us 
 libreoffice-impress 
 #libreoffice-lightproof-en # needed?
@@ -306,10 +312,12 @@ libreoffice-writer
 libsox-fmt-all
 libsox2
 libtxc-dxtn-s2tc
+#libtxc-dxtn-s2tc:i386
 lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-settings
 lightdm-gtk-greeter-mx17
+light-locker
 linux-base
 linux-libc-dev
 #live-usb-maker-gui
@@ -372,7 +380,7 @@ mx-usb-unmounter
 mx-user
 mx-viewer
 mx-welcome
-mx17-artwork
+mx18-artwork
 nautilus-data
 neofetch
 netcat-traditional
@@ -396,6 +404,7 @@ nomacs
 nomacs-l10n
 numix-gtk-theme
 nvidia-detect
+nwipe
 obexfs
 openconnect
 openjdk-8-jre
@@ -647,8 +656,8 @@ xinput
 xml-core
 xorg
 xorriso
-xscreensaver 
-xscreensaver-data
+#xscreensaver 
+#xscreensaver-data
 xserver-common
 xserver-xorg 
 xserver-xorg-core

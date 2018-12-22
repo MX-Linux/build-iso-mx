@@ -68,11 +68,7 @@ LIVE_FILE_LIST="
 /usr/share/applications/antix/minstall.desktop
 /usr/share/applications/antix/antixsources.desktop
 /usr/share/applications/antix/persist-config.desktop
-<<<<<<< HEAD
-/usr/share/applications/antix/persist_setup.desktop
-=======
 /usr/share/applications/antix/persist_setup.desktop 
->>>>>>> d2ef38609d7b6be5137959cd8a32c908772e1cf5
 /usr/share/applications/antix/persist_save.desktop
 /usr/share/applications/antix/remaster.desktop
 "

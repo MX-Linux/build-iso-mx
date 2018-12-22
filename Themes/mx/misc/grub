@@ -6,7 +6,7 @@
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=5
 GRUB_DISTRIBUTOR=`lsb_release -s -d 2> /dev/null || echo Debian`
-GRUB_CMDLINE_LINUX_DEFAULT="quiet"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 GRUB_CMDLINE_LINUX=""
 
 # Uncomment to enable BadRAM filtering, modify to suit your needs
@@ -33,4 +33,6 @@ GRUB_DISABLE_RECOVERY="true"
 
 GRUB_DISABLE_OS_PROBER=false
 #GRUB_BACKGROUND=/usr/local/share/backgrounds/MXLinux/grub/MX_Linux_Dark_City.png
-export GRUB_MENU_PICTURE="/usr/share/backgrounds/MXLinux/grub/MX-Gold1080P.png"
+export GRUB_MENU_PICTURE="/usr/share/backgrounds/MXLinux/grub/linen-gradientblu-grub.png"
+
+#GRUB_THEME="/boot/grub/themes/mx_logo_ribbon/theme.txt"

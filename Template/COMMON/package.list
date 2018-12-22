@@ -9,7 +9,7 @@ busybox
 #ceni
 cli-installer-antix 
 cli-shell-utils
-console-common 
+#console-common 
 console-data
 console-setup
 console-setup-linux

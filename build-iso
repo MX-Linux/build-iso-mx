@@ -990,7 +990,8 @@ do_stage_4() {
     if [ "$ARCH" = "amd64" ] ; then
         say "Adding multiarch support"
         sudo dpkg --add-architecture i386
-        #sudo apt-get update && apt-get install grub-efi-amd64-bin
+        ##add 32 bit version of s3 texture libraries
+        sudo apt-get update && apt-get install libtxc-dxtn-s2tc:i386
     #else
         #sudo apt-get update && apt-get install grub-efi-ia32-bin
     fi
@@ -1536,23 +1537,24 @@ do_stage_7() {
     $SUDO chroot $sqfs_dir /usr/bin/updatedb
     
     say "Update font cache"
-    $SUDO fc-cache -r -s -v
+    $SUDO chroot $sqfs_dir fc-cache -r -s -v
+    $SUDO chroot $sqfs_dir fc-cache -r -v /usr/share/fonts/extra
 
-    say "Build the xz compressed linuxfs file. This takes time and uses a lot of CPU power."
-
+    say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
+    
     local linuxfs_file=$iso_dir/antiX/linuxfs
     rm -f $linuxfs_file
 
     start_timer
     #                                                    262144 = 0x40000
-    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144 $arg
-    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86
-    cmd $SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -Xbcj x86
+    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144 
+    $SUDO mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE
+
 
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
-
+    
     leave_stage
 }
 
@@ -1610,6 +1612,9 @@ do_stage_8() {
     fi
 
     md5sum_file $full_iso_file
+    sha256sum_file $full_iso_file
+    zsyncmake_file $full_iso_file
+    
 
     if [ "$ISO_SYMLINK" -a -L "$ISO_SYMLINK" ];then
         say
@@ -3671,6 +3676,16 @@ update_add_list() {
 md5sum_file() {
     local dir=$(dirname $1) file=$(basename $1)
     (cd $dir && md5sum $file > $file.md5)
+}
+
+sha256sum_file() {
+    local dir=$(dirname $1) file=$(basename $1)
+    (cd $dir && sha256sum $file > $file.sha256)
+}
+
+zsyncmake_file() {
+    local dir=$(dirname $1) file=$(basename $1)
+    (cd $dir && zsyncmake $file)
 }
 
 #------------------------------------------------------------------------------

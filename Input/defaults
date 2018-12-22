@@ -8,30 +8,37 @@
 #----------------------------------------------------------------------
 
 BUG_REPORT_URL="https://mxlinux.org"
-CODE_NAME="Horizon"
-ASCII_CODE_NAME="Horizon"
+CODE_NAME="Continuum"
+ASCII_CODE_NAME="Continuum"
 DEBIAN_RELEASE="stretch"
 DISTRO_NAME="MX"
-DISTRO_VERSION="17.1"
+DISTRO_VERSION="18"
 HOME_URL="https://mxlinux.org"
 
 K_REVISION="1"
-K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="4.15.0"
-#K_VERSION="4.8.1"
+K_TEMPLATE="%V%G-%R-%A-unsigned"
+K_VERSION="4.19.0"
 
-#K_REVISION="7"
+#K_REVISION="1"
 #K_TEMPLATE="%V%G-antix.%R-%A-smp"
-#K_VERSION="3.7.10"
+#K_VERSION="4.19.3"
 
 LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="September 22, 2018"
+RELEASE_DATE="Dec 20, 2018"
 TIME_ZONE="America/New_York"
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
+
+#options You need both 
+#xz use -comp xz -Xbcj x86
+#xz use -comp xz -b 262144 #use for base
+#lz4 use -comp lz4 -Xhc
+#gzip leave empty #use for full
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 
 USE_UEFI=true
 MEM_TEST_BUG=
