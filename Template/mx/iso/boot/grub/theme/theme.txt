@@ -47,7 +47,7 @@ terminal-box:   "inbox_*.png"
 
 + label {
     left  = 30%
-    top   = 65%
+    top   = 70%
     width = 70%
     text  = "Press 'e' to edit the selected entry"
     color = "#ffffff"
@@ -57,7 +57,7 @@ terminal-box:   "inbox_*.png"
 
 + label {
     left  = 30%
-    top   = 70%
+    top   = 75%
     width = 70%
     text  = "Press <Esc> to return to the main menu"
     color = "#ffffff"

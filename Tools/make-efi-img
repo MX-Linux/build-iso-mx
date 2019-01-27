@@ -25,6 +25,7 @@ WORK_DIR="/tmp/$ME"
 LABEL="EFI-LIVE"
 
 INPUT_FILE_LIST="
+EFI/BOOT/BOOTx64.EFI
 EFI/BOOT/bootx64.efi
 EFI/BOOT/grubx64.efi
 boot/grub/grub.cfg
