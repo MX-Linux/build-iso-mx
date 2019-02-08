@@ -92,6 +92,8 @@ dconf-tools
 ddm-mx
 deborphan
 desktop-defaults-xfce-mx17
+desktop-defaults-mx-applications
+desktop-defaults-mx-common
 desktop-file-utils
 dh-python 
 dialog  
@@ -698,3 +700,4 @@ yelp
 #zd1211-firmware
 zip
 #zukitwo-themes
+zsync
