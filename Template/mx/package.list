@@ -291,6 +291,7 @@ libelf-dev
 libgnome2-perl 
 libmtp-runtime
 libnss-myhostname
+libnss-mdns
 libpam-gnome-keyring
 libreoffice-avmedia-backend-gstreamer
 libreoffice-base

@@ -1093,9 +1093,9 @@ do_stage_4() {
 
     if do_part 18 "Run second apt-get -f install"; then
 
-        if [ "$DEBIAN_RELEASE" != "wheezy" ]; then
-            apt-get $APT_GET_OPTS purge systemd libsystemd0 
-        fi
+        #if [ "$DEBIAN_RELEASE" != "wheezy" ]; then
+       #     apt-get $APT_GET_OPTS purge systemd libsystemd0 
+        #fi
 
         apt-get -f install
         # Remove unwanted apps that may have sneaked in.
@@ -1600,7 +1600,7 @@ do_stage_8() {
             -c boot/isolinux/isolinux.cat -o $full_iso_file $iso_dir 2>&1 \
             || error "iso file creation failed"
 
-            isohybrid $full_iso_file
+            isohybrid --uefi $full_iso_file
     fi
 
     size=$(du_size $full_iso_file)
