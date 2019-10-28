@@ -47,13 +47,15 @@ LIVE_FILE_LIST="
 /etc/fstab
 /etc/grub.d/*
 /etc/init.d/checkfs.sh
+/etc/init.d/console-setup.sh
 /etc/init.d/cron
 /etc/init.d/debian/*
 /etc/init.d/gpm
 /etc/init.d/hwclock.sh
 /etc/init.d/keyboard-setup.sh
-/etc/init.d/console-setup.sh
 /etc/init.d/sendsigs
+/etc/init.d/slim
+/etc/init.d/udev
 /etc/init.d/umountfs
 /etc/issue
 /etc/rc.local
@@ -68,7 +70,7 @@ LIVE_FILE_LIST="
 /usr/share/applications/antix/minstall.desktop
 /usr/share/applications/antix/antixsources.desktop
 /usr/share/applications/antix/persist-config.desktop
-/usr/share/applications/antix/persist_setup.desktop 
+/usr/share/applications/antix/persist_setup.desktop
 /usr/share/applications/antix/persist_save.desktop
 /usr/share/applications/antix/remaster.desktop
 "
@@ -363,7 +365,7 @@ do_start() {
         [ -z "$FORCE" ] && fatal "bind-root: $BIND_ROOT is already a mount point"
 
     else
-        mount --bind $REAL_ROOT $BIND_ROOT
+        mount --bind --make-slave $REAL_ROOT $BIND_ROOT
     fi
 
     write_conf_file $conf_file

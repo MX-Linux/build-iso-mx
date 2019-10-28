@@ -1,0 +1,791 @@
+#!/bin/bash
+
+LANG_EXT="lang"
+KMAP_FMT="%s.kmap*"
+
+ME=${0##*/}
+
+DB_DIR="/live/locale/init-lang"
+WM_DIR="/usr/share/antiX/localisation"
+TZ_DIR="/usr/share/zoneinfo"
+LC_DIR="/usr/share/locale"
+KB_DIR="/usr/share/X11/xkb/symbols"
+CF_DIR="/usr/share/consolefonts"
+KT_DIR="/usr/share/keymaps"
+
+FLAG_DIR="/usr/share/fbxkb/images"
+
+INITRD=""
+LOCALE_FILE="/etc/locale.gen"
+
+E_CNT=0
+
+usage() {
+    cat <<Usage
+usage: $ME [options] [lang-file]
+
+Input file contains a list of language codes that we expect to be passed
+in to the LiveCD/USB via the lang=xxx boot parameter.  For each code,
+search for all associated files that are used by antiX Live.
+
+Checks:
+locale, timezone, menus, keyboard layout, console font, and keytable.
+
+The exit code is the number of errors found.
+
+Options:
+  -a --all            Check all init-lang database files
+  -A --ALL            Check all including symlinks
+  -h --help           Show this help
+  -i --initrd=<dir>   Directory containing initrd files
+  -n --native         Show the native language names (implies verbose)
+  -o --only=<list>    Only perform the tests in <list>.  See below.
+  -p --prefix=<dir>   Look for files under <dir>
+  -q --quiet          Only show summary of errors
+  -S --silent         Don't show summary of errors
+  -s --skip=<list>    Skip tests in <list>.  See below.
+  -v --verbose        Expand language and country codes on error
+
+Skip / Only abbreviations:
+
+    c = Console keyboard layout
+    f = Console font
+    g = locale.gen file
+    k = X keyboard layout
+    l = locale directory
+    m = menu
+    t = timezone
+
+Usage
+    exit 1
+}
+
+main() {
+    local param val all_mode f_type PREFIX QUIET_MODE NATIVE_MODE
+    local silent_mode verbose_mode
+    
+    set_color
+
+    [ $# -eq 0 ] && usage
+
+    local skips="cfgklmt"
+
+    local short_stack="aAhinopqsSv"
+    while [ $# -gt 0 -a -z "${1##-*}" ]; do
+        param="${1#-}"; shift
+
+        # Stack short options
+        case "$param" in
+            [$short_stack][$short_stack]*)
+                if echo "$param" | grep -q "^[$short_stack]\+$"; then
+                    set -- $(echo $param | sed 's/\([a-zA-Z]\)/ -\1 /g') "$@"
+                    continue
+                fi;;
+        esac
+
+        case $param in
+            -initrd|-prefix|-only|-skip|[ipos]) 
+                    [ $# -lt 1 ] && fatal "Expected a parameter after: -$param"
+                    val=$1
+                    [ -n "$val" -a -z "${val##-*}" ] \
+                        && fatal "Suspicious parameter after -$param: $val"
+                    shift           ;;
+
+              *=*)  val=${param#*=} ;;
+                *)  val="???"       ;;
+        esac
+
+        case "$param" in
+             -all|a) all_mode=true    ; f_type="-type f"  ;;
+             -ALL|A) all_mode=true    ; f_type="-xtype f" ;;
+            -help|h) usage                                ;;
+          -initrd|i) INITRD=$val                          ;;
+      -initrd=*|i=*) INITRD=$val                          ;;
+          -native|n) NATIVE_MODE=true ; verbose_mode=true ;;
+            -only|o) ONLY=$val        ; SKIP="cfgklmt"    ;;
+          -prefix|p) PREFIX=$val                          ;;
+      -prefix=*|p=*) PREFIX=$val                          ;;
+           -quiet|q) QUIET_MODE=true                      ;;
+          -silent|S) silent_mode=true                     ;;
+            -skip|s) SKIP=$val                            ;;
+         -verbose|v) verbose_mode=true                    ;;
+                  *) fatal "Unknown argument: -$param"    ;;
+        esac
+    done
+
+    FULL_DB_DIR=$INITRD$DB_DIR
+    FULL_LOCALE_FILE=$PREFIX$LOCALE_FILE
+
+    if ! test -e $FULL_LOCALE_FILE; then
+        fatal "Could not find file: $FULL_LOCALE_FILE"
+        #error "Skipping locale.gen tests"
+        #SKIP=g$SKIP
+    fi
+
+    #  c = Console keyboard layout
+    #  f = Console font
+    #  g = locale.gen file
+    #  k = X keyboard layout
+    #  l = locale directory
+    #  m = menu
+    #  t = timezone
+    #  F = keyboard flag
+
+    local char
+    for char in $(echo $SKIP | sed -r 's/(.)/\1 /g'); do
+        case $char in
+            c) SKIP_KEYMAP=true     ;;
+            f) SKIP_FONT=true       ;;
+            g) SKIP_LOCALE_GEN=true ;;
+            k) SKIP_XKB=true        ;;
+            l) SKIP_LOCALE=true     ;;
+            m) SKIP_MENU=true       ;;
+            t) SKIP_TIMEZONE=true   ;;
+            F) SKOP_FLAG=true       ;;
+            *) fatal "Unknown --skip parameter: $char"
+        esac
+    done
+
+    for char in $(echo $ONLY | sed -r 's/(.)/\1 /g'); do
+        case $char in
+            c) SKIP_KEYMAP=     ;;
+            f) SKIP_FONT=       ;;
+            g) SKIP_LOCALE_GEN= ;;
+            k) SKIP_XKB=       ;;
+            l) SKIP_LOCALE=     ;;
+            m) SKIP_MENU=       ;;
+            t) SKIP_TIMEZONE=   ;;
+            F) SKOP_FLAG=true       ;;
+            *) fatal "Unknown --only parameter: $char"
+        esac
+    done
+
+    test -d $FULL_DB_DIR || fatal "Could not file db directory: $FULL_DB_DIR"
+    local file_list
+    if [ "$all_mode" ]; then
+        [ $# -gt 0 ] && fatal "Can't specify both --all (or --ALL) and a language file"
+
+        file_list=$(find $FULL_DB_DIR $f_type -name "*.$LANG_EXT" -printf "%f\n" | sed -n "s/\.$LANG_EXT$//p")
+
+    else
+        [ $# -gt 1 ] && fatal "Extra command line args: $*"
+        [ $# -lt 1 ] && fatal "No language file given"
+        [ -e "$1"  ] || fatal "Could not find file $1"
+        [ -r "$1"  ] || fatal "Could not read file $1"
+        file_list=$(cat "$1")
+        LANG_MODE=true
+    fi
+
+    local lang
+    for lang in $file_list; do
+        [ "$verbose_mode" ] && printf "checking: $cyan%5s$nc %s\n" $lang "$(expand_code $lang)"
+        check $lang
+    done 
+
+    [ "$silent_mode" ] && return
+
+    if [ $E_CNT -eq 0 ]; then
+        echo "${green}$ME: no errors were detected.$nc"
+    else
+        plural $E_CNT "${green}$ME: $white%n$red error%s %were detected.$nc"
+    fi
+}
+
+check() {
+    local CHECK_LANG=$1
+    unset COUNTRY WM_LANG KEYBOARDS KEYTABLE LANG MIRROR TZ XKBLAYOUT
+    unset CONSOLE_FONT
+
+    [ "$SKIP_FLAG"       ] || check_flag "$lang" "$FLAG_DIR"
+
+    local db_file=$FULL_DB_DIR/$CHECK_LANG.$LANG_EXT
+
+    if [ ! -e $db_file ]; then
+        error "missing   $yellow%12s$nc file: %s" "database" "$db_file"
+        return
+    fi
+
+    if [ ! -r $db_file ]; then
+        error "Cannot read db file: $db_file"
+        return
+    fi
+
+    source $db_file
+
+    local kb locale=${LANG%_*}
+
+    [ "$SKIP_LOCALE_GEN" ] || check_locale $CHECK_LANG $LANG
+    [ "$SKIP_MENU"       ] || test_one $lang $WM_DIR "$WM_LANG"  "Menus"
+    [ "$SKIP_TIMEZONE"   ] || test_one $lang $TZ_DIR "$TZ"       "Time Zone"
+    [ "$SKIP_LOCALE"     ] || test_one $lang $LC_DIR "$locale"   "Locale"
+
+    for kb in $(echo $XKBLAYOUT | sed 's/,/ /g'); do
+        [ "$SKIP_XKB" ] || test_one $lang $KB_DIR $kb "Keyboard"
+    done
+
+    local kmap=$(printf "$KMAP_FMT" $KEYTABLE)
+    [ -z "$SKIP_KEYMAP" -a "$KEYTABLE"    ] && test_one "$lang" $KT_DIR "$kmap"            "Key Table"
+    [ -z "$SKIP_FONT"  -a "$CONSOLE_FONT" ] && test_one "$lang" $CF_DIR "$CONSOLE_FONT.*"  "Console Font"
+}
+
+test_one() {
+    local lang=$1 dir="$PREFIX$2" file=$3 type=$4
+
+    type="$yellow$(printf "%-12s" "$type")$nc"
+
+    if [ -z "$file" ]; then
+        error "No $yellow%s$nc given in lang file" "$4"
+        return
+    fi
+
+    if [ ! -d $dir ]; then
+        error "Could not find $type directory: $dir"
+        return
+    fi
+
+    if [ ! -e "$dir/$file" ]; then
+
+        if echo "$file" | grep -q "\*"; then
+            local full=$(find $dir -name "$file")
+            if [ -z "$full" ]; then
+                error "missing   %s %s" "$type" "$dir/ $file"
+                return
+            fi
+        else
+            error "missing   %s %s" "$type" "$dir/$file"
+        fi
+    fi
+}
+
+check_flag() {
+    local lang=$1  dir=$PREFIX$2
+    local cc=$(echo ${lang##*_} | tr 'A-Z' 'a-z')
+
+    test -e $dir/$cc.png && return
+    error "missing  %s   %s in %s" "$cc" "${yellow}Flag$nc" "$2"
+}
+
+check_locale() {
+    local clang=$1 lang=${2%.*} file=${3:-$FULL_LOCALE_FILE}
+
+    if [ -z "${clang##*_*}" -a "$clang" != "$lang" ]; then
+        error "${yellow}Lang change$nc: %s --> %s" $clang $lang
+    fi
+
+    grep -q "^$lang" $file && return
+
+    local type=$(printf "${yellow}%-12s$nc" locale.gen)
+
+    if grep -q "^# *$lang" $file; then
+        error "commented $type entry for $lang"
+    else
+        error "missing   $type entry for $lang"
+    fi
+}
+expand_code() {
+    local lc cc language country ans
+    local lang_field=3
+    lc=$(echo $1 | cut -d_ -f1)  
+    cc=$(echo $1 | cut -s -d_ -f2)
+
+    language=$(grep "^#$lc:" $0 | cut -d: -f3)
+
+    if [ "$NATIVE_MODE" ]; then
+        language="$(grep "^#$lc:" $0 | cut -d: -f4) [$language]"
+        echo -n $language
+        return
+    fi
+
+    [ "$cc" ] && country=$(grep "^#$cc:" $0 | cut -d: -f2)
+    ans=$language
+    [ "$country" ] && ans="$ans ($country)"
+    echo -n "$ans"
+
+}
+
+fatal() {
+    echo "${red}$ME Fatal Error:$nc $*"
+    exit 100
+}
+
+error() { 
+    local fmt=$1; shift
+    E_CNT=$((E_CNT + 1))
+    [ "$QUIET_MODE" ] && return
+    printf "${red}   Error: $cyan%5s$nc $fmt\n" "$CHECK_LANG" "$@"
+}
+
+plural() {
+    local n=$1 str=$2
+    case $n in
+        1) local s=  ies=y   are=is  have=has  were=was;;
+        *) local s=s ies=ies are=are have=have were=were;;
+    esac
+    echo "$str" | sed -e "s/%s/$s/g" -e "s/%ies/$ies/g" -e "s/%are/$are/g" \
+        -e "s/%have/$have/" -e "s/%n/$n/g" -e "s/%were/$were/g"
+}
+
+set_color() {
+
+    e=$(printf "\e")
+    rev_cyan="$e[0;7m"
+    nc="$e[0m"
+
+    [ "$NO_CO" ] && return
+    shade=1
+    [ "$LO_CO" ] && shade=0
+
+    rev_cyan="$e[0;7;36m"
+        cyan="$e[$shade;36m"
+         red="$e[0;31m"
+       green="$e[$shade;32m"
+      yellow="$e[$shade;33m"
+     magenta="$e[$shade;35m"
+       white="$e[1;37m"
+}
+
+main "$@"
+
+exit $E_CNT
+
+
+# ISO 3166-alpah-2 codes from
+# http://www.iso.org/iso/country_codes/iso_3166_code_lists/country_names_and_code_elements.htm
+# Date: Sat May 18 15:08:26 MDT 2013
+#AF:Afghanistan
+#AX:Åland Islands
+#AL:Albania
+#DZ:Algeria
+#AS:American Samoa
+#AD:Andorra
+#AO:Angola
+#AI:Anguilla
+#AQ:Antarctica
+#AG:Antigua And Barbuda
+#AR:Argentina
+#AM:Armenia
+#AW:Aruba
+#AU:Australia
+#AT:Austria
+#AZ:Azerbaijan
+#BS:Bahamas
+#BH:Bahrain
+#BD:Bangladesh
+#BB:Barbados
+#BY:Belarus
+#BE:Belgium
+#BZ:Belize
+#BJ:Benin
+#BM:Bermuda
+#BT:Bhutan
+#BO:Bolivia, Plurinational State of
+#BQ:Bonaire, Sint Eustatius And Saba
+#BA:Bosnia And Herzegovina
+#BW:Botswana
+#BV:Bouvet Island
+#BR:Brazil
+#IO:British Indian Ocean Territory
+#BN:Brunei Darussalam
+#BG:Bulgaria
+#BF:Burkina Faso
+#BI:Burundi
+#KH:Cambodia
+#CM:Cameroon
+#CA:Canada
+#CV:Cape Verde
+#KY:Cayman Islands
+#CF:Central African Republic
+#TD:Chad
+#CL:Chile
+#CN:China
+#CX:Christmas Island
+#CC:Cocos (Keeling) Islands
+#CO:Colombia
+#KM:Comoros
+#CG:Congo
+#CD:Congo, The Democratic Republic of The
+#CK:Cook Islands
+#CR:Costa Rica
+#CI:Côte D'IVOIRE
+#HR:Croatia
+#CU:Cuba
+#CW:Curaçao
+#CY:Cyprus
+#CZ:Czech Republic
+#DK:Denmark
+#DJ:Djibouti
+#DM:Dominica
+#DO:Dominican Republic
+#EC:Ecuador
+#EG:Egypt
+#SV:El Salvador
+#GQ:Equatorial Guinea
+#ER:Eritrea
+#EE:Estonia
+#ET:Ethiopia
+#FK:Falkland Islands (Malvinas)
+#FO:Faroe Islands
+#FJ:Fiji
+#FI:Finland
+#FR:France
+#GF:French Guiana
+#PF:French Polynesia
+#TF:French Southern Territories
+#GA:Gabon
+#GM:Gambia
+#GE:Georgia
+#DE:Germany
+#GH:Ghana
+#GI:Gibraltar
+#GR:Greece
+#GL:Greenland
+#GD:Grenada
+#GP:Guadeloupe
+#GU:Guam
+#GT:Guatemala
+#GG:Guernsey
+#GN:Guinea
+#GW:Guinea-Bissau
+#GY:Guyana
+#HT:Haiti
+#HM:Heard Island And Mcdonald Islands
+#VA:Holy See (Vatican City State)
+#HN:Honduras
+#HK:Hong Kong
+#HU:Hungary
+#IS:Iceland
+#IN:India
+#ID:Indonesia
+#IR:Iran, Islamic Republic of
+#IQ:Iraq
+#IE:Ireland
+#IM:Isle of Man
+#IL:Israel
+#IT:Italy
+#JM:Jamaica
+#JP:Japan
+#JE:Jersey
+#JO:Jordan
+#KZ:Kazakhstan
+#KE:Kenya
+#KI:Kiribati
+#KP:Korea, Democratic People'S Republic of
+#KR:Korea, Republic of
+#KW:Kuwait
+#KG:Kyrgyzstan
+#LA:Lao People'S Democratic Republic
+#LV:Latvia
+#LB:Lebanon
+#LS:Lesotho
+#LR:Liberia
+#LY:Libya
+#LI:Liechtenstein
+#LT:Lithuania
+#LU:Luxembourg
+#MO:Macao
+#MK:Macedonia, The Former Yugoslav Republic of
+#MG:Madagascar
+#MW:Malawi
+#MY:Malaysia
+#MV:Maldives
+#ML:Mali
+#MT:Malta
+#MH:Marshall Islands
+#MQ:Martinique
+#MR:Mauritania
+#MU:Mauritius
+#YT:Mayotte
+#MX:Mexico
+#FM:Micronesia, Federated States of
+#MD:Moldova, Republic of
+#MC:Monaco
+#MN:Mongolia
+#ME:Montenegro
+#MS:Montserrat
+#MA:Morocco
+#MZ:Mozambique
+#MM:Myanmar
+#NA:Namibia
+#NR:Nauru
+#NP:Nepal
+#NL:Netherlands
+#NC:New Caledonia
+#NZ:New Zealand
+#NI:Nicaragua
+#NE:Niger
+#NG:Nigeria
+#NU:Niue
+#NF:Norfolk Island
+#MP:Northern Mariana Islands
+#NO:Norway
+#OM:Oman
+#PK:Pakistan
+#PW:Palau
+#PS:Palestine, State of
+#PA:Panama
+#PG:Papua New Guinea
+#PY:Paraguay
+#PE:Peru
+#PH:Philippines
+#PN:Pitcairn
+#PL:Poland
+#PT:Portugal
+#PR:Puerto Rico
+#QA:Qatar
+#RE:Réunion
+#RO:Romania
+#RU:Russian Federation
+#RW:Rwanda
+#BL:Saint Barthélemy
+#SH:Saint Helena, Ascension And Tristan Da Cunha
+#KN:Saint Kitts And Nevis
+#LC:Saint Lucia
+#MF:Saint Martin (French Part)
+#PM:Saint Pierre And Miquelon
+#VC:Saint Vincent And The Grenadines
+#WS:Samoa
+#SM:San Marino
+#ST:Sao Tome And Principe
+#SA:Saudi Arabia
+#SN:Senegal
+#RS:Serbia
+#SC:Seychelles
+#SL:Sierra Leone
+#SG:Singapore
+#SX:Sint Maarten (Dutch Part)
+#SK:Slovakia
+#SI:Slovenia
+#SB:Solomon Islands
+#SO:Somalia
+#ZA:South Africa
+#GS:South Georgia And The South Sandwich Islands
+#SS:South Sudan
+#ES:Spain
+#LK:Sri Lanka
+#SD:Sudan
+#SR:Suriname
+#SJ:Svalbard And Jan Mayen
+#SZ:Swaziland
+#SE:Sweden
+#CH:Switzerland
+#SY:Syrian Arab Republic
+#TW:Taiwan, Province of China
+#TJ:Tajikistan
+#TZ:Tanzania, United Republic of
+#TH:Thailand
+#TL:Timor-Leste
+#TG:Togo
+#TK:Tokelau
+#TO:Tonga
+#TT:Trinidad And Tobago
+#TN:Tunisia
+#TR:Turkey
+#TM:Turkmenistan
+#TC:Turks And Caicos Islands
+#TV:Tuvalu
+#UG:Uganda
+#UA:Ukraine
+#AE:United Arab Emirates
+#GB:United Kingdom
+#US:United States
+#UM:United States Minor Outlying Islands
+#UY:Uruguay
+#UZ:Uzbekistan
+#VU:Vanuatu
+#VE:Venezuela, Bolivarian Republic of
+#VN:Viet Nam
+#VG:Virgin Islands, British
+#VI:Virgin Islands, U.S.
+#WF:Wallis And Futuna
+#EH:Western Sahara
+#YE:Yemen
+#ZM:Zambia
+#ZW:Zimbabwe
+#
+## From: https://en.wiktionary.org/wiki/Appendix:ISO_639-1_language_codes 
+## date: Sat May 18 15:05:25 MDT 2013
+#aa:aar:Afar:Afaraf:
+#ab:abk:Abkhaz:Аҧсуа:
+#ae:ave:Avestan:avesta:ancient
+#af:afr:Afrikaans:Afrikaans:
+#ak:aka + 2:Akan:Akan:macrolanguage, Twi is [tw/twi], Fanti is [fat]
+#am:amh:Amharic:አማርኛ:
+#an:arg:Aragonese:aragonés:
+#ar:ara + 30:Arabic:العربية:macrolanguage, Standard Arabic is [arb]
+#as:asm:Assamese:অসমীয়া:
+#av:ava:Avar:авар мацӀ, магӀарул мацӀ:
+#ay:aym + 2:Aymara:aymar aru:macrolanguage
+#az:aze + 2:Azerbaijani:azərbaycan dili:macrolanguage
+#ba:bak:Bashkir:башҡорт теле:
+#be:bel:Belarusian:Беларуская:
+#bg:bul:Bulgarian:български език:
+#bh:—:Bihari:भोजपुरी:Collective language code for Bhojpuri, Magahi, and Maithili
+#bi:bis:Bislama:Bislama:
+#bm:bam:Bambara:bamanankan:
+#bn:ben:Bengali:বাংলা:
+#bo:bod:Tibetan:བོད་ཡིག:
+#br:bre:Breton:brezhoneg:
+#bs:bos:Bosnian:bosanski jezik:
+#ca:cat:Catalan, Valencian:Català:
+#ce:che:Chechen:нохчийн мотт:
+#ch:cha:Chamorro:Chamoru:
+#co:cos:Corsican:corsu, lingua corsa:
+#cr:cre + 6:Cree:ᓀᐦᐃᔭᐍᐏᐣ:macrolanguage
+#cs:ces:Czech:česky, čeština:
+#cu:chu:Church Slavic, Old Slavonic, Church Slavonic, Old Bulgarian, Old Church Slavonic:ѩзыкъ словѣньскъ:ancient
+#cv:chv:Chuvash:чӑваш чӗлхи:
+#cy:cym:Welsh:Cymraeg:
+#da:dan:Danish:dansk:
+#de:deu:German:Deutsch:
+#dv:div:Dhivehi, Dhivehi, Maldivian:ދިވެހި:
+#dz:dzo:Dzongkha:རྫོང་ཁ:
+#ee:ewe:Ewe:Eʋegbe:
+#el:ell:Modern Greek:Ελληνικά:
+#en:eng:English:English:
+#eo:epo:Esperanto:Esperanto:constructed
+#es:spa:Spanish, Castilian:español, castellano:
+#et:est + 2:Estonian:eesti, eesti keel:macrolanguage
+#eu:eus:Basque:euskara, euskera:
+#fa:fas + 2:Persian:فارسی:macrolanguage
+#ff:ful + 9:Fula:Fulfulde, Pulaar, Pular:macrolanguage
+#fi:fin:Finnish:suomi, suomen kieli:
+#fj:fij:Fijian:vosa Vakaviti:
+#fo:fao:Faroese:føroyskt:
+#fr:fra:French:français, langue française:
+#fy:fry:West Frisian:Frysk:
+#ga:gle:Irish:Gaeilge:
+#gd:gla:Gaelic, Scottish Gaelic:Gàidhlig:
+#gl:glg:Galician:Galego:
+#gn:grn + 5:Guaraní:Avañe'ẽ:macrolanguage
+#gu:guj:Gujarati:ગુજરાતી:
+#gv:glv:Manx:Gaelg, Gailck:
+#ha:hau:Hausa:Hausa, هَوُسَ:
+#he:heb:Modern Hebrew:עברית:
+#hi:hin:Hindi:हिन्दी, हिंदी:
+#ho:hmo:Hiri Motu:Hiri Motu:
+#hr:hrv:Croatian:hrvatski:
+#ht:hat:Haitian Creole, Haitian Creole:Kreyòl ayisyen:
+#hu:hun:Hungarian:Magyar:
+#hy:hye:Armenian:Հայերեն:
+#hz:her:Herero:Otjiherero:
+#ia:ina:Interlingua (International Auxiliary Language Association):Interlingua:constructed
+#id:ind:Indonesian:Bahasa Indonesia:Covered by macrolanguage [ms/msa]
+#ie:ile:Interlingue, Occidental:Interlingue:constructed
+#ig:ibo:Igbo:Igbo:
+#ii:iii:Yi, Nuosu:ꆇꉙ:
+#ik:ipk + 2:Inupiaq:Iñupiaq, Iñupiatun:macrolanguage
+#io:ido:Ido:Ido:constructed
+#is:isl:Icelandic:Íslenska:
+#it:ita:Italian:Italiano:
+#iu:iku + 2:Inuktitut:ᐃᓄᒃᑎᑐᑦ:macrolanguage
+#ja:jpn:Japanese:日本語 (にほんご／にっぽんご):
+#jv:jav:Javanese:basa Jawa:
+#ka:kat:Georgian:ქართული:
+#kg:kon + 3:Kongo:KiKongo:macrolanguage
+#ki:kik:Gikuyu, Kikuyu:Gĩkũyũ:
+#kj:kua:Kwanyama, Kuanyama:Kuanyama:
+#kk:kaz:Kazakh:Қазақ тілі:
+#kl:kal:Kalaallisut, Greenlandic:kalaallisut, kalaallit oqaasii:
+#km:khm:Central Khmer:ភាសាខ្មែរ:
+#kn:kan:Kannada:ಕನ್ನಡ:
+#ko:kor:Korean:한국어 (韓國語), 조선말 (朝鮮語):
+#kr:kau + 3:Kanuri:Kanuri:macrolanguage
+#ks:kas:Kashmiri:कश्मीरी, كشميري:
+#ku:kur + 3:Kurdish:Kurdî, كوردی:macrolanguage
+#kv:kom + 2:Komi:коми кыв:macrolanguage
+#kw:cor:Cornish:Kernewek:
+#ky:kir:Kyrgyz, Kirgiz:кыргыз тили:
+#la:lat:Latin:latine, lingua latina:ancient
+#lb:ltz:Luxembourgish, Letzeburgesch:Lëtzebuergesch:
+#lg:lug:Luganda:Luganda:
+#li:lim:Limburgish, Limburgan, Limburger:Limburgs:
+#ln:lin:Lingala:Lingála:
+#lo:lao:Lao:ພາສາລາວ:
+#lt:lit:Lithuanian:lietuvių kalba:
+#lu:lub:Luba-Katanga:Kiluba:
+#lv:lav:Latvian:latviešu valoda:
+#mg:mlg + 10:Malagasy:Malagasy fiteny:macrolanguage
+#mh:mah:Marshallese:Kajin M̧ajeļ:
+#mi:mri:Māori:te reo Māori:
+#mk:mkd:Macedonian:македонски јазик:
+#ml:mal:Malayalam:മലയാളം:
+#mn:mon + 2:Mongolian:Монгол:macrolanguage
+#mr:mar:Marathi:मराठी:
+#ms:msa + 13:Malay:bahasa Melayu, بهاس ملايو:macrolanguage, Standard Malay is [zsm], Indonesian is [id/ind]
+#mt:mlt:Maltese:Malti:
+#my:mya:Burmese:ဗမာစာ:
+#na:nau:Nauruan:Ekakairũ Naoero:
+#nb:nob:Norwegian Bokmål:Norsk bokmål:Covered by macrolanguage [no/nor]
+#nd:nde:Northern Ndebele:isiNdebele:
+#ne:nep:Nepali:नेपाली:
+#ng:ndo:Ndonga:Owambo:
+#nl:nld:Dutch, Flemish:Nederlands, Vlaams:
+#nn:nno:Norwegian Nynorsk:Norsk nynorsk:Covered by macrolanguage [no/nor]
+#no:nor + 2:Norwegian:Norsk:macrolanguage
+#nr:nbl:Southern Ndebele:isiNdebele:
+#nv:nav:Navajo, Navaho:Diné bizaad, Dinékʼehǰí:
+#ny:nya:Chichewa, Chewa, Nyanja:chiCheŵa, chinyanja:
+#oc:oci:Occitan (after 1500):Occitan:
+#oj:oji + 7:Anishinaabe:ᐊᓂᔑᓈᐯᒧᐎᓐ:macrolanguage
+#om:orm + 4:Oromo:Afaan Oromoo:macrolanguage
+#or:ori:Oriya:ଓଡ଼ିଆ:
+#os:oss:Ossetic, Ossetian:Ирон æвзаг:
+#pa:pan:Punjabi, Panjabi:ਪੰਜਾਬੀ, پنجابی:
+#pi:pli:Pali, Pāli:पाऴि:ancient
+#pl:pol:Polish:polski:
+#ps:pus + 3:Pashto, Pushto:پښتو:macrolanguage
+#pt:por:Portuguese:Português:
+#qu:que + 44:Quechua:Runa Simi, Kichwa:macrolanguage
+#rm:roh:Romansh:rumantsch grischun:
+#rn:run:Kirundi:kiRundi:
+#ro:ron:Romanian, Moldavian, Moldovan:română:[mo] for Moldavian has been withdrawn, recommending [ro] also for Moldavian
+#ru:rus:Russian:Русский язык:
+#rw:kin:Kinyarwanda:Ikinyarwanda:
+#sa:san:Sanskrit:संस्कृतम्:ancient
+#sc:srd + 4:Sardinian:sardu:macrolanguage
+#sd:snd:Sindhi:सिन्धी, سنڌي، سندھی:
+#se:sme:Northern Sami:Davvisámegiella:
+#sg:sag:Sango:yângâ tî sängö:
+#si:sin:Sinhala, Sinhalese:සිංහල:
+#sk:slk:Slovak:slovenčina:
+#sl:slv:Slovene:slovenščina:
+#sm:smo:Samoan:gagana fa'a Samoa:
+#sn:sna:Shona:chiShona:
+#so:som:Somali:Soomaaliga, af Soomaali:
+#sq:sqi + 4:Albanian:Shqip:macrolanguage
+#sr:srp:Serbian:српски језик:
+#ss:ssw:Swati:SiSwati:
+#st:sot:Sotho:Sesotho:
+#su:sun:Sundanese:Basa Sunda:
+#sv:swe:Swedish:svenska:
+#sw:swa + 2:Swahili:Kiswahili:macrolanguage
+#ta:tam:Tamil:தமிழ்:
+#te:tel:Telugu:తెలుగు:
+#tg:tgk:Tajik:тоҷикӣ, toğikī, تاجیکی:
+#th:tha:Thai:ไทย:
+#ti:tir:Tigrinya:ትግርኛ:
+#tk:tuk:Turkmen:Türkmen, Түркмен:
+#tl:tgl:Tagalog:Wikang Tagalog, ᜏᜒᜃᜅ᜔ ᜆᜄᜎᜓᜄ᜔:Note: Filipino (Pilipino) has the code [fil]
+#tn:tsn:Tswana:Setswana:
+#to:ton:Tongan (Tonga Islands):faka Tonga:
+#tr:tur:Turkish:Türkçe:
+#ts:tso:Tsonga:Xitsonga:
+#tt:tat:Tatar:татарча, tatarça, تاتارچا:
+#tw:twi:Twi:Twi:Covered by macrolanguage [ak/aka]
+#ty:tah:Tahitian:Reo Mā`ohi:
+#ug:uig:Uyghur, Uyghur:Uyƣurqə, ئۇيغۇرچە:
+#uk:ukr:Ukrainian:українська:
+#ur:urd:Urdu:اردو:
+#uz:uzb + 2:Uzbek:O'zbek, Ўзбек, أۇزبېك:macrolanguage
+#ve:ven:Venda:Tshivenḓa:
+#vi:vie:Vietnamese:Tiếng Việt:
+#vo:vol:Volapük:Volapük:constructed
+#wa:wln:Walloon:Walon:
+#wo:wol:Wolof:Wollof:
+#xh:xho:Xhosa:isiXhosa:
+#yi:yid + 2:Yiddish:ייִדיש:macrolanguage
+#yo:yor:Yoruba:Yorùbá:
+#za:zha + 16:Zhuang, Chuang:Saɯ cueŋƅ, Saw cuengh:macrolanguage
+#zh:zho + 13:Chinese:中文 (Zhōngwén), 汉语, 漢語:macrolanguage
+#zu:zul:Zulu:isiZulu:
+

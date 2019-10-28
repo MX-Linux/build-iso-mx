@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.00.08"
-VERSION_DATE="Mon Oct 23 10:16:23 MDT 2017"
+VERSION="1.21.00"
+VERSION_DATE="Thu Mar 28 12:33:18 MDT 2019"
 
 ME=${0##*/}
 
@@ -433,7 +433,7 @@ do_stage_0() {
     pick_prog MAKE_ISO $MAKE_ISO_PROGS
     pick_prog GZIP     $GZIP_PROGS
 
-    require_programs chroot debootstrap isohybrid mksquashfs md5sum sudo tee \
+    require_programs chroot debootstrap isohybrid mksquashfs md5sum sudo tee zsync \
         pkill column expand strings iconv
 
     mkdir -p $output_dir || my_exit
@@ -795,7 +795,7 @@ do_stage_4() {
     require_programs apt-get
 
     if [ -s $partial_file ]  \
-        && do_part 0 "!Read PARTIAL file to skip parts done"; then
+        && do_part 0 "!Stage 3Read PARTIAL file to skip parts done"; then
         local add_skip=$(join_lines $partial_file ",")
         say "have already processed these parts: $(pq $add_skip)"
         if YES_no "Skip these parts this time"; then
@@ -806,6 +806,14 @@ do_stage_4() {
     else
         skip_part 0 "Read PARTIAL file to skip parts done"
     fi
+    
+    if [ -e "/antix-archive-keyring.deb" ]; then
+		dpkg -i antix-archive-keyring.deb && rm /antix-archive-keyring
+	fi
+	
+	if [ -e "/mx19-archive-keyring.deb" ]; then
+		dpkg -i mx19-archive-keyring.deb && rm /mx19-archive-keyring
+	fi
 
     if do_part 1 "Update repos and do apt-get update"; then
         local list_dir=/etc/apt/sources.list.d
@@ -861,7 +869,7 @@ do_stage_4() {
     fi
 
     if do_part 5 "Install kernel & headers"; then
-        apt-get $APT_GET_OPTS install linux-headers-$K_NAME linux-image-$K_NAME
+        apt-get $APT_GET_OPTS install linux-headers-$K_NAME linux-image-$K_NAME$UNSIGNED
         end_part_strict
     fi
 
@@ -988,12 +996,9 @@ do_stage_4() {
 
     # for 64 bit set multiarch
     if [ "$ARCH" = "amd64" ] ; then
-        say "Adding multiarch support"
-        sudo dpkg --add-architecture i386
-        ##add 32 bit version of s3 texture libraries
-        sudo apt-get update && apt-get install libtxc-dxtn-s2tc:i386
-    #else
-        #sudo apt-get update && apt-get install grub-efi-ia32-bin
+        sudo say "Adding multiarch support"
+        dpkg --add-architecture i386
+        sudo apt-get update && apt-get install libc6:i386 libgcc1:i386 gcc-8-base:i386
     fi
 
     #update icons cache files
@@ -1147,6 +1152,9 @@ do_stage_4() {
     rm /etc/antix-version
     ln -frs /etc/mx-version /etc/antix-version
     
+    ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
+    systemctl mask cgmanager.service
+    
     mkdir -p /usr/share/antiX
 
     dpkg-query -l | sed -n 's/^ii\s\+//p' > $output_dir/package-list.out
@@ -1165,6 +1173,16 @@ do_stage_4() {
     mkdir -p $partial_dir
     chown _apt:root -R $partial_dir
     chmod 700 $partial_dir
+    
+    say "fix apparmor profile for smbd"
+    if [ -e /etc/apparmor.d/samba/smbd-shares ]; then
+		continue
+	else
+		if [ ! -d /etc/apparmor.d/samba ]; then
+			mkdir -p /etc/apparmor.d/samba
+		fi
+		touch /etc/apparmor.d/samba/smbd-shares
+    fi
 
     local update_cmd=updatedb
     say "Run $update_cmd"
@@ -1220,10 +1238,10 @@ do_stage_5() {
     sleep 2
 
     if do_part 21 "!Check kernel's GCC version"; then
-        check_kernel_gcc vmlinuz-$K_NAME
+        #check_kernel_gcc vmlinuz-$K_NAME
         end_part_strict
     fi
-    	
+
     if [ "$FLAV" = "base" ]; then
         say "Change flubox and icewm menu-applications files"
         sudo mv -f $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications-fb $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications
@@ -1440,13 +1458,19 @@ Bootloader_Data
         sed -i "s/16x16.fnt/16x16aa.fnt/"  $isolinux_cpio/gfxboot.cfg $syslinux_cpio/gfxboot.cfg
     fi
 
-    say "Make efi.img"
-    $SUDO $tools/make-efi-img $iso_dir "$DISTRO_NAME-uefi"
+    # say "Make efi.img"
+    # $SUDO $tools/make-efi-img $iso_dir "$DISTRO_NAME-uefi"
 
     repack_gfx_cpio isolinux $isolinux_cpio
     repack_gfx_cpio syslinux $syslinux_cpio
 
     echo "$fancy_name" > $iso_dir/version
+
+    local sneaky=".disk"
+    say "Add sneaky $sneaky/ directory"
+    mkdir -p $iso_dir/$sneaky
+    cp $iso_dir/version $iso_dir/$sneaky/info
+
 
     if [ -z "$iso_only" ]; then
         # Copy the kernel from the squashfs
@@ -1535,26 +1559,26 @@ do_stage_7() {
 
     say "Run updatedb one last time"
     $SUDO chroot $sqfs_dir /usr/bin/updatedb
-    
+
     say "Update font cache"
     $SUDO chroot $sqfs_dir fc-cache -r -s -v
     $SUDO chroot $sqfs_dir fc-cache -r -v /usr/share/fonts/extra
 
     say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
-    
+
     local linuxfs_file=$iso_dir/antiX/linuxfs
     rm -f $linuxfs_file
 
     start_timer
     #                                                    262144 = 0x40000
-    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144 
+    #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144
     $SUDO mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE
 
 
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
-    
+
     leave_stage
 }
 
@@ -1584,7 +1608,7 @@ do_stage_8() {
     say "Using $(pq $(basename $MAKE_ISO)) to make iso file"
     if [ -z "${MAKE_ISO%%*xorriso}" ]; then
         $SUDO chown -R root:root $iso_dir
-        make_uefi_iso "$MAKE_ISO -as mkisofs" "-e" $file_dir
+        make_xorriso_iso $MAKE_ISO $file_dir
         $SUDO chown -R $UID $iso_dir
 
     elif has_option $MAKE_ISO -e; then
@@ -1600,7 +1624,7 @@ do_stage_8() {
             -c boot/isolinux/isolinux.cat -o $full_iso_file $iso_dir 2>&1 \
             || error "iso file creation failed"
 
-            isohybrid --uefi $full_iso_file
+            isohybrid $full_iso_file
     fi
 
     size=$(du_size $full_iso_file)
@@ -1608,13 +1632,13 @@ do_stage_8() {
 
     if [ "$SIGN_FILES" ]; then
         say "Sign $(basename $full_iso_file)"
-        sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
+        gpg --output $full_iso_file.sig --detach-sign $full_iso_file
     fi
 
     md5sum_file $full_iso_file
     sha256sum_file $full_iso_file
     zsyncmake_file $full_iso_file
-    
+
 
     if [ "$ISO_SYMLINK" -a -L "$ISO_SYMLINK" ];then
         say
@@ -2311,6 +2335,26 @@ make_uefi_iso() {
     $cmd 2>&1 || error "iso file creation failed"
     isohybrid --uefi $file
 }
+
+make_xorriso_iso() {
+    local prog=$1 file=$2  dir=$3
+    local label="$DISTRO_NAME-Live"
+    local opts_1="-hfsplus on -as mkisofs -quiet -l"
+
+    local opts_2="-R -J -iso-level 3 -pad -partition_cyl_align on"
+    opts_2="$opts_2 -c boot/isolinux/isolinux.cat"
+    opts_2="$opts_2 -b boot/isolinux/isolinux.bin"
+    opts_2="$opts_2 -no-emul-boot -boot-load-size 4 -boot-info-table"
+    opts_2="$opts_2 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
+    opts_2="$opts_2 -isohybrid-apm-hfsplus -isohybrid-gpt-basdat"
+
+    cmd="$prog $(echo $opts_1) -V $label $(echo $opts_2) -o $file $dir"
+    echo $cmd
+
+    $cmd 2>&1 || error "iso file creation failed"
+    isohybrid --uefi $file
+}
+
 
 unpack_gfx_cpio() {
     local type=$1  dir=${2:-$work_dir/$1-cpio}  file=${3:-$iso_dir/boot/$1/gfx-cpio}
@@ -3685,7 +3729,7 @@ sha256sum_file() {
 
 zsyncmake_file() {
     local dir=$(dirname $1) file=$(basename $1)
-    (cd $dir && zsyncmake $file)
+    (cd $dir && zsyncmake -e $file)
 }
 
 #------------------------------------------------------------------------------

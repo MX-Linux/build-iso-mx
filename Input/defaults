@@ -8,16 +8,17 @@
 #----------------------------------------------------------------------
 
 BUG_REPORT_URL="https://mxlinux.org"
-CODE_NAME="Continuum"
-ASCII_CODE_NAME="Continuum"
-DEBIAN_RELEASE="stretch"
+CODE_NAME="patito feo"
+ASCII_CODE_NAME="patito feo"
+DEBIAN_RELEASE="buster"
 DISTRO_NAME="MX"
-DISTRO_VERSION="18"
+DISTRO_VERSION="19"
 HOME_URL="https://mxlinux.org"
 
-K_REVISION="1"
-K_TEMPLATE="%V%G-%R-%A-unsigned"
+K_REVISION="6"
+K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="4.19.0"
+UNSIGNED="-unsigned"
 
 #K_REVISION="1"
 #K_TEMPLATE="%V%G-antix.%R-%A-smp"
@@ -27,7 +28,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="Dec 20, 2018"
+RELEASE_DATE="October 21, 2019"
 TIME_ZONE="America/New_York"
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
@@ -39,6 +40,8 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 #gzip leave empty #use for full
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+#COMPRESSION_TYPE="lz4"
+#COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
 
 USE_UEFI=true
 MEM_TEST_BUG=
@@ -48,4 +51,4 @@ SIGN_FILES="false"
 
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
  CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
-   MX_LIVE_BOOT_OPTIONS="quiet"
+   MX_LIVE_BOOT_OPTIONS="quiet splasht"
