@@ -56,15 +56,6 @@ else
 fi
 unset color_prompt force_color_prompt
 
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
-
 red='\[\e[0;31m\]'
 RED='\[\e[1;31m\]'
 blue='\[\e[0;34m\]'
@@ -122,5 +113,15 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 # Add sbin directories to PATH.  This is useful on systems that have sudo
+echo $PATH | grep -Eq "(^|:)/sbin(:|)"     || PATH=$PATH:/sbin
+echo $PATH | grep -Eq "(^|:)/usr/sbin(:|)" || PATH=$PATH:/usr/sbin
 
-[ -z "${PATH##*/sbin*}" ] || PATH=$PATH:/sbin:/usr/sbin
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    ;;
+*)
+    ;;
+esac
+

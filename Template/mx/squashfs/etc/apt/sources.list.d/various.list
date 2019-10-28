@@ -2,6 +2,6 @@
 #deb http://deb.opera.com/opera/ stable non-free
 
 # virtualbox
-#deb http://download.virtualbox.org/virtualbox/debian stretch contrib
+#deb http://download.virtualbox.org/virtualbox/debian buster contrib
 
 

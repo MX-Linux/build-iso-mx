@@ -11,6 +11,10 @@
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
+console=${CONSOLE:-tty1}
+console=/dev/${console#/dev/}
+test -c $console || console=/dev/tty1
+
 . /lib/lsb/init-functions
 
 PROTECT_LIST="^(mount.|ntfs-3g|lowntfs-3g|wpa_supplicant|udevd|systemd-udevd)"
@@ -34,7 +38,7 @@ do_stop () {
         full_live=$live_dir/bin/$live_prog
         [ -x $full_live ] || continue
         # Don't use exec here so the rest of sendsigs code runs
-        $full_live --run-scripts </dev/console >/dev/console
+        $full_live --run-scripts <$console > $console
         break
     done
 
@@ -84,7 +88,6 @@ do_stop () {
 
 	# Kill all processes.
 	log_action_begin_msg "Asking all remaining processes to terminate"
-
 	killall5 -15 $OMITPIDS # SIGTERM
 	log_action_end_msg 0
 	alldead=""

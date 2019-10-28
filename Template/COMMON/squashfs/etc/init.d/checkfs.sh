@@ -19,7 +19,6 @@ FSCK_LOGFILE=/var/log/fsck/checkfs
 
 . /lib/lsb/init-functions
 . /lib/init/mount-functions.sh
-. /lib/init/swap-functions.sh
 
 do_start () {
     # Don't check all filesystems on the Live system

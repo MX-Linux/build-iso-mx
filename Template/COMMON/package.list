@@ -3,8 +3,8 @@ antix-libs
 #antix-snapshot-cli - replaced by iso-snapshot
 #apt-antix
 #aufs-tools #not needed since we use overlayfs
-bootchart2
-btrfs-tools
+#bootchart2
+#btrfs-tools
 busybox
 #ceni
 cli-installer-antix 
@@ -13,7 +13,7 @@ cli-shell-utils
 console-data
 console-setup
 console-setup-linux
-consolekit
+#consolekit
 cryptsetup
 cryptsetup-bin
 dbus
@@ -43,9 +43,9 @@ grub-pc
 htop
 hwinfo
 iputils-ping
-irssi
-irssi-plugin-otr
-irssi-scripts         
+#irssi
+#irssi-plugin-otr
+#irssi-scripts         
 jfsutils
 kbd
 keyboard-configuration

@@ -1,3 +1,10 @@
 firmware-ipw2x00 
 zd1211-firmware
-desktop-defaults-xfce-mx17
+desktop-defaults-mx-xfce
+lightdm-modified-init
+nfs-common-modified-init
+udev-modified-init
+virtualbox-guest-utils-modified-init
+cups
+printer-driver-cups-pdf
+
