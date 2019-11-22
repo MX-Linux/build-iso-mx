@@ -34,7 +34,7 @@ do_stop () {
         full_live=$live_dir/bin/$live_prog
         [ -x $full_live ] || continue
         # Don't use exec here so the rest of sendsigs code runs
-        $full_live --run-scripts </dev/console >/dev/console
+        $full_live --run-scripts >/dev/tty1 2>/dev/tty1
         break
     done
 
@@ -84,7 +84,6 @@ do_stop () {
 
 	# Kill all processes.
 	log_action_begin_msg "Asking all remaining processes to terminate"
-
 	killall5 -15 $OMITPIDS # SIGTERM
 	log_action_end_msg 0
 	alldead=""

@@ -11,10 +11,6 @@
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-console=${CONSOLE:-tty1}
-console=/dev/${console#/dev/}
-test -c $console || console=/dev/tty1
-
 . /lib/lsb/init-functions
 
 PROTECT_LIST="^(mount.|ntfs-3g|lowntfs-3g|wpa_supplicant|udevd|systemd-udevd)"
@@ -38,7 +34,7 @@ do_stop () {
         full_live=$live_dir/bin/$live_prog
         [ -x $full_live ] || continue
         # Don't use exec here so the rest of sendsigs code runs
-        $full_live --run-scripts <$console > $console
+        $full_live --run-scripts >/dev/tty1 2>/dev/tty1
         break
     done
 

@@ -18,13 +18,9 @@ umask 022
 
 do_stop () {
 
-    local live_prog full_live live_dir=/live
-    read live_dir 2>/dev/null < /etc/live/live-dir
-    for live_prog in live-umount umount-live; do
-        full_live=/live/bin/$live_prog
-        [ -x $full_live ] || continue
-        exec $full_live --umountfs </dev/console >/dev/console
-    done
+    full_live=/live/bin/live-umount
+    [ -x $full_live ] || continue
+    exec $full_live --umountfs >/dev/tty1 2>/dev/tty1
 
 	PROTECTED_MOUNTS="$(sed -n ':a;/^[^ ]* \/ /!{H;n;ba};{H;s/.*//;x;s/\n//;p}' /proc/mounts)"
 	WEAK_MTPTS="" # be gentle, don't use force
@@ -34,7 +30,7 @@ do_stop () {
 	do
 		echo "$PROTECTED_MOUNTS" | grep -qs "^$DEV $MTPT " && continue
 		case "$MTPT" in
-		  /|/proc|/dev|/.dev|/dev/pts|/dev/shm|/dev/.static/dev|/proc/*|/sys|/sys/*|/run|/run/*|/dev/vcs)
+		  /|/usr|/proc|/dev|/.dev|/dev/pts|/dev/shm|/dev/.static/dev|/proc/*|/sys|/sys/*|/run|/run/lock|/run/shm|/run/rpc_pipefs|/dev/vcs)
 			continue
 			;;
 		esac

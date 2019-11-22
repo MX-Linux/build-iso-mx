@@ -14,17 +14,13 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 . /lib/lsb/init-functions
 
-console=${CONSOLE:-tty1}
-console=/dev/${console#/dev/}
-test -c $console || console=/dev/tty1
-
 umask 022
 
 do_stop () {
 
     full_live=/live/bin/live-umount
     [ -x $full_live ] || continue
-    exec $full_live --umountfs <$console >$console
+    exec $full_live --umountfs >/dev/tty1 2>/dev/tty1
 
 	PROTECTED_MOUNTS="$(sed -n ':a;/^[^ ]* \/ /!{H;n;ba};{H;s/.*//;x;s/\n//;p}' /proc/mounts)"
 	WEAK_MTPTS="" # be gentle, don't use force
