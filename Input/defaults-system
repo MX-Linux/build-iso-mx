@@ -11,7 +11,7 @@
 # they seldom need to be changed.
 #----------------------------------------------------------------------
 
-    APT_GET_OPTS="-q -y --force-yes -o DPkg::Options::=--force-confold"
+    APT_GET_OPTS="-q -y -o DPkg::Options::=--force-confold"
            CACHE="debootstrap,chroot"
     CACHE_EXPIRE="7"
 
