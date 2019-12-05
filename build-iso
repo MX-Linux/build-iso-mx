@@ -512,7 +512,7 @@ Remaster_Blurb
     esac
 
     case $ARCH in
-         i386) K_ARCH=486   ; ISO_ARCH=386  ;;
+         i386) K_ARCH=686   ; ISO_ARCH=386  ;;
         amd64) K_ARCH=amd64 ; ISO_ARCH=x64  ;;
             *) error "Invalid ARCH $(pqw $ARCH).  Expected $(pqw i386) or $(pqw amd64)".
     esac
@@ -808,11 +808,11 @@ do_stage_4() {
     fi
     
     if [ -e "/antix-archive-keyring.deb" ]; then
-		dpkg -i antix-archive-keyring.deb && rm /antix-archive-keyring
+		dpkg -i antix-archive-keyring.deb && rm /antix-archive-keyring.deb
 	fi
 	
 	if [ -e "/mx19-archive-keyring.deb" ]; then
-		dpkg -i mx19-archive-keyring.deb && rm /mx19-archive-keyring
+		dpkg -i mx19-archive-keyring.deb && rm /mx19-archive-keyring.deb
 	fi
 
     if do_part 1 "Update repos and do apt-get update"; then

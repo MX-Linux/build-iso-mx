@@ -355,7 +355,6 @@ ndisgtk
 ndiswrapper
 ndiswrapper-dkms
 ndiswrapper-utils-1.9
-nvidia-detect
 openconnect
 openjdk-8-jre
 openjdk-8-jre-headless
