@@ -1,3 +1,6 @@
 # MX Community Main and Test Repos
 deb http://mxrepo.com/mx/repo/ buster main non-free
 #deb http://mxrepo.com/mx/testrepo/ buster test
+
+#ahs hardware stack repo
+#deb http://mxrepo.com/mx/repo/ buster ahs

@@ -14,7 +14,7 @@ amd64-microcode
 anacron
 #apparmor
 #apparmor-profiles
-apt-mx
+#apt-mx
 apt-notifier 
 aptitude
 aptitude-common 
@@ -357,12 +357,14 @@ lsb-release
 lshw
 lsof
 luckybackup
-luckybackup-data 
+luckybackup-data
+lvm2
 lxmenu-data  
 lxrandr 
 matcha-theme
 manpages 
-manpages-dev 
+manpages-dev
+mdadm
 #mediterranean-themes
 mesa-utils 
 menu-xdg
@@ -390,6 +392,7 @@ mx-datetime
 #mx-defaultlook
 mx-docs
 #mx-findshares
+mx-fluxbox
 mx-gpg-keys
 mx-goodies 
 mx-greybird-themes
@@ -436,10 +439,10 @@ nfs-kernel-server
 nictools-pci 
 #nitroshare
 ntp    
-ndisgtk
-ndiswrapper
-ndiswrapper-dkms
-ndiswrapper-utils-1.9
+#ndisgtk
+#ndiswrapper
+#ndiswrapper-dkms
+#ndiswrapper-utils-1.9
 nvidia-detect
 nomacs
 nomacs-l10n
@@ -513,6 +516,7 @@ pulseaudio-module-bluetooth
 pulseaudio-utils
 pv 
 python-bluez
+python3-smbc
 #qogir-gtk-theme
 #qogir-dark-theme
 #qdbus 
@@ -546,6 +550,7 @@ shared-mime-info
 simple-scan
 #simsu  
 smbclient
+smbc
 #smtube
 #smxi-inxi-antix 
 sox

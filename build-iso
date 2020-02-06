@@ -996,7 +996,7 @@ do_stage_4() {
 
     # for 64 bit set multiarch
     if [ "$ARCH" = "amd64" ] ; then
-        sudo say "Adding multiarch support"
+        say "Adding multiarch support"
         dpkg --add-architecture i386
         sudo apt-get update && apt-get install libc6:i386 libgcc1:i386 gcc-8-base:i386
     fi
@@ -1176,7 +1176,7 @@ do_stage_4() {
     
     say "fix apparmor profile for smbd"
     if [ -e /etc/apparmor.d/samba/smbd-shares ]; then
-		continue
+		echo "skip apparmor config"
 	else
 		if [ ! -d /etc/apparmor.d/samba ]; then
 			mkdir -p /etc/apparmor.d/samba

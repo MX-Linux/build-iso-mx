@@ -10,4 +10,4 @@ fi
 sleep 20
 killall conky
 cd "/home/$USER/.conky/MX-Cowon"
-conky -c "/home/$USER/.conky/MX-Cowon/MX-Cowon_more_sys_small" &
+conky -c "/home/$USER/.conky/MX-CowonBlue/MX-Cowon_blue_roboto" &
