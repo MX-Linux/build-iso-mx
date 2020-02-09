@@ -54,7 +54,7 @@ libmtp-runtime
 libnss-myhostname
 #live-init-antix 
 live-kernel-updater
-live-usb-cli-antix
+#live-usb-cli-antix
 live-usb-maker
 lockfile-progs
 #lsb-release - do not use in core

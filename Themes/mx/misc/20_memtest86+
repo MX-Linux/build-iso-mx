@@ -1,4 +1,9 @@
 #!/bin/sh
+
+#tag for mx-system update
+#mx-system 20.02.02
+#!/bin/sh
+
 set -e
 
 if [ -f /usr/lib/grub/grub-mkconfig_lib ]; then
@@ -20,11 +25,14 @@ esac
 
 prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/\t/")"
 
-if test -e /boot/memtest86+.bin ; then
+efi_vars_dir=/sys/firmware/efi/vars
+
+if [ ! -e "$efi_vars_dir" ] && [ -e /boot/memtest86+.bin ]; then
   MEMTESTPATH=$( make_system_path_relative_to_its_root "/boot/memtest86+.bin" )
   echo "Found memtest86+ image: $MEMTESTPATH" >&2
   cat << 'EOF'
 if [ "${grub_platform}" == "pc" ]; then
+:
 menuentry "Memory test (memtest86+)" {
 EOF
   printf '%s\n' "${prepare_boot_cache}"
@@ -35,13 +43,13 @@ fi
 EOF
 fi
 
-if test -e /boot/uefi-mt/mtest-64.efi ; then
+if [ -e "$efi_vars_dir" ] && [ -e /boot/uefi-mt/mtest-64.efi ]; then
   MEMTESTPATH=$( make_system_path_relative_to_its_root "/boot/uefi-mt/mtest-64.efi" )
   echo "Found mtest-64.efi image: $MEMTESTPATH" >&2
   cat << 'EOF'
 if [ "${grub_platform}" == "efi" ]; then
    if [ "${grub_cpu}" == "x86_64" ]; then
-  
+:  
 menuentry "Memory Test (64-bit UEFI)" {
 EOF
   printf '%s\n' "${prepare_boot_cache}"
