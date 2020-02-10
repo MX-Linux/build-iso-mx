@@ -5,7 +5,7 @@
 
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=5
-GRUB_DISTRIBUTOR=`grep PRETTY_NAME /etc/lsb-release | cut -d= -f2 | cut -d\" -f2 2> /dev/null || echo Debian`
+GRUB_DISTRIBUTOR="$(unset PRETTY_NAME; (. /etc/lsb-release; echo ${PRETTY_NAME:?}) 2>/dev/null || echo Debian)"
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 GRUB_CMDLINE_LINUX=""
 
