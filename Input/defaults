@@ -12,7 +12,7 @@ CODE_NAME="patito feo"
 ASCII_CODE_NAME="patito feo"
 DEBIAN_RELEASE="buster"
 DISTRO_NAME="MX"
-DISTRO_VERSION="19.1_preview3"
+DISTRO_VERSION="19.1"
 HOME_URL="https://mxlinux.org"
 
 K_REVISION="6"
