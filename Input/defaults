@@ -51,4 +51,4 @@ SIGN_FILES="false"
 
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
  CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
-   MX_LIVE_BOOT_OPTIONS="quiet splasht"
+   MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
