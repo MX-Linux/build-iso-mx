@@ -1,0 +1,2 @@
+# Debian buster Updates
+deb http://deb.debian.org/debian buster-updates main contrib non-free

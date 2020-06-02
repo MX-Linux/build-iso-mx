@@ -17,6 +17,7 @@ copy_file conky.desktop  /etc/skel/.config/autostart/
 copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/
+copy_file 99-sandbox-mx.conf /etc/sysctl.d/
 copy_file timezone		/etc/
 copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
 #copy_file catfish.desktop	/usr/share/applications/ 

@@ -29,7 +29,7 @@ elinks
 #encfs
 fbcat 
 file
-firmware-linux-free
+#firmware-linux-free
 #flashrom
 fuse
 #fuse-utils
