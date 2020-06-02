@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+### BEGIN INIT INFO
+# Provides:          gpm
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: gpm sysv init script
+# Description:       general purpose mouse event server
+### END INIT INFO
+#
+
+PIDFILE=/var/run/gpm.pid
+GPM=/usr/sbin/gpm
+CFG=/etc/gpm.conf
+
+DISABLED_CONF=/live/config/disabled
+
+test -x $GPM || exit 0
+
+. /lib/lsb/init-functions
+
+if [ "$(id -u)" != "0" ]
+then
+  log_failure_msg "You must be root to start, stop or restart gpm."
+  exit 1
+fi
+
+cmdln=
+niceness=0
+ssd_args="--quiet --oknodo --nicelevel $niceness --pidfile $PIDFILE --exec $GPM"
+
+if [ -f $CFG ]; then
+  . $CFG
+  if [ -n "$device" ]; then cmdln="$cmdln -m $device"; fi
+  if [ -n "$type" ]; then cmdln="$cmdln -t $type"; fi
+  if [ -n "$responsiveness" ]; then cmdln="$cmdln -r $responsiveness"; fi
+  if [ -n "$sample_rate" ]; then cmdln="$cmdln -s $sample_rate"; fi
+  # Yes, this /IS/ correct! There is no space after -R!!!!!!
+  # I reserve the right to throw manpages at anyone who disagrees.
+  if [ -n "$repeat_type" ] && [ "$repeat_type" != "none" ]; then
+    cmdln="$cmdln -R$repeat_type"
+  fi
+  if [ -n "$append" ]; then cmdln="$cmdln $append"; fi
+  # If both the second device and type are specified, use it.
+  if [ -n "$device2" ] && [ -n "$type2" ] ; then
+    cmdln="$cmdln -M -m $device2 -t $type2"
+  fi
+fi
+
+gpm_strace () {
+  log_daemon_msg "Running mouse interface server under strace" "gpm"
+  eval strace -T -o /root/gpm.strace $GPM -V -D -e $cmdln > /root/gpm.out 2>&1
+  log_end_msg $?
+  return $?
+}
+
+gpm_start () {
+
+  me=${0##*/}
+  test -r $DISABLED_CONF && sed -r -i "s/^($me)$/# \1/" $DISABLED_CONF
+
+  log_daemon_msg "Starting mouse interface server" "gpm"
+  # HACK - kernel module init is asynchronous in kernel 2.6, EVEN FROM
+  # REQUEST_MODULE().  That would include 'mousedev'.  The correct
+  # solution is a hotplug script, but we cannot depend on hotplug being
+  # available just yet, either kernel-side or user-side.
+  for foo in 1 2 3; do
+    if :< ${device-/dev/mouse}; then break; fi
+    sleep 1
+  done
+  start-stop-daemon --start $ssd_args -- $cmdln
+  log_end_msg $?
+  return $?
+}
+
+gpm_stop () {
+
+  test -r $DISABLED_CONF && grep -q "^${0##*/}$" $DISABLED_CONF && return 0
+
+  log_daemon_msg "Stopping mouse interface server" "gpm"
+  start-stop-daemon --stop $ssd_args
+  log_end_msg $?
+  return $?
+}
+
+
+case "$1" in
+  strace)
+     gpm_strace || exit 1
+     ;;
+  start)
+     gpm_start || exit 1
+     ;;
+  stop)
+     gpm_stop || exit 1
+     ;;
+  force-reload|restart)
+     gpm_stop && sleep 3
+     gpm_start || exit 1
+     ;;
+  *)
+     echo "Usage: /etc/init.d/gpm {start|stop|restart|force-reload|strace}"
+     exit 1
+esac
+
+exit 0
