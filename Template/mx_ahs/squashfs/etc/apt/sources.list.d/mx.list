@@ -4,4 +4,3 @@ deb http://mxrepo.com/mx/repo/ buster main non-free
 
 #ahs hardware stack repo
 deb http://mxrepo.com/mx/repo/ buster ahs
-deb http://mxrepo.com/mx/repo/ temp main
