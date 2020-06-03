@@ -61,7 +61,7 @@ else
     esac
 
     # Don't try to set the font if there is no framebuffer
-    #test -e /dev/fb0 || exit 0
+    test -e /dev/fb0 || exit 0
 
     # Set the console font based on values the file below. Try hard to get some
     # reasonable font

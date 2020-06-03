@@ -37,8 +37,8 @@ copy_file pppoeconf.desktop     /usr/share/applications/
 #copy_file i915-power-saving.conf 	/etc/modprobe.d/
 #copy_file hang-on-shutdown.conf  	/etc/modprobe.d/
 #copy_file 98qtconfig /etc/X11/Xsession.d/
-copy_file compton.desktop /etc/skel/.local/share/applications/
-copy_file compton-conf.desktop /etc/skel/.local/share/applications/
+#copy_file compton.desktop /etc/skel/.local/share/applications/
+#copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 #copy_file ndisgtk.desktop /usr/share/applications/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/scalable/apps/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/48x48/apps/

@@ -5,20 +5,4 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
-allow-hotplug eth0
-iface eth0 inet dhcp
 
-allow-hotplug eth1
-iface eth1 inet dhcp
-
-allow-hotplug eth2
-iface eth2 inet dhcp
-
-allow-hotplug eth3
-iface eth3 inet dhcp
-
-allow-hotplug eth4
-iface eth4 inet dhcp
-
-allow-hotplug eth5
-iface eth5 inet dhcp

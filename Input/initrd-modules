@@ -1,3 +1,5 @@
+#modules to include in initrd
+#generally expanded by copy-initrd-modules
 #ahci
 aufs
 #button
