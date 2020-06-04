@@ -2631,11 +2631,11 @@ make_build_dir() {
     done
 
     # This skips the larger subdirectories which aren't needed
-    (cd $script_dir && tar cf - Template \
+    (cd $script_dir && tar cf -          \
         --exclude iso                    \
         --exclude initrd                 \
         --exclude squashfs               \
-        --exclude isolinux  )            \
+        --exclude isolinux Template )    \
         | (cd $b_dir && tar xBf -)
 
     [ "$THEME" ] && copy_theme_dir $b_dir
