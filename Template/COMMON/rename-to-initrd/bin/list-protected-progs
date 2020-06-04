@@ -1,0 +1,5 @@
+#!/bin/bash
+
+PROTECT_LIST="^(/sbin/mount.ntfs|mount.ntfs|mount.fuse|mount.cifs|ntfs-3g|/sbin/mount.ntfs-3g|rpcbind|/sbin/wpa_supplicant)"
+
+pgrep -l -f "$PROTECT_LIST"

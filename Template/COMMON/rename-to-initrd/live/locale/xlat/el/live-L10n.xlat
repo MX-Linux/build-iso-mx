@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Διαμόρφωση της κονσόλας για %s"
+_Localizing_console_and_timezone_="Τοπικοποίηση  κονσόλας και ζώνη ώρας"
+_Recreate_symlink_X_="Επαναδημιουργια symlink %s"
+_Setting_hostname_to_X_="Ρύθμιση hostname σε %s"
+_Setting_locale_to_X_="Ρύθμιση γλώσσας σε %s"
+_Setting_timezone_and_localtime_to_X_="Ρύθμιση της ζώνη ώρας και τοπική ώρας σε %s"
+_Unknown_time_zone_X_="Άγνωστη ζώνη ώρας %s"

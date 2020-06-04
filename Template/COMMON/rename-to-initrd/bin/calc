@@ -1,0 +1,3 @@
+#!/bin/sh
+
+awk "BEGIN{ print $(echo "$@" | sed "s/x/*/g"); }"

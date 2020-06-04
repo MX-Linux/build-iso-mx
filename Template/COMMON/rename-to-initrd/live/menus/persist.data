@@ -1,0 +1,12 @@
+1:default
+2:persist_all:persist_all
+3:persist_root:persist_root
+4:persist_static:persist_static
+5:p_static_root:p_static_root
+6:persist_home:persist_home
+7:frugal_persist:frugal_persist
+8:frugal_root:frugal_root
+9:frugal_static:frugal_static
+10:f_static_root:f_static_root
+11:frugal_home:frugal_home
+12:frugal_only:frugal_only

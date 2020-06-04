@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="A configurar o terminal para um teclado %s"
+_Localizing_console_and_timezone_="A localizar o terminal e o fuso horário"
+_Recreate_symlink_X_="Recriar o atalho simbólico %s"
+_Setting_hostname_to_X_="A definir o nome de hospedeiro para %s"
+_Setting_locale_to_X_="A definir localização para %s"
+_Setting_timezone_and_localtime_to_X_="A definir o fuso horário e a hora local para %s"
+_Unknown_time_zone_X_="Fuso horário %s desconhecido"

@@ -1,0 +1,8 @@
+COUNTRY="Gàidhlig"
+WM_LANG="en"
+KEYBOARDS="ie,us"
+KEYTABLE="uk"
+LANG="ga_IE.UTF-8"
+MIRROR="ie"
+TZ="Europe/Dublin"
+XKBLAYOUT="ie,us"

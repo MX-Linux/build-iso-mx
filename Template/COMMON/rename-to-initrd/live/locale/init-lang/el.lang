@@ -1,0 +1,8 @@
+COUNTRY="Ελληνικά"
+WM_LANG="el"
+KEYBOARDS="gr,us"
+KEYTABLE="gr"
+LANG="el_GR.UTF-8"
+MIRROR="gr"
+TZ="Europe/Athens"
+XKBLAYOUT="gr,us"

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#------------------------------------------------------------------------------
+# Remove most/all ANSI escape sequences and backspace
+# This cleans out most special chars and sequences from the log file
+#------------------------------------------------------------------------------
+sed -r -e "s/\x1B\[[0-9;]+[fhHmlpKABCDj]|\x1B\[[suK]|\x08//g"
+
+
+

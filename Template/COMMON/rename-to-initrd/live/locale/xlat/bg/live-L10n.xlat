@@ -1,0 +1,5 @@
+_Localizing_console_and_timezone_="Локализиране конзола и времева зона"
+_Setting_hostname_to_X_="Настройване хост име на hostname %s"
+_Setting_locale_to_X_="Настройване локализация на %s"
+_Setting_timezone_and_localtime_to_X_="Настройване времева зона и локално време на %s"
+_Unknown_time_zone_X_="Непозната времева зона %s"

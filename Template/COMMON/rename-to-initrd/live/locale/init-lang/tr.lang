@@ -1,0 +1,8 @@
+COUNTRY="Türk"
+WM_LANG="tr"
+KEYBOARDS="tr,us"
+KEYTABLE="tr_q-latin5"
+LANG="tr_TR.UTF-8"
+MIRROR="tr"
+TZ="Europe/Istanbul"
+XKBLAYOUT="tr,us"

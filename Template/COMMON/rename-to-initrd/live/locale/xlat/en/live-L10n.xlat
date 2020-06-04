@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Configuring console for a %s keymap"
+_Localizing_console_and_timezone_="Localizing console and timezone"
+_Recreate_symlink_X_="Recreate symlink %s"
+_Setting_hostname_to_X_="Setting hostname to %s"
+_Setting_locale_to_X_="Setting locale to %s"
+_Setting_timezone_and_localtime_to_X_="Setting timezone and localtime to %s"
+_Unknown_time_zone_X_="Unknown time zone %s"

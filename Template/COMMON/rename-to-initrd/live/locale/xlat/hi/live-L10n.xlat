@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="कंसोल को %s कुंजीपटल के अनुसार विन्यस्त किया जा रहा है"
+_Localizing_console_and_timezone_="कंसोल व समय क्षेत्र का स्थानीयकरण किया जा रहा है"
+_Recreate_symlink_X_="symlink %s पुनः बनाएँ"
+_Setting_hostname_to_X_="होस्ट नाम %s सेट किया जा रहा है"
+_Setting_locale_to_X_="स्थानिकी %s सेट किया जा रहा है"
+_Setting_timezone_and_localtime_to_X_="समय क्षेत्र व स्थानीय समय %s सेट किया जा रहा है"
+_Unknown_time_zone_X_="अज्ञात समय क्षेत्र %s"

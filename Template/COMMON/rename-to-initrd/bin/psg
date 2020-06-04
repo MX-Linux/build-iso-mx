@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Copyright 2012 -- 2014  James Bowlin (bitjam@gmail.com)
+# Released under the GPL 3
+
+ME=${0##*/}
+args=-ef
+pid_col=2
+n_only=
+
+usage() {
+    cat <<Usage
+Usage: $ME [options] <grep-arguments>
+
+Search the output of the ps command with grep.  Command line arguments
+are sent to grep.
+
+Options:
+
+    -h|--help   Show this usage
+    -n|--pid    Only print PIDs
+
+Any other option that starts with - will have the - stripped off and
+be used as the argument to ps.  So to use "ps aux" use "psg -aux ...".
+Usage
+    exit
+}
+
+[ $# -gt 0 ] || usage
+
+if [ -n "$1" -a -z "${1##-*}" ]; then
+
+    case $1 in
+         -n|--pid) n_only=true  ;;
+        -h|--help) usage        ;;
+                *) args=${1#-}  ;;
+    esac
+
+    shift
+fi
+
+[ -n "$*" ] || exit
+
+content=$(ps $args | tail -n +2 | grep "$@" | egrep -v " ps $args$| tail -n +2$|\<e?grep|\<$$\>|$0")
+
+echo "$content" | grep -q . || exit
+
+e=$(printf "\e")
+
+if [ "$n_only" ]; then
+    echo "$content" | awk "{print \$$pid_col}"
+    exit
+fi
+
+printf "\e[1;36m"
+ps $args | head -n 1 | sed "s/$/$e[0;39m/" 
+echo "$content"

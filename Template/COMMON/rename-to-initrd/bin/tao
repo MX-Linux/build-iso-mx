@@ -1,0 +1,24 @@
+#!/bin/sh
+
+PATH=/live/bin:/bin
+dir=/live/custom/tao
+
+main() {
+    local idx=$(shuf -n1 $dir/tao.idx)
+    : ${idx:=0}
+
+    IFS=''
+    local cnt=0
+    tail -n $idx $dir/tao.txt | while read -r line; do
+        case $line in
+            [1-9]*|BOOK*|\([IV]*) cnt=$((cnt + 1))
+        esac
+        [ $cnt -gt 1 ] && break
+        echo "$line"
+    done
+}
+
+# tac tao.txt | egrep -n "^([1-9]|BOOK|\([IV])" | cut -d: -f1 > tao.idx
+
+main
+

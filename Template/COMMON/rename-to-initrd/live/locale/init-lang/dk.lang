@@ -1,0 +1,8 @@
+COUNTRY="Dansk"
+WM_LANG="da"
+KEYBOARDS="dk,us"
+KEYTABLE="dk"
+LANG="da_DK.UTF-8"
+MIRROR="dk"
+TZ="Europe/Copenhagen"
+XKBLAYOUT="dk,us"

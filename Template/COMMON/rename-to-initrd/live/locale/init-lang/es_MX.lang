@@ -1,0 +1,8 @@
+COUNTRY="Español"
+WM_LANG="es"
+KEYBOARDS="es,us"
+KEYTABLE="es"
+LANG="es_MX.UTF-8"
+MIRROR="mx"
+TZ="America/Mexico_City"
+XKBLAYOUT="es,us"

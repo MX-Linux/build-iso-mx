@@ -1,0 +1,4 @@
+#!/bin/bash
+
+find /sys/devices -name modalias -print0 | xargs -0 sort -u \
+    | tr '\n' '\0' | xargs -0 modprobe -a -D 2>/dev/null |  sed -e "s|.*/||" -e "s/\.ko.*//" | sort -u

@@ -1,0 +1,8 @@
+COUNTRY="Slovenských"
+WM_LANG="sk"
+KEYBOARDS="sk,us"
+KEYTABLE="sk-qwerty"
+LANG="sk_SK.UTF-8"
+MIRROR="sk"
+TZ="Europe/Bratislava"
+XKBLAYOUT="sk,us"

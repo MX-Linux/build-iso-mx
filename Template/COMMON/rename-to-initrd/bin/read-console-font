@@ -1,0 +1,132 @@
+#!/bin/bash
+
+# Yes, this is peverse and backwards
+DEF_SIZE="16x8"
+DEF_PWIDTH="800"
+
+read_console_font() {
+    local lang=$1
+    local file=${2:-/etc/default/console-setup}
+    local fdir=${3:-/usr/share/consolefonts}
+    local  ext=${4:-.psf.gz}
+
+    test -r "$file" || return
+    . "$file"
+
+    local pixel_width=$(get_fbcondecor_width)  min_width=${MIN_SCREEN_WIDTH:-80}
+    : ${pixel_width:=$DEF_PWIDTH}
+
+    local max_width=$((pixel_width / min_width))
+
+    esay "pixel_width: $pixel_width"
+    esay "  max width: $max_width"
+
+    local cmd_size=${FONTSIZE:-$DEF_SIZE}
+
+    # If we have unexpected chars then fall back to the default
+    # only digits and "x" are allowed
+    [ -z "${cmd_size##*[^0-9x]*}" ] && cmd=$DEF_SIZE
+
+    # Now try to figure out width versus height (***** sigh *****)
+    # If there are two numbers then width is the smaller number
+    if [ -z "${cmd_size##*x*}" ]; then
+        local cmd_width=${cmd_size##*x}
+        local cmd_height=${cmd_size%%x*}
+        [ ${cmd_width:-1} -gt ${cmd_height:-1} ] && cmd_width=${cmd_height:-1}
+    else
+        # if there is only one number then it is the height so divide by two
+        # H'mm, maybe we should just set the width to 16 in this case
+        cmd_width=$((cmd_size / 2))
+    fi
+
+    esay "  cmd width: $cmd_width"
+
+    [ $cmd_width -gt $max_width ] && cmd_width=$max_width
+
+    local size
+    case $cmd_width in
+              [1-7]) size=12x6                ;;
+               [89]) size=16                  ;;
+                 10) size=20x10               ;;
+                 11) size=22x11               ;;
+              1[23]) size=24x12               ;;
+              1[45]) size=28x14               ;;
+            1[6789]) size=32x16               ;;
+       [23456][0-9]) size=32x16               ;;
+                  *) size=32x16               ;;
+    esac
+
+    esay "       size: $size"
+
+    if [ -z "$CODESET" -o "$CODESET" = "guess" ]; then
+        case ${lang%%_*} in
+                             kk|ky|tj) code='CyrAsia'  ;;
+                                ru|uk) code='CyrKoi'   ;;
+                          bg|mk|ru|sr) code='CyrSlav'  ;;
+              bs|hr|cs|hu|pl|ro|sk|sl) code='Lat2'     ;;
+                af|sq|ast|da|nl|et|fr) code='Lat15'    ;;
+            'fi'|de|is|id|pt|es|sv|tr) code='Lat15'    ;;
+                                lt|lv) code='Lat7'     ;;
+                                   el) code='Greek'    ;;
+                                    *) code='Uni2'     ;;
+        esac
+
+    else
+        code=$CODESET
+    fi
+
+    local try font
+    for try in $FONT $code-$FONTFACE$size$ext $code-VGA16$ext; do
+        #echo $try
+        test -e $fdir/$try || continue
+        font=$try
+        break
+    done
+
+    echo $font
+}
+
+esay() {
+    [ -z "$DEBUG" ] && return
+    local fmt=$1 ; shift
+    printf "$fmt\n" "$@" >&2
+}
+
+#------------------------------------------------------------------------------
+# This version uses the program "fbcondecor_ctl" or fbcondecor_ctl.static" to
+# find out the width of the active text area of the current theme in pixels.
+# This is the best way to do it but it requires that program which is not in
+# initrd ATM.  So similar code in the initrd assumes the default theme is
+# being used.
+#------------------------------------------------------------------------------
+get_fbcondecor_width() {
+    local tty_arg=$1  res
+    local fbsize_file=/sys/class/graphics/fb0/virtual_size
+    read res 2>/dev/null <$fbsize_file
+    [ -z "$res" ] && return
+    local width
+    local name=fbcondecor_ctl prog
+    for prog in $name $name.static; do
+        which $prog &>/dev/null || continue
+        width=$($prog $tty_arg -c getcfg 2>/dev/null | sed -nr "s/^twidth:\s+//p")
+        break
+    done
+    [ ${width:-0} -eq 0 ] && width=$(echo "$res" | cut -d, -f1)
+    printf "%s\n" "$width"
+}
+
+old_get_fbcondecor_width() {
+    local theme=${1:-default}  res
+    local fbsize_file=/sys/class/graphics/fb0/virtual_size
+    read res 2>/dev/null <$fbsize_file
+    [ -z "$res" ] && return
+    local theme_file=/etc/splash/$theme/${res/,/x}.cfg
+    if test -e /dev/fbcondecor && test -r $theme_file; then
+        sed -rn "s/^\s*tw=([0-9]+).*/\1/p" $theme_file | tail -n1
+        return
+    fi
+    cut -d, -f1 $fbsize_file
+}
+
+read_console_font "$@"
+

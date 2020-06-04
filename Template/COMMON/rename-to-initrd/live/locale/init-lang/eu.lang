@@ -1,0 +1,8 @@
+COUNTRY="Euskal"
+WM_LANG="eu"
+KEYBOARDS="es,us"
+KEYTABLE="es"
+LANG="eu_ES.UTF-8"
+MIRROR="es"
+TZ="Europe/Madrid"
+XKBLAYOUT="es,us"

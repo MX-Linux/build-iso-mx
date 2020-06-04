@@ -1,0 +1,8 @@
+COUNTRY="Belgisch-Nederlandse"
+WM_LANG="nl"
+KEYBOARDS="be,fr,us"
+KEYTABLE="be2-latin1"
+LANG="nl_BE.UTF-8"
+MIRROR="be"
+TZ="Europe/Brussels"
+XKBLAYOUT="be,fr,us"

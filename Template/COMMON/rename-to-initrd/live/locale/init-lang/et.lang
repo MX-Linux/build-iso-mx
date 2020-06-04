@@ -1,0 +1,8 @@
+COUNTRY="Eesti"
+WM_LANG="et"
+KEYBOARDS="et,us"
+KEYTABLE="et-nodeadkeys"
+LANG="et_EE.UTF-8"
+MIRROR="ee"
+TZ="Europe/Tallinn"
+XKBLAYOUT="et,us"

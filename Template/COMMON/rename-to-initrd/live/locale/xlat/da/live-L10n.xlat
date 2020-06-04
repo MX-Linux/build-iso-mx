@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Konfigurerer konsol til et %s-tastaturlayout"
+_Localizing_console_and_timezone_="Lokaliserer konsol og tidszone"
+_Recreate_symlink_X_="Genopret symlinket %s"
+_Setting_hostname_to_X_="Indstiller værtsnavn til %s"
+_Setting_locale_to_X_="Indstiller lokalitet til %s"
+_Setting_timezone_and_localtime_to_X_="Indstiller tidszone og lokalt klokkeslæt til %s"
+_Unknown_time_zone_X_="Ukendt tidszone %s"

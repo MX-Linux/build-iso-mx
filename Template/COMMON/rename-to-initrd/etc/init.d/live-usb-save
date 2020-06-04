@@ -1,0 +1,543 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-usb-save
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 6
+# Short-Description:
+# Description:       save/restore some information on raw liveusb w/o persistence
+### END INIT INFO
+
+LINUXFS_DIR="/live/linux"
+
+MSTATE_FILES="# File: machine-state-files
+# Machine specific files to be saved across reboots
+
+/etc/adjtime
+/etc/bcm.chk
+/etc/default/acpi-support
+/etc/default/acpid
+/etc/default/bluetooth
+/etc/default/dbus
+/etc/default/ifplugd
+/etc/default/networking
+/etc/default/numlockx
+/etc/default/smartmontools
+/etc/default/tlp
+/etc/default/ufw
+/etc/default/wicd
+/etc/modprobe.d/*.conf
+/etc/modules
+/etc/udev/rules.d/*-persistent-net.rules
+# /etc/X11/xorg.conf
+/etc/X11/xorg-bus-id
+/etc/X11/xorg.conf.d/*
+/lib/modprobe.d/i915-invert.conf
+/var/lib/alsa/asound.state
+/var/lib/connman/*
+/var/lib/connman/*/*
+/var/lib/live-mstate/*
+/var/lib/initscripts/brightness*"
+
+GSTATE_FILES="# File: general-state-files
+# Files to be saved across reboots and across machines
+
+/etc/default/unclutter
+/etc/fstab.automount
+/etc/fstab.hotplug.state
+/etc/fstab.mount
+/etc/wicd/*.conf
+/etc/network/interfaces
+/etc/network/interfaces.d/*
+
+/var/log/live/persist-save.log
+/var/log/live/live-remaster.log
+
+/root/.bash_history
+
+# /etc/passwd
+# /etc/shadow
+# /etc/group
+# /etc/gshadow"
+
+MSTATE_DIR=state/machine
+GSTATE_DIR=state/general
+USTATE_DIR=state/user
+
+DONT_DELETE="/etc/network/interfaces"
+
+ID_DIR="/sys/class/dmi/id"
+ID_FILES="board_vendor board_name board_version product_name"
+
+DS_FILE="/home/%s/.desktop-session/default-desktop"
+DS_DIR="/home/%s/.desktop-session"
+BLACK_LIST_FILE=/etc/modprobe.d/live-blacklist.conf
+
+TORAM_FILE=/live/config/did-toram
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+. /live/lib/live-init-utils.sh
+
+. $INITRD_OUT
+
+start_init_logging
+load_translation
+
+main() {
+    case $1 in
+            start) SYS_MODE=
+                   do_start $1 ;;
+
+              sys) test -f $TORAM_FILE && return
+                   SYS_MODE=true
+                   do_start $1 ;;
+
+             stop) do_stop     ;;
+
+                *) echo "Usage: $0 {start|stop|sys}" ;;
+    esac
+    exit 0
+}
+
+do_start() {
+    local cmd=${1:-start}
+
+    test -e /live/config/remasterable || exit 0
+    read_cmdline
+
+    local bdir root_dir
+    for bdir in $SQFILE_DIR $TORAM_MP; do
+        [ -d $bdir ] || continue
+        root_dir=$bdir
+        break
+    done
+
+    [ "$root_dir" ] || exit 0
+
+    read_create_config_files $root_dir || exit 0
+
+    #. "State" information are files saved at shutdown and restored at startup
+    #. Like saving the state of a game.
+    echo_script "$_Restore_state_information_" $0
+
+    local file_list=$(state_files "$MSTATE_FILES")
+
+    # Always restore machine specific state files
+    restore_state $root_dir/$MSTATE_DIR "$(state_files "$file_list")" "$(mach_id)" $cmd
+
+    # Only restore general state files and user files if root persistence is not
+    # enabled
+    # Not saving state when I enable persistence was a pain.
+    # We'll see.  Maybe just restore it the first time?!
+    #test -e /live/config/persist-root && return
+
+    file_list=$(state_files "$GSTATE_FILES" | sed "s|^\s*/||")
+    restore_state $root_dir/$GSTATE_DIR "$file_list" "" $cmd
+
+    [ "$PERSISTENCE" ] && return
+
+    restore_desktop $root_dir/$USTATE_DIR
+}
+
+do_stop() {
+
+    test -e /live/config/remasterable || exit 0
+    read_cmdline
+
+    local root_dir=$SQFILE_DIR
+
+    if [ "$DID_TORAM" ];  then
+        mount_boot_dev "$BOOT_UUID" "$BOOT_MP" || exit 0
+        root_dir=$ROOT_MP
+    fi
+
+    read_create_config_files $root_dir || exit 0
+
+    echo_script "$_Save_state_information_" $0
+
+    # See if we are on a vfat partition
+    FS_TYPE=$(df -T $root_dir | tail -n1 | awk '{print $2}')
+
+    unset TO_DELETE
+    save_desktop $root_dir/$USTATE_DIR
+    save_state   $root_dir/$MSTATE_DIR "$(state_files "$MSTATE_FILES")" $(mach_id)
+    save_state   $root_dir/$GSTATE_DIR "$(state_files "$GSTATE_FILES")"
+
+}
+
+read_create_config_files() {
+    local dir="$1"
+
+    local s_dir=$dir/state
+    mkdir -p $s_dir
+
+    # Make "savestate" and "nosavestate" sticky
+    local no_state_file=$s_dir/no-state
+    if [ "$DISABLE" ]; then
+        touch $no_state_file
+    elif [ "$ENABLE" ]; then
+        rm -f $no_state_file
+    fi
+
+    test -e $no_state_file && return 1
+    local mlist_file=$dir/state/machine-state-files
+    local glist_file=$dir/state/general-state-files
+
+    # Create default config file if it doesn't already exist
+    if test -r $mlist_file; then
+        MSTATE_FILES=$(cat $mlist_file 2>/dev/null)
+    else
+        echo_cmd mkdir -p $(dirname $mlist_file)
+        echo "$MSTATE_FILES" > $mlist_file
+    fi
+
+    # Create default config file if it doesn't already exist
+    if test -r $glist_file; then
+        GSTATE_FILES=$(cat $glist_file 2>/dev/null)
+    else
+        echo_cmd mkdir -p $(dirname $glist_file)
+        echo "$GSTATE_FILES" > $glist_file
+    fi
+
+    return 0
+}
+
+save_desktop() {
+    local to_dir="$1"
+
+    test -e $to_dir/no-state && return
+
+    local user from to base_file
+
+    for user in $(ls /home); do
+        for base_file in default-desktop automount.conf; do
+            from=$(printf $DS_DIR $user)/$base_file
+            [ -e "$from" ] || continue
+            to="$to_dir/$user/$base_file"
+            should_copy "$from" "$to" || continue
+            #. Save <user-name> file <file-name>
+            echo_live "$_Save_X_file_Y_" $(wq $user) $(wq $(basename $from))
+            echo_cmd mkdir -p $(dirname "$to")
+            echo_cmd cp "$from" "$to"
+        done
+    done
+}
+
+restore_desktop() {
+    local from_dir="$1"
+
+    # There are many reasons to not restore
+
+    test -e $from_dir/no-state && return
+
+    local user dest_dir dest sorc base_file
+    for user in $(ls $from_dir 2>/dev/null); do
+        for base_file in default-desktop automount.conf; do
+            [ ${#CMD_DESKTOP} -gt 0 -a "$base_file" = "default-desktop" ] && continue
+            sorc=$from_dir/$user/default-desktop
+            dest=$(printf $DS_FILE $user)
+            dest_dir=$(dirname $dest)
+            [ -d "$dest_dir" ] || continue
+            [ -e "$sorc"     ] || continue
+            should_copy $sorc $dest || continue
+            #. Restore <user-name> file <file-name>
+            echo_live "$_Restore_X_file_Y_" $(wq $user) $(wq $(basename $sorc))
+            echo_cmd cp "$sorc" "$dest"
+            echo_cmd chown $user:users $dest
+        done
+    done
+}
+
+dummy() {
+    #. "Save %s desktop %s" $(wq $user) $(wq $(cat $from))
+    echo_live "$_Save_X_desktop_Y_" $(wq $user) $(wq $(cat $from))
+    #. Restore <user-name> desktop to <window-manager-name>
+    echo_live "$_restore_X_desktop_to_Y_" $(wq $user) $(wq $(cat $sorc))
+}
+
+save_state() {
+    #. "general" (same on all machines) versus "machine specific"
+    local state_dir="$1"  file_list="$2"  dir2="$3"  type="$(wq "$_general_")"
+    local to_delete  del_file=$state_dir/to-delete
+
+    test -e $state_dir/no-state && return
+
+    #. "machine specific" versus "general" (same on all machines)
+    [ ${#dir2} -gt 0 ] && type=$(wq "$_machine_specific_")
+    # dir2 is typically/only a machine-id
+    state_dir=$state_dir${dir2:+/$dir2}
+    local perm_file=$state_dir/permissions
+
+    # Create state directory if needed
+    if ! test -e $state_dir; then
+        echo_cmd mkdir -p $state_dir
+
+        # Save some files to let humans identify the machine
+        # But only if this is a machine-specific directory
+        if [ "$dir2" ]; then
+            for file in $ID_FILES; do
+                test -r $ID_DIR/$file || continue
+                echo_cmd cp $ID_DIR/$file $state_dir
+            done
+        fi
+    fi
+
+    # Delete saved files that no longer exist on system
+    # Wildcards force us to use "find" here
+    # Note: Could use wildcards with sed to change to
+    # the files directory and get rid of find.
+    local file
+    for to in $(find $state_dir/files -type f 2>/dev/null); do
+        from=${to#$state_dir/files}
+
+        # Never delete state files that came from /sys/ so we perserve settings
+        # even if drivers come and go
+        [ -z "${from##/sys/*}" ] && continue
+
+        test -e $from || echo_cmd rm -f $to
+    done
+
+    # Save system files under state_dir
+    for file in $file_list; do
+
+        # Don't save from /live
+        [ -z "${file##/live/*}" ] && continue
+
+        local from=$file
+        local to=$state_dir/files$file
+        local from_linuxfs=$LINUXFS_DIR$from
+
+        # Never save black list file generated by live initrd
+        [ "$from" = "$BLACK_LIST_FILE" ] && continue
+
+        if [ ! -e "$from" ]; then
+            rm -f $to
+
+            # Don't add unmatched globs to the delete list
+            [ -z "${from##*\**}" ] && continue
+
+            # Don't add files from under /sys/ to the delete list
+            [ -z "${from##/sys/*}" ] && continue
+
+            echo "$from" | egrep -q "^($DONT_DELETE)$" && continue
+            to_delete="$to_delete\n$from"
+            continue
+        fi
+
+        if test -e $from_linuxfs && no_diff $from_linuxfs $from; then
+            #echo_live "TEST: Skipping linuxfs $from"
+            rm -f $to
+            continue
+        fi
+
+        should_copy $from $to || continue
+        #. Save <general|machine specific> state file <file-name>
+        echo_live "$_Save_X_state_file_Y_" "$type" $(wq $file)
+        echo_cmd mkdir -p $(dirname $to)
+        echo_cmd cp $from $to
+
+        [ "$FS_TYPE" != vfat ] && continue
+
+        # Save permission information on vfat LiveUSBs
+        test -e $perm_file || touch $perm_file
+        local perm=$(stat -c %a $file)
+        grep -q "^$file:$perm$" $perm_file 2>/dev/null && continue
+        if grep -q "$file:" $perm_file 2>/dev/null; then
+            echo_cmd sed -i "s=^$file:.*=$file:$perm=" $perm_file
+        else
+            # echo "$file:$perm" >> $perm_file
+            echo_cmd sed -i "$ a$file:$perm" $perm_file
+        fi
+    done
+
+    # Save list of files to delete when we restore state
+    [ ${#to_delete} -gt 0 ] && echo -e "$to_delete" > $del_file
+}
+
+restore_state() {
+    local state_dir="$1"  file_list="$2"  dir2="$3" cmd=${4:-start} type="$(wq "$_general_")"
+    [ ${#dir2} -gt 0 ] && type=$(wq "$_machine_specific_")
+
+    case $cmd in
+        sys) file_list=$(echo "$file_list" | grep    ^/sys/) ;;
+          *) file_list=$(echo "$file_list" | grep -v ^/sys/) ;;
+    esac
+
+    file_list=$(echo "$file_list" | sed "s|^\s*/||")
+    echo "$file_list" | grep -q "^[a-z]" || return
+
+    test -e $state_dir/no-state && return
+
+    local del_file=$state_dir/to-delete
+    delete_files $del_file $type
+    rm -f $del_file
+
+    # dir2 is typically/only a machine-id
+    state_dir=$state_dir${dir2:+/$dir2}
+    local perm_file=$state_dir/permissions
+
+    if test -e $state_dir/files; then
+        # Copy saved state files to system
+        #for from in $(find $state_dir/files -type f 2>/dev/null); do
+        while read from; do
+            [ ${#from} -gt 0 ] || continue
+            from=$state_dir/files/$from
+            local to=${from#$state_dir/files}
+
+            # Don't write to /live or /sys
+            [ -z "${to##/live/*}" ] && continue
+
+            if [ "$SYS_MODE" ]; then
+                test -e $to   || continue
+                test -f $from || continue
+                #. Restore <general|machine specific> state file <file-name>
+                echo_live "$_Restore_X_state_file_Y_" "$type" "$(wq $to)"
+                echo_cmd cp $from $to
+
+                continue
+            else
+                should_copy $from $to || continue
+            fi
+
+            #. Restore <general|machine specific> state file <file-name>
+            echo_live "$_Restore_X_state_file_Y_" "$type" "$(wq $to)"
+            echo_cmd mkdir -p $(dirname $to)
+
+            echo_cmd cp $from $to
+
+            # make sure permissions match those of original (sigh: fat32)
+            test -r $perm_file || continue
+            local perm=$(grep "^$to:" $perm_file 2>/dev/null | cut -d: -f2)
+            : ${perm:=644}
+            [ "$perm" != "$(stat -c %a $to)" ] && echo_cmd chmod $perm $to
+        done <<Restore_Files
+$(cd "$state_dir/files" && eval "ls -d $(echo $file_list)" 2>/dev/null)
+Restore_Files
+
+    else
+        [ "$dir2" ] || return
+        for file in $MSTATE_FILES; do
+            test -f $file || continue
+            if [ "$file" = /etc/adjtime ]; then
+                echo_live "$_Reset_file_X_" $(wq $file)
+                reset_adjtime $file
+            fi
+
+            #else
+            #    #. Delete <general|machine specific> state file <file-name>
+            #    echo_live "Delete %s state file %s" "$type" $(wq $file)
+            #    echo_cmd rm -f $file
+            #fi
+        done
+
+    fi
+}
+
+delete_files() {
+    local file  list_file=$1  type=$2
+    test -r $list_file || return
+    while read file; do
+        test -e "$file" || continue
+        #. Delete <general|machine specific> state file <file-name>
+        echo_live "$_Delete_X_state_file_Y_" "$(wq $type)" "$(wq $file)"
+        echo_cmd rm -f "$file"
+    done<<Delete_Files
+$(cat $list_file)
+Delete_Files
+}
+
+mount_boot_dev() {
+    uuid="$1"  mp="$2"
+    ROOT_MP=
+
+    debug "uuid=$uuid  mp=$mp"
+
+    if [ -z "$uuid" ]; then
+        echo_live "$_Could_not_find_UUID_of_boot_device_for_remounting_"
+        echo_live "$_Will_not_save_state_information_"
+        return 1
+    fi
+
+    local boot_dev=$(blkid -U $uuid)
+    if [ -z "$boot_dev" ]; then
+        echo_live "$_Could_not_find_boot_device_for_remounting_"
+        echo_live "$_Will_not_save_state_information_"
+        return 1
+    fi
+
+    local existing_mp=$(grep "^$boot_dev " /proc/mounts | cut -d" " -f2)
+    debug "existing_mp=$existing_mp"
+    if [ "$existing_mp" ]; then
+        ROOT_MP=$existing_mp/$SQFILE_PATH
+        return 0
+    fi
+
+    echo_cmd mkdir -p $mp
+    echo_cmd mount UUID=$uuid $mp
+    if ! grep -q "^$boot_dev $mp " /proc/mounts; then
+        echo_live "$_Could_not_remount_boot_device_"
+        echo_live "$_Will_not_save_state_information_"
+        return 1
+    fi
+
+    ROOT_MP=$mp/$SQFILE_PATH
+    return 0
+}
+
+read_cmdline() {
+    : ${CMDLINE:=$(cat /live/config/proc-cmdline /live/config/cmdline /live/config/cmdline2)}
+    local param
+    for param in $CMDLINE; do
+        value=${param#*=}
+        case $param in
+          nosavestate)  DISABLE=true       ;;
+            savestate)  ENABLE=true        ;;
+          dbsavestate)  DEBUG=true         ;;
+            desktop=*)  CMD_DESKTOP=$value ;;
+        esac
+    done
+}
+
+should_copy() {
+    local from="$1"  to="$2"
+    [ -f "$from" ] || return 1
+    [ -e "$to"   ] || return 0
+    no_diff "$from" "$to" && return 1
+    return 0
+}
+
+no_diff() { diff -q "$@" >/dev/null 2>&1 ; return $? ;}
+
+mach_id() {
+    local data=$(find $ID_DIR/ -name 'board_*' -exec cat '{}' + 2>/dev/null)
+    if [ ${#data} -eq 0 ]; then
+        echo "0000000000000000000000"
+        return 1
+    fi
+    echo "$data" | md5sum | cut -d" " -f1 ;
+    return 0
+}
+
+reset_adjtime() {
+    local file=$1
+
+    echo_cmd sed -i -e "1 s/.*/0.0 0 0.0/" -e "2 s/.*/0/" $file
+}
+
+state_files() { echo "$1" | grep -v "^\s*#" | sed "s/\s*#.*//" ;}
+
+# For testing
+echo_cmd() {
+    [ "$DEBUG" ] && echo "$@"
+    "$@"
+}
+
+debug() {
+    [ -z "$DEBUG" ] && return
+    echo "$*"
+}
+
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE

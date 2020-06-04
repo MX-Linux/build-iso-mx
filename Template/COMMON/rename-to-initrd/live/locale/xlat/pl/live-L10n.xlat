@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Konfigurowanie konsoli dla mapy klawiszy %s"
+_Localizing_console_and_timezone_="Lokalizowanie konsoli i strefy czasowej"
+_Recreate_symlink_X_="Odtwórz dowiązanie symboliczne %s"
+_Setting_hostname_to_X_="Ustawianie nazwy hosta jako %s"
+_Setting_locale_to_X_="Ustawienie lokalizacji na %s"
+_Setting_timezone_and_localtime_to_X_="Ustawianie strefy czasowej i czasu lokalnego na %s"
+_Unknown_time_zone_X_="Nieznana strefa czasowa %s"

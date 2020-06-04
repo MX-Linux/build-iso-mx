@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Uçbirim %s tuşeşlemi için yapılandırılıyor"
+_Localizing_console_and_timezone_="Tuştakımını ve zaman dilimini yerelleştirme"
+_Recreate_symlink_X_="%s kısayolunu tekrar oluştur"
+_Setting_hostname_to_X_="Bilgisayar Adı %s olarak ayarlanıyor"
+_Setting_locale_to_X_="Sistem yerel ayarı %s olarak ayarlanıyor"
+_Setting_timezone_and_localtime_to_X_="Zaman Dilimi ve Yerel Saat %s'e ayarlanıyor"
+_Unknown_time_zone_X_="Bilinmeyen saat dilimi %s"

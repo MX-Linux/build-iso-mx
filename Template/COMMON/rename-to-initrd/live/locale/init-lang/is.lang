@@ -1,0 +1,8 @@
+COUNTRY="Íslenska"
+WM_LANG="is"
+KEYBOARDS="is,us"
+KEYTABLE="is-latin1"
+LANG="is_IS.UTF-8"
+MIRROR="is"
+TZ="Atlantic/Reykjavik"
+XKBLAYOUT="is,us"

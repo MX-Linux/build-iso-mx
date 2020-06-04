@@ -1,0 +1,8 @@
+COUNTRY="Shqipe"
+WM_LANG="sq"
+KEYBOARDS="sq,us"
+KEYTABLE="us"
+LANG="sq_AL.UTF-8"
+MIRROR="gr"
+TZ="Europe/Tirane"
+XKBLAYOUT="al,us"

@@ -1,0 +1,8 @@
+COUNTRY="Українська"
+WM_LANG="uk"
+KEYBOARDS="ua,us"
+KEYTABLE="ua"
+LANG="uk_UA.UTF-8"
+MIRROR="ua"
+TZ="Europe/Kiev"
+XKBLAYOUT="ua,us"

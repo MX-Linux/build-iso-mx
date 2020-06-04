@@ -1,0 +1,16 @@
+   1)  Voreinstellung
+   2)  checkmd5        Prüfe die Integrität der Live-Medien
+   3)  checkfs         Prüfe LiveUSB und Persistenz auf ext2/3/4 Dateisystemen
+   4)  toram           Kopiere das komprimierte Dateisystem nach RAM
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        Boot von Live-USB abschließen
+   8)  from=hd         Boot von Festplatte abgeschlossen
+   9)  hwclock=ask     Lasse das Linux-System die Uhr stellen
+  10)  hwclock=utc     Hardware-Uhr läuft auf UTC ('Greenwich Zeitzone') (für Linux-Systeme ohne Windows Benutzung)
+  11)  hwclock=local   Hardware-Uhr nutzt lokale Zeit (besser mit Windows-Systemem)
+  12)  password        Ändere Passwörter ("demo") vor dem Bootvorgang
+  13)  nostore         Abschalten des Live-USB-Speicher Features (nur im Live-USB möglich, nicht von DVD)
+  14)  dostore         Einschalten des LiveUSB-Speicher features (nur im LiveUSB möglich)
+  15)  savestate       Speicherung von Dateien zwischen den Sitzungen ermöglichen (nur bei LiveUSB)
+  16)  nosavestate     Keine Speicherung von Dateien zwischen den Sitzungen (nur bei LiveUSB)

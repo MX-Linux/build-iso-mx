@@ -1,0 +1,12 @@
+   1)  Voreinstellung
+   2)  persist_all     root in RAM speichern, home auf Festplatte speichern (root beim Herunterfahren speichern)
+   3)  persist_root    root und home in RAM speichern, dann beim Herunterfahren speichern
+   4)  persist_static  root und home auf Festplatte speichern, home dabei separat auf Festplatte
+   5)  p_static_root   root und home zusammen auf Festplatte speichern
+   6)  persist_home    Nur Home-Persistenz (kein /)
+   7)  frugal_persist  Frugal mit root in RAM und home auf Festplatte
+   8)  frugal_root     Frugal mit root und home in RAM und dann beim Herunterfahren speichern
+   9)  frugal_static   Frugal mit root auf Festplatte und home separat auf Festplatte
+  10)  f_static_root   Frugal mit root und home zusammen auf Festplatte
+  11)  frugal_home     Frugal mit nur Home-Persistenz
+  12)  frugal_only     Frugal ohne Persistenz

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+delay=${1:=500}
+micro_s=$((delay * 10000))
+while : ; do
+    find /sys/devices -name modalias -print0 | xargs -0 sort -u | xargs modprobe -a -q -b &>/dev/null
+    usleep $micro_s
+done
+

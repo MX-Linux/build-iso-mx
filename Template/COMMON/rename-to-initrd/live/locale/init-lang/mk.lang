@@ -1,0 +1,8 @@
+COUNTRY="Македонска"
+WM_LANG="mk"
+KEYBOARDS="mk,us"
+KEYTABLE="mk"
+LANG="mk_MK.UTF-8"
+MIRROR="gr"
+TZ="Europe/Skopje"
+XKBLAYOUT="mk,us"

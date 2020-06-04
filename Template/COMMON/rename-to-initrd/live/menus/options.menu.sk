@@ -1,0 +1,16 @@
+   1)  Predvolené
+   2)  checkmd5        Skontrolovať integritu Live média
+   3)  checkfs         Skontrolovať Live-USB a persistentné systémy súborov ext2/3/4
+   4)  toram           Skopírovať komprimovaný systém súborov do RAM
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        Dokončiť zavedenie systému z Live-USB
+   8)  from=hd         Dokončiť zavedenie systému z pevného disku
+   9)  hwclock=ask     Ma systémový pomocník určiť nastavenie hodín
+  10)  hwclock=utc     Hardvérové hodiny používajú UTC (iba systémy Linux)
+  11)  hwclock=local   Hardvérové hodiny používajú lokálny čas (systémy Windows)
+  12)  password        Pred zavedením systému zmeniť heslá
+  13)  nostore         Zakázať funkciu Live-USB-Storage (iba Live-USB)
+  14)  dostore         Povoliť funkciu Live-USB-Storage (iba Live-USB)
+  15)  savestate       Ukladať súbory medzi spusteniami (iba Live-USB)
+  16)  nosavestate     Neukladať súbory medzi spusteniami (iba Live-USB)

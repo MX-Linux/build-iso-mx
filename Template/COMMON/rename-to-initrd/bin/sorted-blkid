@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#------------------------------------------------------------------------------
+# sort blkid output by device name, including a numerical sort when partition
+# numbers have two-digits.  Also strip off the leadng "/dev/" and the ":".
+#------------------------------------------------------------------------------
+
+blkid | sed -r \
+        -e 's=^/dev/==' \
+        -e 's=^(sd.[0-9][0-9]):=\1+\1:=' \
+        -e 's=^(sd.)([0-9]):=\10\2+\1\2:=' \
+    | sort \
+    | sed -e 's/^sd.[0-9][0-9]+//' -e 's/://'

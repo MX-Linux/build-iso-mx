@@ -1,0 +1,69 @@
+#!/bin/sh
+
+ME=${0##*/}
+
+  LIVE_X64_LD_PATH="/lib64:/lib:/lib/x86_64-linux-gnu:/usr/lib"
+  LIVE_386_LD_PATH="/lib:/lib/i386-linux-gnu:/usr/lib"
+         LIVE_PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
+
+usage() {
+    local ret=${1:-0}
+
+cat <<Usage
+Usage: $ME command [options]
+
+Execute <command> from under the $dir directory, including
+any libraries dependenices.
+Usage
+    exit $ret
+}
+
+main() {
+    prep
+    [ $# -lt 1 ] && usage
+
+    local xdir found prog=$1
+
+    [ -n "${prog##/*}" ] && prog=$(ld_path_which $prog)
+
+    if [ -z "$prog" ]; then
+        printf "Program %s not found under $LD_DIR\n" "$1"  >&2
+        return 1
+    fi
+
+    shift
+    LD_LIBRARY_PATH=$LD_PATH $set_arch $LD_DIR$prog "$@"
+
+}
+
+prep() {
+    case $ME in
+         aufs-*) dir=/live/aufs  ;;
+        linux-*) dir=/live/linux ;;
+    esac
+
+    LD_DIR=$dir
+
+    arch=$(uname -m)
+
+    case $arch in
+          x86_64) ld_path=$LIVE_X64_LD_PATH ; set_arch=linux64 ;;
+        i[3-8]86) ld_path=$LIVE_386_LD_PATH ; set_arch=linux32 ;;
+               *) printf 'unknown architecture "%s". Assuming "%s"\n' $arch i686 >&2
+                  ld_path=$LIVE_386_LD_PATH;;
+    esac
+
+    LD_PATH=$(echo $ld_path | sed -r "s=(^|:)=\\1$dir=g")
+}
+
+ld_path_which() {
+    local xdir prog=$1
+    for xdir in $(echo $LIVE_PATH | tr ':' ' '); do
+        [ -x $LD_DIR$xdir/$prog ] || continue
+        echo $xdir/$prog
+        return 0
+    done
+    return 1
+}
+
+main "$@"

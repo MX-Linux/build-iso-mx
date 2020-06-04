@@ -1,0 +1,8 @@
+COUNTRY="Deutsch-Schweizer"
+WM_LANG="de"
+KEYBOARDS="de_CH,de,fr,us"
+KEYTABLE="sg-latin1"
+LANG="de_CH.UTF-8"
+MIRROR="ch"
+TZ="Europe/Zurich"
+XKBLAYOUT="ch,de,fr,us"

@@ -1,0 +1,84 @@
+#!/bin/sh
+
+PATH=/bin
+ME=${0##*/}
+
+e=$(printf "\e")
+ cyan="$e[0;36m";     red="$e[0;31m";      nc="$e[0m"
+white="$e[1;37m"; lt_gray="$e[0;37m"; lt_cyan="$e[1;36m"
+
+mountpoint_list() {
+    local dev mp other ret=1
+    while read dev mp other; do
+        case $mp in /|/dev|/dev/*|/proc|/sys) continue;; esac
+        echo -n "$mp "
+        ret=0
+    done << Read_Mounts
+$(tac /proc/mounts)
+Read_Mounts
+    return $ret
+}
+
+move_mountpoints() {
+    local dir mp old aufs_live=/live/aufs/live
+    
+    [ -d $aufs_live ] || return
+
+    for dir in $(ls $aufs_live); do
+        [ "$dir" = "aufs" ] && continue
+        mp=$aufs_live/$dir
+        mountpoint -q $mp || continue
+        old=/live/$dir
+        mkdir -p $old
+        echo mount --move $mp $old
+        mount --move $mp $old
+    done
+}
+
+final_umount() {
+    local mp list i
+    move_mountpoints
+
+    for i in $(seq 1 4); do
+        list=$(mountpoint_list) || return 0
+        for mp in $list; do
+            umount $mp
+        done
+    done
+    list=$(mountpoint_list) || return 0
+    echo "${red}Unable to umount:$white $list$nc"
+    return 1
+}
+
+safe_shutdown() {
+    local cmd=$1 prompt=${1:-continue}
+
+    if test -e /proc/mounts; then
+        local rootfs=$(sed -nr "s=^([^ ]+) / .*=\1=p" /proc/mounts)
+
+        case $rootfs in
+                  rootfs) ;;
+            aufs|overlay) echo "$ME cannot be use here" >&2
+                          exit 2 ;;
+                       *) echo "$ME must be used on a live system" >&2
+                          exit 3 ;;
+        esac
+    fi
+
+    if final_umount; then
+        echo "${lt_cyan}Umount successful$nc"
+        echo -n "${lt_cyan}Press <Enter> to$white $prompt$nc "
+        read x
+    else
+        [ "$FORCE" ] || return
+    fi
+    [ "$cmd" ] && exec $cmd -f -n
+}
+
+[ "$1" = -f ] && FORCE=true
+
+[ -z "${0##*poweroff}" ] && cmd=poweroff
+[ -z "${0##*shutdown}" ] && cmd=poweroff
+[ -z "${0##*reboot}"   ] && cmd=reboot
+
+safe_shutdown $cmd

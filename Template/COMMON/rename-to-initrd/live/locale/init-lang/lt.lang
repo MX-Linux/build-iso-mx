@@ -1,0 +1,8 @@
+COUNTRY="Lietuvos"
+WM_LANG="lt"
+KEYBOARDS="lt,us"
+KEYTABLE="lt"
+LANG="lt_LT.UTF-8"
+MIRROR="ee"
+TZ="Europe/Vilnius"
+XKBLAYOUT="lt,us"

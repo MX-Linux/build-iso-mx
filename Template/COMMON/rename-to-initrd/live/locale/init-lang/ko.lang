@@ -1,0 +1,8 @@
+COUNTRY="Korean"
+WM_LANG="ko"
+KEYBOARDS="kr,us"
+KEYTABLE="us"
+LANG="ko_KR.UTF-8"
+MIRROR="kr"
+TZ="Asia/Seoul"
+XKBLAYOUT="kr,us"

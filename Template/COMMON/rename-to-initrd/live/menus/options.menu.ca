@@ -1,0 +1,16 @@
+   1)  Per omissió
+   2)  checkmd5        Comprova la integritat del suport autònom
+   3)  checkfs         Comprova LiveUSB i persistència en sistemes de fitxers ext2/3/4
+   4)  toram           Copia el sistema de fitxers comprimit a la RAM
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        Acaba l'arrencada des de l'USB autònom
+   8)  from=hd         Acaba l'arrencada des d'un disc dur
+   9)  hwclock=ask     Deixa que el sistema ajudi a trobar la configuració de rellotge
+  10)  hwclock=utc     El rellotge del maquinari usa UTC (sistemes amb només Linux)
+  11)  hwclock=local   El rellotge de maquinari usa l'hora local (sistemes amb Windows)
+  12)  password        Canvieu les contrasenyes abans d'arrencar
+  13)  nostore         Desactiva l'opció d'emmagatzematge LiveUSB (només LiveUSB)
+  14)  dostore         Activa l'opció d'emmagatzematge LiveUSB (només LiveUSB)
+  15)  savestate       Desa alguns fitxers entre arrencades (només USB autònom)
+  16)  nosavestate     No desis fitxers entre arrencades (només USB autònom)

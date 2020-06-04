@@ -1,0 +1,12 @@
+   1)  Per omissió
+   2)  persist_all     Desa l'arrel a la RAM, i el 'home' al disc (desa l'arrel en tancar)
+   3)  persist_root    Desa l'arrel i el 'home' a la RAM i desa tot en tancar
+   4)  persist_static  Desa l'arrel i 'home' al disc, amb 'home' separat al disc
+   5)  p_static_root   Desa l'arrel i 'home' junts al disc
+   6)  persist_home    Persistència només d'usuari
+   7)  frugal_persist  Frugal amb l'arrel a RAM i 'home' al disc
+   8)  frugal_root     Frugal amb l'arrel i 'home' en RAM i després desat en sortir
+   9)  frugal_static   Frugal amb l'arrel al disc i 'home' separat al disc
+  10)  f_static_root   Frugal amb l'arrel i 'home' junts al disc
+  11)  frugal_home     Frugal, només amb persistència d'usuari
+  12)  frugal_only     Només Frugal, sense persistència

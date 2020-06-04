@@ -1,0 +1,12 @@
+   1)  Predefinito
+   2)  persist_all     Salvare root sulla RAM, salvare home sul disco (salvare root all'arresto)
+   3)  persist_root    Salvare root e home sulla RAM, per poi salvarli all'arresto
+   4)  persist_static  Salvare root e home sul disco con la home separata sul disco
+   5)  p_static_root   Salvare root e home insieme sul disco
+   6)  persist_home    Solo persistenza della home
+   7)  frugal_persist  Frugale con root sulla RAM e la home sul disco
+   8)  frugal_root     Frugale con root e home sulla RAM per poi salvarli all'arresto
+   9)  frugal_static   Frugale con root sul disco e la home separata sul disco
+  10)  f_static_root   Frugale con root e home insieme sul disco
+  11)  frugal_home     Frugale con persistenza solo della home
+  12)  frugal_only     Esclusivamente Frugale, senza persistenza.

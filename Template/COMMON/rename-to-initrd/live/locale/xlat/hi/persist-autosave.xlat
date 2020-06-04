@@ -1,0 +1,5 @@
+_Already_saved_X_seconds_ago_="%s सेकंड पहले ही संचित कर लिया गया है"
+_Possibly_save_persistent_information_="संभवतः संरक्षित जानकारी संचित करें"
+_Save_new_autosave_selection_="स्वतः संचित चयन को संचित करें"
+_Save_new_passwords_="नए कूटशब्द संचित करें"
+_Wont_autosave_within_X_seconds_of_a_previous_save_="पिछले संचित के %s सेकंड के अंदर स्वतः संचित नहीं होगा"

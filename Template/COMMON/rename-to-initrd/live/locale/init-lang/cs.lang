@@ -1,0 +1,8 @@
+COUNTRY="Český"
+WM_LANG="cs"
+KEYBOARDS="cz,us"
+KEYTABLE="cz-lat2"
+LANG="cs_CZ.UTF-8"
+MIRROR="cz"
+TZ="Europe/Prague"
+XKBLAYOUT="cz,us"

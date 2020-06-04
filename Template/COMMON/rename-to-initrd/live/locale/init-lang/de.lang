@@ -1,0 +1,8 @@
+COUNTRY="Deutsch"
+WM_LANG="de"
+KEYBOARDS="de,us"
+KEYTABLE="de-latin1-nodeadkeys"
+LANG="de_DE.UTF-8"
+MIRROR="de"
+TZ="Europe/Berlin"
+XKBLAYOUT="de,us"

@@ -1,0 +1,16 @@
+   1)  Standard
+   2)  checkmd5        Tjek integritet af livemediet
+   3)  checkfs         Tjek LiveUSB og vedvarende ext2/3/4-filsystemer
+   4)  toram           Kopiér det komprimeret filsystem til RAM
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        Færdig med at opstarte fra en LiveUSB
+   8)  from=hd         Færdig med at opstarte fra en harddisk
+   9)  hwclock=ask     Få systemet til at hjælpe med at fastslå urets indstilling
+  10)  hwclock=utc     Hardwarens ur bruger UTC (kun til Linux-systemer)
+  11)  hwclock=local   Hardwarens ur bruger lokal tid (Windows-systemer)
+  12)  password        Skift adgangskoder inden opstart
+  13)  nostore         Deaktivér LiveUSB-lager-funktionalitet (kun LiveUSB)
+  14)  dostore         Aktivér LiveUSB-lager-funktionalitet (kun LiveUSB)
+  15)  savestate       Gem nogen filer henover genstarter (kun LiveUSB)
+  16)  nosavestate     Gem ikke filer henover genstarter (kun LiveUSB)

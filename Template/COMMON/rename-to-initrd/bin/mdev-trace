@@ -1,0 +1,13 @@
+#!/bin/sh
+PATH=/bin
+
+trace=/live/config/mdev-trace.out
+
+if [ "$MODALIAS" ]; then
+    echo "$MODALIAS" >> $trace
+    [ "$ACTION" = add     ] && modprobe -v    $MODALIAS >> $trace  2>&1
+    [ "$ACTION" = remove  ] && modprobe -v -r $MODALIAS >> $trace  2>&1
+fi
+
+mdev $@
+

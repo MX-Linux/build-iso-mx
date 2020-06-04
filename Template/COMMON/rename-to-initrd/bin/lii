@@ -1,0 +1,3 @@
+#!/bin/bash
+
+less -R -i /var/log/live/initrd.log.color

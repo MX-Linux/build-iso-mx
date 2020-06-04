@@ -1,0 +1,37 @@
+#!/bin/bash
+
+
+ME=${0##*/}
+MY_DIR=$(dirname $(readlink -f $0))
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+graphics_drivers() {
+    lspci_graphics -nk | sed -n -r "s/^[ \t]*(Kernel driver in use|Kernel modules): //p" \
+        | tr -s ', ' '\n' | sort -u
+}
+
+#------------------------------------------------------------------------------
+# Run lspci with then 4 different graphics classes.  For my slow code that
+# gets the graphics drivers this provides a big speed-up.
+#------------------------------------------------------------------------------
+lspci_graphics() {
+
+    if [ "$TEST" ]; then
+        case $1 in
+            -nn) grep "^[^[]*\[03" ${MY_DIR%/}/test.lspci-nn ;;
+            -nk) cat ${MY_DIR%/}/test.lspci-nk ;;
+              *) fatal "Unknown option %s passed to lspci_graphics in test mode" "$1" ;;
+        esac
+        return
+    fi
+
+    #lspci "$@"
+    lspci -d::0300 "$@"
+    lspci -d::0301 "$@"
+    lspci -d::0302 "$@"
+    lspci -d::0390 "$@"
+}
+
+graphics_drivers "$@"

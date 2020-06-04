@@ -1,0 +1,688 @@
+#!/live/bin/bash
+
+OLD_GFX_CONFIG_FILE="/live/config/gfxsave.conf"
+         GFX_SUFFIX=".def"
+        GFX_SAVE_ON="gfxsave.on"
+          CPIO_FILE="gfx-cpio"
+           CPIO_DIR="/live/tmp/cpio"
+
+hbar="======================================================================"
+tab="----------------------------------------------------------------------"
+
+main() {
+    local GFX_BOOT_DIR=$1
+    local gfx_cmd=$2
+    local GFX_MESSAGE_FILE
+    local GFX_OUTPUT_DIRS
+
+    : ${CMDLINE:=$(cat /proc/cmdline)}
+
+    case $VERBOSE in
+        [0-9]|[0-9][0-9]) ;;
+                       *) VERBOSE=5 ;;
+    esac
+
+    # Width of some printfs with no color codes
+    MSG8_W=30
+    set_colors "$NO_COLOR" "$LO_COLOR"
+
+    case "$gfx_cmd" in
+        menus|custom|both|reset) ;;
+        *)  err "Bad gfxsave parameter $cheat_co$gfx_cmd$CO_ERR. \
+Expected$cheat_co menus custom both$err_co or$cheat_co reset"
+            return ;;
+    esac
+
+    vmsg 6 "Current bootcodes:"
+    vmsg 6 "$cheat_co$CMDLINE"
+
+    # Do this once for both directories
+    write_boot_param_hash
+
+    local pre
+    for pre in ext sys; do
+        TYPE=${pre}linux
+        NAME=${pre}Linux
+        XXX_LINUX_DIR=$GFX_BOOT_DIR/$TYPE
+        is_writable $XXX_LINUX_DIR/  dir $NAME || continue
+        case $pre in
+            ext) XXX_LINUX_CFG=$XXX_LINUX_DIR/$TYPE.conf ;;
+            sys) XXX_LINUX_CFG=$XXX_LINUX_DIR/$TYPE.cfg  ;;
+        esac
+
+        is_writable "$XXX_LINUX_CFG"  file $NAME || continue
+
+        msg
+        msg " Found directory:$cheat_co $XXX_LINUX_DIR"
+        local new_config_file=$XXX_LINUX_DIR/gfxsave.cfg
+        if [ -r $new_config_file ]; then
+            msg "Using$cheat_co $new_config_file"
+            GFX_CONFIG_FILE=$new_config_file
+        else
+            GFX_CONFIG_FILE=$OLD_GFX_CONFIG_FILE
+        fi
+
+        if ! [ -r "$GFX_CONFIG_FILE" ]; then
+            err "Could not find gfxsave config file: $GFX_CONFIG_FILE"
+            continue
+        fi
+
+        MENU_DIR=$XXX_LINUX_DIR
+        unpack_cpio $XXX_LINUX_DIR/$CPIO_FILE $CPIO_DIR && MENU_DIR=$CPIO_DIR
+
+        # FIXME: will this work with gfx-cpio?
+        # Handle the "always" parameter and then work like "both"
+        # Must do this for each directory
+        local gfx_def_file=$MENU_DIR/gfxsave.def
+        if [ "$gfx_cmd" = "always" ]; then
+            test -e $gfx_def_file || echo gfxsave=always > $gfx_def_file
+            gfx_cmd=both
+        else
+            test -e $gfx_def_file && rm -f $gfx_def_file 2>/dev/null
+        fi
+
+        case $gfx_cmd in
+            menus|both|custom)
+                write_gfx_menu_defaults prep $MENU_DIR ""
+                msg  "    popup params:$cheat_co$ALL_MENU_PARAMS"
+                msg  "main menu params:$cheat_co" $(extra_cmdline_params) ;;
+        esac
+
+        case $gfx_cmd in
+            custom|both) create_custom_main_entry $NAME $XXX_LINUX_CFG
+                         update_main_menu_default $XXX_LINUX_CFG ;;
+        esac
+
+        case $gfx_cmd in
+            reset|menus|both) reset_one_dir $NAME $MENU_DIR ;;
+        esac
+
+        case $gfx_cmd in
+            reset) remove_custom_entry $XXX_LINUX_CFG ;;
+        esac
+
+
+        case $gfx_cmd in
+            menus|both) update_gfxmenus $MENU_DIR;;
+        esac
+
+        repack_cpio $XXX_LINUX_DIR/$CPIO_FILE $CPIO_DIR
+
+        if [ -n "$GFX_LOG_FILE" -a -z "$NO_LOG" ]; then
+            mkdir -p $(dirname $GFX_LOG_FILE)
+            echo -e "$LOG" | /bin/sed -r "s:\x1B\[[0-9;]*[mK]::g" > $GFX_LOG_FILE
+            [ -n "$NO_COLOR" ] || echo -e "$LOG" > $GFX_LOG_FILE.color
+        fi
+    done
+}
+
+unpack_cpio() {
+    local file=$1  dir=$2
+    test -r $file || return 1
+    rm -rf $dir
+    mkdir -p $dir || return 1
+    msg " Unpack CPIO file:$cheat_co $file"
+    (cd $dir && cpio -idum --quiet < $file)
+    return 0
+}
+
+repack_cpio() {
+    local file=$1  dir=$2
+    test -r $file || return 1
+    msg " Repack CPIO file:$cheat_co $file"
+    (cd $dir && find . | cpio -o --quiet) > $file
+    return 0
+}
+
+#==============================================================================
+# Update Panel menus defaults
+#==============================================================================
+
+write_boot_param_hash() {
+    for param in $CMDLINE; do
+        param=$(echo $param | sed -r -e 's/^(nouveau|video)\./\1_/' -e 's/^(persist|frugal)-/\1_/')
+        # only let through parameter names made of word chars
+        # so we can turn them into variables names.  This is
+        # a poor man's ash hash.
+
+        # skip parameter names with non-word characters
+        echo $param | grep -q "^[^=]*[^A-Za-z0-9_=]" && continue
+        case "$param" in
+            *=*)
+                nam=${param%%=*}
+                val=${param#*=}
+                eval GFX_P_$nam="$val";;
+              *)
+                eval GFX_F_$param=true;;
+        esac
+    done
+
+    # No output dirs, just check if anything needs to be done
+    # FIXME: move this to main()
+}
+
+update_gfxmenus() {
+    local dir=$1
+
+    msg
+    bold "Update bootloader menu defaults"
+
+    if [ $GFX_MENU_CNT -eq 0 ]; then
+        msg "No defaults were found to update"
+        return
+    fi
+
+    pmsg $GFX_MENU_CNT "Found $num_co%n$m_co default setting%s to update"
+
+    # This time it's for real
+    write_gfx_menu_defaults write $dir
+}
+
+# This routine gets called twice.  First as prep to find the popup params
+# so we can find the parameters that go in the main menu.  Then a second
+# time (if we are updating menus) to actually update the menus.  I'm sure
+# all of this could be greatly improved.
+
+write_gfx_menu_defaults() {
+    GFX_MENU_CNT=0
+    ALL_MENU_PARAMS=
+
+    local type=$1 dir=$2
+
+    local quiet write save
+    case $type in
+        write) write=true ; quiet=true ;;
+         prep) save=true               ;;
+            *) exit 3;;
+    esac
+
+    local m_config
+    for m_config in $(grep '^[A-Za-z]' $GFX_CONFIG_FILE); do
+        local title=$(echo $m_config | cut -d"|" -f1)
+        local fname=$(echo $m_config | cut -d"|" -f2)
+        local out=
+        fields=$(echo $m_config | cut -d"|" -f3-30)
+        for field in $(echo $fields | sed 's/|/ /g'); do
+            eval local nam="\$GFX_P_$field"
+            [ -n "$nam" ] && out="$out${out:+ }$field=$nam"
+            eval local cmd="\$GFX_F_$field"
+            [ -n "$cmd" ] && out="$out${out:+ }$field"
+        done
+        local entry=$(echo "$out" | sed -r  \
+            -e 's/^ //'                     \
+            -e 's/\<(nouveau|video)_/\1./g' \
+            -e 's/\<lang=//'                \
+            -e 's/\<nouveau\.modeset=0$//'  \
+            -e 's/\<tz=//')
+
+        [ -n "$out" ] || continue
+        local menu_file=$dir/$fname.men
+        if [ -r $menu_file ]; then
+            [ "$quiet" ] || vmsg 6 " Found menu file:$cheat_co $(basename $menu_file)"
+            if ! grep -q "\`$entry$" $menu_file; then
+                local found=
+                while [ -n "$entry" -a -z "${entry##* *}" ]; do
+                    # Strip off params from the end of the string
+                    entry=${entry% *}
+                    out=${out% *}
+                    grep -q "\`$entry$" $menu_file || continue
+                    found=true
+                    break
+                done
+                if [ -z "$found" ]; then
+                    [ "$quiet" ] || msg "Menu file$cheat_co $fname.men$m_co does not contain "$cheat_co$entry$m_co".  Skipping."
+                    continue
+                fi
+            fi
+        fi
+        GFX_MENU_CNT=$(($GFX_MENU_CNT + 1))
+        [ "$save" ] && ALL_MENU_PARAMS="$ALL_MENU_PARAMS ${out# }"
+        [ "$write" ] || continue
+
+        msg "$(printf " %12s:$from_co %-14s $cheat_co%s\n" \
+            "$title" "$fname$GFX_SUFFIX" "$entry")"
+
+        echo "$entry" > $dir/$fname$GFX_SUFFIX
+    done
+}
+
+reset_one_dir() {
+    local name="$1" dir="$2"
+
+    [ -n "$dir" ] || return
+
+    bold "Reset bootloader menu defaults"
+
+    local fcnt=0
+    for file in $(grep '^[A-Za-z]' $GFX_CONFIG_FILE | cut -d"|" -f2); do
+        local full=$dir/$file$GFX_SUFFIX
+        [ -e "$full" ] || continue
+        fcnt=$(( $fcnt + 1 ))
+        rm -rf $full
+    done
+    pmsg  $fcnt "Deleted$num_co %n$from_co $name$m_co file%s"
+
+}
+
+is_writable() {
+    local file=$1 name=$2 type=$3
+
+    [ "$file" ] || return 1
+    #msg8e  "Could not find" $type "$name" $file
+    #msg8e "Cannot write to" $type "$name" $file
+    if ! [ -e "$file" ]; then
+        msg8e "Could not find" $type "$name"  $file
+        return 1
+    fi
+
+    [ -w "$file" ] || chmod u+w $file
+
+    if ! [ -w "$file" ]; then
+        msg8e "Cannot write to" $type "$name" $file
+        return 1
+    fi
+
+    [ -n "$name" ] && msg8 "Found" $type "$name" $file
+    return 0
+}
+
+_msg8() { vmsg 7 "$1$(printf %${MSG8_W}s "$2$from_co $3$1 $4")$to_co $5" ; }
+msg8()  { _msg8 "$m_co" "$@"; }
+msg8e() { _msg8 "$err_co" "$@"; }
+
+msg7() {
+    local c1=$1 pre=$2 c2=$3 file=$4
+    vmsg 7 "$c1$(printf %30s "$pre")$c2 $file"
+}
+#==============================================================================
+# Update default main menu entry
+#==============================================================================
+
+update_main_menu_default() {
+    local file=$1
+
+    [ "$DEFAULT_LABEL" ] || return
+
+    bold "Update main menu default to$cheat_co $DEFAULT_LABEL"
+    if grep -q "^default\>" "$file"; then
+        sed -r -i "s/^default\>.*/default $DEFAULT_LABEL/" "$file"
+    elif [ "$FIRST_LABEL_LINE" ]; then
+        sed -i "$FIRST_LABEL_LINE i\
+default $DEFAULT_LABEL" "$file"
+
+        sed -i "$FIRST_LABEL_LINE G" "$file"
+    fi
+}
+
+set_main_menu_default() {
+    local type=$1; shift
+    local file=$1
+
+    [ -n "$file" ] || return
+
+    local sorted_params="$(get_all_cfg_params $@ | sort -u)"
+
+    cmdline_params=$(cmdline_only $sorted_params)
+    cmdline_params=$(echo $cmdline_params)
+    vmsg 8 "Cmdline params: $cmdline_params"
+
+    find_main_entry "$cmdline_params" "$@"
+
+    if ! [ -n "$FOUND_ENTRY" ]; then
+        msg "Failed to resolve default$from_co $type$m_co entry"
+        return
+    fi
+    local pre="Set$from_co $type$m_co default to"
+    msg "$(printf %${MSG8_W}s "$pre") ($num_co$FOUND_ENTRY$m_co)$high_co $FOUND_TITLE"
+
+    if grep -q "^\s*default\>" $file; then
+        sed -i -r "s/^(\s*default\>).*/\1 $FOUND_ENTRY/" $file
+    else
+        sed -i "1i\
+default $FOUND_ENTRY" $file
+    fi
+}
+
+get_all_cfg_params() {
+    local file=$1
+    local counter=$2
+    local target=$3
+    local first=$4
+
+    while read a1 a2 a3 a4 a5 a6 a7 a8 a9; do
+        [ "$a1" = "$target" ] || continue
+        for i in $(seq $first 9); do
+            eval val=\$a$i
+            [ -n "$val" ] || break
+            echo $val
+        done | sort
+    done <<Config_File
+$(cat $file)
+Config_File
+}
+
+cmdline_only() {
+    for param; do
+        case " $CMDLINE " in
+            *" $param "*) echo $param;;
+        esac
+    done
+}
+
+find_main_entry() {
+    local cmdline=$1
+    local    file=$2
+    local counter=$3
+    local  target=$4
+    local   first=$5
+    local title val
+
+    FOUND_ENTRY=
+    FOUND_TITLE=
+
+    [ -n "$file" ] || return
+
+    local count=-1  line=0
+    while read a1 a2 a3 a4 a5 a6 a7 a8 a9; do
+        line=$((line + 1))
+        if [ "$a1" = "$counter" ]; then
+            count=$((count + 1))
+            : ${FIRST_LABEL_LINE:=$line}
+            local title=
+            for i in $(seq 2 9); do
+                eval val=\$a$i
+                [ -n "$val" ] || break
+                title="$title $val"
+            done
+            title=${title# }
+            #echo "$count: $title"
+        fi
+        [ "$a1" = "$target" ] || continue
+        local params=$(
+            for i in $(seq $first 9); do
+                eval val=\$a$i
+                [ -n "$val" ] || break
+                echo $val
+            done | sort)
+
+        # Ignore entries with no parameters
+        [ -n "$params" ] || continue
+
+        params=$(echo $params)
+        #-- echo " params: $params"
+        #-- echo "cmdline: $cmdline"
+        #-- continue
+        [ "$params" = "$cmdline" ] || continue
+        #vmsg 8 "Found entry $count: $title"
+        FOUND_TITLE=$title
+        FOUND_ENTRY=$count
+        break
+    done <<Config_File
+$(cat $file)
+Config_File
+}
+
+#==============================================================================
+# Create custom main menu entry
+#==============================================================================
+create_custom_main_entry() {
+    local name=$1  file=$2
+    local alpha_params=$(extra_cmdline_params | tr ' ' '\n' | sort -u)
+    alpha_params=$(echo $alpha_params)
+    vmsg 9 "Main menu params:$cheat_co $alpha_params"
+
+    if ! [ -n "$alpha_params" ]; then
+        msg "No non-menu parameters found"
+        return
+    fi
+
+    local ordered_params=$(extra_cmdline_params)
+    ordered_params=$(echo $ordered_params)
+
+    find_main_entry "$alpha_params" "$file" LABEL APPEND 2
+    if ! [ -n "$FOUND_ENTRY" ]; then
+        bold
+        bold "Create Custom bootloader entry"
+        add_custom_entry $name "$file" LABEL KERNEL "" "APPEND" INITRD "$ordered_params"
+    else
+        pre="${from_co}$name$m_co entry already exists:"
+        msg "$(printf %${MSG8_W}s "$pre") ($num_co$FOUND_ENTRY$m_co)$high_co $FOUND_TITLE"
+        DEFAULT_LABEL=$FOUND_TITLE
+    fi
+}
+
+add_custom_entry() {
+    local       type=$1
+    local       file=$2
+
+    local  title_tag=$3
+    local kernel_tag=$4
+    local kernel_sed=$5
+    local append_tag=$6
+    local initrd_tag=$7
+    local     params=$8
+
+    [ -n "$file" ] || return
+
+    local date=$(date "+%e %B %Y")
+    local title_text="Custom ($date)"
+    local title="$title_tag $title_text\n"
+    local state=1 kernel append initrd
+
+    case $type in
+        *Linux) title="LABEL custom\n    MENU LABEL $title_text\n" ;;
+    esac
+
+    [ -n "$append_tag" ] && append="    $append_tag $params\n"
+
+    local replace target pre="$from_co $type$m_co entry labeled:"
+    if grep -q "^\s*$title_tag\s\+custom" $file; then
+        replace=true
+        target="$title_tag\s\+custom"
+        msg "$(printf %${MSG8_W}s "Replace$pre")$cheat_co $title_text"
+    else
+        target="$title_tag"
+        msg "$(printf %${MSG8_W}s "Create$pre")$cheat_co $title_text"
+    fi
+
+    msg "$(printf %30s "Params:")$cheat_co $params"
+    local backup=${file%.*}.bak
+    local file2=${file%.*}.tmp
+    [ -e "$backup" ] || cp $file $backup
+    rm -f $file2
+
+    local old_ifs=$IFS
+    IFS=''
+
+    while read line; do
+        #echo "$state: $line"
+        case $state in
+        1)  if echo $line | grep -q "^\s*$target\>"; then
+                state=2
+                [ -n "$replace" ] && continue
+            fi;;
+
+        2)  if echo $line | grep -q "^\s*$kernel_tag\>"; then
+                if [ -n "$kernel_sed" ]; then
+                    kernel="$(echo $line | sed -r "s/$kernel_sed/\1 $params/")\n"
+                else
+                    kernel="$line\n"
+                fi
+            fi
+
+            echo $line | grep -q "^\s*$initrd_tag" && initrd="$line\n"
+
+            if echo $line | grep -q "^\s*$title_tag"; then
+                echo -e "$title$kernel$append$initrd" >> $file2
+                vmsg_nc 8 "$(echo -e "$title$kernel$append$initrd \n")"
+                state=3
+            else
+                [ -n "$replace" ] && continue
+            fi;;
+
+        3)  ;;
+
+        esac
+
+        echo "$line" >> $file2
+        vmsg_nc 8 "$line"
+
+    done <<Config_File
+$(cat $file)
+Config_File
+
+    IFS=$old_ifs
+
+    if [ "$state" -lt 3 ]; then
+        err "Failed to update$from_co $type$err_co config file"
+        return
+    fi
+
+    mv $file2 $file
+    DEFAULT_LABEL=custom
+}
+
+
+#------------------------------------------------------------------------------
+# Remove the custom entry (if it exists)
+#------------------------------------------------------------------------------
+remove_custom_entry() {
+    local file=$1
+    sed -i "/^LABEL custom/,/^$/d" "$file"
+}
+
+#------------------------------------------------------------------------------
+# Only echo cmdline params that *don't* match any of the names in menu_params.
+# Equal signs and values after equal signs are ignored.
+#------------------------------------------------------------------------------
+extra_cmdline_params() {
+    local param menu_params=$1
+    for param in $CMDLINE; do
+        case $param in
+                        ubp=*) continue ;;
+                         bp=*) continue ;;
+            gfxsave|gfxsave=*) continue ;;
+          bootsave|bootsave=*) continue ;;
+                 BOOT_IMAGE=*) continue ;;
+        savestate|nosavestate) continue ;;
+              nostore|dostore) continue ;;
+             checkmd5|checkfs) continue ;;
+                  noautomount) continue ;;
+            automount|mount=*) continue ;;
+   i915_invert|no_i915_invert) continue ;;
+                    hwclock=*) continue ;;
+                    desktop=*) continue ;;
+            nouveau.modeset=0) continue ;;
+                 mk_swap_file) continue ;;
+               mk_swap_file=*) continue ;;
+                      vcard=*) continue ;;
+        esac
+        case " $ALL_MENU_PARAMS " in
+            *" ${param%%=*} "*) ;;
+            *" ${param} "*)     ;;
+            *) echo $param      ;;
+        esac
+    done
+}
+
+
+#------------------------------------------------------------------------------
+# Utilities
+#------------------------------------------------------------------------------
+
+set_colors() {
+    local noco=$1 loco=$2
+
+    [ "$noco" ] && return
+
+    # Adjust this printf width for added color codes
+    MSG8_W=$((MSG8_W + 14))
+
+    local e=$(printf "\e")
+     black="$e[0;30m";    blue="$e[0;34m";    green="$e[0;32m";    cyan="$e[0;36m";
+       red="$e[0;31m";  purple="$e[0;35m";    brown="$e[0;33m"; lt_gray="$e[0;37m";
+   dk_gray="$e[1;30m"; lt_blue="$e[1;34m"; lt_green="$e[1;32m"; lt_cyan="$e[1;36m";
+    lt_red="$e[1;31m"; magenta="$e[1;35m";   yellow="$e[1;33m";   white="$e[1;37m";
+        nc="$e[0m";
+
+    cheat_co=$white;      err_co=$red;       hi_co=$white;      nc_co=$nc;
+      cmd_co=$white;     from_co=$lt_green;  mp_co=$magenta;   num_co=$magenta;
+      dev_co=$magenta;   head_co=$yellow;     m_co=$lt_cyan;    ok_co=$lt_green;
+
+    [ "$loco" ] || return
+
+    from_co=$brown
+      hi_co=$white
+       m_co=$nc_co
+     num_co=$white
+    warn_co=$yellow
+}
+
+bold() { vmsg 3 "$high_co$@";    }
+warn() { vmsg 3 "$warn_co$@";    }
+err()  { vmsg 1 "$err_co$@" >&2; }
+
+vmsg() {
+    local level="$1"
+    shift;
+
+    local msg
+    if [ "$1" = "-n" ]; then
+        shift;
+        msg="$m_co$@$nc_co"
+        vsay $level -n "$msg"
+    else
+        msg="$m_co$@$nc_co"
+        vsay $level "$msg"
+        msg="$msg\n"
+    fi
+
+    [ -n "$NO_LOG" ] || LOG="$LOG$msg"
+    return 0
+}
+
+vmsg_if() {
+    local level="$1"
+    shift
+    [ "$VERBOSE" -ge "$level" ] || return
+    vmsg $level "$@"
+}
+
+msg()    { vmsg 5 "$@"; }
+msg_nc() { vmsg 5 "$nc_co$@"; }
+
+vmsg_nc() {
+    local level="$1"
+    shift;
+    vmsg $level "$nc_co$@"
+}
+
+heading() {
+    vmsg_nc 6 $tab
+    vmsg 3 "${head_co}$_Start_ $@"
+}
+
+vsay() {
+    local msg_level="$1"
+    shift;
+    [ "$msg_level" -le "$VERBOSE" ] && echo "$@"
+    return 0
+}
+
+plural() {
+    local n=$1 str="$2"
+    case "$n" in
+        1) local s=  ies=y   are=is;;
+        *) local s=s ies=ies are=are;;
+    esac
+    echo "$str" | sed -e "s/%s/$s/g" -e "s/%ies/$ies/g" -e "s/%are/$are/g" -e "s/%n/$n/g"
+}
+
+pmsg() { msg "$(plural "$@")"; }
+
+vpmsg() {
+    local v=$1; shift
+    vmsg $v "$(plural "$@")"
+}
+
+main "$@"

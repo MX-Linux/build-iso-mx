@@ -1,0 +1,53 @@
+#!/bin/sh
+
+PATH=/live/bin:/bin
+dir=/usr/share/fortune
+
+name=$1
+
+usage() {
+    cat<<Usage
+usage $ME <category>
+    Print out a random quote from the give category
+Usage
+    exit 0
+}
+
+main() {
+    [ -z "$name" ] && usage
+
+    local file=$dir/$name
+    [ -n "$name" -a -z "${name##*/*}" ] && file=$name
+
+    test -r $file || fatal "file %s not found" "$file"
+    local all=$(grep -n "^%$" "$file" | cut -d: -f1)
+    local num=$(echo "$all" | wc -l)
+    idx=$(echo "$all" | head -n $(rand $num)  | tail -n1)
+    #printf "%4s    %4s\n" "$num"  "$idx"
+
+    local IFS=''   line
+    tail -n +$((idx + 1)) "$file" | while read -r line; do
+        case $line in
+            %) return;;
+        esac
+        echo "$line"
+    done
+}
+
+rand_hex() {
+    dd if=/dev/urandom count=16 bs=1 2>/dev/null \
+        | md5sum | sed -r "s/(.{8}).*/0x\1/"
+}
+
+rand() {
+    echo $(($(rand_hex) % $1))
+}
+
+fatal() {
+    local fmt=$1 ; shift
+    printf "Error: $fmt\n" "$@" >&2
+    exit 2
+}
+
+main "$@"
+

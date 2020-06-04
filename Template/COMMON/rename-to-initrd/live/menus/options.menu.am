@@ -1,0 +1,16 @@
+   1)  ነባር
+   2)  checkmd5        በ ቅጥታ መገናኛ ሙሉ መሆኑን መመርመሪያ
+   3)  checkfs         በ ቀጥታ USB እና ቀጣይነቱን ለ ext2/3/4 ፋይል ስርአት መመርመሪያ
+   4)  toram           የ ታመቀ የ ስርአት ፋይል ወደ ራም ኮፒ ማድረጊያ
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        በ ቀጥታ USB ማስነሻ መጨረሻ
+   8)  from=hd         በ ቀጥታ ከ ሀርድ ዲስክ ማስነሻ መጨረሻ
+   9)  hwclock=ask     ለ ሰአት ማሰናጃ የ ስርአት እርዳታ መወሰኛ
+  10)  hwclock=utc     የ ጠንካራ አካል የሚጠቀመው ሰአት UTC (ለ ሊነክስ-ስርአት ብቻ)
+  11)  hwclock=local   የ ጠንካራ አካል የሚጠቀመው የ አካባቢ ሰአት (ለ Windows ስርአት)
+  12)  password        ከ መነሳቱ በፊት የ መግቢያ ቃል መቀየሪያ
+  13)  nostore         በ ቀጥታ USB-ማጠራቀሚያ ገጽታ ማሰናከያ ለ (በ ቀጥታ USB ብቻ)
+  14)  dostore         በ ቀጥታ USB-ማጠራቀሚያ ገጽታ ማስቻያ ለ (በ ቀጥታ USB ብቻ)
+  15)  savestate       አንዳንድ ፋይሎች ከ እንደገና ማስነሻ ባሻገር ማስቀመጫ (በ ቀጥታ USB ብቻ)
+  16)  nosavestate     አንዳንድ ፋይሎች ከ እንደገና ማስነሻ ባሻገር አታስቀምጥ (በ ቀጥታ USB ብቻ)

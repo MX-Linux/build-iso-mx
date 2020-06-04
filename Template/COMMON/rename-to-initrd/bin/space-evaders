@@ -1,0 +1,661 @@
+#!/bin/bash
+
+ME=${0##*/}
+
+[ -x /live/bin/busybox -a -z "$NO_LOOP" ] \
+    && PATH=/live/bin NO_LOOP=true exec /live/bin/sh $0 "$@"
+
+old_stty=$(stty -g)
+
+: ${WIDTH:=$(stty size | cut -d" " -f2)}
+: ${HEIGHT:=$(stty size | cut -d" " -f1)}
+
+restore_tty() {
+    stty $old_stty
+    printf "\e[?25h\e[0m"
+}
+
+cli_help() {
+    cat << CLI_Help
+Usage: $ME [options]
+
+Options:
+    -a  --accel    Speed increase when aliens descend in percent: (${accel})
+    -c  --cols     Number of columns of aliens: (${cols})
+    -C  -classic   Use classic (boring) spacing
+    -d  --debug  
+    -e  --elev     Space between aliens and top of play area: (${elev})
+    -g  --gap      Startng gap between aliens and ship: (${gap})
+    -h  --help
+    -i  --idle     Starting clock cycles per alien motion: (${idle_base})
+    -m  --margin   Extra space on left of screen 
+    -r  --rows     Number of rows of aliens: (${rows})
+    -s  --space    Space between aliens: (${space})
+    -t  --tick     Clock period in microseconds: (${tick})
+    -w  --width    Width of playing field: (${width})
+
+CLI_Help
+}
+
+space_evaders() {
+    local accel_factor=$((100 - accel))
+    local alien_y=$((elev  +  2))
+    local cycles_per_step=$(( (idle_base * idle_factor) / idle_denom))
+    local delay=$(printf "0.%06d" $tick)
+    echo "cycles_per_step:$cycles_per_step  delay:$delay" >&2
+
+    # X-axix geometry
+    local seq_rows=$(seq $rows)
+    local pad="$(printf "%${space}s" "")"
+
+    local alien_chars=$((3 + $space))
+    local alien_width=$((alien_chars * cols - $space + 1))
+    local alien_height=$((2 * rows))
+
+    local  ship_max_x=$((width  -  ship_width - 1))
+    local  ship_min_x=$(( margin ))
+    local alien_max_x=$((width  - alien_width - 1)) 
+    local alien_min_x=$(( margin + 2 )) 
+    local      ship_x=$(( margin + (width - ship_width) / 2))
+    local     alien_x=$(( margin + (width - alien_width) / 2 - 1))
+
+    local ship_y=$((alien_y + alien_height - 1 + $gap))
+
+    local shot_y=0 alien_dir=1 a_type=0 score=0
+    local misses=0 hits=0 was_hit
+    local exp_x exp_y hit_row hit_col
+
+    local shade=${SHADE:-1}
+    local e=$(printf "\e")
+
+    local    blue="$e[$shade;34m"    green="$e[$shade;32m"    cyan="$e[$shade;36m"
+    local     red="$e[$shade;31m"  magenta="$e[$shade;35m"  yellow="$e[$shade;33m"
+    local   white="$e[$shade;37m"  rev_red="$e[0;7;31m"       grey="$e[1;0m"
+    local dk_grey="$e[1;0m"          amber="$e[0;33m"           nc="$e[0m"
+
+    local clear="$e[2;J" cursor_off="$e[?25l" cursor_on="$e[?25h"
+
+    local title=" S P A C E   E \\/ A D E R S "
+    local title="$e[1;$(( 1 + (WIDTH - ${#title}) /2))H$e[0;0;37m$title$nc"
+
+    local val_6=1 val_5=5 val_4=10 val_3=15 val_2=20 val_1=30
+
+    #local a01=":O: " a02="/-\\ " a03="-x- " a04="-#- " a05=":|: " a06="-o- "
+    #local a11="|O| " a12="\\-/ " a13=">x< " a14=":@: " a15="!-! " a16=":x: "
+
+    local a01=":O:" a02="/-\\" a03="-x-" a04="-@-" a05=":\":" a06="-o-"
+    local a11="|O|" a12="\\-/" a13=">x<" a14=":@:" a15="!\"!" a16=".o."
+    local a21="-O-" a22="---"  a23="-x-" a24="o@o" a25="o\"o" a26="!o!"
+    #local a31="-O- " a32="--- "  a33="-x- " a34="o#o " a35="=|= " a36="-x- "
+
+    local co_1=$green co_2=$magenta co_3=$cyan co_4=$white co_5=$blue co_6=$yellow
+
+    local num_types=3
+    local seq_alien_types=$(seq 0 $((num_types -1)))
+    
+    # Build num_types strings of aliens for every row
+    for type in $seq_alien_types; do
+        for row in $seq_rows; do
+            r_type=$(( (row - 1) % 6 + 1))
+            [ $row -gt 6 ] && eval co_$row=\$co_$r_type
+            eval export A_$type$row
+            for j in $(seq 2 $cols); do
+                eval A_$type$row=\$A_$type$row\$a$type$r_type\$pad
+            done
+            eval A_$type$row=\"\$A_$type$row\$a$type$r_type \"
+        done
+    done
+
+    #echo $((1 + cols * (3 + $space)))
+    local line="$(printf "%${alien_width}s" "")"
+
+    local alien_cnt=$(( cols * rows))
+
+    hide_tty
+
+    local start_time=$(date +%s)
+
+    if [ ! "$debug" ]; then
+        help start
+    else
+        refresh
+    fi
+
+    local state=update total_cycles=0 cycles=0 dmod dcnt this_row idle_cycles key
+
+    while :; do
+
+        [ "$key" ] || key=$($getch)
+        case $key in
+                
+         q|Q)  sign_off "Bye Bye!" 0;;
+
+         d|D)  duck_mode=$(( (duck_mode + 1) % 4));;
+
+         # s|S)  printf "$e[$ship_y;1H$e[3B"
+         #        restore_tty
+         #        PS1="${red}Space-evaders$green>$nc " sh 2>&1
+         #        hide_tty
+         #        refresh;;
+
+         f|F)  if [ $cycles_per_step -gt 0 -a -n "$debug" ]; then
+                    idle_factor=$(( (idle_factor * 90) / 100))
+                    cycles_per_step=$(( (idle_base * idle_factor) /idle_denom))
+                    echo "cycles_per_step=$cycles_per_step" >&2
+                fi;;
+
+         g|G)  if [ $cycles_per_step -lt 150 -a -n "$debug" ]; then
+                    idle_factor=$(( (idle_factor * 100) / 90))
+                    cycles_per_step=$(( (idle_base * idle_factor) / idle_denom))
+                fi;;
+
+         " ")  if [ $shot_y -eq 0 ]; then
+                    shot_x=$((ship_x + 4))
+                    shot_y=$((ship_y))
+                    draw_ship
+                fi;;
+
+         p|P)  pause
+               continue;;        # Continue allows us to process key used to
+                                 # stop pausing
+         h|H)  help
+               continue;;        # Same here.  Remove if it is too confusing
+
+
+           # Arrow keys: up, down, left, right
+           ?A)  if [ $tick -gt 100 ]; then
+                    tick=$(( ( tick * 90) / 100))
+                    delay=$(printf "0.%06d" $tick)
+                fi;;
+
+           ?B)  if [ $tick -lt 50000 ]; then
+                    tick=$(( ( tick * 100) / 90))
+                    delay=$(printf "0.%06d" $tick)
+                fi;;
+
+           ?D)  if [ $ship_x -gt $ship_min_x ]; then
+                    ship_x=$((ship_x - 1))
+                    draw_ship
+                fi;;
+
+           ?C)  if [ $ship_x -lt $ship_max_x ]; then
+                    ship_x=$((ship_x + 1))
+                    draw_ship
+                fi;;
+
+            *) ;;
+        esac
+
+        # "continue"above will reuse $key if it exists.  "continue" below won't
+        key=
+
+        # A primative state machine
+        case $state in
+
+        update) update_aliens
+                total_cycles=$((total_cycles + cycles))
+                cycles=0
+
+                dmod=$(( (cycles_per_step - 2) / rows))
+                if [ $dmod -lt 1 ]; then
+                    state=draw-2
+                else
+                    this_row=1
+                    state=draw-1
+                    dcnt=0
+                fi;;
+                #[ $cycles_per_step -lt 1 ] && continue;;
+
+        draw-1) if [ $((dcnt % dmod)) -eq 0 ]; then
+                    draw_alien_row $this_row
+                    this_row=$((this_row + 1))
+                    [ $this_row -gt $rows ] && state=shot
+                fi
+                dcnt=$((dcnt + 1));;
+
+        draw-2) for row in $seq_rows; do
+                    draw_alien_row $row
+                done
+                state=shot
+                [ $cycles_per_step -lt 2 ] && continue;;
+
+         shot)  draw_shot
+                [ $((alien_y + alien_height - 1)) -gt $ship_y ] && sign_off "GAME OVER!"
+
+                [ "$debug" ] && printf "$e[$ship_y;1H$e[2B$amber" && report
+
+                idle_cycles=$((cycles_per_step - cycles))
+                [ $idle_cycles -le 1 ] && state=update && continue
+
+                state=idle;;
+
+         idle)  [ $idle_cycles -le 0 ] && state=update && continue
+                idle_cycles=$((idle_cycles - 1));;
+
+            *)  echo "Invalid state: $state" >&2
+                exit;;
+
+        esac
+        cycles=$((cycles + 1))
+        sleep $delay
+    done
+}
+
+draw_alien_row() {
+
+    row=$1
+    local y=$((alien_y + 2 * row - 2))
+
+    # Erase row when move down
+    [ $alien_x -eq $alien_max_x ] && echo -ne "$e[$((y - 1));${alien_x}H${line}"
+
+    # Draw row
+    eval local co_row=\$co_$row local b_type=\$A_$a_type$row
+    echo -ne "$e[$y;${alien_x}H$co_row $b_type"
+}
+
+update_aliens() {
+
+    [ $duck_mode -eq 1 ] && return
+
+    a_type=$(( (a_type + 1) % $num_types))
+
+    [ $duck_mode -eq 2 ] && return
+
+    # Move aliens back and forth
+    alien_x=$((alien_x + alien_dir))
+
+    # On far-left just change direction
+    [ $alien_x -le $alien_min_x ] || [ $alien_x -ge $alien_max_x ] || return
+
+    # reverse direction
+    alien_dir=$((-1 * alien_dir))
+
+    [ $alien_x -le $alien_min_x ] && return
+
+    [ $duck_mode -eq 3 ] && return
+
+    # move down, and speed up
+    local y=$alien_y
+
+    alien_y=$((alien_y + 1))
+
+    idle_factor=$(( (idle_factor * accel_factor) / 100))
+    cycles_per_step=$(( (idle_base * idle_factor) / idle_denom))
+    echo "cycles_per_step=$cycles_per_step" >&2
+}
+
+draw_shot() {
+
+    # Make sure we erase previous explosion
+    [ "$hit_row" ] && printf "$e[$exp_y;${exp_x}H$nc     "
+    hit_row=
+
+    # shot_y == zero is our quiescent loaded state
+    [ $shot_y -eq 0 ] && return 1
+
+    # set to ship_y means we just fired a shot
+    # Erase previous shot mark
+    [ $shot_y -ne $ship_y ] && echo -en "$e[$shot_y;${shot_x}H "
+
+    # Move shot up
+    shot_y=$((shot_y - 1))
+
+    # Reset if shot goes off of top of screen
+    if [ $shot_y -lt 2 ]; then
+        shot_y=0
+        draw_ship
+        misses=$((misses + 1))
+        return 1
+    fi
+
+    # Draw the shot
+    printf "$e[$shot_y;${shot_x}H$e[9;31m*$nc"
+
+    # Check for hit
+    local rel_x=$(( shot_x - alien_x - 1 ))
+    local rel_y=$(( shot_y - alien_y + 1 ))
+
+    # Skip empty rows
+    [ "$(( rel_y % 2 ))" = 0 ] && return 1
+
+    # Only look for hits if shot is in area where aliens are
+    [ $rel_x -lt 0 -o $rel_x -ge $alien_width  ] && return 1
+    [ $rel_y -lt 0 -o $rel_y -gt $alien_height ] && return 1
+
+    # Grab 3 (or 2) chars where possible hit occurred
+    local row=$(( 1 + rel_y / 2 ))
+    local hit="$(eval echo -ne \"\$A_0$row\" | sed -n "s/.\{$rel_x\}\(...\?\).*/\1/p")"
+    local bonus
+
+    [ ${#hit} -lt 2 ] && return 1
+    # Detect miss, direct hit, or hit
+    case "$hit" in
+                        \ *) return 1 ;;
+         [Ox\#\|o-][:\\-]\ ) bonus=2  ;;
+                          *) bonus=1  ;;
+    esac
+
+    printf "|%s| hit(%d) at %2d %2d abs:%2d\n" "$hit" "$bonus" $rel_x $rel_y $shot_y>&2
+
+    hits=$((hits + 1))
+
+    # Erase the alien that was hit
+    local start_x=$((rel_x - rel_x % alien_chars))
+    for type in $seq_alien_types; do
+        eval A_$type$row='"$(eval echo -ne \"\$A_$type$row\" | sed "s/\(.\{$start_x\}\).../\1   /")"'
+    done
+
+    # Align explosion on alien
+    exp_x=$(( shot_x - rel_x % alien_chars - 1))
+    exp_y=$shot_y
+
+    local exp_co=$red
+    [ $bonus -eq 2 ] && exp_co=$rev_red
+    # Show explosion and then reset shot
+    printf "$e[$exp_y;${exp_x}H$exp_co*****$nc"
+    shot_y=0
+    draw_ship
+
+    # Get value of this hit
+    eval local value=\$val_$row
+    value=${value:-1}
+    score=$(( score + value * bonus))
+    show_score
+    hit_row=$row
+    hit_col=$(( 1 + rel_x / alien_chars))
+
+    alien_cnt=$((alien_cnt - 1))
+    [ $alien_cnt -le 0 ] && sign_off "YOU WIN!" 0
+
+    # Trim rows and columns if sides or bottom are empty
+    [ $hit_row = $rows ] && remove_rows
+
+    [ $hit_col = 1 ]     && trim_lead_cols
+    [ $hit_col = $cols ] && trim_trail_cols
+
+}
+
+# Remove lines without aliens from bottom of alien blocks
+remove_rows() {
+
+    # Remove consecutive empty rows starting at the bottom
+    for row in $(seq $rows -1 1); do
+        eval echo -ne \"\$A_0$row\" | grep -q  '[^\ ]' && return
+        echo "remove row: $row" >&2
+        rows=$((rows - 1))
+        alien_height=$((2 * rows))
+        seq_rows=$(seq $rows)
+    done
+    sign_off "You won?"
+}
+
+trim_lead_cols() {
+
+    # Is the first column empty in all rows?
+    for row in $seq_rows; do
+        eval echo -ne \"\$A_0$row\" | grep -q "^   " || return
+    done
+
+    #echo "Trim lead column" >&2
+    for row in $seq_rows; do
+        for type in $seq_alien_types; do
+            eval A_$type$row='"$(eval echo -ne \"\$A_$type$row\" | sed "s/^   $pad//")"'
+        done
+    done
+    cols=$((cols - 1))
+    alien_width=$((  alien_chars * cols - $space + 1))
+    alien_max_x=$((alien_max_x + alien_chars))
+    alien_x=$((alien_x + alien_chars))
+    line="$(printf "%${alien_width}s" "")"
+    # Recurse
+    trim_lead_cols
+}
+
+trim_trail_cols() {
+
+    # Only trim of the last column is empty in all rows
+    for row in $seq_rows; do
+        eval echo -ne \"\$A_0$row\" | grep -q "   $pad$" || return
+    done
+
+    #echo "Trim trailing column" >&2
+    for row in $seq_rows; do
+        for type in $seq_alien_types; do
+            eval A_$type$row='"$(eval echo -ne \"\$A_$type$row\" | sed "s/   $pad$//")"'
+        done
+    done
+    cols=$((cols - 1))
+    alien_width=$((  alien_chars * cols - $space + 1))
+    alien_max_x=$((alien_max_x + alien_chars))
+    ine="$(printf "%${alien_width}s" "")"
+
+    # Recurse
+    trim_trail_cols
+}
+
+hide_tty() {
+    stty cbreak -echo
+    echo -ne $cursor_off
+}
+
+refresh() {
+    clear
+    printf "$title"
+    show_score
+    #draw_aliens
+    draw_ship
+}
+
+draw_ship() {
+
+    local shot="$red*"
+    [ $shot_y -ne 0 ] && shot="${nc}o"
+
+    # Pad sides with spaces to erase previous ship
+    echo -en "$e[$ship_y;${ship_x}H$nc $cyan($green--$shot$green--$cyan) "
+
+    # Show boundaries every time so edges of ship don't erase them
+    printf "$e[$ship_y;${ship_min_x}H$white|"
+    printf "$e[$ship_y;${ship_max_x}H$e[8C$white|"
+}
+
+show_score() {
+    printf "$e[1;1H${nc}Score: %5d\n" $score
+}
+
+pause() {
+    local cnt=$1
+
+    # Don't count seconds while we are paused
+    local enter_time=$(date +%s)
+    while :; do
+        key=$($getch)
+            case ${#key} in
+            [12])  break    ;;
+               *) sleep .1   ;;
+        esac
+        [ "$cnt" ] || continue;
+        cnt=$((cnt - 1))
+        [ $cnt -le 0 ] && break
+    done
+
+    # Swallow space-bar Pause & Help presses, pass others on
+    case "$key" in [\ pPhH]) key=;; esac
+
+    # Start counting seconds again
+    start_time=$((start_time + $(date +%s) - enter_time))
+}
+
+help() {
+    local next=${1:-continue}
+    clear
+
+    printf "$title"
+    local marg=$(( (WIDTH - 48 ) / 2 ))
+    local space="$(printf "%${marg}s" "")"
+    sed "s/^/$space/" <<Help
+$e[3;1H$cyan
+           left-arrow: move left
+          right-arrow: move right
+             up-arrow: faster
+           down-arrow: slower
+            space-bar: fire!
+                    q: quit
+                    p: pause
+                    h: help
+$white
+use -h or --help command line option to list
+all command line options.
+$green
+        press space-bar to $next
+Help
+
+    printf "$amber$e[2B"
+    report
+    printf "screen width: $WIDTH   screen height: $HEIGHT"
+    printf "$amber\n"
+    utilization
+    pause
+    refresh
+}
+
+report() {
+    local elapsed=$(( $(date +%s) - start_time))
+    test $elapsed -gt 0 || return
+    printf "tick:0.%06d dmod:%-2d total_cycles:%-3s cycles/step:%-4s cycles/sec:%-4d secs:%d" \
+        $tick ${dmod:-0} $total_cycles $cycles_per_step $((total_cycles /elapsed)) $elapsed
+}
+
+utilization() {
+    local elapsed=$( ($(date +%s) - start_time))
+    test $elapsed -gt 0 || return
+    cps=$((total_cycles / elapsed))
+    util=$(( (1000000 / tick  - cps) / (10000 / tick)))
+    echo "cycles/sec:$cps  cpu-utilization:$util%"
+    return 0
+}
+
+sign_off() {
+
+    report      >&2
+    echo        >&2
+    utilization >&2
+
+    local x_off=$(( (WIDTH - 20) / 2))
+    printf "$e[9;${x_off}H                      "$cyan
+    printf "$e[10;${x_off}H  ==================  "
+    printf "$e[11;${x_off}H  X                X  "
+    printf "$e[12;${x_off}H  X  $white%10s$cyan    X  "   "$1"
+    printf "$e[13;${x_off}H  X                X  "
+    printf "$e[14;${x_off}H  ==================  "
+    printf "$e[15;${x_off}H                      "
+
+    pause ${2:-50}
+
+    # Get command line off of our screen
+    printf "$e[$ship_y;1H$e[3B$nc"
+    printf "$e[$ship_y;1H$e[3B$nc"
+
+    pause 10
+    if [ -z "$debug" ]; then
+        clear
+        exit
+    fi
+    printf "$amber"
+    utilization
+    pause
+    exit
+
+}
+
+auto_size() {
+    width=$(( 80 + (WIDTH - 80 ) / 2 ))
+    [ $width -gt $WIDTH ] && width=$WIDTH
+    margin=$(( (WIDTH - width) / 2))
+    center=$(( margin + width / 2))
+}
+
+start_space_evaders() {
+
+    # Timing ...
+    local tick=5000 idle_base=20 accel=15
+    local duck_mode=0
+    local idle_denom=1000 idle_factor=1000
+    local width=80 cols=8 rows=6 space=1 center=40
+    local margin=0
+    local ship_width=7 gap=4  elev=2
+
+    auto_size
+    #-- Process command line.  Args must start with a "-"
+    while [ $# -gt 0 -a -z "${1##-*}" ]; do
+        arg="${1#-}"; shift
+
+        # Stack short options
+        case "$arg" in
+            [a-z][a-z0-9]*)
+                if echo "$arg" | grep -q "^[acCdeghimrstw0-9]\+$"; then
+                    set -- $(echo $arg | sed 's/\(\d\+\)/ \1 /g' | sed 's/\([a-zA-Z]\)/ -\1 /g') "$@"
+                    continue
+                fi;;
+        esac
+
+        # Expand arg=*
+        case "$arg" in
+            -accel=*|-cols=*|-elev=*|-gap=*|-idle=*|-rows=*|-space=*|-tick=*|-width=*|[acegirstw]=*)
+                set -- $(echo $arg | sed 's/^\(-\w\+\)=\([0-9]\+\)/-\1 \2/') "$@"
+                continue
+        esac
+
+        # Check for missing and suspicious operands
+        case "$arg" in
+            -FIXME|[acgirtw])
+                if [ $# -lt 1 ]; then
+                    echo "Expected an operand after -$arg" && return 4
+
+                elif [ -z "${1##-[a-zA-Z]*}" -o -z "${1##--[a-zA-Z]*}" ]; then
+                    echo "Skipping -$arg $1 due to suspicious operand."
+                    shift
+                    continue;
+                fi;;
+        esac
+
+        case "$arg" in
+           -accel|a)  accel=$1         ; shift     ;;
+            -cols|c)  cols=$1          ; shift     ;;
+         -classic|C)  classic=true                 ;;
+           -debug|d)  debug=true                   ;;
+            -elev|e)  elev=$1          ; shift     ;;
+             -gap|g)  gap=$1           ; shift     ;;
+            -help|h)  cli_help         ; return  0 ;;
+            -idle|i)  idle_base=$1     ; shift     ;;
+          -margin|m)  margin=$1        ; shift     ;;
+            -rows|r)  rows=$1          ; shift     ;;
+           -space|s)  space=$1         ; shift     ;;
+            -tick|t)  tick=$1          ; shift     ;;
+           -width|w)  width=$1         ; shift     ;;
+
+                  *)  echo "Unknown parameter: $arg"
+                      exit;;
+        esac
+    done
+
+    # We need the getch helper for non-blocking stdin
+    local getch=  my_dir=$(readlink -f "$(dirname "$0")")
+    for try_getch in $getch $my_dir/getch $my_dir/getch-64 ./getch getch ./getch-64 getch-64; do
+        [ -n "$($try_getch 2>&1)" ] && continue
+        getch=$try_getch
+        break
+    done
+    if [ -z "$getch" ]; then
+        echo "Could not find a \"getch\" program that works on this system."
+        exit 2
+    fi
+
+    trap restore_tty EXIT
+
+    #space_evaders 2> ${0##*/}.log
+    space_evaders 2> /dev/null
+}
+
+start_space_evaders "$@"
