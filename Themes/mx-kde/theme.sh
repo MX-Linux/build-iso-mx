@@ -23,8 +23,6 @@ copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
 #copy_file Window_Buttons.desktop	/usr/share/applications/
-copy_file synaptic.desktop 		/usr/share/applications/
-copy_file synaptic-kde.desktop		/usr/share/applications/
 copy_file nano.desktop		/usr/share/applications/
 copy_file lightdm.conf		/etc/lightdm/
 copy_file lightdm-gtk-greeter.conf /etc/lightdm/
