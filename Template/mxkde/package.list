@@ -92,6 +92,7 @@ colord-data
 #compton-conf
 conky-all
 conky-manager
+conky-toggle-mx
 #consolekit
 cpufrequtils
 cracklib-runtime
@@ -219,6 +220,7 @@ fonts-uralic
 fonts-vlgothic # Japanese
 fonts-wqy-microhei # Chinese
 foomatic-db-compressed-ppds
+formatusb
 frameworkintegration
 freeglut3
 #freshplayerplugin
@@ -233,8 +235,8 @@ gconf2-common
 gcr
 gdb-minimal
 gddrescue
-#gdebi-core
 gdebi
+#gdebi-core
 gdisk
 #geany
 #geary
@@ -376,10 +378,10 @@ kio
 kio-extras
 kio-extras-data
 kio-ldap
-konsole
-konsole-kpart
 kompare
 konq-plugins
+konsole
+konsole-kpart
 kopete
 korganizer
 kpackagetool5
@@ -491,6 +493,7 @@ muon
 mx-boot-options
 mx-bootrepair
 #mx-broadcom-manager
+mx-cleanup
 #mx-clocky
 mx-codecs
 mx-conky
@@ -502,8 +505,11 @@ mx-docs
 mx-goodies
 mx-gpg-keys
 #mx-greybird-themes
+mx-idevice-mounter
 mx-installer
+mx-live-usb-maker
 mx-menu-editor
+mx-network-assistant
 mx-packageinstaller
 mx-packageinstaller-pkglist
 mx-pkexec
@@ -571,8 +577,8 @@ openvpn
 oxygen-icon-theme
 oxygen-sounds
 p7zip-full
-pacpl
 packagekit
+pacpl
 parted
 #partimage
 partition-info
