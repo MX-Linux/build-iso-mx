@@ -57,6 +57,6 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 #copy KDE configs to skel
 copy_file kactivitymanagerd-statsrc /etc/skel/.config/
 copy_file kglobalshortcutsrc /etc/skel/.config/ 
-copy_file  /etc/skel/.config/autostart/
+copy_file org.kde.yakuake.desktop /etc/skel/.config/autostart/
 
 exit
