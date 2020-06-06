@@ -54,4 +54,9 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 #copy_file 48381996347_8f9d2001e3_k.jpg /usr/share/backgrounds/
 #copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
+#copy KDE configs to skel
+copy_file kactivitymanagerd-statsrc /etc/skel/.config/
+copy_file kglobalshortcutsrc /etc/skel/.config/ 
+copy_file conky.desktop  /etc/skel/.config/autostart/
+
 exit
