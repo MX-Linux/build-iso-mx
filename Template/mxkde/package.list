@@ -378,7 +378,7 @@ kio
 kio-extras
 kio-extras-data
 kio-ldap
-kmahjong
+kmahjongg
 kmines
 kompare
 konq-plugins
@@ -388,7 +388,6 @@ konsole-kpart
 kopete
 korganizer
 kpackagetool5
-kpatience
 kppp
 krb5-locales
 kross
