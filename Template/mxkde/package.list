@@ -25,7 +25,7 @@ appstream
 apt-config-icons
 apt-config-icons-large
 #apt-mx
-apt-notifier
+#apt-notifier
 apt-transport-https
 apt-xapian-index
 aptitude
