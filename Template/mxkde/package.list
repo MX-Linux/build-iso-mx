@@ -131,6 +131,7 @@ dh-python
 dialog
 dictionaries-common
 #diffuse
+digikam
 discover
 discover-data
 disk-manager
@@ -243,8 +244,8 @@ gdisk
 ghostscript
 ghostscript-x
 giblib1
-gimp
-gimp-data
+#gimp
+#gimp-data
 git
 #gksu
 glib-networking
@@ -357,6 +358,7 @@ kded5
 kdelibs-bin
 kdelibs5-data
 kdelibs5-plugins
+kdenlive
 kdepim-runtime
 kdeplasma-addons-data
 kdialog
@@ -392,6 +394,7 @@ kppp
 krb5-locales
 kross
 krdc
+krita
 kscreen
 ksshaskpass
 ksudoku
