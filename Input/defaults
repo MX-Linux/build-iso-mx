@@ -46,7 +46,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="May 31, 2020"
+RELEASE_DATE="June 6, 2020"
 TIME_ZONE="America/New_York"
 
 #DE particular items
