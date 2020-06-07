@@ -54,8 +54,9 @@ DialogHeight=535
 DialogWidth=720
 
 [Containments][2][Applets][3][Configuration][General]
-favoritesPortedToKAstats=true
+favorites=applications:conky-toggle.desktop,applications:libreoffice-startcenter.desktop,applications:mx-tools.desktop,applications:mx-packageinstaller.desktop,applications:Help.desktop,applications:org.kde.konsole.desktop,applications:org.kde.ksysguard.desktop,applications:Quick_System_Info.desktop
 showAppsByName=true
+icon=/usr/local/share/icons/mxfcelogo-rounded.png
 systemApplications=systemsettings.desktop,org.kde.kinfocenter.desktop
 
 [Containments][2][Applets][3][Configuration][Shortcuts]
@@ -104,7 +105,7 @@ PreloadWeight=18
 AppletOrder=3;4;21;20;19;5;6;8
 
 [Containments][23]
-activityId=97f9e9b5-494b-4b6f-b95e-ea0e14d7afd5
+activityId=
 formfactor=0
 immutability=1
 lastScreen=0
