@@ -55,8 +55,6 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 #copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
 #copy KDE configs to skel
-copy_file kactivitymanagerdrc /etc/skel/.config/
-copy_file kactivitymanagerd-statsrc /etc/skel/.config/
 copy_file kglobalshortcutsrc /etc/skel/.config/ 
 copy_file yakuakerc /etc/skel/.config/ 
 copy_file plasma-org.kde.plasma.desktop-appletsrc /etc/skel/.config/
