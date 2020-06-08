@@ -47,7 +47,7 @@ immutability=1
 plugin=org.kde.plasma.systemloadviewer
 
 [Containments][2][Applets][25][Configuration]
-PreloadWeight=26
+PreloadWeight=18
 
 [Containments][2][Applets][3]
 immutability=1
@@ -62,8 +62,8 @@ DialogWidth=720
 
 [Containments][2][Applets][3][Configuration][General]
 favorites=applications:conky-toggle.desktop,applications:libreoffice-startcenter.desktop,applications:mx-tools.desktop,applications:mx-packageinstaller.desktop,applications:Help.desktop,applications:org.kde.konsole.desktop,applications:org.kde.ksysguard.desktop,applications:Quick_System_Info.desktop
-showAppsByName=true
 icon=/usr/local/share/icons/mxfcelogo-rounded.png
+showAppsByName=true
 systemApplications=systemsettings.desktop,org.kde.kinfocenter.desktop
 
 [Containments][2][Applets][3][Configuration][Shortcuts]
@@ -77,21 +77,21 @@ immutability=1
 plugin=org.kde.plasma.pager
 
 [Containments][2][Applets][4][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][2][Applets][5]
 immutability=1
 plugin=org.kde.plasma.taskmanager
 
 [Containments][2][Applets][5][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][2][Applets][6]
 immutability=1
 plugin=org.kde.plasma.systemtray
 
 [Containments][2][Applets][6][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 SystrayContainmentId=7
 
 [Containments][2][Applets][8]
@@ -99,19 +99,19 @@ immutability=1
 plugin=org.kde.plasma.digitalclock
 
 [Containments][2][Applets][8][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][2][ConfigDialog]
 DialogHeight=84
 DialogWidth=800
 
 [Containments][2][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][2][General]
-AppletOrder=3;4;21;20;19;5;6;8
+AppletOrder=3;4;21;20;19;5;25;6;8
 
-[Containments][23]
+[Containments][26]
 activityId=
 formfactor=0
 immutability=1
@@ -119,6 +119,16 @@ lastScreen=0
 location=0
 plugin=org.kde.plasma.folder
 wallpaperplugin=org.kde.image
+
+[Containments][26][ConfigDialog]
+DialogHeight=541
+DialogWidth=800
+
+[Containments][26][Configuration]
+PreloadWeight=42
+
+[Containments][26][Wallpaper][org.kde.image][General]
+Image=file:///usr/share/backgrounds/mx_blue.jpg
 
 [Containments][7]
 activityId=
@@ -134,78 +144,85 @@ immutability=1
 plugin=org.kde.plasma.clipboard
 
 [Containments][7][Applets][10][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][11]
 immutability=1
 plugin=org.kde.plasma.devicenotifier
 
 [Containments][7][Applets][11][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][12]
 immutability=1
 plugin=org.kde.kdeconnect
 
 [Containments][7][Applets][12][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][13]
 immutability=1
 plugin=org.kde.plasma.keyboardindicator
 
 [Containments][7][Applets][13][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][14]
 immutability=1
 plugin=org.kde.plasma.notifications
 
 [Containments][7][Applets][14][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][15]
 immutability=1
 plugin=org.kde.plasma.printmanager
 
 [Containments][7][Applets][15][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][16]
 immutability=1
 plugin=org.kde.plasma.battery
 
 [Containments][7][Applets][16][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][17]
 immutability=1
 plugin=org.kde.plasma.bluetooth
 
 [Containments][7][Applets][17][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Applets][18]
 immutability=1
 plugin=org.kde.plasma.networkmanagement
 
 [Containments][7][Applets][18][Configuration]
-PreloadWeight=18
+PreloadWeight=10
+
+[Containments][7][Applets][27]
+immutability=1
+plugin=org.kde.discovernotifier
+
+[Containments][7][Applets][27][Configuration]
+PreloadWeight=42
 
 [Containments][7][Applets][9]
 immutability=1
 plugin=org.kde.plasma.volume
 
 [Containments][7][Applets][9][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][Configuration]
-PreloadWeight=18
+PreloadWeight=10
 
 [Containments][7][General]
-extraItems=org.kde.kdeconnect,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume
-knownItems=org.kde.kdeconnect,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume
+extraItems=org.kde.kdeconnect,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.discovernotifier
+knownItems=org.kde.kdeconnect,org.kde.plasma.battery,org.kde.plasma.bluetooth,org.kde.plasma.clipboard,org.kde.plasma.devicenotifier,org.kde.plasma.keyboardindicator,org.kde.plasma.mediacontroller,org.kde.plasma.networkmanagement,org.kde.plasma.notifications,org.kde.plasma.printmanager,org.kde.plasma.volume,org.kde.discovernotifier
 
 [ScreenMapping]
 itemsOnDisabledScreens=
-screenMapping=desktop:/Installer.desktop,0,desktop:/FAQ.desktop,0,desktop:/manual.desktop,0
+screenMapping=desktop:/FAQ.desktop,0,desktop:/manual.desktop,0,desktop:/Installer.desktop,0
