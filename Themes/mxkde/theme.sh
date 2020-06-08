@@ -60,6 +60,7 @@ copy_file kscreenlockerrc /etc/skel/.config/
 copy_file ksmserverrc /etc/skel/.config/ 
 copy_file org.kde.yakuake.desktop /etc/skel/.config/autostart/
 copy_file plasma-org.kde.plasma.desktop-appletsrc /etc/skel/.config/
+copy_file set_wallpaper.desktop /etc/skel/.config/autostart/
 copy_file yakuakerc /etc/skel/.config/ 
 
 exit
