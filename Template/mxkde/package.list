@@ -244,8 +244,8 @@ gdisk
 ghostscript
 ghostscript-x
 giblib1
-#gimp
-#gimp-data
+gimp
+gimp-data
 git
 #gksu
 glib-networking
@@ -346,6 +346,7 @@ kde-config-screenlocker
 kde-config-sddm
 kde-runtime
 kde-runtime-data
+kde-servicemenu-rootactions
 kde-spectacle
 kde-standard
 kde-style-breeze
@@ -587,6 +588,7 @@ p7zip-full
 packagekit
 packagekit-tools
 pacpl
+papirus-icon-theme
 parted
 #partimage
 partition-info
@@ -702,12 +704,13 @@ qml-module-qtquick2
 qml-module-qtwebkit
 #qogir-dark-theme
 #qogir-gtk-theme
-qpdfview
+#qpdfview
 qpdfview-djvu-plugin
 qpdfview-ps-plugin
 qpdfview-translations
 #qt4-fsarchiver
 qt5-gtk-platformtheme
+qt5-style-kvantum
 qt5-style-plugins
 #qtchooser
 qtcore4-l10n
