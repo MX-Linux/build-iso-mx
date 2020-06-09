@@ -1318,7 +1318,7 @@ do_stage_5() {
     for efile in $exclude_files; do
         ofile=${efile%.list}.orig
         $SUDO cp $efile $ofile
-        [ -f $sqfs_dir/etc/mx-snapshot-excludes.list ] && $SUDO cp $sqfs_dir/etc/mx-snapshot-excludes.list $sqfs_dir/usr/local/share/excludes
+        [ -f $sqfs_dir/etc/mx-snapshot-excludes.list ] && $SUDO cp  --remove-destination $sqfs_dir/etc/mx-snapshot-excludes.list $sqfs_dir/usr/local/share/excludes
         $SUDO chmod a-wx $ofile
     done
 
