@@ -1318,6 +1318,7 @@ do_stage_5() {
     for efile in $exclude_files; do
         ofile=${efile%.list}.orig
         $SUDO cp $efile $ofile
+        [ -f $sqfs_dir/etc/mx-snapshot-excludes.list ] && $SUDO cp $sqfs_dir/etc/mx-snapshot-excludes.list $sqfs_dir/usr/local/share/excludes
         $SUDO chmod a-wx $ofile
     done
 
@@ -2585,6 +2586,11 @@ prep_chroot() {
     fi
 
     [ -e $sqfs_dir/Build ] || make_build_dir
+
+    if ! [ -e $sqfs_dir/run/resolveconf/resolv.conf ]; then
+        $SUDO mkdir -p $sqfs_dir/run/resolvconf/
+        $SUDO cp /etc/resolv.conf $sqfs_dir/run/resolvconf
+    fi
 
     # Always use local mirror when working in chroot
     set_chroot_mirror $LOCAL_MIRROR "LOCAL mirror"
