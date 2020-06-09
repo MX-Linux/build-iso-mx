@@ -2589,7 +2589,7 @@ prep_chroot() {
 
     if ! [ -e $sqfs_dir/run/resolveconf/resolv.conf ]; then
         $SUDO mkdir -p $sqfs_dir/run/resolvconf/
-        $SUDO cp /etc/resolv.conf $sqfs_dir/run/resolvconf
+        $SUDO cp -H /etc/resolv.conf $sqfs_dir/run/resolvconf
     fi
 
     # Always use local mirror when working in chroot
