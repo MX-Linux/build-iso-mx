@@ -705,9 +705,9 @@ qml-module-qtwebkit
 #qogir-dark-theme
 #qogir-gtk-theme
 #qpdfview
-qpdfview-djvu-plugin
-qpdfview-ps-plugin
-qpdfview-translations
+#qpdfview-djvu-plugin
+#qpdfview-ps-plugin
+#qpdfview-translations
 #qt4-fsarchiver
 qt5-gtk-platformtheme
 qt5-style-kvantum
