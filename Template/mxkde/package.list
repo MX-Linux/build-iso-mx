@@ -236,7 +236,7 @@ gconf2-common
 gcr
 gdb-minimal
 gddrescue
-gdebi
+#gdebi
 #gdebi-core
 gdisk
 #geany
