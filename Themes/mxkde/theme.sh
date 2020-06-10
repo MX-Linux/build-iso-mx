@@ -55,6 +55,7 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 #copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
 #copy KDE configs to skel
+copy_file kcminputrc /etc/skel/.config/ 
 copy_file kdeglobals /etc/skel/.config/ 
 copy_file kglobalshortcutsrc /etc/skel/.config/ 
 copy_file kscreenlockerrc /etc/skel/.config/ 

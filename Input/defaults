@@ -13,7 +13,7 @@ CODE_NAME="patito feo"
 ASCII_CODE_NAME="patito feo"
 DEBIAN_RELEASE="buster"
 DISTRO_NAME="MX"
-DISTRO_VERSION="19.2_KDE-alpha2"
+DISTRO_VERSION="19.2_KDE-alpha3"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
