@@ -1,0 +1,13 @@
+[General]
+BrowserApplication=firefox.desktop
+ColorScheme=Breeze
+Name=Breeze
+shadeSortColumn=true
+widgetStyle=Breeze
+
+[KDE]
+ColorScheme=Breeze
+LookAndFeelPackage=org.kde.breeze.desktop
+contrast=4
+widgetStyle=breeze
+

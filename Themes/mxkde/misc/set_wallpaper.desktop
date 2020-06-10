@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Exec=(sleep 5; qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript 'var allDesktops = desktops();print (allDesktops);for (i=0;i<allDesktops.length;i++) {d = allDesktops[i];d.wallpaperPlugin = "org.kde.image";d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");d.writeConfig("Image", "file:///usr/share/backgrounds/mx_blue.jpg")}' && rm $HOME/.config/autostart/set_wallpaper.desktop)
+Hidden=false
+NoDisplay=false
+Name=Set Wallpaper
+OnlyShowIn=KDE;

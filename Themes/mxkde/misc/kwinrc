@@ -1,0 +1,13 @@
+[Desktops]
+Number=2
+Rows=2
+
+[TabBox]
+DesktopLayout=org.kde.breeze.desktop
+DesktopListLayout=org.kde.breeze.desktop
+LayoutName=org.kde.breeze.desktop
+
+[org.kde.kdecoration2]
+library=org.kde.breeze
+theme=
+

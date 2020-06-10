@@ -23,8 +23,6 @@ copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
 #copy_file Window_Buttons.desktop	/usr/share/applications/
-copy_file synaptic.desktop 		/usr/share/applications/
-copy_file synaptic-kde.desktop		/usr/share/applications/
 copy_file nano.desktop		/usr/share/applications/
 copy_file lightdm.conf		/etc/lightdm/
 copy_file lightdm-gtk-greeter.conf /etc/lightdm/
@@ -55,5 +53,19 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 
 #copy_file 48381996347_8f9d2001e3_k.jpg /usr/share/backgrounds/
 #copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
+
+#copy KDE configs to skel
+copy_file kcminputrc /etc/skel/.config/ 
+copy_file kdeglobals /etc/skel/.config/ 
+copy_file kglobalshortcutsrc /etc/skel/.config/ 
+copy_file kscreenlockerrc /etc/skel/.config/ 
+copy_file ksmserverrc /etc/skel/.config/ 
+copy_file kwalletrc /etc/skel/.config/ 
+copy_file kwinrc /etc/skel/.config/ 
+copy_file mimeapps.list /etc/skel/.config/ 
+copy_file org.kde.yakuake.desktop /etc/skel/.config/autostart/
+copy_file plasma-org.kde.plasma.desktop-appletsrc /etc/skel/.config/
+copy_file set_wallpaper.desktop /etc/skel/.config/autostart/
+copy_file yakuakerc /etc/skel/.config/ 
 
 exit
