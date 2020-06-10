@@ -384,7 +384,7 @@ kio-ldap
 kmahjongg
 kmines
 kompare
-konq-plugins
+#konq-plugins
 konversation
 konsole
 konsole-kpart
@@ -734,8 +734,9 @@ sgml-base
 sgml-data
 shared-mime-info
 #shotwell
+skanlite
 signon-plugin-oauth2
-simple-scan
+#simple-scan
 #simsu
 smbc
 smbclient
