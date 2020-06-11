@@ -298,7 +298,7 @@ hardinfo
 haveged
 hddtemp
 hdparm
-hexchat
+#hexchat
 hexedit
 hibernate
 hicolor-icon-theme
@@ -783,7 +783,7 @@ telnet
 thunderbird
 #timeset-gui
 tlp
-# touchpad-indicator
+#touchpad-indicator
 traceroute
 transmission-common
 transmission-qt
