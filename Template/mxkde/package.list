@@ -166,7 +166,7 @@ f2fs-tools
 #faenza-icon-theme
 #fail2ban
 fakeroot
-fbreader
+#fbreader
 #fbsplash-antix
 #fbxkb
 #featherpad
@@ -204,6 +204,7 @@ firmware-b43legacy-installer
 flac
 flake
 #flashplugin-nonfree
+foliate
 fontconfig
 fontconfig-config
 fonts-crosextra-caladea
