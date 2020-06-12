@@ -928,7 +928,7 @@ do_stage_4() {
     if gather_any remove \
         && do_part 11 "Remove some packages"; then
         gather_say remove "Remove $(pqn %n) package%s"
-        gather remove | apt-get purge
+        apt-get purge $(gather remove)
         end_part_lax
     fi
 
