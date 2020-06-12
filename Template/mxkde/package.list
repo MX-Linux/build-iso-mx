@@ -740,6 +740,7 @@ skanlite
 signon-plugin-oauth2
 #simple-scan
 #simsu
+smb4k
 smbc
 smbclient
 #smtube
@@ -762,7 +763,7 @@ syslinux-common
 syslinux-utils
 system-config-printer
 system-config-printer-udev
-system-config-samba
+#system-config-samba
 system-tools-backends
 systemd
 systemd-shim
