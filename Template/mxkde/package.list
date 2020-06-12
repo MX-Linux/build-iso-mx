@@ -169,7 +169,7 @@ fakeroot
 fbreader
 #fbsplash-antix
 #fbxkb
-featherpad
+#featherpad
 feh
 #file-roller
 firefox
@@ -754,7 +754,7 @@ spice-vdagent
 sshfs
 ssl-cert
 strace
-swell-foop
+#swell-foop
 #synaptic
 syslinux
 syslinux-common
