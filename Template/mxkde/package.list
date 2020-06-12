@@ -295,7 +295,7 @@ guvcview
 gvfs
 gvfs-backends
 gvfs-fuse
-hardinfo
+#hardinfo
 haveged
 hddtemp
 hdparm
