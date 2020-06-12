@@ -519,7 +519,7 @@ mx-gpg-keys
 mx-idevice-mounter
 mx-installer
 mx-live-usb-maker
-mx-menu-editor
+#mx-menu-editor
 mx-network-assistant
 mx-packageinstaller
 mx-packageinstaller-pkglist
@@ -603,7 +603,7 @@ phonon4qt5
 phonon4qt5-backend-vlc
 #pidgin
 #pidgin-data
-pim-data-exporter
+#-- REMOVE (11 June, 2020) pim-data-exporter
 pinentry-qt
 plasma-discover
 #plane-gtk-theme
