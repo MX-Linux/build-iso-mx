@@ -61,8 +61,8 @@ lockfile-progs
 #lvm2
 make
 mbr
-mc
-mc-data
+# mc
+# mc-data
 memtest86+
 menu
 mlocate
