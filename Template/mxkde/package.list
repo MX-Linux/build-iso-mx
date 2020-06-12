@@ -166,10 +166,10 @@ f2fs-tools
 #faenza-icon-theme
 #fail2ban
 fakeroot
-fbreader
+#fbreader
 #fbsplash-antix
 #fbxkb
-featherpad
+#featherpad
 feh
 #file-roller
 firefox
@@ -204,6 +204,7 @@ firmware-b43legacy-installer
 flac
 flake
 #flashplugin-nonfree
+foliate
 fontconfig
 fontconfig-config
 fonts-crosextra-caladea
@@ -236,7 +237,7 @@ gconf2-common
 gcr
 gdb-minimal
 gddrescue
-gdebi
+#gdebi
 #gdebi-core
 gdisk
 #geany
@@ -298,7 +299,7 @@ hardinfo
 haveged
 hddtemp
 hdparm
-hexchat
+#hexchat
 hexedit
 hibernate
 hicolor-icon-theme
@@ -371,6 +372,7 @@ kf5-kdepim-apps-libs-data
 kf5-messagelib-data
 kfind
 kgamma5
+kgpg
 khelpcenter
 khotkeys
 khotkeys-data
@@ -518,7 +520,7 @@ mx-gpg-keys
 mx-idevice-mounter
 mx-installer
 mx-live-usb-maker
-mx-menu-editor
+#mx-menu-editor
 mx-network-assistant
 mx-packageinstaller
 mx-packageinstaller-pkglist
@@ -602,7 +604,7 @@ phonon4qt5
 phonon4qt5-backend-vlc
 #pidgin
 #pidgin-data
-pim-data-exporter
+#-- REMOVE (11 June, 2020) pim-data-exporter
 pinentry-qt
 plasma-discover
 #plane-gtk-theme
@@ -753,7 +755,7 @@ spice-vdagent
 sshfs
 ssl-cert
 strace
-swell-foop
+#swell-foop
 #synaptic
 syslinux
 syslinux-common
@@ -782,7 +784,7 @@ telnet
 thunderbird
 #timeset-gui
 tlp
-touchpad-indicator
+#touchpad-indicator
 traceroute
 transmission-common
 transmission-qt
