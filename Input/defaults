@@ -14,6 +14,7 @@ ASCII_CODE_NAME="patito feo"
 DEBIAN_RELEASE="buster"
 DISTRO_NAME="MX"
 DISTRO_VERSION="19.2_KDE-alpha3"
+#DISTRO_VERSION="19.2_ahs"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -24,10 +25,10 @@ HOME_URL="https://mxlinux.org"
 #Note that the templates don't use all values.
 
 #ahs
-K_REVISION="2"
-K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="5.6.0"
-UNSIGNED="-unsigned"
+#K_REVISION="2"
+#K_TEMPLATE="%V%G-%R-%A"
+#K_VERSION="5.6.0"
+#UNSIGNED="-unsigned"
 
 #standard 32 bit
 #K_REVISION="9"
@@ -35,11 +36,11 @@ UNSIGNED="-unsigned"
 #K_VERSION="4.19.0"
 #UNSIGNED=""
 
-#standard 64 bit
-#K_REVISION="9"
-#K_TEMPLATE="%V%G-%R-%A"
-#K_VERSION="4.19.0"
-#UNSIGNED=""
+standard 64 bit
+K_REVISION="9"
+K_TEMPLATE="%V%G-%R-%A"
+K_VERSION="4.19.0"
+UNSIGNED=""
 
 #system defaults, these end up inside the squash file system mostly
 LIVE_USER="demo"
