@@ -58,6 +58,7 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 copy_file kcminputrc /etc/skel/.config/ 
 copy_file kdeglobals /etc/skel/.config/ 
 copy_file kglobalshortcutsrc /etc/skel/.config/ 
+copy_file klaunchrc /etc/skel/.config/ 
 copy_file kscreenlockerrc /etc/skel/.config/ 
 copy_file ksmserverrc /etc/skel/.config/ 
 copy_file kwalletrc /etc/skel/.config/ 
