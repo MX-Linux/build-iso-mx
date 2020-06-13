@@ -345,7 +345,7 @@ kde-cli-tools-data
 kde-config-gtk-style
 kde-config-mailtransport
 kde-config-screenlocker
-kde-config-sddm
+#kde-config-sddm
 kdenetwork-filesharing
 kde-runtime
 kde-runtime-data
@@ -364,15 +364,15 @@ kdelibs-bin
 kdelibs5-data
 kdelibs5-plugins
 kdenlive
-kdepim-runtime
+#kdepim-runtime
 kdeplasma-addons-data
 kdialog
 #kdiff3
 kdoctools
 kdoctools5
 keditbookmarks
-kf5-kdepim-apps-libs-data
-kf5-messagelib-data
+#kf5-kdepim-apps-libs-data
+#kf5-messagelib-data
 kfind
 kgamma5
 kgpg
