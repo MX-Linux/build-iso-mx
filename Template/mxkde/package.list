@@ -410,6 +410,7 @@ ksysguard-data
 ksysguardd
 ktexteditor-data
 ktexteditor-katepart
+ktorrent
 kwalletmanager
 kwayland-data
 kwin-common
@@ -673,7 +674,7 @@ python3-pycurl
 python3-smbc
 python3-software-properties
 #qdbus
-qbittorrent
+#qbittorrent
 qdbus-qt5
 qdirstat
 qml-module-org-kde-activities
