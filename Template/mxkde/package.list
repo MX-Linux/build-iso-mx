@@ -673,6 +673,7 @@ python3-pycurl
 python3-smbc
 python3-software-properties
 #qdbus
+qbittorrent
 qdbus-qt5
 qdirstat
 qml-module-org-kde-activities
@@ -791,8 +792,8 @@ thunderbird
 tlp
 #touchpad-indicator
 traceroute
-transmission-common
-transmission-qt
+#transmission-common
+#transmission-qt
 #ttf-freefont
 ttf-mscorefonts-installer
 #tumbler
