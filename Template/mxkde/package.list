@@ -350,7 +350,7 @@ kdenetwork-filesharing
 kde-runtime
 kde-runtime-data
 kde-servicemenu-rootactions
-#kde-spectacle
+kde-spectacle
 kde-standard
 kde-style-breeze
 kde-style-breeze-qt4
@@ -402,7 +402,7 @@ kross
 krdc
 krita
 kscreen
-ksnip
+#ksnip
 ksshaskpass
 ksudoku
 ksysguard
