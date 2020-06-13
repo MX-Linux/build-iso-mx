@@ -13,7 +13,7 @@ akonadi-backend-mysql
 akonadi-contacts-data
 akonadi-mime-data
 akonadi-server
-akregator
+#akregator
 alsa-tools
 alsa-utils
 amd64-microcode
