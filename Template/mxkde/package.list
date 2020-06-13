@@ -498,7 +498,7 @@ mobile-broadband-provider-info
 modemmanager
 module-assistant
 mtr
-mugshot
+#mugshot
 muon
 #murrine-themes
 #mx-adwaita-dark-xfce-themes
@@ -817,6 +817,7 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
+user-manager
 uswsusp
 va-driver-all
 vainfo
