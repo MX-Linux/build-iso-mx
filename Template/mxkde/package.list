@@ -550,7 +550,7 @@ mx-welcome
 mx19-archive-keyring
 mx19-artwork
 mythes-en-us
-nautilus-data
+#nautilus-data
 #ndisgtk
 #ndiswrapper
 #ndiswrapper-dkms
