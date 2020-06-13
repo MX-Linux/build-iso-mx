@@ -365,7 +365,7 @@ kdenlive
 kdepim-runtime
 kdeplasma-addons-data
 kdialog
-kdiff3
+#kdiff3
 kdoctools
 kdoctools5
 keditbookmarks
