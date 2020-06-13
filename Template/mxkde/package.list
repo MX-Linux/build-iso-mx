@@ -346,7 +346,7 @@ kde-config-gtk-style
 kde-config-mailtransport
 kde-config-screenlocker
 kde-config-sddm
-kdenetwork-fileshare
+kdenetwork-filesharing
 kde-runtime
 kde-runtime-data
 kde-servicemenu-rootactions
