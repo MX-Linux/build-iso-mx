@@ -763,8 +763,8 @@ strace
 syslinux
 syslinux-common
 syslinux-utils
-system-config-printer
-system-config-printer-udev
+#system-config-printer
+#system-config-printer-udev
 #system-config-samba
 system-tools-backends
 systemd
