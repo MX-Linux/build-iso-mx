@@ -47,12 +47,12 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="June 15, 2020"
+RELEASE_DATE="June 14, 2020"
 TIME_ZONE="America/New_York"
 
 #DE particular items
 X_TERM_EMULATOR="/usr/bin/konsole"
-CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
+CURSOR_ICON_THEME="/etc/X11/cursors/breeze_cursors.theme"
 
 #options for building squashfs
 #lz4 is good for testing but large isos
@@ -61,10 +61,10 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 #xz use -comp xz -b 262144 #use for base
 #lz4 use -comp lz4 -Xhc
 #gzip leave empty #use for full
-#COMPRESSION_TYPE="xz"
-#COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
-COMPRESSION_TYPE="lz4"
-COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+#COMPRESSION_TYPE="lz4"
+#COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
 
 #legacy variables that don't change
 USE_UEFI=true
