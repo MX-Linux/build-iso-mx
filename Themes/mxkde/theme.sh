@@ -24,8 +24,9 @@ copy_file display-im6.desktop		/usr/share/applications/
 copy_file display-im6.q16.desktop	/usr/share/applications/
 #copy_file Window_Buttons.desktop	/usr/share/applications/
 copy_file nano.desktop		/usr/share/applications/
-copy_file lightdm.conf		/etc/lightdm/
-copy_file lightdm-gtk-greeter.conf /etc/lightdm/
+#copy_file lightdm.conf		/etc/lightdm/
+copy_file sddm.conf		/etc/
+#copy_file lightdm-gtk-greeter.conf /etc/lightdm/
 copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file desktop.data          /usr/local/share/boot-menus/
 copy_file desktop.menu          /usr/local/share/boot-menus/
