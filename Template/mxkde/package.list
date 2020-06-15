@@ -350,7 +350,7 @@ kde-config-sddm
 kdenetwork-filesharing
 kde-runtime
 kde-runtime-data
-Kde-servicemenu-checkhash-installdebs 
+kde-servicemenu-checkhash-installdebs 
 kde-servicemenu-extract-and-compress 
 kde-servicemenu-kim4
 kde-servicemenu-rootactions
