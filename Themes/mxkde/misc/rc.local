@@ -29,6 +29,14 @@ usb_save=/live/etc/init.d/live-usb-save
 #make sure an apt cache archive partial folder exists for apt-notifier
 [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
 
+if [ ! /proc/1/exe -ef /usr/lib/systemd/systemd ]; then
+    case $(runlevel) in
+         *5)
+          /usr/bin/pgrep -x sddm >/dev/null && sleep 3 && /usr/sbin/service sddm restart || true
+          ;;
+    esac
+fi
+
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
     *5) exit 0  ;;
