@@ -5,8 +5,8 @@ acpi
 acpi-fakekey
 #acpi-support-base
 acpid
-adobe-flash-properties-kde
-adobe-flashplugin
+#adobe-flash-properties-kde
+#adobe-flashplugin
 advert-block-antix
 #aisleriot
 #akonadi-backend-mysql
