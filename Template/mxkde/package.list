@@ -5,8 +5,8 @@ acpi
 acpi-fakekey
 #acpi-support-base
 acpid
-adobe-flash-properties-kde
-adobe-flashplugin
+#adobe-flash-properties-kde
+#adobe-flashplugin
 advert-block-antix
 #aisleriot
 #akonadi-backend-mysql
@@ -449,7 +449,7 @@ libreoffice-calc
 libreoffice-common
 libreoffice-core
 libreoffice-draw
-libreoffice-gnome
+#libreoffice-gnome
 libreoffice-help-en-us
 libreoffice-impress
 libreoffice-java-common
