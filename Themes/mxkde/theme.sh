@@ -58,19 +58,20 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 
 #copy KDE configs to skel
 copy_file kcminputrc /etc/skel/.config/ 
+copy_file kde-mimeapps.list /etc/xdg/ 
 copy_file kdeglobals /etc/skel/.config/ 
 copy_file kglobalshortcutsrc /etc/skel/.config/ 
 copy_file klaunchrc /etc/skel/.config/ 
 copy_file kscreenlockerrc /etc/skel/.config/ 
 copy_file ksmserverrc /etc/skel/.config/ 
+copy_file ksplashrc /etc/skel/.config/ 
 copy_file kwalletrc /etc/skel/.config/ 
 copy_file kwinrc /etc/skel/.config/ 
-copy_file kde-mimeapps.list /etc/xdg/ 
 copy_file mx_blue.jpg /usr/share/sddm/themes/breeze/
-copy_file theme.conf.user /usr/share/sddm/themes/breeze/
 copy_file org.kde.yakuake.desktop /etc/skel/.config/autostart/
 copy_file plasma-org.kde.plasma.desktop-appletsrc /etc/skel/.config/
 copy_file set_wallpaper.desktop /etc/skel/.config/autostart/
+copy_file theme.conf.user /usr/share/sddm/themes/breeze/
 copy_file yakuakerc /etc/skel/.config/ 
 
 exit
