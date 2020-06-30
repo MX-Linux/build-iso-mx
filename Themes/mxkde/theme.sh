@@ -62,6 +62,7 @@ copy_file kde-mimeapps.list /etc/xdg/
 copy_file kdeglobals /etc/skel/.config/ 
 copy_file kglobalshortcutsrc /etc/skel/.config/ 
 copy_file klaunchrc /etc/skel/.config/ 
+copy_file komparerc /etc/skel/.config/ 
 copy_file kscreenlockerrc /etc/skel/.config/ 
 copy_file ksmserverrc /etc/skel/.config/ 
 copy_file ksplashrc /etc/skel/.config/ 
