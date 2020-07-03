@@ -1,3 +1,3 @@
 [General]
-excludeApps=yakuake
+excludeApps=yakuake,conky,apt-notifier
 
