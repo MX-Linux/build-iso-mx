@@ -617,7 +617,7 @@ phonon4qt5-backend-vlc
 #pidgin-data
 #-- REMOVE (11 June, 2020) pim-data-exporter
 pinentry-qt
-plasma-discover
+#plasma-discover
 #plane-gtk-theme
 plasma-dataengines-addons
 plasma-desktop
@@ -681,6 +681,7 @@ python3-smbc
 python3-software-properties
 #qdbus
 #qbittorrent
+qapt-deb-installer
 qdbus-qt5
 #qdirstat
 qml-module-org-kde-activities
