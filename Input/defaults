@@ -13,7 +13,7 @@ CODE_NAME="patito feo"
 ASCII_CODE_NAME="patito feo"
 DEBIAN_RELEASE="buster"
 DISTRO_NAME="MX"
-DISTRO_VERSION="19.2_KDE-alpha3"
+DISTRO_VERSION="19.2_KDE-beta1"
 #DISTRO_VERSION="19.2_ahs"
 HOME_URL="https://mxlinux.org"
 
@@ -47,7 +47,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="June 14, 2020"
+RELEASE_DATE="July 5, 2020"
 TIME_ZONE="America/New_York"
 
 #DE particular items
@@ -61,10 +61,10 @@ CURSOR_ICON_THEME="/etc/X11/cursors/breeze_cursors.theme"
 #xz use -comp xz -b 262144 #use for base
 #lz4 use -comp lz4 -Xhc
 #gzip leave empty #use for full
-COMPRESSION_TYPE="xz"
-COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
-#COMPRESSION_TYPE="lz4"
-#COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+#COMPRESSION_TYPE="xz"
+#COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+COMPRESSION_TYPE="lz4"
+COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
 
 #legacy variables that don't change
 USE_UEFI=true
