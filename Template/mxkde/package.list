@@ -369,7 +369,7 @@ kded5
 kdelibs-bin
 kdelibs5-data
 kdelibs5-plugins
-kdenlive
+#kdenlive
 #kdepim-runtime
 kdeplasma-addons-data
 kdialog
@@ -394,7 +394,7 @@ kio-extras-data
 kio-ldap
 kmahjongg
 kmines
-kompare
+#kompare
 #konq-plugins
 #konversation
 konsole
