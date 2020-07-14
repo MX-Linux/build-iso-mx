@@ -677,6 +677,7 @@ pulseaudio-module-bluetooth
 pulseaudio-utils
 pv
 python-bluez
+python3-pkg-resources 
 python3-pycurl
 python3-smbc
 python3-software-properties
