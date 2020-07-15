@@ -121,6 +121,7 @@ dconf-service
 #dconf-tools
 dctrl-tools
 ddm-mx
+debconf-kde-helper
 deborphan
 #default-mysql-client-core
 #default-mysql-server-core
