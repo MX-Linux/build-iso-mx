@@ -435,7 +435,7 @@ libc-dev-bin
 #libc6:i386
 libcanberra-gstreamer
 #libcanberra-gtk-module
-#libcanberra-gtk3-module
+libcanberra-gtk3-module
 libcanberra-pulse
 libelf-dev
 #libgcc1:i386
@@ -680,7 +680,8 @@ pulseaudio-module-bluetooth
 pulseaudio-utils
 pv
 python-bluez
-python3-pkg-resources 
+python3-gi-cairo
+#python3-pkg-resources 
 python3-pycurl
 python3-smbc
 python3-software-properties
