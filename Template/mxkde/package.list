@@ -609,6 +609,7 @@ parted
 #partimage
 partition-info
 partitionmanager
+partitionmanager-modified-launcher
 pavucontrol
 pdfshuffler
 peg-e
