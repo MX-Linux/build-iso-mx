@@ -737,6 +737,7 @@ qml-module-qtwebkit
 #qpdfview-translations
 #qt4-fsarchiver
 qt5-gtk-platformtheme
+qt5-image-formats-plugins
 qt5-style-kvantum
 qt5-style-plugins
 #qtchooser
