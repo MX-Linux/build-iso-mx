@@ -89,6 +89,7 @@ cli-aptix
 #clipit
 colord
 colord-data
+command-not-found
 #compton
 #compton-conf
 conky-all
