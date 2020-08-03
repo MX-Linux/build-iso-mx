@@ -492,7 +492,7 @@ Remaster_Blurb
 
     RESPIN_INHERIT=
     case $FLAV in
-        mx32|mx64|mxahs|mxkde|starter64) ISO_RESPIN_OF=$FLAV ;;
+        mx32|mx64|mxahs|mxkde|mxbase64) ISO_RESPIN_OF=$FLAV ;;
 
         *)  choose "flavour to base respin on" ISO_RESPIN_OF \
                 full base core
@@ -507,7 +507,7 @@ Remaster_Blurb
     esac
 
     case $ISO_RESPIN_OF in
-        mx32|mx64|mxahs|mxkde|starter64) ;;
+        mx32|mx64|mxahs|mxkde|mxbase64) ;;
         *) fatal "Invalid flavour to base respin on: $ISO_RESPIN_OF" ;;
     esac
 
