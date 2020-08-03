@@ -20,6 +20,7 @@ copy_file modules               /etc/
 copy_file 99-sandbox-mx.conf /etc/sysctl.d/
 copy_file timezone		/etc/
 copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
+copy_file virtualbox-guest-utils	/etc/init.d/
 #copy_file catfish.desktop	/usr/share/applications/ 
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
