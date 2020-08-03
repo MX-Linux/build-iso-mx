@@ -44,7 +44,7 @@ copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/scalable/apps/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/48x48/apps/
 copy_file uswsusp.conf /etc/
-copy_file plymouthd.conf /etc/plymouth/
+copy_file plymouthd.conf /etc/plymouth/		--create
 #copy_file luckybackup.desktop /usr/share/applications/
 #copy_file luckybackup-su.desktop /usr/share/applications/
 #copy_file luckybackup.svg /usr/share/icons/hicolor/scalable/apps/
