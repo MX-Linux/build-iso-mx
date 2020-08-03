@@ -1,0 +1,31 @@
+[Desktop Entry]
+Type=Application
+Name=Window Effects
+GenericName=Compton Configuration
+Comment=Configure Compton window effects
+TryExec=compton-conf
+Exec=compton-conf
+Icon=preferences-system-windows
+Categories=Settings;DesktopSettings;Qt;LXQt;
+
+Name[de]=Fenstereffekte
+GenericName[de]=Compton Konfiguration
+Comment[de]=Konfiguriere Compton-Fenstereffekte
+Name[fr]=Effets des fenêtres
+GenericName[fr]=Paramétrage de Compton
+Comment[fr]=Paramétrage de Compton (effets des fenêtres)
+Name[hu]=Ablakhatások
+GenericName[hu]=Compton beállítás
+Comment[hu]=Compton-ablakhatások beállítása
+Name[it]=Effetti delle finestre
+Comment[it]=Configura gli effetti delle finestre di Compton
+Name[ja]=ウインドウ効果
+GenericName[ja]=Comptonの設定
+Comment[ja]=Comptonのウインドウ効果の設定
+Name[pt]=Efeitos de janelas
+GenericName[pt]=Configuração do Compton
+Comment[pt]=Configurar os efeitos de janelas
+Name[ru]=Эффекты окна
+GenericName[ru]=Настройка Compton
+Comment[ru]=Настроить эффекты окна Compton
+NoDisplay=true
