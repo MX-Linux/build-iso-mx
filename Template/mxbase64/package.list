@@ -330,6 +330,8 @@ libgcrypt20
 libgmp10
 libgnutls30
 libgpg-error0
+libgtk3-perl
+libgtk3-simplelist-perl
 libhogweed4
 libidn11
 libidn2-0
