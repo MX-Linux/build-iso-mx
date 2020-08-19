@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment[fr]=Configurer l'ADSL/PPPOE
+Comment[de]=ADSL/PPPOE konfigurieren
+Comment[hu]=ADSL/PPPOE kapcsolat beállítása
+Comment[ro]=Configurare conexiune ADSL/PPPOE
+Comment[lt]=Konfigūruoti ADSL/PPPOE interneto ryšį
+Comment=Configure ADSL/PPPOE
+Exec=x-terminal-emulator -e /usr/sbin/pppoeconf
+Terminal=false
+Icon=pppoeconf
+Name[fr]=Configuration ADSL/PPPOE
+Name[de]=ADSL/PPPOE-Konfiguration
+Name[hu]=ADSL/PPPOE kapcsolat
+Name[ro]=Conexiune ADSL/PPPOE
+Name[lt]=DSL/PPPOE interneto nustatymai
+Name=ADSL/PPPOE configuration
+Type=Application
+Categories=System;Settings;HardwareSettings;
+Encoding=UTF-8
