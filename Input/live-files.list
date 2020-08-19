@@ -10,7 +10,7 @@
 /etc/issue
 /etc/lightdm/lightdm.conf
 /etc/rc.local
-/etc/sddm.comf
+/etc/sddm.conf
 /etc/skel/.fluxbox/menu
 /etc/skel/.icewm/menu
 /etc/skel/.jwm/menu
