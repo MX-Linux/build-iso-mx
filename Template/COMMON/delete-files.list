@@ -18,9 +18,13 @@ etc/skel/.xinitrc-custom
 etc/slim.conf.dpkg-*
 etc/subgid-
 etc/subuid-
+#etc/systemd
 etc/xdg/menus/debian-menu.menu
+#lib/systemd
 root/.bash_history
+#systemd crud
 tmp/*
+#usr/lib/x86_64-linux-gnu/systemd
 usr/share/antiX/lib
 #usr/share/applications/gparted.desktop
 #usr/share/applications/gufw.desktop 
@@ -73,7 +77,7 @@ usr/share/desktop-defaults
 #usr/share/icewm/themes/yellowmotif
 #usr/share/icons/*/icon-theme.cache 
 #usr/share/icons/BRIT-ICONS/icon-theme.cache
-#usr/share/wallpapers/*
+usr/share/wallpapers/*
 var/cache/apt-show-versions/* 
 var/cache/apt/*.bin
 var/cache/debconf/*-old
@@ -84,13 +88,9 @@ var/lib/apt/lists/*
 var/lib/dbus/machine-id
 var/lib/dhcp/*
 var/lib/dpkg/*-old 
+#var/lib/systemd
 var/log/*.log
 var/log/*log
 var/log/*mp
 var/log/apt/*.log
 var/log/dmesg
-#systemd crud
-#etc/systemd
-#lib/systemd
-#usr/lib/x86_64-linux-gnu/systemd
-#var/lib/systemd
