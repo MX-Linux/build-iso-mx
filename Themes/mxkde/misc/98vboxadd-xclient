@@ -4,7 +4,7 @@
 #
 
 #
-# Copyright (C) 2007-2012 Oracle Corporation
+# Copyright (C) 2007-2020 Oracle Corporation
 #
 # This file is part of VirtualBox Open Source Edition (OSE), as
 # available from http://www.virtualbox.org. This file is free software;
@@ -15,15 +15,28 @@
 # hope that it will be useful, but WITHOUT ANY WARRANTY of any kind.
 #
 
+in_virtual_machine()
+{
+	if [ -z "$(lspci -d 80ee:cafe)" ]; then
+	echo "VirtualBox Additions disabled, not in a Virtual Machine" >&2
+	return 1
+	fi
+
+	return 0
+}
+in_virtual_machine || return
+
 # Sanity check: if non-writeable PID-files are present in the user home
 # directory VBoxClient will fail to start.
 for i in $HOME/.vboxclient-*.pid; do
     test -w $i || rm -f $i
 done
 
-if test -f /proc/modules && ! grep -q vboxguest /proc/modules 2>/dev/null; then
+if ! test -c /dev/vboxguest 2>/dev/null; then
    # Do not start if the kernel module is not present.
-   echo "VBoxClient: the VirtualBox kernel service is not running.  Exiting."
+   # Execute notify-send in the back-ground to avoid racing with sddm,
+   # as notify-send may wait for sddm to start while it waits for us to exit.
+   echo "VBoxClient: the VirtualBox kernel service is not running.  Exiting." &
 elif test -z "${SSH_CONNECTION}"; then
    # This script can also be triggered by a connection over SSH, which is not
    # what we had in mind, so we do not start VBoxClient in that case.  We do
@@ -33,4 +46,5 @@ elif test -z "${SSH_CONNECTION}"; then
   /usr/bin/VBoxClient --display || true
   /usr/bin/VBoxClient --seamless || true
   /usr/bin/VBoxClient --draganddrop || true
+  /usr/bin/VBoxClient --vmsvga-x11  || true # In case VMSVGA emulation is enabled
 fi
