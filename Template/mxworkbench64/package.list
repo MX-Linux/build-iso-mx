@@ -21,11 +21,13 @@ apt-utils
 apt-xapian-index
 arandr
 arc-theme
+arpwatch
 at-spi2-core
 atmel-firmware
 attr
 avahi-daemon
 baobab
+bar
 base-files
 base-passwd
 bash
@@ -67,6 +69,7 @@ cli-aptix
 cli-installer-antix
 cli-shell-utils
 clonezilla
+cmospwd
 colord
 colord-data
 compton
@@ -98,9 +101,11 @@ cups-server-common
 curl
 custom-toolbox
 dash
+dbench
 dbus
 dbus-x11
 dc
+dc3dd
 dcfldd
 dconf-cli
 dconf-editor
@@ -122,12 +127,15 @@ desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 desktop-file-utils
 dh-python
+di
 dialog
 dictionaries-common
 diffutils
 discover
 discover-data
 disk-manager
+disktype
+dislocker
 djvulibre-bin
 dkms
 dmidecode
@@ -150,10 +158,12 @@ efivar
 eject
 elinks
 emacsen-common
+encfs
 ethtool
 exfat-fuse
 exfat-utils
 exo-utils
+ext3grep
 extlinux
 extundelete
 f2fs-tools
@@ -189,6 +199,7 @@ firmware-qlogic
 firmware-realtek
 firmware-zd1211
 flake
+flashrom
 fontconfig
 fontconfig-config
 fonts-crosextra-caladea
@@ -237,6 +248,7 @@ gnome-accessibility-themes
 gnome-icon-theme
 gnupg2
 gocr
+gpart
 gparted
 gpgv
 grep
@@ -299,6 +311,7 @@ iputils-tracepath
 isc-dhcp-client
 isc-dhcp-common
 iso-codes
+isomaster
 isomount
 iucode-tool
 jfsutils
@@ -437,6 +450,7 @@ mawk
 mbr
 mc
 mc-data
+md5deep
 mdadm
 meld
 memtest86+
@@ -494,6 +508,7 @@ ncurses-term
 neofetch
 netbase
 netcat-traditional
+netwag
 network-manager
 network-manager-gnome
 network-manager-openconnect
@@ -574,8 +589,10 @@ python-bluez
 python3-smbc
 qpdfview
 qt5-gtk-platformtheme
+rdiff-backup
 read-edid
 readline-common
+reglookup
 reiser4progs
 reiserfsprogs
 rename
@@ -586,12 +603,15 @@ rpcbind
 rpl
 rsync
 rsyslog
+rtorrent
+safecopy
 samba
 samba-common
 samba-common-bin
 sane-utils
 screen
 scrot
+scrounge-ntfs
 sdparm
 sed
 sensible-utils
@@ -636,6 +656,7 @@ thunar-archive-plugin
 thunar-data
 thunar-gtkhash
 thunar-volman
+tigervnc-viewer
 tlp
 tmux
 touchpad-indicator
@@ -673,6 +694,7 @@ virtualbox-guest-dkms
 virtualbox-guest-utils
 virtualbox-guest-utils-modified-init
 virtualbox-guest-x11
+vmfs-tools
 volumeicon-alsa
 vorbis-tools
 vpnc
@@ -684,6 +706,7 @@ wamerican
 wavpack
 whiptail
 whois
+wipe
 wireless-tools
 wireshark
 wmctrl
@@ -791,6 +814,7 @@ xutils-dev
 yad
 yelp
 zenmap
+zfs-fuse
 zip
 zlib1g
 zsync
