@@ -17,7 +17,6 @@ apt-transport-https
 apt-utils
 apt-xapian-index
 arandr
-arc-theme
 arpwatch
 at-spi2-core
 atmel-firmware
@@ -70,9 +69,6 @@ colord
 colord-data
 compton
 compton-conf
-conky-all
-conky-manager
-conky-toggle-mx
 console-data
 console-setup
 console-setup-linux
@@ -103,7 +99,6 @@ dbus-x11
 dc
 dc3dd
 dcfldd
-dconf-cli
 dconf-editor
 dconf-gsettings-backend
 dconf-service
@@ -137,7 +132,6 @@ dkms
 dmidecode
 dmraid
 dmsetup
-dmz-cursor-theme
 dns-root-data
 dnsmasq-base
 dnsutils
@@ -264,7 +258,6 @@ gtk2-engines-murrine
 gtk2-engines-pixbuf
 gtk3-engines-xfce
 gtkdialog
-gufw
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -413,7 +406,6 @@ libxtables12
 libzstd1
 lightdm
 lightdm-gtk-greeter
-lightdm-gtk-greeter-mx19
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linssid
@@ -434,8 +426,6 @@ lsb-base
 lsb-release
 lshw
 lsof
-luckybackup
-luckybackup-data
 lvm2
 lxrandr
 lynx
@@ -468,7 +458,6 @@ mx-boot-options
 mx-bootrepair
 mx-cleanup
 mx-codecs
-mx-conky
 mx-datetime
 mx-docs
 mx-goodies
@@ -493,7 +482,6 @@ mx-usb-unmounter
 mx-user
 mx-viewer
 mx19-archive-keyring
-mx19-artwork
 nano
 ncdu
 ncurses-base
@@ -532,14 +520,12 @@ openvpn
 orage
 os-prober
 p7zip-full
-pacpl
 papirus-icon-theme
 partclone
 parted
 partition-info
 passwd
 patch
-pavucontrol
 pciutils
 pcmciautils
 perl-base
@@ -637,7 +623,6 @@ systemd-shim
 sysv-rc-conf
 sysvinit-core
 sysvinit-utils
-tango-icon-theme
 tar
 tcl
 tcl8.6
@@ -806,7 +791,6 @@ xserver-xorg-video-vmware
 xutils
 xutils-dev
 yad
-yelp
 zenmap
 zfs-fuse
 zip
