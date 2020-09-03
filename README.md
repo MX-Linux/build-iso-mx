@@ -1,18 +1,20 @@
 # build-iso-mx
-antix build-iso system with settings for mx
+**antiX** build-iso system with settings for MX. This script is used to create variate ISO flavors.
 
 
-For usage instructions, please run:
+## For usage instructions, please run:
+```
 ./build-iso -h				Displays help
 ./build-iso --show-stages	Show the stages of processing
 ./build-iso --show-parts	Show parts of stage-4 and how to control them
+```
 
 
-Special notice
+## Special notice
 Please allow roughly 10 GB drive space for most completed projects 
 
 
-Hint
+## Hint
 Consider having separate build-iso-mx folders for different architectures
 
 
