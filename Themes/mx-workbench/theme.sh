@@ -57,4 +57,6 @@ copy_dir cache		/etc/skel/.cache/ 	--create
 #copy_file 48381996347_8f9d2001e3_k.jpg /usr/share/backgrounds/
 #copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
+# Make pkexec use sudo password
+copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
 exit
