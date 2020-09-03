@@ -1,9 +1,9 @@
 #amd64
-linux-image-amd64
-linux-headers-amd64
+#linux-image-amd64
+#linux-headers-amd64
 #i386
-#linux-image-686-pae
-#linux-headers-686-pae
+linux-image-686-pae
+linux-headers-686-pae
 accountsservice
 acl
 acpi
@@ -154,7 +154,6 @@ exo-utils
 extlinux
 extundelete
 f2fs-tools
-#faenza-icons
 #faenza-cupertino-icons
 fakeroot
 #fatrace
@@ -242,8 +241,8 @@ gsettings-desktop-schemas
 gsmartcontrol
 gstreamer1.0-alsa
 gstreamer1.0-libav
-gstreamer1.0-plugins-base
-gstreamer1.0-plugins-good
+#gstreamer1.0-plugins-base
+#gstreamer1.0-plugins-good
 gstreamer1.0-pulseaudio
 gtk-theme-switch
 gtk2-engines-murrine
@@ -260,10 +259,10 @@ haveged
 hddtemp
 hdparm
 hexedit
-hfsplus
-hfsprogs
-hfsutils
-hfsutils-tcltk
+#hfsplus
+#hfsprogs
+#hfsutils
+#hfsutils-tcltk
 hibernate
 #hicolor-icon-theme
 hostname
@@ -336,7 +335,6 @@ libgcrypt20
 libgmp10
 libgnutls30
 libgpg-error0
-libgtk3-perl
 libhogweed4
 libidn11
 libidn2-0
@@ -498,7 +496,7 @@ ntp
 ntpdate
 #numix-gtk-theme
 #numix-icon-theme
-nvidia-detect
+#nvidia-detect
 nwipe
 obexfs
 onboard
