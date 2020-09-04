@@ -67,8 +67,8 @@ clonezilla
 cmospwd
 colord
 colord-data
-compton
-compton-conf
+# compton
+# compton-conf
 console-data
 console-setup
 console-setup-linux
@@ -243,9 +243,9 @@ gpgv
 grep
 growisofs
 grsync
-grub-common
-grub-pc
-grub-themes-mx
+# grub-common
+# grub-pc
+# grub-themes-mx
 gsettings-desktop-schemas
 gsmartcontrol
 gstreamer1.0-alsa
