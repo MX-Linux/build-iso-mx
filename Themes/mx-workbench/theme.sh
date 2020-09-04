@@ -50,9 +50,6 @@ copy_file plymouthd.conf /etc/plymouth/		--create
 #copy_dir Desktop/               /etc/skel/Desktop/           --create
 copy_dir cache		/etc/skel/.cache/ 	--create
 
-# Make pkexec use sudo password
-copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
-
 # copy custom Workbench stuff
 copy_file workbench-tools.desktop /usr/share/applications/
 copy_file workbench-tools.desktop /etc/skel/.config/autostart/
