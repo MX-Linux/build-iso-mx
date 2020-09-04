@@ -663,10 +663,6 @@ vcdimager
 vdpau-driver-all
 vim
 vim-tiny
-virtualbox-guest-dkms
-virtualbox-guest-utils
-virtualbox-guest-utils-modified-init
-virtualbox-guest-x11
 vmfs-tools
 volumeicon-alsa
 vorbis-tools
