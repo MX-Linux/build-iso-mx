@@ -54,7 +54,6 @@ cabextract
 cdparanoia
 ceni
 checkaptgpg
-chkrootkit
 chntpw
 chroot-rescue-mx
 cifs-utils
@@ -64,8 +63,8 @@ cli-aptix
 cli-shell-utils
 clonezilla
 cmospwd
-colord
-colord-data
+# colord
+# colord-data
 # compton
 # compton-conf
 console-data
@@ -452,7 +451,6 @@ mount
 mpg123
 mtools
 mtr
-mugshot
 mx-boot-options
 mx-bootrepair
 mx-datetime
@@ -504,7 +502,7 @@ nomacs-l10n
 ntfs-3g
 ntp
 ntpdate
-nvidia-detect
+# nvidia-detect
 nwipe
 obexfs
 onboard
@@ -529,8 +527,6 @@ pm-utils
 pmount
 policykit-1
 policykit-1-gnome
-poppler-data
-poppler-utils
 powermgmt-base
 pppoeconf
 printer-driver-brlaser
@@ -563,12 +559,21 @@ python-bluez
 python3-smbc
 qpdfview
 qt5-gtk-platformtheme
+rdesktop
 rdiff-backup
 read-edid
 readline-common
 reglookup
 reiser4progs
 reiserfsprogs
+remmina
+remmina-plugin-exec
+remmina-plugin-nx
+remmina-plugin-rdp
+remmina-plugin-secret
+remmina-plugin-spice
+remmina-plugin-telepathy
+remmina-plugin-vnc
 rename
 resolvconf
 rfkill
@@ -629,13 +634,12 @@ thunar-archive-plugin
 thunar-data
 thunar-gtkhash
 thunar-volman
-tigervnc-viewer
 tlp
 tmux
 touchpad-indicator
 traceroute
 ttf-bitstream-vera
-ttf-mscorefonts-installer
+# ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra
@@ -662,7 +666,7 @@ vbetool
 vcdimager
 vdpau-driver-all
 vim
-vim-tiny
+# vim-tiny
 vmfs-tools
 volumeicon-alsa
 vorbis-tools
@@ -726,7 +730,7 @@ xfce4-terminal
 xfce4-timer-plugin
 xfce4-verve-plugin
 xfce4-wavelan-plugin
-xfce4-weather-plugin
+# xfce4-weather-plugin
 xfce4-whiskermenu-plugin
 xfce4-xkb-plugin
 xfconf
