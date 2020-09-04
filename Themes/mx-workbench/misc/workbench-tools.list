@@ -8,52 +8,64 @@ Name=Workbench Tools Launcher
 Comment=Utility Tools Launcher for MX Workbench
 
 Category=Disk Management
-gparted root
+gparted 
 clonezilla
-gsmartcontrol root
-org.gnome.baobab root
-disk-manager root
-gnome-qt4-fsarchiver root
+gsmartcontrol 
+org.gnome.baobab
+disk-manager 
+gnome-qt4-fsarchiver 
 nwipe
 testdisk
 
 Category=GRUB Boot Functions
-mx-bootrepair root
-mx-boot-options root
+mx-bootrepair 
+mx-boot-options
+chroot-rescue-scan 
 
 Category=File Management
-mc root
+mc 
 xfburn
-freefilesync root
-grsync root
-org.gnome.FileRoller root
+FreeFileSync 
+RealTimeSync
+grsync 
+org.gnome.FileRoller 
 gftp
-meld root
-ghex root
+org.gnome.meld 
+ghex 
+isomaster
+gtkhash 
+iDevice-Mounter
 
 Category=Antivirus
-clamtk root
+clamtk 
 
 Category=File Recovery
+testdisk
 photorec
 
 Category=Misc.
 blockout2
 geany 
-xfce4-terminal root
+xfce4-terminal
+htop 
+iotop
 
 Category=Hardware Info
 hardinfo
+quick-system-info-mx
 
 Category=Network
-ceni root 
+ceni 
 wireshark
-zenmap root 
-linssid root
-mx-findshares root
+zenmap 
+linssid 
+remmina
+netwag
 
 Category=Live USB Tools
-mx-snapshot root
-mx-remastercc root
-live-usb-maker-gui root
+mx-snapshot 
+mx-remastercc 
+mx-live-usb-maker
+formatusb
+live-kernel-updater
 
