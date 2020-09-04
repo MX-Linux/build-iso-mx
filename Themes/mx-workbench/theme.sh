@@ -62,7 +62,7 @@ copy_file wood-architect-table-work.jpeg /usr/share/backgrounds/MXLinux/	--creat
 copy_file wood-architect-table-work-BW.jpeg /usr/share/backgrounds/MXLinux/lightdm/	--create
 copy_file lightdm-gtk-greeter.conf /etc/lightdm/
 copy_file workbench-sudoers /etc/sudoers.d/
-copy_dir defaults/panel/ /etc/skel/.config/panel/	--create
+copy_dir defaults/panel/ /etc/skel/.config/xfce4/panel/	--create
 copy_dir defaults/xfconf/xfce-perchannel-xml/ /etc/skel/.config/xfce4/xfconf/xfce-prechannel-xml/	--create
 copy_dir defaults/qt4-fsarchiver/ /etc/skel/.config/qt4-fsarchiver/	--create
 copy_file mx-snapshot.conf /etc/
