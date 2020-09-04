@@ -56,15 +56,15 @@ copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
 # copy custom Workbench stuff
 copy_file workbench-tools.desktop /usr/share/applications/
 copy_file workbench-tools.desktop /etc/skel/.config/autostart/
-copy_dir desktop_files /usr/share/applications/workbench/	--create
+copy_dir desktop_files/ /usr/share/applications/workbench/	--create
 copy_file workbench-tools.list /etc/custom-toolbox/
 copy_file wood-architect-table-work.jpeg /usr/share/backgrounds/MXLinux/	--create
 copy_file wood-architect-table-work-BW.jpeg /usr/share/backgrounds/MXLinux/lightdm/	--create
 copy_file lightdm-gtk-greeter.conf /etc/lightdm/
 copy_file workbench-sudoers /etc/sudoers.d/
-copy_dir defaults/panel /etc/skel/.config/panel/	--create
-copy_dir defaults/xfconf/xfce-perchannel-xml /etc/skel/.config/xfce4/xfconf/xfce-prechannel-xml/	--create
-copy_dir defaults/qt4-fsarchiver /etc/skel/.config/
+copy_dir defaults/panel/ /etc/skel/.config/panel/	--create
+copy_dir defaults/xfconf/xfce-perchannel-xml/ /etc/skel/.config/xfce4/xfconf/xfce-prechannel-xml/	--create
+copy_dir defaults/qt4-fsarchiver/ /etc/skel/.config/qt4-fsarchiver/	--create
 copy_file mx-snapshot.conf /etc/
 
 exit
