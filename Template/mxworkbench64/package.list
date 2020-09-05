@@ -232,6 +232,7 @@ glib-networking
 glib-networking-common
 glib-networking-services
 gnome-accessibility-themes
+gnome-disk-utility
 gnome-icon-theme
 gnupg2
 gocr

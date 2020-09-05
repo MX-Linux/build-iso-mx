@@ -16,6 +16,7 @@ disk-manager
 gnome-qt4-fsarchiver 
 nwipe
 testdisk
+org.gnome.DiskUtility
 
 Category=GRUB Boot Functions
 mx-bootrepair 
