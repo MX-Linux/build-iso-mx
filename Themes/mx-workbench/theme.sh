@@ -63,6 +63,6 @@ copy_dir defaults/panel/ /etc/skel/.config/xfce4/panel/	--create
 copy_dir defaults/xfconf/xfce-perchannel-xml/ /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/	--create
 copy_dir defaults/qt4-fsarchiver/ /etc/skel/.config/qt4-fsarchiver/	--create
 copy_file mx-snapshot.conf /etc/
-ln -s /usr/games/blockout2 /usr/bin/blockout2 # add a link in $PATH
+ln -sf /usr/games/blockout2 /usr/bin/blockout2 # add a link in $PATH
 
 exit
