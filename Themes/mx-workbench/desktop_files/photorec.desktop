@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=photorec
+Comment=file data recovery software
+Exec=mx-pkexec "x-terminal-emulator -e photorec"
+Icon=drive-harddisk
+Path=
+Terminal=false
+StartupNotify=false

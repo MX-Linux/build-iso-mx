@@ -1,0 +1,73 @@
+# WORKBENCH TOOLS LAUNCHER
+
+# Simple text file containing Name= Comment= Category= keywords
+# with the list of app names under each coresponding category
+# optional "root" flag can follow app name to indicate how to run the app
+
+Name=Workbench Tools Launcher
+Comment=Utility Tools Launcher for MX Workbench
+
+Category=Disk Management
+gparted 
+clonezilla
+gsmartcontrol 
+org.gnome.baobab
+disk-manager 
+gnome-qt4-fsarchiver 
+nwipe
+testdisk
+org.gnome.DiskUtility
+ncdu
+
+Category=GRUB Boot Functions
+mx-bootrepair 
+mx-boot-options
+chroot-rescue-scan 
+
+Category=File Management
+mc 
+xfburn
+FreeFileSync 
+RealTimeSync
+grsync 
+org.gnome.FileRoller 
+gftp
+org.gnome.meld 
+ghex 
+isomaster
+gtkhash 
+iDevice-Mounter
+
+Category=Antivirus
+clamtk 
+
+Category=File Recovery
+testdisk
+photorec
+
+Category=Misc.
+blockout2
+geany 
+xfce4-terminal
+htop 
+iotop
+
+Category=Hardware Info
+hardinfo
+Quick_System_Info
+
+Category=Network
+ceni 
+wireshark
+zenmap 
+linssid 
+remmina
+netwag
+
+Category=Live USB Tools
+mx-snapshot 
+mx-remastercc 
+mx-live-usb-maker
+formatusb
+live-kernel-updater
+

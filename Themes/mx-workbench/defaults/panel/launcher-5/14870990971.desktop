@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Workbench Tools Launcher
+Comment=Utility Tools Launcher for MX Workbench
+Exec=sudo -E custom-toolbox /etc/custom-toolbox/workbench-tools.list
+Terminal=false
+Type=Application
+Icon=custom-toolbox
+Categories=XFCE;System
+StartupNotify=false

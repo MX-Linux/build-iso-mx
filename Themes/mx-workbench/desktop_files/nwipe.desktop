@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=nwipe
+Comment=securely erase disks
+Exec=mx-pkexec "x-terminal-emulator -e nwipe"
+Icon=drive-harddisk
+Path=
+Terminal=false
+StartupNotify=false

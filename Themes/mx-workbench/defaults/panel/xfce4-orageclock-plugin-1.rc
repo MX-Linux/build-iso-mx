@@ -1,0 +1,13 @@
+show_frame=false
+fg_set=false
+bg_set=false
+timezone=
+width_set=false
+height_set=false
+lines_vertically=true
+rotation=0
+data0=%H:%M
+font0=Noto Sans Bold 8
+tooltip=%c
+hib_timing=false
+
