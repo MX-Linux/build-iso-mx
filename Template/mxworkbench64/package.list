@@ -215,6 +215,7 @@ freefilesync
 fsarchiver
 ftp
 fuse
+fwupd
 galculator
 gawk
 gcc-8-base
@@ -233,6 +234,7 @@ ghex
 ghostscript
 ghostscript-x
 giblib1
+glances
 glib-networking
 glib-networking-common
 glib-networking-services
@@ -504,6 +506,7 @@ nfs-common-modified-init
 nfs-kernel-server
 nictools-pci
 nmap
+nmon
 nomacs
 nomacs-l10n
 ntfs-3g
@@ -645,6 +648,7 @@ thunar-data
 thunar-gtkhash
 thunar-volman
 tlp
+tlpui 
 tmux
 touchpad-indicator
 traceroute
