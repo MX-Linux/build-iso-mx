@@ -53,7 +53,7 @@ iotop
 
 Category=Hardware Info
 hardinfo
-quick-system-info-mx
+Quick_System_Info
 
 Category=Network
 ceni 
