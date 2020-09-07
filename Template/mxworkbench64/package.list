@@ -103,6 +103,7 @@ dconf-service
 dctrl-tools
 ddcutil
 ddm-mx
+ddrutility
 deb-multimedia-keyring
 debconf
 debconf-i18n
