@@ -417,9 +417,7 @@ lightdm-modified-init
 linssid
 linux-base
 linux-headers-686-pae
-linux-headers-amd64
 linux-image-686-pae
-linux-image-amd64
 linux-libc-dev
 live-kernel-updater
 live-usb-maker
