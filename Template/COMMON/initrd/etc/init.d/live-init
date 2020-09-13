@@ -552,7 +552,7 @@ localize_skel() {
 #------------------------------------------------------------------------------
 set_keyboard() {
     local kb_file=/etc/default/keyboard
-    local default_xkb_opts="grp:alt_shift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+    local default_xkb_opts="terminate:ctrl_alt_bksp,grp_led:scroll"
 
     first_write $kb_file || [ "$DO_XKBD" ] || return
 
