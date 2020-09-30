@@ -10,8 +10,8 @@ acpi
 acpi-fakekey
 #acpi-support-base
 acpid
-adobe-flashplugin
-adobe-flash-properties-gtk
+#adobe-flashplugin
+#adobe-flash-properties-gtk
 advert-block-antix
 #aisleriot
 alsa-tools
@@ -146,7 +146,7 @@ faenza-cupertino-icons
 #faenza-cupertino-mini-icons
 #fail2ban
 fakeroot 
-fbreader
+#fbreader
 #fbsplash-antix
 fbxkb  
 feh
@@ -184,6 +184,7 @@ firmware-realtek
 flac   
 flake 
 #flashplugin-nonfree
+foliate
 fontconfig 
 fontconfig-config
 fonts-crosextra-caladea

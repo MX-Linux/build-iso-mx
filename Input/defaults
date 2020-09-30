@@ -13,10 +13,10 @@ CODE_NAME="patito feo"
 ASCII_CODE_NAME="patito feo"
 DEBIAN_RELEASE="buster"
 DISTRO_NAME="MX"
-DISTRO_VERSION="19.2"
-#DISTRO_VERSION="19.2_ahs"
-#DISTRO_VERSION="19.2_base"
-DISTRO_VERSION="19.2_flux_base"
+DISTRO_VERSION="19.3"
+#DISTRO_VERSION="19.3_ahs"
+#DISTRO_VERSION="19.3_base"
+#DISTRO_VERSION="19.3_flux_base"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -33,13 +33,13 @@ HOME_URL="https://mxlinux.org"
 #UNSIGNED="-unsigned"
 
 #standard 32 bit
-#K_REVISION="10"
+#K_REVISION="11"
 #K_TEMPLATE="%V%G-%R-686-pae"
 #K_VERSION="4.19.0"
 #UNSIGNED=""
 
 #standard 64 bit
-K_REVISION="10"
+K_REVISION="11"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="4.19.0"
 UNSIGNED=""
@@ -49,7 +49,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="Sept 05, 2020"
+RELEASE_DATE="October 17, 2020"
 TIME_ZONE="America/New_York"
 
 #DE particular items
