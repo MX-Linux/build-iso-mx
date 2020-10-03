@@ -46,5 +46,9 @@ elif test -z "${SSH_CONNECTION}"; then
   /usr/bin/VBoxClient --display || true
   /usr/bin/VBoxClient --seamless || true
   /usr/bin/VBoxClient --draganddrop || true
-  /usr/bin/VBoxClient --vmsvga-x11  || true # In case VMSVGA emulation is enabled
+  if [ $(VBoxClient -h |grep -q vmsvga-x11) ]; then
+       /usr/bin/VBoxClient --vmsvga-x11  || true # In case VMSVGA emulation is enabled - older VB
+  else
+	   /usr/bin/VBoxClient --vmsvga || true # In case VMSVGA emulation is enabled - Newer VB
+  fi
 fi
