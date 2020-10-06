@@ -153,7 +153,9 @@ feh
 featherpad
 file-roller 
 firefox
-linux-firmware
+#firmware meta package for MX
+mx-debian-firmware
+#linux-firmware
 #firmware-amd-graphics
 #firmware-atheros  
 firmware-b43-installer  

@@ -180,6 +180,8 @@ ffmpegthumbs
 filelight
 #file-roller
 firefox
+#firmware mx metapackage
+mx-debian-firmware
 #firmware-amd-graphics
 #firmware-atheros
 firmware-b43-installer
@@ -480,7 +482,7 @@ libvirglrenderer0
 #lightdm-gtk-greeter-settings
 #lightdm-modified-init
 linux-base
-linux-firmware
+#linux-firmware
 #linux-firmware replaces firmware-linux and firmware-*
 linux-libc-dev
 #live-usb-maker-gui

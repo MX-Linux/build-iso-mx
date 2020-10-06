@@ -29,7 +29,7 @@ HOME_URL="https://mxlinux.org"
 #ahs
 #K_REVISION="2"
 #K_TEMPLATE="%V%G-%R-%A"
-#K_VERSION="5.6.0"
+#K_VERSION="5.8.0"
 #UNSIGNED="-unsigned"
 
 #standard 32 bit
