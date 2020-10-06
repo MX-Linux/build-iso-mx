@@ -170,6 +170,8 @@ file-roller
 findutils
 fio
 firefox
+#firmware meta package for MX
+mx-debian-firmware
 firmware-amd-graphics
 firmware-atheros
 firmware-b43-installer
