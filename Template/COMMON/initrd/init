@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14"
-           VERSION_DATE="Fri 18 Oct 2019 01:30:11 AM MDT"
+                VERSION="8.30.12"
+           VERSION_DATE="Thu 10 Oct 2019 11:24:39 PM MDT"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -792,8 +792,7 @@ read_cmdline_params()
                       overlayfs) WANT_UNIONFS=overlay                            ;;
                           menus) DO_MENUS=${MENUS_LIST:-cltopfsv}                ;;
                         menus=*) DO_MENUS=$DO_MENUS$value                        ;;
-             vcard=on|vcard=off) VCARD_CMD=$value                                ;;
-         vcard=menu|vcard=clear) VCARD_CMD=$value                                ;;
+                        vcard=*) VCARD_CMD=$value                                ;;
             rootdelay=*|delay=*) small_int COLDPLUG_DELAY $param                 ;;
                          splash) SPLASH_PARAM=v                                  ;;
                        splash=*) SPLASH_PARAM=$value                             ;;
@@ -2420,16 +2419,11 @@ find_crypt_or_linuxfs() {
     BOOT_UUID=$CRYPT_UUID
 
     tsplash_clear
-
-    mkdir -p /run/cryptsetup
-
     msg  "$_Checking_for_encrypted_partition_on_device_X_" "$crypt_dev"
 
     test -e "$crypt_dev" || fatal  "$_Encrypted_device_X_does_not_exist_"                 "$(dqe $crypt_dev)"
     test -b "$crypt_dev" || fatal  "$_Encrypted_device_X_is_not_a_block_device_"          "$(dqe $crypt_dev)"
     cryptsetup isLuks "$crypt_dev" || fatal  "$_Encrypted_device_X_is_not_a_LUKS_device_" "$(dqe $crypt_dev)"
-
-    #check_luks_version "$crypt_dev"
 
     mount -o remount,rw $BIOS_DEV
 
@@ -2441,7 +2435,7 @@ find_crypt_or_linuxfs() {
     fi
 
     warn  "$_Found_encrypted_device_You_will_be_asked_to_enter_your_passphrase_below_"
-    cttyhack cryptsetup open $crypt_dev $LUKS_NAME || fatal  "$_Could_not_open_LUKS_device_X_" $crypt_dev
+    cttyhack cryptsetup open --type luks $crypt_dev $LUKS_NAME || fatal  "$_Could_not_open_LUKS_device_X_" $crypt_dev
     local mapper_dev=/dev/mapper/$LUKS_NAME
     msg  "$_Opened_encrypted_device_X_at_Y_" "$crypt_dev" "$mapper_dev"
     try_mount "$mapper_dev" "$BOOT_MP" || fatal_dmesg  "$_Could_not_mount_encrypted_device_"
@@ -2459,27 +2453,6 @@ find_crypt_or_linuxfs() {
 }
 
 #------------------------------------------------------------------------------
-# Note: od is giving us leading whitespace which I remove with echo
-# FIXME: busybox od does not have the --endian optiont
-#------------------------------------------------------------------------------
-check_luks_version() {
-    local part=$1
-
-    if ! test -b "$part"; then
-        warn  "$_Encrypted_partition_X_is_not_a_block_device_" "$(pqw $part)"
-        return 1
-    fi
-    local luks=$(echo $(dd status=none if=$part bs=1 count=4 | od -An -t x4 --endian=big))
-    if [ "$luks" != '4c554b53' ]; then
-        warn  "$_X_does_not_look_like_a_Luks_partition_Found_Y_" "$(pqw $part)" "$(pqw $luks)"
-        return 2
-    fi
-    local type=$(echo $(dd status=none if=$part bs=1 skip=6 count=2 | od -An -t x2 --endian=big))
-    msg  "$_Luks_type_X_" "$(nq $(printf "%d" "0x$type"))"
-    return 0
-}
-
-#------------------------------------------------------------------------------
 # Allow the user to change the encryption passphrase based on the "passphrase"
 # boot parameter.  Peraps it is silly to have this here.
 #------------------------------------------------------------------------------
@@ -2494,7 +2467,7 @@ change_passphrase() {
         echo -n "> "
         read old
         echo -n "$old" > $file
-        cryptsetup open --test-passphrase --key-file $file $dev &>/dev/null && break
+        cryptsetup open --type luks --test-passphrase --key-file $file $dev &>/dev/null && break
 
         warn  "$_The_entered_passphrase_does_not_match_"
         YES_no  "$_Do_you_want_to_try_again_" && continue
@@ -2527,7 +2500,7 @@ reset_passphrase() {
         return 1
     fi
 
-    if ! cryptsetup open --test-passphrase --key-file $file $dev &>/dev/null; then
+    if ! cryptsetup open --type luks --test-passphrase --key-file $file $dev &>/dev/null; then
         warn  "$_Reset_aborted_wrong_passphrase_in_passphrase_file_"
         return 2
     fi
@@ -6018,21 +5991,6 @@ copy_xtra() {
     if [ -e $tarball ]; then
         msg 'Unpack xtra tarball'
         gunzip -c "$tarball" | tar x -C $NEW_ROOT/
-    fi
-
-    local live_xtra='/live/xtra'
-
-    if  [ -d "$live_xtra" -a ! -d "$xtra_dir" ]; then
-        msg 'Copy xtra file(s) from %s' "$(fq "$live_xtra")"
-
-        # Copy into the antiX/xtra dir if we can,
-        # otherwise copy directly to the aufs from the initrd
-        if remasterable; then
-            mkdir -p "$xtra_dir"
-            (cd "$live_xtra" && tar cf - *) | tar x -C "$xtra_dir"
-        else
-            xtra_dir="$live_xtra"
-        fi
     fi
 
     [ -d "$xtra_dir" ] || return
