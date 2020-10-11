@@ -1,4 +1,4 @@
-Welcome to MX-17-beta_x64 (11 October 2020)!
+Welcome to %FULL_DISTRO_NAME% (%RELEASE_DATE%)!
 
 To start the system, type one of the label names below and press [enter]:
 
