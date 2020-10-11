@@ -124,7 +124,7 @@ progress: normal
 password: crypto normal
 part_sunpc:
 video_fb:
-tftp: priority_queue net
+tftp: net
 sleep: extcmd normal
 serial: extcmd terminfo
 search_fs_file:
