@@ -16,7 +16,7 @@ terminal-box:   "inbox_*.png"
     left  = 30%
     top   = 8%
     width = 100%
-    text  = "Welcome to %DISTRO% (%ASCII_CODE_NAME%)!"
+    text  = "Welcome to MX-17-beta (Horizon)!"
     color = "#ffffff"
     align = "left"
     font  = "DejaVu Sans Regular 18"
