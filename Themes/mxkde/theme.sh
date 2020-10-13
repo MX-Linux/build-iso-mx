@@ -4,6 +4,7 @@ THEME_DIR=$(dirname $(readlink -f $0))
 source $THEME_DIR/../theme-functions.sh
 start_theme "$@"
 
+rm -R /etc/skel/.conky
 copy_file grub                  /etc/default/
 #copy_file 10_linux              /etc/grub.d/
 copy_file 20_memtest86+         /etc/grub.d/
