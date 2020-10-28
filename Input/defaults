@@ -27,7 +27,7 @@ HOME_URL="https://mxlinux.org"
 #Note that the templates don't use all values.
 
 #ahs
-#K_REVISION="2"
+#K_REVISION="3"
 #K_TEMPLATE="%V%G-%R-%A"
 #K_VERSION="5.8.0"
 #UNSIGNED="-unsigned"
@@ -49,7 +49,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="October 17, 2020"
+RELEASE_DATE="November 7,2020"
 TIME_ZONE="America/New_York"
 
 #DE particular items
