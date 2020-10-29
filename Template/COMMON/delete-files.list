@@ -22,7 +22,6 @@ etc/subuid-
 etc/xdg/menus/debian-menu.menu
 #lib/systemd
 root/.bash_history
-#systemd crud
 tmp/*
 #usr/lib/x86_64-linux-gnu/systemd
 usr/share/antiX/lib
@@ -77,7 +76,7 @@ usr/share/desktop-defaults
 #usr/share/icewm/themes/yellowmotif
 #usr/share/icons/*/icon-theme.cache 
 #usr/share/icons/BRIT-ICONS/icon-theme.cache
-usr/share/wallpapers/*
+#usr/share/wallpapers/*
 var/cache/apt-show-versions/* 
 var/cache/apt/*.bin
 var/cache/debconf/*-old
