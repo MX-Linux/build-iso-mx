@@ -1564,8 +1564,17 @@ do_stage_7() {
     say "Update font cache"
     $SUDO chroot $sqfs_dir fc-cache -r -s -v
     $SUDO chroot $sqfs_dir fc-cache -r -v /usr/share/fonts/extra
-
-    say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
+    
+    #update cache in /etc/skel
+    
+    if [ ! -d /etc/skel/.cache/fontconfig ]; then
+		$SUDO chroot $sqfs_dir mkdir -p /etc/skel/.cache/fontconfig
+	fi
+	
+	$SUDO chroot $sqfs_dir rm /etc/skel/.cache/fontconfig 
+	$SUDO chroot $sqfs_dir cp /var/cache/fontconfig/* /etc/skel/.cache/fontconfig
+	
+	say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
 
     local linuxfs_file=$iso_dir/antiX/linuxfs
     rm -f $linuxfs_file

@@ -48,7 +48,7 @@ copy_file plymouthd.conf /etc/plymouth/		--create
 #copy_file luckybackup.svg /usr/share/icons/hicolor/scalable/apps/
 
 #copy_dir Desktop/               /etc/skel/Desktop/           --create
-copy_dir cache		/etc/skel/.cache/ 	--create
+#copy_dir cache		/etc/skel/.cache/ 	--create
 
 # copy custom Workbench stuff
 copy_file workbench-tools.desktop /usr/share/applications/
