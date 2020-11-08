@@ -1567,12 +1567,12 @@ do_stage_7() {
     
     #update cache in /etc/skel
     
-    if [ ! -d /etc/skel/.cache/fontconfig ]; then
-		$SUDO chroot $sqfs_dir mkdir -p /etc/skel/.cache/fontconfig
+    if [ ! -d "$sqfs_dir/etc/skel/.cache/fontconfig" ]; then
+		$SUDO mkdir -p $sqfs_dir/etc/skel/.cache/fontconfig
 	fi
 	
-	$SUDO chroot $sqfs_dir rm /etc/skel/.cache/fontconfig 
-	$SUDO chroot $sqfs_dir cp /var/cache/fontconfig/* /etc/skel/.cache/fontconfig
+	$SUDO rm $sqfs_dir/etc/skel/.cache/fontconfig/*
+	$SUDO cp $sqfs_dir/var/cache/fontconfig/* $sqfs_dir/etc/skel/.cache/fontconfig/
 	
 	say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
 
