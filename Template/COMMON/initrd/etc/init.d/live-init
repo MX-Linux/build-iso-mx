@@ -52,7 +52,7 @@ UEFI_VDRIVER="fbdev"
 VIDEO_TWEAKS_FILE="/live/config/video-tweaks"
 XORG_BUS_ID_FILE="/etc/X11/xorg-bus-id"
 
-if test -d /live/config/uefi; then
+if test -e /live/config/uefi; then
     UEFI_BOOT=true
     DEFAULT_VDRIVER=$UEFI_VDRIVER
 fi
