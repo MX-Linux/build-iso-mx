@@ -6224,7 +6224,7 @@ Initrd_Out
 
     echo "$SQFILE_DEV" > $dir/boot-device
 
-    [ -e /sys/firmare/efi ]                  && touch $dir/uefi
+    [ -e /sys/firmware/efi ]                  && touch $dir/uefi
     [ "$DID_TORAM"    ]                      && touch $dir/did-toram
     [ "$TORAM_ALL"    ]                      && touch $dir/toram-all
     [ "$TORAM_STORE"  ]                      && touch $dir/toram-store
