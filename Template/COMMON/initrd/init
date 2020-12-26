@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.12"
-           VERSION_DATE="Thu 10 Oct 2019 11:24:39 PM MDT"
+                VERSION="8.30.12-mc1"
+           VERSION_DATE="Wed Dec 23 02:28:59 PM MST 2020"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -596,6 +596,8 @@ main_core() {
     fi
 
     breakpoint 6 "after mounting aufs"
+
+    load_microcode
 
     [ "$WANT_HOMEFS" ] \
         && mount_homefs $PERSIST_FULL_PATH/homefs $NEW_ROOT/home "$WANT_HOMEFS" "$NEED_HOMEFS"
@@ -2631,6 +2633,22 @@ check_kernel_version() {
             "$(printf  "$_Kernel_version_X_" $(pqh $kversion))" \
             "$(printf  "$_The_module_directory_X_is_missing_" $(pqh $mp$mod_dir))"
     fi
+}
+
+#------------------------------------------------------------------------------
+# Load microcode by bind mounting /lib/firmware/.  For some reason this fails
+# to work inside a chroot.
+#------------------------------------------------------------------------------
+load_microcode() {
+    local mc_file=/sys/devices/system/cpu/microcode/reload
+
+    [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ] || return
+    msg "Load microcode"
+    mkdir /lib/firmware
+    mount --bind /live/aufs/lib/firmware /lib/firmware
+    echo 1 > $mc_file
+    #sleep 0.1
+    umount /lib/firmware
 }
 
 #------------------------------------------------------------------------------
@@ -6224,7 +6242,7 @@ Initrd_Out
 
     echo "$SQFILE_DEV" > $dir/boot-device
 
-    [ -e /sys/firmware/efi ]                  && touch $dir/uefi
+    [ -e /sys/firmare/efi ]                  && touch $dir/uefi
     [ "$DID_TORAM"    ]                      && touch $dir/did-toram
     [ "$TORAM_ALL"    ]                      && touch $dir/toram-all
     [ "$TORAM_STORE"  ]                      && touch $dir/toram-store
@@ -6754,9 +6772,9 @@ prepare_switch_root() {
     # Avoid PID wrap by setting a large max
     echo 4000000 > /proc/sys/kernel/pid_max 2>/dev/null
 
-    mount_tmpfs $new_root/media  10 /media
-    mount_tmpfs $new_root/run    10 /run        mode=755,nodev
-    mount_tmpfs $new_live        10 $live_dir   mode=755
+    mount_tmpfs $new_root/media   10 /media
+    mount_tmpfs $new_root/run    100 /run        mode=755,nodev
+    mount_tmpfs $new_live         10 $live_dir   mode=755
 
     mkdir -p -m 777 $new_root/run/lock
 

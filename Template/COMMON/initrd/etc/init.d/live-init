@@ -52,7 +52,7 @@ UEFI_VDRIVER="fbdev"
 VIDEO_TWEAKS_FILE="/live/config/video-tweaks"
 XORG_BUS_ID_FILE="/etc/X11/xorg-bus-id"
 
-if test -e /live/config/uefi; then
+if test -d /live/config/uefi; then
     UEFI_BOOT=true
     DEFAULT_VDRIVER=$UEFI_VDRIVER
 fi
@@ -95,7 +95,6 @@ automount=off|amnt=off)                          AUTOMOUNT_OFF=true ;;
                  issue)   FORCE_ISSUE=true                          ;;
              vboxdecor)    VBOX_DECOR=true                          ;;
          i915powersave) ENABLE_I915_POWER_SAVE=true                 ;;
-           nomicrocode) NO_MICRO_CODE=true                          ;;
          live_swap=off)      NO_SWAP=true                           ;;
        live_swap=force)   FORCE_SWAP=true                           ;;
      live_swap=all-off)      NO_SWAP=true  ; NO_SWAP_FILE=true      ;;
@@ -128,13 +127,6 @@ main() {
 
 do_start() {
     echo_script "$_Localizing_configuring_X_Windows_" $0
-
-    local mc_file=/sys/devices/system/cpu/microcode/reload
-
-    if [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ]; then
-        echo_live "$_Load_microcode_"
-        echo 1 > $mc_file
-    fi
 
     get_init_param DISTRO ""
 
