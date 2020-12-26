@@ -1100,7 +1100,7 @@ valid_user() {
     [ -z "$user" ] && return 1
 
     #echo "try: $user"
-    local ent=$(grep "^$user:.*:/home/.*:/bin/.*sh$" /etc/passwd)
+    local ent=$(grep "^$user:.*:/home/.*:*/bin/.*sh$" /etc/passwd)
     local uid=$(echo $ent | cut -d: -f3)
     [ -z "$uid" ] && return 1
     [ $uid -lt 1000 ] && return 1
