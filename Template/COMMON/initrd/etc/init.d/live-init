@@ -574,6 +574,10 @@ Keyboard_Out
 localize_repo() {
     local mirror=$1  tz=$2  lang_mirror=$3  lang_tz=$4
 
+	if [ ! -e "$(which localize-repo)" ];
+		return
+	fi
+
     if [ -n "$mirror" -a -n "${mirror##[a-zA-Z][a-zA-Z]}" ]; then
         error "$_Bad_mirror_code_X_expected_two_letters_" $(pquote $mirror)
         mirror=
