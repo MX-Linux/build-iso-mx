@@ -574,7 +574,7 @@ Keyboard_Out
 localize_repo() {
     local mirror=$1  tz=$2  lang_mirror=$3  lang_tz=$4
 
-	if [ ! -e "$(which localize-repo)" ];
+	if [ ! -e "$(which localize-repo)" ]; then
 		return
 	fi
 
