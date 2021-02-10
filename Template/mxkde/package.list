@@ -481,6 +481,7 @@ libvirglrenderer0
 #lightdm-gtk-greeter-mx19
 #lightdm-gtk-greeter-settings
 #lightdm-modified-init
+libkf5baloowidgets-bin
 linux-base
 #linux-firmware
 #linux-firmware replaces firmware-linux and firmware-*
