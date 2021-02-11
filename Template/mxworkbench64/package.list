@@ -570,7 +570,7 @@ psutils
 pulseaudio
 pulseaudio-module-bluetooth
 pv
-python-bluez
+python3-bluez
 python3-smbc
 qla-tools
 qpdfview

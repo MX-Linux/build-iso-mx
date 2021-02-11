@@ -559,7 +559,7 @@ psutils
 pulseaudio
 pulseaudio-module-bluetooth
 pv
-python-bluez
+python3-bluez
 python3-smbc
 qpdfview
 qt5-gtk-platformtheme

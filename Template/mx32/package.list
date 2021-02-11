@@ -524,7 +524,7 @@ pulseaudio-module-bluetooth
 #pulseaudio-module-x11
 pulseaudio-utils
 pv 
-python-bluez
+python3-bluez
 python3-smbc
 #qogir-gtk-theme
 #qogir-dark-theme
