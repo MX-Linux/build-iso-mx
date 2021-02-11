@@ -330,7 +330,7 @@ libestr0
 libext2fs2
 libfastjson4
 libfdisk1
-libffi6
+libffi7
 libgcc1
 libgcrypt20
 libgmp10
@@ -655,7 +655,7 @@ vbetool
 vcdimager
 vdpau-driver-all
 vim-tiny
-virtualbox-guest-dkms
+# virtualbox-guest-dkms
 virtualbox-guest-utils
 virtualbox-guest-utils-modified-init
 virtualbox-guest-x11
