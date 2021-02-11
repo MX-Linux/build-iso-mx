@@ -378,7 +378,7 @@ libmtp-runtime
 libncurses6
 libncursesw6
 libnetfilter-conntrack3
-libnettle6
+libnettle8
 libnewt0.52
 libnfnetlink0
 libnftnl11
