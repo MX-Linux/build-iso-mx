@@ -24,7 +24,7 @@ anacron
 appstream
 apt-config-icons
 apt-config-icons-large
-apt-mx
+#apt-mx
 apt-notifier
 apt-transport-https
 apt-xapian-index
