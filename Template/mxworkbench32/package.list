@@ -343,7 +343,7 @@ libcryptsetup12
 libdb5.3
 libdebconfclient0
 libdevmapper1.02.1
-libdns-export1104
+libdns-export1110
 libelf-dev
 libelf1
 libestr0
