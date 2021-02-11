@@ -323,7 +323,7 @@ less
 libacl1
 libapparmor1
 libapt-inst2.0
-libapt-pkg5.0
+libapt-pkg6.0
 libargon2-1
 libattr1
 libaudit-common
