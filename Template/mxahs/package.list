@@ -266,7 +266,7 @@ gtk-theme-switch
 gtk2-engines-murrine
 gtk2-engines-pixbuf
 #gtk2-engines-xfce
-gtk3-engines-xfce
+
 gtkdialog
 #gthumb
 guvcview
