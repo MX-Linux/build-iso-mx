@@ -1,2 +1,2 @@
-# Debian buster Updates
-deb http://deb.debian.org/debian buster-updates main contrib non-free
+# Debian bullseye Updates
+deb http://deb.debian.org/debian bullseye-updates main contrib non-free
