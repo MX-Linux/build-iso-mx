@@ -362,8 +362,8 @@ libgtk3-perl
 libhogweed4
 libidn11
 libidn2-0
-libip4tc0
-libip6tc0
+libip4tc2
+libip6tc2
 libiptc0
 libisc-export1100
 libjson-c3
