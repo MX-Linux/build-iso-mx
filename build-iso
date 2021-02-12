@@ -51,6 +51,7 @@ Options:
     -i --iso-only       Only build an iso.  Don't create a squashfs file
     -I --INTERACTIVE    Let Debian ask config questions inside the chroot
     -j --jbb            Suppress voluminous output
+    --lz4               Override default compression scheme with lz4
     -m --manual         Enter chroot if the automatic chroot stage fails
     -n --no-error-check Don't do error checking on stderr output
     -N --NO-ERROR-LOG   Also, don't log or highlight errors on stderr
@@ -61,11 +62,13 @@ Options:
     -S --SAVE           Save the squashfs directory in the cache
     -u --update         Skip most parts in chroot stage preceding add and remove
     -U --UPDATE         Merge add.list and remove.list into the other lists
+    --user-default      specify a defaults file, must be present in Input folder
     -V --VERBOSE        Print even more than we already do
     -v --version        Print version info and exit
     --show-stages       Show the stages of processing
     --show-parts        Show parts of stage-$chroot_stage and how to control them
     -0 -- -8            Start over from stage N.
+    
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -128,6 +131,7 @@ main() {
     local partial_name="PARTIAL"
     local partial_file=$build_dir/$partial_name
     local seed_fname="random-seed"
+    local user_defaults
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
@@ -151,6 +155,13 @@ main() {
                     val=$1
                     [ -n "$val" -a -z "${val##-*}" ] \
                         && fatal "Suspicious argument after -$arg: $(pqw $val)"
+
+                    shift         ;;
+    -user-default)  [ $# -lt 1 ] && fatal "Expected a parameter after: $(pqw -$arg)"
+                    val=$1
+                    user_defaults="$input_dir/$val"
+                    [ ! -e "$user_defaults" ] \
+                        && fatal "Default file not found -$arg: $(pqw $val)"
 
                     shift         ;;
               *=*)  val=${arg#*=} ;;
@@ -186,6 +197,8 @@ main() {
           -update|u)    update_mode=true                        ;;
           -UPDATE|U)    UPDATE_mode=true                        ;;
          -VERBOSE|V)   verbose_mode=true                        ;;
+         -user-default)      user_default_file=true  		    ;;
+         -lz4)				=true						;;
 
               [0-8]) [ "$start_from" ] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -264,6 +277,17 @@ main() {
     local normal_defaults="$input_dir/defaults $input_dir/defaults-local"
     local all_defaults="$input_dir/defaults-system $normal_defaults"
 
+	#echo "defaults" $normal_defaults
+	#echo "all_defaults" $all_defaults
+	
+	if [ user_default_file ]; then
+		local normal_defaults="$user_defaults $input_dir/defaults-local"
+		local all_defaults="$input_dir/defaults-system $normal_defaults"
+		#echo "defaults" $normal_defaults
+	   #echo "all_defaults" $all_defaults
+	fi
+	
+	
     load_defaults
 
     trap on_exit       EXIT
@@ -1573,6 +1597,12 @@ do_stage_7() {
 	
 	$SUDO rm $sqfs_dir/etc/skel/.cache/fontconfig/*
 	$SUDO cp $sqfs_dir/var/cache/fontconfig/* $sqfs_dir/etc/skel/.cache/fontconfig/
+	
+	if [ lz4_override ]; then
+		$COMPRESSION_TYPE="lz4"
+		$COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+	fi
+	
 	
 	say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
 
