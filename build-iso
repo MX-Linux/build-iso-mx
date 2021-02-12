@@ -198,7 +198,7 @@ main() {
           -UPDATE|U)    UPDATE_mode=true                        ;;
          -VERBOSE|V)   verbose_mode=true                        ;;
          -user-default)      user_default_file=true  		    ;;
-         -lz4)				=true						;;
+         -lz4)				lz4_override=true						;;
 
               [0-8]) [ "$start_from" ] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
