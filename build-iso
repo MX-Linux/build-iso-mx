@@ -280,7 +280,7 @@ main() {
 	#echo "defaults" $normal_defaults
 	#echo "all_defaults" $all_defaults
 	
-	if [ user_default_file ]; then
+	if [ $user_default_file ]; then
 		local normal_defaults="$user_defaults $input_dir/defaults-local"
 		local all_defaults="$input_dir/defaults-system $normal_defaults"
 		#echo "defaults" $normal_defaults
@@ -837,6 +837,10 @@ do_stage_4() {
 	
 	if [ -e "/mx19-archive-keyring.deb" ]; then
 		dpkg -i mx19-archive-keyring.deb && rm /mx19-archive-keyring.deb
+	fi
+	
+	if [ -e "/mx21repo.asc" ]; then
+		apt-key add /mx21repo.asc && rm /mx21repo.asc
 	fi
 
     if do_part 1 "Update repos and do apt-get update"; then

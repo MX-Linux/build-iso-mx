@@ -9,14 +9,14 @@
 
 #this is basic version info.  used to make mx-version among other things
 BUG_REPORT_URL="https://mxlinux.org"
-CODE_NAME="patito feo"
-ASCII_CODE_NAME="patito feo"
-DEBIAN_RELEASE="buster"
+CODE_NAME="pufferfish"
+ASCII_CODE_NAME="pufferfish"
+DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
-DISTRO_VERSION="19.3"
-#DISTRO_VERSION="19.3_ahs"
-#DISTRO_VERSION="19.3_base"
-#DISTRO_VERSION="19.3_flux_base"
+DISTRO_VERSION="21"
+#DISTRO_VERSION="21_ahs"
+#DISTRO_VERSION="21_base"
+#DISTRO_VERSION="21_flux_base"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -39,9 +39,9 @@ HOME_URL="https://mxlinux.org"
 #UNSIGNED=""
 
 #standard 64 bit
-K_REVISION="12"
+K_REVISION="3"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="4.19.0"
+K_VERSION="5.10.0"
 UNSIGNED=""
 
 #system defaults, these end up inside the squash file system mostly
@@ -49,7 +49,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="November 7,2020"
+RELEASE_DATE="Feb 16, 2021"
 TIME_ZONE="America/New_York"
 
 #DE particular items
@@ -63,10 +63,10 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 #xz use -comp xz -b 262144 #use for base
 #lz4 use -comp lz4 -Xhc
 #gzip leave empty #use for full
-#COMPRESSION_TYPE="xz"
-#COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
-COMPRESSION_TYPE="lz4"
-COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+#COMPRESSION_TYPE="lz4"
+#COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
 
 #legacy variables that don't change
 USE_UEFI=true
