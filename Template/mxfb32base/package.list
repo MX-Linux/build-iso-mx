@@ -496,7 +496,7 @@ network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-nictools-pci
+# nictools-pci
 nomacs
 nomacs-l10n
 ntfs-3g

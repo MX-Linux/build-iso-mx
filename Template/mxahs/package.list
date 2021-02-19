@@ -446,7 +446,7 @@ network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-nictools-pci 
+# nictools-pci 
 #nitroshare
 ntp    
 #ndisgtk
