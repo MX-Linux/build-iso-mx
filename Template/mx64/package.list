@@ -353,7 +353,7 @@ lightdm
 lightdm-modified-init
 lightdm-gtk-greeter
 lightdm-gtk-greeter-settings
-lightdm-gtk-greeter-mx19
+# lightdm-gtk-greeter-mx19
 #light-locker
 linux-base
 linux-libc-dev
