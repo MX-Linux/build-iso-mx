@@ -77,7 +77,7 @@ cpuidtool
 cron
 cryptsetup
 cryptsetup-bin
-cryptsetup-modified-functions
+# cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -105,7 +105,7 @@ dctrl-tools
 ddcutil
 ddm-mx
 ddrutility
-deb-multimedia-keyring
+# deb-multimedia-keyring
 debconf
 debconf-i18n
 debconf-utils
@@ -126,7 +126,7 @@ diffutils
 digitemp
 discover
 discover-data
-disk-manager
+# disk-manager
 disktype
 dislocker
 djvulibre-bin
@@ -278,7 +278,7 @@ hfsplus
 hfsprogs
 hfsutils
 hfsutils-tcltk
-hibernate
+# hibernate
 hostname
 hplip
 hplip-data
@@ -511,8 +511,8 @@ nfs-kernel-server
 # nictools-pci
 nmap
 nmon
-nomacs
-nomacs-l10n
+# nomacs
+# nomacs-l10n
 ntfs-3g
 ntp
 ntpdate
@@ -537,7 +537,7 @@ pciutils
 pcmciautils
 perl-base
 pinentry-gtk2
-pkg-mozilla-archive-keyring
+# pkg-mozilla-archive-keyring
 pm-utils
 pmount
 policykit-1
@@ -591,7 +591,7 @@ remmina-plugin-spice
 remmina-plugin-telepathy
 remmina-plugin-vnc
 rename
-resolvconf
+# resolvconf
 rfkill
 rkhunter
 rpcbind
@@ -614,8 +614,8 @@ sgml-base
 sgml-data
 shared-mime-info
 smartmontools
-smbc
-smbclient
+# smbc
+# smbclient
 smbios-utils
 smxi-inxi-antix
 spice-vdagent
@@ -632,7 +632,7 @@ syslinux-common
 syslinux-utils
 system-config-printer
 system-config-printer-udev
-system-config-samba
+# system-config-samba
 system-tools-backends
 systemd
 systemd-shim
@@ -675,7 +675,7 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-uswsusp
+# uswsusp
 util-linux
 va-driver-all
 vainfo

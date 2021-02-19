@@ -16,7 +16,7 @@ cryptsetup
 cryptsetup-bin
 #dbus
 debconf-utils
-deb-multimedia-keyring
+# deb-multimedia-keyring
 #devuan-keyring
 #desktop-file-utils
 dmsetup
@@ -75,7 +75,7 @@ pciutils
 pcmciautils
 perl
 perl-modules
-pkg-mozilla-archive-keyring
+# pkg-mozilla-archive-keyring
 #ppp
 #pppconfig
 psmisc
@@ -85,7 +85,7 @@ reiser4progs
 reiserfsprogs
 remaster-antix
 rfkill
-resolvconf
+# resolvconf
 rsync
 screen
 siduction-archive-keyring

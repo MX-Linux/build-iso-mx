@@ -17,8 +17,8 @@ OUT_FILE=/live/config/disabled
 PAM_FILE=/etc/pam.d/login
 
 VBOX_SERVICES="
-virtualbox-guest-utils
-virtualbox-guest-x11
+# virtualbox-guest-utils
+# virtualbox-guest-x11
 "
 
 NFS_SERVICES="

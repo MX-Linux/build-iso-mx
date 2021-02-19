@@ -80,7 +80,7 @@ cpufrequtils
 cron
 cryptsetup
 cryptsetup-bin
-cryptsetup-modified-functions
+# cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -103,7 +103,7 @@ dconf-gsettings-backend
 dconf-service
 dctrl-tools
 ddm-mx
-deb-multimedia-keyring
+# deb-multimedia-keyring
 debconf
 debconf-i18n
 debconf-utils
@@ -122,7 +122,7 @@ dictionaries-common
 diffutils
 discover
 discover-data
-disk-manager
+# disk-manager
 djvulibre-bin
 dkms
 dmidecode
@@ -265,7 +265,7 @@ hexedit
 #hfsprogs
 #hfsutils
 #hfsutils-tcltk
-hibernate
+# hibernate
 #hicolor-icon-theme
 hostname
 hplip
@@ -497,8 +497,8 @@ nfs-common
 nfs-common-modified-init
 nfs-kernel-server
 # nictools-pci
-nomacs
-nomacs-l10n
+# nomacs
+# nomacs-l10n
 ntfs-3g
 ntp
 ntpdate
@@ -527,7 +527,7 @@ pciutils
 pcmciautils
 perl-base
 pinentry-gtk2
-pkg-mozilla-archive-keyring
+# pkg-mozilla-archive-keyring
 #plane-gtk-theme
 #plymouth
 #plymouth-themes
@@ -575,7 +575,7 @@ read-edid
 readline-common
 reiser4progs
 reiserfsprogs
-resolvconf
+# resolvconf
 rfkill
 rpcbind
 rpl
@@ -593,8 +593,8 @@ sgml-base
 sgml-data
 shared-mime-info
 smartmontools
-smbc
-smbclient
+# smbc
+# smbclient
 smxi-inxi-antix
 spice-vdagent
 squashfs-tools
@@ -609,7 +609,7 @@ syslinux-common
 syslinux-utils
 system-config-printer
 system-config-printer-udev
-system-config-samba
+# system-config-samba
 system-tools-backends
 systemd
 systemd-shim
@@ -653,7 +653,7 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-uswsusp
+# uswsusp
 util-linux
 va-driver-all
 vainfo
@@ -661,10 +661,10 @@ vbetool
 vcdimager
 vdpau-driver-all
 vim-tiny
-virtualbox-guest-dkms
-virtualbox-guest-utils
-virtualbox-guest-utils-modified-init
-virtualbox-guest-x11
+# virtualbox-guest-dkms
+# virtualbox-guest-utils
+# virtualbox-guest-utils-modified-init
+# virtualbox-guest-x11
 volumeicon-alsa
 vorbis-tools
 vpnc

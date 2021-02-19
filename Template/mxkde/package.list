@@ -98,7 +98,7 @@ conky-toggle-mx
 #consolekit
 cpufrequtils
 cracklib-runtime
-cryptsetup-modified-functions
+# cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -138,7 +138,7 @@ dictionaries-common
 digikam
 discover
 discover-data
-disk-manager
+# disk-manager
 djvulibre-bin
 dkms
 dmz-cursor-theme
@@ -310,7 +310,7 @@ hddtemp
 hdparm
 #hexchat
 hexedit
-hibernate
+# hibernate
 hicolor-icon-theme
 #host
 hplip
@@ -773,8 +773,8 @@ signon-plugin-oauth2
 simple-scan
 #simsu
 smb4k
-smbc
-smbclient
+# smbc
+# smbclient
 #smtube
 #smxi-inxi-antix
 sni-qt
@@ -844,17 +844,17 @@ usb-modeswitch-data
 usbmuxd
 usbutils
 user-manager
-uswsusp
+# uswsusp
 va-driver-all
 vainfo
 vbetool
 vcdimager
 vdpau-driver-all
 vim-tiny
-virtualbox-guest-dkms
-virtualbox-guest-utils
-virtualbox-guest-utils-modified-init
-virtualbox-guest-x11
+# virtualbox-guest-dkms
+# virtualbox-guest-utils
+# virtualbox-guest-utils-modified-init
+# virtualbox-guest-x11
 vlc
 vlc-data
 #vlc-nox
