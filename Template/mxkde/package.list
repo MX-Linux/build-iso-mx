@@ -239,7 +239,7 @@ ftp
 #fuseiso9660
 #galculator
 #galternatives
-#gcc-8-base:i386
+#gcc-9-base:i386
 #gconf-service
 #gconf2
 #gconf2-common

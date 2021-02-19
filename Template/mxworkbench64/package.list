@@ -222,7 +222,7 @@ fuse3
 fwupd
 galculator
 gawk
-gcc-8-base
+gcc-9-base
 gconf-service
 gconf2-common
 gcr
