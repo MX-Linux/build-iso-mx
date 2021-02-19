@@ -631,7 +631,7 @@ thunar-gtkhash
 thunar-volman
 tlp
 tmux
-touchpad-indicator
+# touchpad-indicator
 traceroute
 ttf-bitstream-vera
 ttf-mscorefonts-installer

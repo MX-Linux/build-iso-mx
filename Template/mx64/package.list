@@ -584,7 +584,7 @@ systemd
 sysvinit-core
 systemd-shim
 tango-icon-theme
-touchpad-indicator
+# touchpad-indicator
 tcl 
 tcl8.6
 tcpd 
