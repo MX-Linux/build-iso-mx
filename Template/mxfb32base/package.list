@@ -512,7 +512,7 @@ openconnect
 openssh-client
 openssl
 openvpn
-orage
+# orage
 os-prober
 p7zip-full
 #p7zip-rar

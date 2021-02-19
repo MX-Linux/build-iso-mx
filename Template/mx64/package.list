@@ -469,7 +469,7 @@ openconnect
 openssh-client
 #openssh-server    
 openvpn
-orage 
+# orage 
 p7zip-full
 pacpl
 papirus-icon-theme 
