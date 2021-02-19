@@ -674,7 +674,7 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin 
 xfce4-genmon-plugin 
-xfce4-hardware-monitor-plugin
+# xfce4-hardware-monitor-plugin
 #xfce4-hotcorner-plugin
 #xfce4-indicator-plugin
 #xfce4-mailwatch-plugin 
@@ -682,7 +682,7 @@ xfce4-hardware-monitor-plugin
 #xfce4-mixer  
 xfce4-mount-plugin 
 xfce4-netload-plugin 
-xfce4-notes
+# xfce4-notes
 #xfce4-notes-plugin
 xfce4-notifyd 
 xfce4-panel 
@@ -694,7 +694,7 @@ xfce4-pulseaudio-plugin
 #xfce4-quicklauncher-plugin 
 xfce4-screenshooter
 #xfce4-screenshooter-plugin 
-xfce4-screensaver
+# xfce4-screensaver
 xfce4-sensors-plugin 
 xfce4-session
 xfce4-settings
