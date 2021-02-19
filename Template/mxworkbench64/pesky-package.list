@@ -4,7 +4,7 @@ desktop-defaults-mx-xfce
 lightdm-modified-init
 nfs-common-modified-init
 udev-modified-init
-virtualbox-guest-utils-modified-init
+# virtualbox-guest-utils-modified-init
 cups
 printer-driver-cups-pdf
 

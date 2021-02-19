@@ -95,7 +95,7 @@ cups-filters-core-drivers
 cups-ppdc 
 cups-server-common
 curl   
-cryptsetup-modified-functions
+# cryptsetup-modified-functions
 dbus
 dbus-x11
 dc    
@@ -117,7 +117,7 @@ dictionaries-common
 #diffuse
 discover
 discover-data
-disk-manager 
+# disk-manager 
 djvulibre-bin 
 dkms 
 dmz-cursor-theme
@@ -280,7 +280,7 @@ hddtemp
 hdparm
 hexchat
 hexedit
-hibernate
+# hibernate
 hicolor-icon-theme
 #host 
 hplip
@@ -318,7 +318,7 @@ libcanberra-pulse
 libc-dev-bin
 #libc6:i386
 #libgcc1:i386
-#gcc-8-base:i386
+#gcc-9-base:i386
 libelf-dev
 #libgnome2-perl 
 libmtp-runtime
@@ -354,7 +354,7 @@ lightdm
 lightdm-modified-init
 lightdm-gtk-greeter
 lightdm-gtk-greeter-settings
-lightdm-gtk-greeter-mx19
+# lightdm-gtk-greeter-mx19
 #light-locker
 linux-base
 linux-libc-dev
@@ -446,7 +446,7 @@ network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-nictools-pci 
+# nictools-pci 
 #nitroshare
 ntp    
 #ndisgtk
@@ -454,8 +454,8 @@ ntp
 #ndiswrapper-dkms
 #ndiswrapper-utils-1.9
 nvidia-detect
-nomacs
-nomacs-l10n
+# nomacs
+# nomacs-l10n
 numix-gtk-theme
 numix-icon-theme
 nwipe
@@ -470,7 +470,7 @@ openconnect
 openssh-client
 #openssh-server    
 openvpn
-orage 
+# orage 
 p7zip-full
 pacpl
 papirus-icon-theme 
@@ -559,8 +559,8 @@ shared-mime-info
 #shotwell 
 simple-scan
 #simsu  
-smbclient
-smbc
+# smbclient
+# smbc
 #smtube
 #smxi-inxi-antix 
 sox
@@ -577,7 +577,7 @@ syslinux-common
 syslinux-utils
 system-config-printer 
 system-config-printer-udev 
-system-config-samba
+# system-config-samba
 system-tools-backends  
 sysv-rc-conf 
 systemd
@@ -585,7 +585,7 @@ systemd
 sysvinit-core
 systemd-shim
 tango-icon-theme
-touchpad-indicator
+# touchpad-indicator
 tcl 
 tcl8.6
 tcpd 
@@ -623,17 +623,17 @@ usb-modeswitch
 usb-modeswitch-data 
 usbmuxd  
 usbutils 
-uswsusp
+# uswsusp
 vbetool
 vcdimager
 vdpau-driver-all
 vainfo
 va-driver-all
 vim-tiny
-virtualbox-guest-dkms
-virtualbox-guest-utils
-virtualbox-guest-x11
-virtualbox-guest-utils-modified-init
+# virtualbox-guest-dkms
+# virtualbox-guest-utils
+# virtualbox-guest-x11
+# virtualbox-guest-utils-modified-init
 vlc  
 vlc-data 
 #vlc-nox 
@@ -675,7 +675,7 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin 
 xfce4-genmon-plugin 
-xfce4-hardware-monitor-plugin
+# xfce4-hardware-monitor-plugin
 #xfce4-hotcorner-plugin
 #xfce4-indicator-plugin
 #xfce4-mailwatch-plugin 
@@ -683,7 +683,7 @@ xfce4-hardware-monitor-plugin
 #xfce4-mixer  
 xfce4-mount-plugin 
 xfce4-netload-plugin 
-xfce4-notes
+# xfce4-notes
 #xfce4-notes-plugin
 xfce4-notifyd 
 xfce4-panel 
@@ -695,7 +695,7 @@ xfce4-pulseaudio-plugin
 #xfce4-quicklauncher-plugin 
 xfce4-screenshooter
 #xfce4-screenshooter-plugin 
-xfce4-screensaver
+# xfce4-screensaver
 xfce4-sensors-plugin 
 xfce4-session
 xfce4-settings

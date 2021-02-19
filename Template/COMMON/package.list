@@ -18,7 +18,7 @@ cryptsetup
 cryptsetup-bin
 dbus
 debconf-utils
-deb-multimedia-keyring
+# deb-multimedia-keyring
 #devuan-keyring
 #desktop-defaults-core-antix
 #desktop-file-utils
@@ -80,7 +80,7 @@ pciutils
 pcmciautils
 #perl
 #perl-modules
-pkg-mozilla-archive-keyring
+# pkg-mozilla-archive-keyring
 #ppp
 pppoeconf
 psmisc
@@ -90,7 +90,7 @@ reiser4progs
 reiserfsprogs
 #remaster-antix
 rfkill
-resolvconf
+# resolvconf
 rsync
 #screen #replaced by tmux
 #siduction-archive-keyring

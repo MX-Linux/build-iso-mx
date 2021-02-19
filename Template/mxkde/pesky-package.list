@@ -4,7 +4,7 @@ zd1211-firmware
 #lightdm-modified-init
 nfs-common-modified-init
 udev-modified-init
-virtualbox-guest-utils-modified-init
+# virtualbox-guest-utils-modified-init
 cups
 printer-driver-cups-pdf
 desktop-defaults-mx-kde
