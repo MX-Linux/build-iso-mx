@@ -485,6 +485,7 @@ network-manager-openvpn
 network-manager-openvpn-gnome
 network-manager-pptp
 network-manager-vpnc
+network-manager-sysvinit-compat
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
