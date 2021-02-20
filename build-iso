@@ -1391,11 +1391,15 @@ do_stage_5() {
         $SUDO rm -f $sqfs_dir/root/.bash_history
     fi
     
-     # Make sure root's history is either clobbered (above) or erased
-    elif $SUDO test -e $sqfs_dir/root/.bash_history; then
-        say "Deleting root's history"
-        $SUDO rm -f $sqfs_dir/root/.bash_history
-    fi
+     #remove symlink for /etc/resolv.conf
+    say "Removing symlink for /etc/resolv.conf"
+    $SUDO rm /etc/resolv.conf
+    
+    #remove old linux image files
+    say "Removing *.old files from / "
+    $SUDO rm /*.old
+    
+
 
     leave_stage
 }
