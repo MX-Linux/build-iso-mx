@@ -372,9 +372,9 @@ kde-style-qtcurve-qt5
 kde-thumbnailer-epub
 kdeconnect
 kded5
-kdelibs-bin
-kdelibs5-data
-kdelibs5-plugins
+# kdelibs-bin
+# kdelibs5-data
+# kdelibs5-plugins
 #kdenlive
 #kdepim-runtime
 kdeplasma-addons-data
