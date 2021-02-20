@@ -474,7 +474,7 @@ libsox-fmt-all
 #libsox2
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
-#libvirglrenderer1
+libvirglrenderer1
 #light-locker
 #lightdm
 #lightdm-gtk-greeter
@@ -622,7 +622,7 @@ partitionmanager-modified-launcher
 pavucontrol
 pdfshuffler
 peg-e
-#phonon-backend-gstreamer-common
+phonon-backend-gstreamer-common
 phonon4qt5
 phonon4qt5-backend-vlc
 #pidgin
