@@ -299,7 +299,7 @@ info
 init-system-helpers 
 installation-report 
 intel-microcode  
-iptraf 
+iptraf-ng 
 iso-codes
 isomount
 iucode-tool
