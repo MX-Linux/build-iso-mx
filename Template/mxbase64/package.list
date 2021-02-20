@@ -210,7 +210,7 @@ ftp
 fuse3
 galculator
 gawk
-gcc-9-base
+gcc-10-base
 gconf-service
 gconf2-common
 gcr
