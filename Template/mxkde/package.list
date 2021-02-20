@@ -356,8 +356,8 @@ kde-config-screenlocker
 kde-config-sddm
 kdegraphics-thumbnailers
 kdenetwork-filesharing
-kde-runtime
-kde-runtime-data
+# kde-runtime
+# kde-runtime-data
 kde-servicemenu-checkhash-installdebs 
 kde-servicemenu-extract-and-compress 
 kde-servicemenu-kim4
