@@ -365,9 +365,9 @@ kde-servicemenu-rootactions
 kde-spectacle
 kde-standard
 kde-style-breeze
-kde-style-breeze-qt4
+# kde-style-breeze-qt4
 kde-style-oxygen-qt5
-kde-style-qtcurve-qt4
+# kde-style-qtcurve-qt4
 kde-style-qtcurve-qt5
 kde-thumbnailer-epub
 kdeconnect
