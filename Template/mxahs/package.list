@@ -662,7 +662,7 @@ xdg-utils
 #xf86-video-sis-antix
 xfburn 
 #xfdashboard
-xfce-keyboard-shortcuts 
+#xfce-keyboard-shortcuts 
 xfce4-appfinder
 xfce4-battery-plugin 
 #xfce4-cellmodem-plugin 
