@@ -142,7 +142,7 @@ extlinux
 extundelete
 f2fs-tools
 #faenza-icon-theme 
-faenza-cupertino-icons
+#faenza-cupertino-icons
 #faenza-cupertino-mini-icons
 #fail2ban
 fakeroot 
@@ -339,14 +339,14 @@ libreoffice-impress
 #libreoffice-lightproof-en # needed?
 libreoffice-java-common
 libreoffice-math 
-libreoffice-pdfimport
+#libreoffice-pdfimport
 libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 #libreoffice-style-galaxy 
 libreoffice-writer 
 libsox-fmt-all
 #libsox2
-libvirglrenderer0
+#libvirglrenderer0
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
 lightdm
@@ -370,7 +370,7 @@ luckybackup-data
 lvm2
 lxmenu-data  
 lxrandr 
-matcha-theme
+#matcha-theme
 manpages 
 manpages-dev
 mdadm
@@ -479,7 +479,7 @@ partition-info
 pavucontrol
 pdfshuffler
 peg-e
-phonon-backend-gstreamer  
+#phonon-backend-gstreamer  
 #pidgin  
 #pidgin-data
 pinentry-gtk2
@@ -514,7 +514,7 @@ printer-driver-pxljr
 printer-driver-sag-gdi    
 printer-driver-splix  
 projectm-data
-plane-gtk-theme
+#plane-gtk-theme
 plymouth
 plymouth-themes-mx
 plymouth-themes
@@ -535,7 +535,7 @@ qpdfview-ps-plugin
 qpdfview-translations 
 #qtchooser
 #qt4-fsarchiver 
-qtcore4-l10n
+#qtcore4-l10n
 qt5-gtk-platformtheme
 qt5-style-plugins
 #rarian-compat
@@ -611,7 +611,7 @@ udev-modified-init
 udevil
 udisks2
 #unetbootin
-uno-libs3
+#uno-libs3
 unpaper
 unrar 
 unzip
