@@ -380,7 +380,7 @@ kdelibs5-plugins
 kdeplasma-addons-data
 kdialog
 #kdiff3
-kdoctools
+# kdoctools
 kdoctools5
 keditbookmarks
 #kf5-kdepim-apps-libs-data
@@ -409,7 +409,7 @@ konsole-kpart
 #kopete
 #korganizer
 kpackagetool5
-kppp
+# kppp
 krb5-locales
 kross
 krdc
@@ -474,7 +474,7 @@ libsox-fmt-all
 #libsox2
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
-libvirglrenderer0
+libvirglrenderer1
 #light-locker
 #lightdm
 #lightdm-gtk-greeter

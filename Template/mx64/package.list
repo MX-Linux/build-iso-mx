@@ -346,7 +346,7 @@ libreoffice-sdbc-hsqldb
 libreoffice-writer 
 libsox-fmt-all
 #libsox2
-#libvirglrenderer0
+libvirglrenderer1
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
 lightdm
