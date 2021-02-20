@@ -1115,6 +1115,13 @@ do_stage_4() {
 
         gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
         local group
+        
+        # add conveinence group vboxsf even if virtualbox guest additions 
+        # aren not installed
+        if [  -n "$(groups | grep vboxsf)" ]; then
+			groupadd vboxsf
+		fi
+        
         for group in $(gather user-groups); do
             usermod -a -G $group $user
         done
