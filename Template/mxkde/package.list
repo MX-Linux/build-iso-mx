@@ -744,7 +744,7 @@ qt5-image-formats-plugins
 qt5-style-kvantum
 qt5-style-plugins
 #qtchooser
-qtcore4-l10n
+# qtcore4-l10n
 qtvirtualkeyboard-plugin
 #rarian-compat
 #rdesktop
@@ -776,7 +776,7 @@ smb4k
 # smbclient
 #smtube
 #smxi-inxi-antix
-sni-qt
+# sni-qt
 software-properties-kde
 sonnet-plugins
 sound-theme-freedesktop
