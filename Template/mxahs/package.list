@@ -480,7 +480,7 @@ partition-info
 pavucontrol
 pdfshuffler
 peg-e
-#phonon-backend-gstreamer  
+phonon-backend-gstreamer-common  
 #pidgin  
 #pidgin-data
 pinentry-gtk2

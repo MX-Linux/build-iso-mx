@@ -622,7 +622,7 @@ pavucontrol
 pdfshuffler
 peg-e
 phonon
-phonon-backend-gstreamer
+phonon-backend-gstreamer-common
 phonon4qt5
 phonon4qt5-backend-vlc
 #pidgin
