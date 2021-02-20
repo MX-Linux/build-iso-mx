@@ -465,7 +465,7 @@ libreoffice-java-common
 libreoffice-kde5
 #libreoffice-lightproof-en # needed?
 libreoffice-math
-libreoffice-pdfimport
+# libreoffice-pdfimport
 libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 #libreoffice-style-galaxy
