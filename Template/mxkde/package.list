@@ -344,7 +344,7 @@ kactivitymanagerd
 #kalternatives
 kamera
 kate
-kate-data
+# kate-data
 kate5-data
 katepart
 kcalc
