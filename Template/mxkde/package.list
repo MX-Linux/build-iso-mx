@@ -369,7 +369,7 @@ kde-style-breeze
 kde-style-oxygen-qt5
 # kde-style-qtcurve-qt4
 kde-style-qtcurve-qt5
-kde-thumbnailer-epub
+# kde-thumbnailer-epub
 kdeconnect
 kded5
 # kdelibs-bin
