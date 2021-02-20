@@ -843,7 +843,7 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-user-manager
+# user-manager
 # uswsusp
 va-driver-all
 vainfo
