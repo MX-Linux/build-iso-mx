@@ -6778,8 +6778,8 @@ prepare_switch_root() {
 
     mkdir -p -m 777 $new_root/run/lock
 
-    #rm -f $new_root/etc/resolv.conf
-    #ln -s ../run/resolvconf/resolv.conf $new_root/etc/resolv.conf
+    rm -f $new_root/etc/resolv.conf
+    ln -s ../run/resolvconf/resolv.conf $new_root/etc/resolv.conf
 
     [ -z "$NO_TMP_TMP" ] && $LIVE_BIN/mount -t tmpfs -o noatime tmpfs $new_root/tmp
 
