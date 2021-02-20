@@ -1390,6 +1390,12 @@ do_stage_5() {
         say "Deleting root's history"
         $SUDO rm -f $sqfs_dir/root/.bash_history
     fi
+    
+     # Make sure root's history is either clobbered (above) or erased
+    elif $SUDO test -e $sqfs_dir/root/.bash_history; then
+        say "Deleting root's history"
+        $SUDO rm -f $sqfs_dir/root/.bash_history
+    fi
 
     leave_stage
 }
