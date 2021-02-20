@@ -535,7 +535,7 @@ qpdfview-ps-plugin
 qpdfview-translations 
 #qtchooser
 #qt4-fsarchiver 
-$qtcore4-l10n
+#qtcore4-l10n
 qt5-gtk-platformtheme
 qt5-style-plugins
 #rarian-compat
