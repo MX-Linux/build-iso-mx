@@ -611,6 +611,8 @@ do_stage_1() {
     convenience_link $sqfs_dir   sqfs
     convenience_link $iso_dir    iso
     convenience_link $initrd_dir initrd
+    
+    $SUDO chown root:root $sqfs_dir
 
     leave_stage notime
 }
