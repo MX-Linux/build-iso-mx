@@ -1393,11 +1393,11 @@ do_stage_5() {
     
      #remove symlink for /etc/resolv.conf
     say "Removing symlink for /etc/resolv.conf"
-    $SUDO rm -f /etc/resolv.conf
+    $SUDO rm -f $sqfs_dir/etc/resolv.conf
     
     #remove old linux image files
     say "Removing *.old files from / "
-    $SUDO rm -f /*.old
+    $SUDO rm -f $sqfs_dir/*.old
     
 
 
