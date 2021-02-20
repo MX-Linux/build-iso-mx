@@ -3,7 +3,7 @@
 # Provides:          checkfs
 # Required-Start:    checkroot
 # Required-Stop:
-# Should-Start:
+# Should-Start:      mdadm-raid
 # Default-Start:     S
 # Default-Stop:
 # X-Interactive:     true
@@ -12,7 +12,7 @@
 
 # Include /usr/bin in path to find on_ac_power if /usr/ is on the root
 # partition.
-PATH=/sbin:/bin:/usr/bin
+PATH=/usr/bin:/sbin:/bin
 FSCK_LOGFILE=/var/log/fsck/checkfs
 [ "$FSCKFIX" ] || FSCKFIX=no
 . /lib/init/vars.sh
@@ -20,12 +20,19 @@ FSCK_LOGFILE=/var/log/fsck/checkfs
 . /lib/lsb/init-functions
 . /lib/init/mount-functions.sh
 
+if command -v setterm >/dev/null 2>&1; then
+	setterm=setterm
+else
+	setterm='true -- '
+fi
+
 do_start () {
     # Don't check all filesystems on the Live system
 	rm -f /fastboot /forcefsck 2>/dev/null
-    exit 0
+    exit 0	
 
-	# Trap SIGINT so that we can handle user interupt of fsck.
+
+# Trap SIGINT so that we can handle user interupt of fsck.
 	trap "" INT
 
 	# See if we're on AC Power.  If not, we're not gonna run our
@@ -95,8 +102,10 @@ Continuing with system boot in 5 seconds."
 		if [ "$VERBOSE" = no ]
 		then
 			log_action_begin_msg "Checking file systems"
-			logsave_best_effort fsck $spinner -M -A $fix $force $FSCKTYPES_OPT
+			$setterm --msg off
+			logsave_best_effort fsck $spinner -T -M -A $fix $force $FSCKTYPES_OPT
 			FSCKCODE=$?
+			$setterm --msg on
 
 			if [ "$FSCKCODE" -eq 32 ]
 			then
@@ -116,7 +125,7 @@ Continuing with system boot in 5 seconds."
 			else
 				log_action_msg "Will now check all file systems"
 			fi
-			logsave_best_effort fsck $spinner -V -M -A $fix $force $FSCKTYPES_OPT
+			logsave_best_effort fsck $spinner -V -T -M -A $fix $force $FSCKTYPES_OPT
 			FSCKCODE=$?
 			if [ "$FSCKCODE" -eq 32 ]
 			then
@@ -125,8 +134,8 @@ Continuing with system boot in 5 seconds."
 			then
 				handle_failed_fsck
 			else
-				log_success_msg "Done checking file systems. 
-A log is being saved in ${FSCK_LOGFILE} if that location is writable."
+				log_success_msg 'Done checking file systems'
+				log_success_msg "Log is being saved in ${FSCK_LOGFILE} if that location is writable"
 			fi
 		fi
 	fi
