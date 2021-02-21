@@ -346,7 +346,7 @@ kamera
 kate
 # kate-data
 kate5-data
-katepart
+# katepart
 kcalc
 kde-cli-tools
 kde-cli-tools-data
