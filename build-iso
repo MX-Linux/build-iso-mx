@@ -1118,9 +1118,7 @@ do_stage_4() {
         
         # add conveinence group vboxsf even if virtualbox guest additions 
         # aren not installed
-        if [  -n "$(groups | grep vboxsf)" ]; then
-			groupadd vboxsf
-		fi
+        grep -q vboxsf /etc/group || groupadd vboxsf
         
         for group in $(gather user-groups); do
             usermod -a -G $group $user
