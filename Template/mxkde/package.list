@@ -346,7 +346,7 @@ kamera
 kate
 # kate-data
 kate5-data
-katepart
+# katepart
 kcalc
 kde-cli-tools
 kde-cli-tools-data
@@ -723,7 +723,7 @@ qml-module-qtgraphicaleffects
 qml-module-qtmultimedia
 qml-module-qtqml-models2
 qml-module-qtquick-controls
-qml-module-qtquick-controls-styles-breeze
+# qml-module-qtquick-controls-styles-breeze
 qml-module-qtquick-controls2
 qml-module-qtquick-dialogs
 qml-module-qtquick-layouts
