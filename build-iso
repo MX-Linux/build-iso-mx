@@ -1619,7 +1619,7 @@ do_stage_7() {
 	$SUDO rm -f $sqfs_dir/etc/skel/.cache/fontconfig/*
 	$SUDO cp $sqfs_dir/var/cache/fontconfig/* $sqfs_dir/etc/skel/.cache/fontconfig/
 	
-	if [ lz4_override ]; then
+	if [ "$lz4_override" ]; then
 		COMPRESSION_TYPE="lz4"
 		COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
 	fi
