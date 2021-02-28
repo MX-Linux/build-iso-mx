@@ -94,7 +94,7 @@ cups-filters
 cups-filters-core-drivers
 cups-ppdc 
 cups-server-common
-curl   
+curl
 # cryptsetup-modified-functions
 dbus
 dbus-x11

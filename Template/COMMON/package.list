@@ -16,6 +16,7 @@ console-setup-linux
 #consolekit
 cryptsetup
 cryptsetup-bin
+cryptsetup-initramfs
 dbus
 debconf-utils
 # deb-multimedia-keyring
