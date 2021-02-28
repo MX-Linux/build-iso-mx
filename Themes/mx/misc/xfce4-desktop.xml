@@ -4,31 +4,31 @@
   <property name="backdrop" type="empty">
     <property name="screen0" type="empty">
       <property name="monitor0" type="empty">
-        <property name="image-path" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
-        <property name="last-image" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
-        <property name="last-single-image" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
+        <property name="image-path" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
+        <property name="last-image" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
+        <property name="last-single-image" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
         <property name="image-style" type="int" value="3"/>
         <property name="workspace0" type="empty">
           <property name="color-style" type="int" value="0"/>
           <property name="image-style" type="int" value="3"/>
-          <property name="last-image" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
         </property>
         <property name="workspace1" type="empty">
           <property name="color-style" type="int" value="0"/>
           <property name="image-style" type="int" value="3"/>
-          <property name="last-image" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
         </property>
       </property>
       <property name="monitorLVDS" type="empty">
         <property name="workspace0" type="empty">
           <property name="color-style" type="int" value="0"/>
           <property name="image-style" type="int" value="3"/>
-          <property name="last-image" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
         </property>
         <property name="workspace1" type="empty">
           <property name="color-style" type="int" value="0"/>
           <property name="image-style" type="int" value="3"/>
-          <property name="last-image" type="string" value="/usr/share/backgrounds/48381996347_8f9d2001e3_k.jpg"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/MXALPHAWALL.png"/>
         </property>
       </property>
     </property>

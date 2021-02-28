@@ -6,6 +6,7 @@ start_theme "$@"
 
 rm -R /etc/skel/.conky
 copy_file grub                  /etc/default/
+copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
 #copy_file 10_linux              /etc/grub.d/
 copy_file 20_memtest86+         /etc/grub.d/
 copy_dir desktop-base/               /usr/share/desktop-base/          --create
@@ -21,7 +22,7 @@ copy_file modules               /etc/
 copy_file 99-sandbox-mx.conf /etc/sysctl.d/
 copy_file timezone		/etc/
 copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
-copy_file virtualbox-guest-utils	/etc/init.d/
+#copy_file virtualbox-guest-utils	/etc/init.d/
 #copy_file catfish.desktop	/usr/share/applications/ 
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
@@ -45,7 +46,7 @@ copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 #copy_file ndisgtk.desktop /usr/share/applications/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/scalable/apps/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/48x48/apps/
-copy_file uswsusp.conf /etc/
+#copy_file uswsusp.conf /etc/
 copy_file plymouthd.conf /etc/plymouth/
 #copy_file luckybackup.desktop /usr/share/applications/
 #copy_file luckybackup-su.desktop /usr/share/applications/
@@ -56,7 +57,7 @@ copy_dir Desktop/               /etc/skel/Desktop/           --create
 
 ##alpha
 
-#copy_file 48381996347_8f9d2001e3_k.jpg /usr/share/backgrounds/
-#copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
+copy_file MXALPHAWALL.png /usr/share/backgrounds/
+copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
 exit
