@@ -72,7 +72,6 @@ checkaptgpg
 chroot-rescue-mx
 cifs-utils
 cli-aptix
-clipit
 clementine  
 colord 
 colord-data
@@ -666,7 +665,7 @@ xfburn
 xfce4-appfinder
 xfce4-battery-plugin 
 #xfce4-cellmodem-plugin 
-#xfce4-clipman
+xfce4-clipman
 #xfce4-clipman-plugin
 xfce4-cpufreq-plugin
 xfce4-cpugraph-plugin 
