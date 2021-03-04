@@ -236,6 +236,7 @@ after you boot with the "services" command.
     B                Enable bootclean.sh service (disabled by default)
     c                disable connmand service
     d [nodbus]       disable dbus service
+    F                Enable fbcondecor (console decoration)
     g                disable gpm service (mouse on virtual consoles)
     i                disable ifplugd service
     l [lean]         disable "lean" services (see below)

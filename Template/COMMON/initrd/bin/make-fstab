@@ -25,8 +25,8 @@
 
              ME=$(basename $0)
 
-        VERSION="2.4.02"
-   VERSION_DATE="Tue 21 May 2019 07:14:53 PM MDT"
+        VERSION="2.4.03"
+   VERSION_DATE="Fri 18 December 2020 17:00:00 PM"
 
  MAJOR_DEV_LIST="3,8,22,179,202,259"
      LSBLK_ARGS="--pairs --noheadings --output=name,fstype,label,mountpoint,parttype,type,uuid"
@@ -34,7 +34,7 @@
      SD_OPTIONS=noauto,exec
    NTFS_OPTIONS=noauto,noexec,uid=1000,gid=users,dmask=002,fmask=113
    VFAT_OPTIONS=noauto,uid=1000,gid=users,dmask=002,fmask=113
-     SR_OPTIONS=noauto,exec,users
+     SR_OPTIONS=noauto,users,exec
 
          MARKER="# Added by $ME"
      OLD_MARKER="# Added by antiX"

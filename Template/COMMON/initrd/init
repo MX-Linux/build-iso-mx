@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.12-mc1"
-           VERSION_DATE="Wed Dec 23 02:28:59 PM MST 2020"
+                VERSION="8.30.14-x04"
+           VERSION_DATE="Thu Dec 10 12:56:47 AM MST 2020"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -64,8 +64,8 @@ TORAM_ALL_OTHER_FILES="boot EFI version"
           MAKE_OLD="rootfs xtra deb xtra.tgz linuxfs.md5 state"
            MOD_DIR="/lib/modules/$(uname -r)"
 
-         FROM_TYPE="usb,cd"
-     FROM_TYPE_ALL="usb,cd,hd"
+     DEF_FROM_TYPE="usb,cd"
+     FROM_TYPE_ALL="usb,cd,hd,mmc"
 
       FRUGAL_FILES="linuxfs vmlinuz vmlinuz1 initrd.gz xtra xtra.tgz esp-uuid"
       FRUGAL_FILES="$FRUGAL_FILES ../boot ../efi ../EFI ../cdrom.ico ../version"
@@ -151,6 +151,8 @@ KMS_VIDEO_MODULES="amdgpu,analogix-anx78xx,ast,bochs-drm,ch7006,cirrus,gma500_gf
        TSPLASH_TTY=10
             MY_TTY=1
    VCARD_CONF_FILE="/live/config/vcard-cmd"
+
+         CRYPT_TAB=""
 
     #           HUP INT QUIT SEGV TERM
     SIGNAL_LIST="1   2   3    11   15"
@@ -597,8 +599,6 @@ main_core() {
 
     breakpoint 6 "after mounting aufs"
 
-    load_microcode
-
     [ "$WANT_HOMEFS" ] \
         && mount_homefs $PERSIST_FULL_PATH/homefs $NEW_ROOT/home "$WANT_HOMEFS" "$NEED_HOMEFS"
 
@@ -730,12 +730,29 @@ read_late_cmdline_params() {
                          frugal) set_frugal                           ;;
                        frugal=*) set_frugal $value                    ;;
                 hwclock=*|hwc=*) DO_HWCLOCK=true                      ;;
-                         from=*) FROM_TYPE=$value ; ALWAYS_SCAN=true  ;;
+                         from=*) FROM_BOOT=$value ; BOOT_FILTER=true  ;;
                   persist=*|p=*) PERSIST=$PERSIST,$value              ;;
                         persist) PERSIST=$PERSIST,root,home           ;;
                          lang=*) LANG=$value                          ;;
                    md5|checkmd5) CHECK_MD5=true                       ;;
                         checkfs) FORCE_FSCK=true                      ;;
+
+                          bluks) BOOT_ID=fstype=crypto_LUKS    ; BLUKS_ASK=true                          ;;
+                         bluks1) BOOT_ID=fstype=crypto_LUKS                                              ;;
+                        bluks=*) BOOT_ID=fstype=crypto_LUKS    ; BLUKS_ASK=true  ;  FROM_BOOT=$value     ;;
+                       bluks1=*) BOOT_ID=fstype=crypto_LUKS                      ;  FROM_BOOT=$value     ;;
+
+                          fluks) FRUGAL_ID=fstype=crypto_LUKS  ; FLUKS_ASK=true                          ;;
+                         fluks1) FRUGAL_ID=fstype=crypto_LUKS                                            ;;
+                        fluks=*) FRUGAL_ID=fstype=crypto_LUKS  ; FLUKS_ASK=true  ;  FROM_FRUGAL=$value   ;;
+                       fluks1=*) FRUGAL_ID=fstype=crypto_LUKS                    ;  FROM_FRUGAL=$value   ;;
+
+                          pluks) PERSIST_ID=fstype=crypto_LUKS ; PLUKS_ASK=true                          ;;
+                         pluks1) PERSIST_ID=fstype=crypto_LUKS                                           ;;
+                        pluks=*) PERSIST_ID=fstype=crypto_LUKS ; PLUKS_ASK=true  ;  FROM_PERSIST=$value  ;;
+                       pluks1=*) PERSIST_ID=fstype=crypto_LUKS                   ;  FROM_PERSIST=$value  ;;
+
+                      fstype=*) BOOT_ID=fstype=$value                 ;;
 
                   nousb2|noehci) NO_EHCI=true                         ;;
               private|private=*) FORCE_PASSWD=true                    ;;
@@ -794,7 +811,8 @@ read_cmdline_params()
                       overlayfs) WANT_UNIONFS=overlay                            ;;
                           menus) DO_MENUS=${MENUS_LIST:-cltopfsv}                ;;
                         menus=*) DO_MENUS=$DO_MENUS$value                        ;;
-                        vcard=*) VCARD_CMD=$value                                ;;
+             vcard=on|vcard=off) VCARD_CMD=$value                                ;;
+         vcard=menu|vcard=clear) VCARD_CMD=$value                                ;;
             rootdelay=*|delay=*) small_int COLDPLUG_DELAY $param                 ;;
                          splash) SPLASH_PARAM=v                                  ;;
                        splash=*) SPLASH_PARAM=$value                             ;;
@@ -879,7 +897,7 @@ read_cmdline_params()
                        failsafe) MODULE_LIST=all
                                  BLACK_LIST=$BLACK_LIST,VIDEO
                                  BOOT_RETRY=$FAILSAFE_BOOT_RETRY
-                                 FROM_TYPE=all                                   ;;
+                                 FROM_BOOT=all                                   ;;
 
                          load=*) MODULE_LIST=$MODULE_LIST,$value                 ;;
                bl=*|blacklist=*) BLACK_LIST=$BLACK_LIST,$value                   ;;
@@ -940,6 +958,22 @@ read_cmdline_params()
                         toram=*)  ;;
                       toram_all)  ;;
 
+                          bluks)  ;;
+                         bluks1)  ;;
+                        bluks=*)  ;;
+                       bluks1=*)  ;;
+
+                          fluks)  ;;
+                         fluks1)  ;;
+                        fluks=*)  ;;
+                       fluks1=*)  ;;
+
+                          pluks)  ;;
+                         pluks1)  ;;
+                        pluks=*)  ;;
+                       pluks1=*)  ;;
+
+                       fstype=*)  ;;
 
                    mk_swap_file)  ;;
                  mk_swap_file=*)  ;;
@@ -1640,6 +1674,7 @@ next_partition() {
 #  22 block Second IDE hard disk/CD-ROM interface               hdc, hdd
 # 179 block MMC block devices                                   mmcblk0, mmcblk1, ... mmcblk7
 #------------------------------------------------------------------------------
+
 from_filter() {
 
     FILTERED_LIST=
@@ -1654,6 +1689,7 @@ from_filter() {
     local dev cd_devs hd_devs usb_devs mmc_devs
     for dev; do
         [ -b "$dev" ] || continue
+
         case $(stat -c %t $dev) in
 
             b) cd_devs="$cd_devs $dev" ;;
@@ -1700,11 +1736,23 @@ from_filter() {
 }
 
 #------------------------------------------------------------------------------
+# Set some global variables for the find_files() routine.
+#------------------------------------------------------------------------------
+prep_find_files() {
+    unset ALWAYS_FILTER  TRIED_LUKS
+
+    FROM_TYPE=${1:-$DEF_FROM_TYPE}
+    [ -n "$1" ] && ALWAYS_FILTER=true
+    DECRYPT_ASK=$2
+}
+
+#------------------------------------------------------------------------------
 # Wrapper to find_files() when we are looking for boot files.  This provides
 # the proper messaging and error message for that case
 #------------------------------------------------------------------------------
 find_boot_file() {
     local ret
+    prep_find_files "$FROM_BOOT"  "$BLUKS_ASK"
     find_files boot "$@"
     ret=$?
     local file=$1
@@ -1748,6 +1796,9 @@ find_files() {
 
 _find_files() {
     local find_type=$1 files=$2  mp_orig=$3  device_id=$4  retry_time=$5
+
+    local TRY_LUKS
+    [ -n "$device_id" ] && TRY_LUKS=$find_type
 
     local short_files f
     if [ ${#files} -gt 20 ]; then
@@ -1838,7 +1889,6 @@ _find_files() {
         # device was specified ...
         #----------------------------------------------------------------------
         if [ -z "$device_id" ]; then
-
             #. Scan <type> devices.  Look for <type> file(s) <file-names>
             [ "$try" = "0" ] \
                 && vmsg 4  "$_Scan_X_devices_Look_for_Y_file_s_Z_"  $(dq $FROM_TYPE) $find_type "$(fq $short_files)"
@@ -1876,7 +1926,8 @@ _find_files() {
         #----------------------------------------------------------------------
         else
             if [ "$mounted_device" ]; then
-                FOUND_ID_DEVICE=$mounted_device
+                ORIG_FOUND_ID_DEVICE=$mounted_device
+                FOUND_ID_DEVICE=${DECRYPT_DEV:-$mounted_device}
                 return 40
             fi
 
@@ -1900,7 +1951,7 @@ _find_files() {
             # When a device has been specified via label, uuid, or /dev/node
             # then only filter and order if from= parameter is given explicitly
             #------------------------------------------------------------------
-            if [ "$ALWAYS_SCAN" ]; then
+            if [ "$ALWAYS_FILTER" ]; then
                 if ! from_filter $DEVICE_LIST; then
                     [ "$final_try" ] && return 30
                     continue
@@ -1936,7 +1987,6 @@ _find_files() {
         #-- now try to mount each device and find at least one of the $files ...
         local dev fname mntpnt mounted already
         for dev in $DEVICE_LIST; do
-
             # use existing mountpoint if device is already mounted
             mntpnt="$(get_mountpoint $dev)"
             if [ "$mntpnt" ]; then
@@ -1989,7 +2039,8 @@ _find_files() {
                 else
                     rmdir $mp_orig
                 fi
-                FOUND_DEV=$dev
+                ORIG_FOUND_DEV=$dev
+                FOUND_DEV=${DECRYPT_DEV:-$dev}
                 FOUND_MP=$mntpnt
                 FOUND_FNAME=$fname
                 return 0
@@ -2018,9 +2069,10 @@ find_device() {
     [ "$try" = 0 ] && tsplash_alert  "$_Look_for_X_device_with_Y_" "$(fq $find_type)" "$type $(cq $value)"
 
     case $type in
-        name) DEVICE_LIST=$(cleanse_dev  $value)  ; err_ret=1 ;;
-       label) DEVICE_LIST=$(label_to_dev $value)  ; err_ret=2 ;;
-        uuid) DEVICE_LIST=$(uuid_to_dev  $value)  ; err_ret=3 ;;
+        name) DEVICE_LIST=$(cleanse_dev   $value) ; err_ret=1 ;;
+       label) DEVICE_LIST=$(label_to_dev  $value) ; err_ret=2 ;;
+        uuid) DEVICE_LIST=$(uuid_to_dev   $value) ; err_ret=3 ;;
+      fstype) DEVICE_LIST=$(fstype_to_dev $value) ; err_ret=4 ;;
            *) fatal 'Internal error: find_device() type=%s value=%s' "$type" "$value" ;;
     esac
 
@@ -2045,14 +2097,28 @@ find_device() {
 # a frugal system
 #------------------------------------------------------------------------------
 create_grub_entry() {
-    local bdir=$1  uuid=$2
-    cat <<Grub_Entry
+    local bdir=$1  uuid=$2 crypt_flag=$3
+    if [ -n "$crypt_flag" ]; then
+    
+        cat <<Crypt_Entry
+menuentry "$DISTRO_PRETTY_NAME Encrypted Frugal Install" {
+    insmod luks
+    cryptomount -u ${uuid//-/}
+    set root=(crypto0)
+    linux /$bdir/vmlinuz bdir=$bdir buuid=$uuid $(gather_frugal_cmdline)
+    initrd /$bdir/initrd.gz
+}
+Crypt_Entry
+
+    else
+        cat <<Grub_Entry
 menuentry "$DISTRO_PRETTY_NAME Frugal Install" {
     search --no-floppy --set=root --fs-uuid $uuid
     linux /$bdir/vmlinuz bdir=$bdir buuid=$uuid $(gather_frugal_cmdline)
     initrd /$bdir/initrd.gz
 }
 Grub_Entry
+    fi
 }
 
 #------------------------------------------------------------------------------
@@ -2113,11 +2179,12 @@ find_frugal_file() {
 
     tsplash_alert  "$_Search_for_X_partition_" frugal
     local sqfile=$bdir/$SQFILE_NAME need_to_ask
-    local device name=${frugal_id%%=*}  value=${frugal_id#*=}
+    local device  orig_device  name=${frugal_id%%=*}  value=${frugal_id#*=}
+    prep_find_files  "$FROM_FRUGAL"  "$FLUKS_ASK"
     find_files frugal "$sqfile" "$BOOT_MP" "$frugal_id" "$FRUGAL_RETRY"
     local ret=$?
 
-    if [ $ret -eq 0  -a -z "$FORCE_FRUGAL" ]; then
+    if [ $ret -eq 0  -a  -z "$FORCE_FRUGAL" ]; then
         #. Found existing <frugal> install
         tsplash_alert  "$_Found_existing_X_install_" frugal
         SQFILE_MP=$BOOT_MP
@@ -2131,7 +2198,9 @@ find_frugal_file() {
         return 0
 
     elif [ $ret -eq 40 ]; then
+        orig_device=$ORIG_FOUND_ID_DEVICE
         device=$FOUND_ID_DEVICE
+        msg "$found_id_device: '$found_id_device'"
         need_to_ask=true
 
         warn
@@ -2183,7 +2252,7 @@ find_frugal_file() {
         select_device 'frugal' device $needed not_mounted
         local ret=$?
         [ $ret -eq 0 ] || return 2
-        [ -z "$device" -o "$device" =  "$_quit_" ] && return 1
+        [ -z "$device" -o "$device" = "$_quit_" ] && return 1
 
         [ "$LABEL_FRUGAL" ] && label_device $device "$FRUGAL_NAME-Frugal"
     fi
@@ -2193,10 +2262,13 @@ find_frugal_file() {
         return 10
     fi
 
+    TRY_LUKS=frugal
     if ! try_mount $device $FRUGAL_MP rw; then
         err  "Could not mount frugal device %s" $(pqe $device)
         return 20
     fi
+    local orig_device=$device
+    device=${DECRYPT_DEV:-$device}
 
     local sqfile_full=$FRUGAL_MP/$sqfile
     local sqfile_dir=$(dirname $sqfile_full)
@@ -2235,7 +2307,7 @@ find_frugal_file() {
             return 40
         fi
 
-        create_grub_entry "$bdir" "$(device_uuid $device)"  >  $sqfile_dir/grub.entry
+        create_grub_entry "$bdir" "$(device_uuid ${orig_device:-$device})" "$DECRYPT_DEV" >  $sqfile_dir/grub.entry
 
         case $(device_fstype $BIOS_DEV) in
             vfat|ext[234]) device_uuid $BIOS_DEV > $sqfile_dir/bios-dev-uuid
@@ -2329,14 +2401,12 @@ find_linuxfs_file() {
 validate_encryption_mode() {
 
     : ${ENCRYPT_MODE:=$(head -n1 $ENCRYPT_MODE_FILE 2>/dev/null)}
+    : ${ENCRYPT_MODE:=$ENCRYPT_DISABLE}
 
     # Default to enable or disabled depending on existence of cryptsetup program
-    if [ -z "$ENCRYPT_MODE" ]; then
-        if test -x /bin/cryptsetup; then
-            ENCRYPT_MODE=$ENCRYPT_ONLY
-        else
-            ENCRYPT_MODE=$ENCRYPT_DISABLE
-        fi
+    if [ "$ENCRYPT_MODE" = "$ENCRYPT_ONLY" -a ! -x /bin/cryptsetup ]; then
+        non_fatal "encrypted live-usb requested but the %s program was not found" "cryptsetup"
+        ENCRYPT_MODE=$ENCRYPT_DISABLE
     fi
 
     case $ENCRYPT_MODE in
@@ -2355,6 +2425,10 @@ validate_encryption_mode() {
 # This code is used in 2 places.  Very yuck right now.
 #------------------------------------------------------------------------------
 find_crypt_or_linuxfs() {
+
+    # If user specifies a boot device then don't assume we are doing a "normal"
+    # encrypted boot
+    [ -n "$BOOT_ID" ] && ENCRYPT_MODE=$ENCRYPT_DiSABLE
 
     validate_encryption_mode
 
@@ -2421,11 +2495,16 @@ find_crypt_or_linuxfs() {
     BOOT_UUID=$CRYPT_UUID
 
     tsplash_clear
+
+    mkdir -p /run/cryptsetup
+
     msg  "$_Checking_for_encrypted_partition_on_device_X_" "$crypt_dev"
 
     test -e "$crypt_dev" || fatal  "$_Encrypted_device_X_does_not_exist_"                 "$(dqe $crypt_dev)"
     test -b "$crypt_dev" || fatal  "$_Encrypted_device_X_is_not_a_block_device_"          "$(dqe $crypt_dev)"
     cryptsetup isLuks "$crypt_dev" || fatal  "$_Encrypted_device_X_is_not_a_LUKS_device_" "$(dqe $crypt_dev)"
+
+    #check_luks_version "$crypt_dev"
 
     mount -o remount,rw $BIOS_DEV
 
@@ -2437,9 +2516,12 @@ find_crypt_or_linuxfs() {
     fi
 
     warn  "$_Found_encrypted_device_You_will_be_asked_to_enter_your_passphrase_below_"
-    cttyhack cryptsetup open --type luks $crypt_dev $LUKS_NAME || fatal  "$_Could_not_open_LUKS_device_X_" $crypt_dev
+    cttyhack cryptsetup open $crypt_dev $LUKS_NAME || fatal  "$_Could_not_open_LUKS_device_X_" $crypt_dev
+
+    CRYPT_TAB="$CRYPT_TAB$crypt_dev:$LUKS_NAME:\n"
     local mapper_dev=/dev/mapper/$LUKS_NAME
     msg  "$_Opened_encrypted_device_X_at_Y_" "$crypt_dev" "$mapper_dev"
+    TRY_LUKS='encrypted'
     try_mount "$mapper_dev" "$BOOT_MP" || fatal_dmesg  "$_Could_not_mount_encrypted_device_"
     test -e "$BOOT_MP/$SQFILE_FILE" || fatal  "$_Could_not_find_file_X_on_encrypted_partition_" "$SQFILE_FILE"
     BOOT_FSTYPE=$(mntpnt_fstype $BOOT_MP)
@@ -2452,6 +2534,27 @@ find_crypt_or_linuxfs() {
         local xxxx
         read xxxx
     fi
+}
+
+#------------------------------------------------------------------------------
+# Note: od is giving us leading whitespace which I remove with echo
+# FIXME: busybox od does not have the --endian optiont
+#------------------------------------------------------------------------------
+check_luks_version() {
+    local part=$1
+
+    if ! test -b "$part"; then
+        warn  "$_Encrypted_partition_X_is_not_a_block_device_" "$(pqw $part)"
+        return 1
+    fi
+    local luks=$(echo $(dd status=none if=$part bs=1 count=4 | od -An -t x4 --endian=big))
+    if [ "$luks" != '4c554b53' ]; then
+        warn  "$_X_does_not_look_like_a_Luks_partition_Found_Y_" "$(pqw $part)" "$(pqw $luks)"
+        return 2
+    fi
+    local type=$(echo $(dd status=none if=$part bs=1 skip=6 count=2 | od -An -t x2 --endian=big))
+    msg  "$_Luks_type_X_" "$(nq $(printf "%d" "0x$type"))"
+    return 0
 }
 
 #------------------------------------------------------------------------------
@@ -2469,7 +2572,7 @@ change_passphrase() {
         echo -n "> "
         read old
         echo -n "$old" > $file
-        cryptsetup open --type luks --test-passphrase --key-file $file $dev &>/dev/null && break
+        cryptsetup open --test-passphrase --key-file $file $dev &>/dev/null && break
 
         warn  "$_The_entered_passphrase_does_not_match_"
         YES_no  "$_Do_you_want_to_try_again_" && continue
@@ -2502,7 +2605,7 @@ reset_passphrase() {
         return 1
     fi
 
-    if ! cryptsetup open --type luks --test-passphrase --key-file $file $dev &>/dev/null; then
+    if ! cryptsetup open --test-passphrase --key-file $file $dev &>/dev/null; then
         warn  "$_Reset_aborted_wrong_passphrase_in_passphrase_file_"
         return 2
     fi
@@ -2633,22 +2736,6 @@ check_kernel_version() {
             "$(printf  "$_Kernel_version_X_" $(pqh $kversion))" \
             "$(printf  "$_The_module_directory_X_is_missing_" $(pqh $mp$mod_dir))"
     fi
-}
-
-#------------------------------------------------------------------------------
-# Load microcode by bind mounting /lib/firmware/.  For some reason this fails
-# to work inside a chroot.
-#------------------------------------------------------------------------------
-load_microcode() {
-    local mc_file=/sys/devices/system/cpu/microcode/reload
-
-    [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ] || return
-    msg "Load microcode"
-    mkdir /lib/firmware
-    mount --bind /live/aufs/lib/firmware /lib/firmware
-    echo 1 > $mc_file
-    #sleep 0.1
-    umount /lib/firmware
 }
 
 #------------------------------------------------------------------------------
@@ -2887,6 +2974,11 @@ link_top_dirs() {
 # command can figure out the file system type now?
 #------------------------------------------------------------------------------
 try_mount() {
+    unset DECRYPT_DEV
+    _try_mount "$@"
+}
+
+_try_mount() {
     local dev=$1  mp=$2  rw=${3:-$RW_MODE}
     local type=${4:-$(blkid $dev | sed -n -r 's/.* TYPE="([^"]*)"$/\1/p' | tail -n 1)}
     [ "$type" ] || return 1
@@ -2896,7 +2988,7 @@ try_mount() {
     local fatopts=$winopts,shortname=winnt,uid=$USER_UID,gid=$USER_GID
 
     case $type in
-     crypto_LUKS) return 1 ;;
+     crypto_LUKS) try_luks_mount "$@" ;;
             ext4) log_cmd mount -t $type   -o $opts$LAZYTIME  $dev "$mp" 2>/dev/null ;;
         ext[234]) log_cmd mount -t $type   -o $opts           $dev "$mp" 2>/dev/null ;;
             vfat) modprobe -q nls-cp437
@@ -2907,7 +2999,57 @@ try_mount() {
                   log_cmd mount -t ntfs    -o umask=000,ro    $dev "$mp" 2>/dev/null ;;
                *) log_cmd mount -t $type   -o $opts           $dev "$mp" 2>/dev/null ;;
     esac
-    return $?
+    local ret=$?
+    return $ret
+}
+
+#------------------------------------------------------------------------------
+# Mount a LUKS encrypted partition.  Call _try_mount recursively.  But only do
+# this if TRY_LUKS is non-empty to avoid asking for a password for every LUKS
+# partition when we're scanning.
+#------------------------------------------------------------------------------
+try_luks_mount() {
+    [ -z "$TRY_LUKS" ] && return 1
+    local dev=$1  mp=$2  rw=${3:-$RW_MODE}
+    test -x /bin/cryptsetup || fatal "Could not find the %s program for device %s" "cryptsetup" "$dev"
+    msg "try_luks_mount(%s)" "$(pq $*)"
+    # Don't decrypt the same device twice
+    if echo -e "$CRYPT_TAB" | grep -q "^$dev:"; then
+        local map_name=$(echo -e "$CRYPT_TAB" | sed -rn "s|^$dev:([^:]+):?.*|\1|p")
+        msg "Device %s already decrypted at %s" "$(cqw $dev)" "$(cqw $map_name)"
+        local map_dev=/dev/mapper/$map_name
+        _try_mount "$map_dev" "$mp" "$rw"
+        return $?
+    fi
+
+    echo -e "$TRIED_LUKS" | grep -q "^$dev$" && return 3
+    TRIED_LUKS="$TRIED_LUKS$dev\n"
+
+    local i map_dev map_name
+    for i in $(seq 1 20); do
+        map_name=live-$(printf "%02d" $i)
+        map_dev=/dev/mapper/$map_name
+        test -e $map_dev || break
+    done
+    test -e $map_dev && fatal "Could not mount yet another encrypted partition"
+
+    tsplash_off
+    if [ -n "$DECRYPT_ASK" -a -n "${TRY_LUKS#nested*}" ]; then
+        YES_no "Do you want to decrypt %s device %s" "$(pq $TRY_LUKS)" "$(pq ${dev##*/})" || return 2
+    fi
+    warn "You will be asked for the passphrase of the %s partition" "$(cqw $TRY_LUKS)"
+    cttyhack cryptsetup open $dev $map_name || fatal "$_Could_not_open_LUKS_device_X_" $dev
+    test -e $map_dev || fatal "Was unable to mount encrypted device %s" "$dev"
+    CRYPT_TAB="$CRYPT_TAB$dev:$map_name:$mp\n"
+    DECRYPT_DEV=$map_dev
+    TRY_LUKS=$(printf "nested %s" "$TRY_LUKS")
+    msg "_try_mount($map_dev $mp $rw)"
+    _try_mount "$map_dev" "$mp" "$rw"
+    local ret=$?
+
+    tsplash_on
+
+    return $ret
 }
 
 #------------------------------------------------------------------------------
@@ -3983,6 +4125,7 @@ label_any_size() {
 }
 
 nq_label_meg() { nq $(label_meg $1); }
+
 #------------------------------------------------------------------------------
 #  Allow user to select a partition from a menu of choices
 #------------------------------------------------------------------------------
@@ -4066,7 +4209,12 @@ select_device() {
             umount $mp
         fi
 
-        if [ "$free" ]; then
+        type=${type#crypto_}
+
+        if [ "$type" = "LUKS" ]; then
+            free_lab="??"
+
+        elif [ "$free" ]; then
             free_lab=$(size_label_m $free)
             if [ $min_size -gt 0 -a $min_size -gt $free ]; then
                 free_rev=$rev
@@ -4155,7 +4303,7 @@ label_device() {
          vfat|dos) pre="dosfslabel $dev"             ; post=""       ;;
             btrfs) pre="btrfs filesystem label $dev" ; post=""       ;;
          reiserfs) pre="reiserfstune --label"        ; post="$dev"   ;;
-
+      crypto_LUKS) return 3                                          ;;
                "") warn  "Could not determine filesystem on %s" $(pqw $dev)
                    return 1                                          ;;
 
@@ -4215,6 +4363,14 @@ uuid_to_dev() {
 $(blkid | grep "$grep_for")
 EOT
     echo $devices
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+fstype_to_dev() {
+    local fstype=$1
+    blkid | egrep "\<TYPE=\"($fstype)\"" | cut -d: -f1 | tr '\n' ' '
 }
 
 #------------------------------------------------------------------------------
@@ -4409,8 +4565,8 @@ prog_copy() {
     # Enable cursor
     printf "\e[?25h"
 
-    echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
-    echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
+    [ "$dirty_bytes" -ne 0 ] && echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
+    [ "$dirty_ratio" -ne 0 ] && echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
 
     # Use err_file as a semaphore from (...)& process
     if test -e $err_file; then
@@ -5290,9 +5446,7 @@ mount_persist_device() {
 
     heading  "$_Mount_persistence_device_if_needed_"
 
-    ALWAYS_SCAN=$FROM_PERSIST
-    FROM_TYPE=${FROM_PERSIST:-usb,hd}
-
+    prep_find_files "$FROM_PERSIST"  "$PLUKS_ASK"
     find_files persist "$persist_files" "$PERSIST_MP" "$PERSIST_ID" "$PERSIST_RETRY"
     local ret=$?
 
@@ -6011,6 +6165,21 @@ copy_xtra() {
         gunzip -c "$tarball" | tar x -C $NEW_ROOT/
     fi
 
+    local live_xtra='/live/xtra'
+
+    if  [ -d "$live_xtra" -a ! -d "$xtra_dir" ]; then
+        msg 'Copy xtra file(s) from %s' "$(fq "$live_xtra")"
+
+        # Copy into the antiX/xtra dir if we can,
+        # otherwise copy directly to the aufs from the initrd
+        if remasterable; then
+            mkdir -p "$xtra_dir"
+            (cd "$live_xtra" && tar cf - *) | tar x -C "$xtra_dir"
+        else
+            xtra_dir="$live_xtra"
+        fi
+    fi
+
     [ -d "$xtra_dir" ] || return
 
     local list=$(ls $xtra_dir)
@@ -6242,7 +6411,7 @@ Initrd_Out
 
     echo "$SQFILE_DEV" > $dir/boot-device
 
-    [ -e /sys/firmware/efi ]                  && touch $dir/uefi
+    [ -e /sys/firmware/efi ]                 && touch $dir/uefi
     [ "$DID_TORAM"    ]                      && touch $dir/did-toram
     [ "$TORAM_ALL"    ]                      && touch $dir/toram-all
     [ "$TORAM_STORE"  ]                      && touch $dir/toram-store
@@ -6772,9 +6941,9 @@ prepare_switch_root() {
     # Avoid PID wrap by setting a large max
     echo 4000000 > /proc/sys/kernel/pid_max 2>/dev/null
 
-    mount_tmpfs $new_root/media   10 /media
-    mount_tmpfs $new_root/run    100 /run        mode=755,nodev
-    mount_tmpfs $new_live         10 $live_dir   mode=755
+    mount_tmpfs $new_root/media  10 /media
+    mount_tmpfs $new_root/run    10 /run        mode=755,nodev
+    mount_tmpfs $new_live        10 $live_dir   mode=755
 
     mkdir -p -m 777 $new_root/run/lock
 

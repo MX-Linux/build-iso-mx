@@ -169,8 +169,8 @@ main() {
         esac
 
         case $arg in
-            -auto|a)      auto_mode=true                        ;;
-            -AUTO|A)      auto_mode=true ; full_auto=true       ;;
+            -auto|a)      auto_mode=true ; apt_yes="-y"         ;;
+            -AUTO|A)      auto_mode=true ; full_auto=true ; apt_yes="-y";;
           -chroot|c)    chroot_mode=true                        ;;
        -color=*|C=*)     color_mode=$val                        ;;
            -color|C)     color_mode=$val                        ;;
@@ -936,7 +936,7 @@ do_stage_4() {
 
     if do_part 9 "Run first apt-get -f install"; then
         apt-get update && apt-get $APT_GET_OPTS dist-upgrade
-        apt-get -f install
+        apt-get -f "$apt_yes" install
         end_part_lax
     fi
 
@@ -958,7 +958,7 @@ do_stage_4() {
     if gather_any remove \
         && do_part 11 "Remove some packages"; then
         gather_say remove "Remove $(pqn %n) package%s"
-        apt-get purge $(gather remove)
+        apt-get "$apt_yes" purge $(gather remove)
         end_part_lax
     fi
 
@@ -1028,7 +1028,7 @@ do_stage_4() {
     if [ "$ARCH" = "amd64" ] ; then
         say "Adding multiarch support"
         dpkg --add-architecture i386
-        sudo apt-get update && apt-get install libc6:i386 libgcc-s1:i386 gcc-10-base:i386
+        sudo apt-get update && apt-get "$apt_yes" install libc6:i386 libgcc-s1:i386 gcc-10-base:i386
     fi
 
     #update icons cache files
@@ -1137,7 +1137,7 @@ do_stage_4() {
        #     apt-get $APT_GET_OPTS purge systemd libsystemd0 
         #fi
 
-        apt-get -f install
+        apt-get -f "$apt_yes" install
         # Remove unwanted apps that may have sneaked in.
         say "Run $(pq "apt-get autoremove")"
         apt-get $APT_GET_OPTS autoremove
@@ -1290,13 +1290,13 @@ do_stage_5() {
         [ -e $f ] && $SUDO chown 1000:1000 $f
     done
 
-    if [ "$DEBIAN_RELEASE" != "wheezy" -a -z "$jbb_mode" ]; then
-        say "Compress /usr/share/doc then delete folder"
-        tar -jcvf doc-$full_distro_name.tar.bz2 -C / ${sqfs_dir#/}/usr/share/doc
-        sleep 1
-        $SUDO find $sqfs_dir/usr/share/doc -type f -name "*.gz" -delete
-        $SUDO find $sqfs_dir/usr/lib -type f -name "*.pyc" -delete
-    fi
+    #if [ "$DEBIAN_RELEASE" != "wheezy" -a -z "$jbb_mode" ]; then
+        #say "Compress /usr/share/doc then delete folder"
+        #tar -jcvf doc-$full_distro_name.tar.bz2 -C / ${sqfs_dir#/}/usr/share/doc
+        #sleep 1
+        #$SUDO find $sqfs_dir/usr/share/doc -type f -name "*.gz" -delete
+       #$SUDO find $sqfs_dir/usr/lib -type f -name "*.pyc" -delete
+    #fi
 
     say "Write initrd-release file"
     write_initrd_release $sqfs_dir $SUDO
