@@ -130,6 +130,14 @@ do_start() {
 
     get_init_param DISTRO ""
 
+    # Load microcode
+    local mc_file=/sys/devices/system/cpu/microcode/reload
+
+    if [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ]; then
+        echo_live "Load microcode"
+        echo 1 > $mc_file
+    fi
+
     # Try really hard to get the distro name
     if [ ${#DISTRO} = 0 ]; then
         local vfile

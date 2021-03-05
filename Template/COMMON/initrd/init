@@ -4409,8 +4409,8 @@ prog_copy() {
     # Enable cursor
     printf "\e[?25h"
 
-    echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
-    echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
+    [ "$dirty_bytes" -ne 0 ] && echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
+    [ "$dirty_ratio" -ne 0 ] && echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
 
     # Use err_file as a semaphore from (...)& process
     if test -e $err_file; then
