@@ -21,7 +21,7 @@ copy_file libuser.conf          /etc/
 copy_file modules               /etc/
 copy_file 99-sandbox-mx.conf /etc/sysctl.d/
 copy_file timezone		/etc/
-copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
+#copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
 #copy_file virtualbox-guest-utils	/etc/init.d/
 #copy_file catfish.desktop	/usr/share/applications/ 
 copy_file display-im6.desktop		/usr/share/applications/ 
@@ -47,7 +47,7 @@ copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/scalable/apps/
 #copy_file ndisgtk.svg /usr/share/icons/hicolor/48x48/apps/
 #copy_file uswsusp.conf /etc/
-copy_file plymouthd.conf /etc/plymouth/
+copy_file plymouthd.conf /etc/plymouth/ --create
 #copy_file luckybackup.desktop /usr/share/applications/
 #copy_file luckybackup-su.desktop /usr/share/applications/
 #copy_file luckybackup.svg /usr/share/icons/hicolor/scalable/apps/
