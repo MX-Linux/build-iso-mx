@@ -281,7 +281,7 @@ gocr
 growisofs
 #grub-customizer
 grub-themes-mx
-gscan2pdf
+#gscan2pdf
 gsettings-desktop-schemas
 gsfonts
 gsmartcontrol
