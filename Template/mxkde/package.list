@@ -748,7 +748,7 @@ qt5-style-plugins
 # qtcore4-l10n
 qtvirtualkeyboard-plugin
 #rarian-compat
-#rdesktop
+rdesktop
 read-edid
 rpcbind
 rpl
