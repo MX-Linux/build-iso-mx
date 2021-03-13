@@ -1326,10 +1326,10 @@ do_stage_5() {
     copy_template_dir -o custom-config-files $sqfs_dir
 
     #collect_live_files $live_files_list /usr/local/share/live-files
-    say "Save Live files for snapshot"
+    #say "Save Live files for snapshot"
 
-    $SUDO rm -rf $sqfs_dir/usr/local/share/live-files
-    $SUDO $tools/installed-to-live populate-live-files $sqfs_dir $sqfs_dir
+    #$SUDO rm -rf $sqfs_dir/usr/local/share/live-files
+    #$SUDO $tools/installed-to-live populate-live-files $sqfs_dir $sqfs_dir
 
 #    local if_file=$sqfs_dir/etc/network/interfaces
 #    if ! grep -q eth0 $if_file; then
