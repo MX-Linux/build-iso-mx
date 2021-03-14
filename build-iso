@@ -52,6 +52,7 @@ Options:
     -I --INTERACTIVE    Let Debian ask config questions inside the chroot
     -j --jbb            Suppress voluminous output
     --lz4               Override default compression scheme with lz4
+    --zstd              Override default compression scheme with zstd
     -m --manual         Enter chroot if the automatic chroot stage fails
     -n --no-error-check Don't do error checking on stderr output
     -N --NO-ERROR-LOG   Also, don't log or highlight errors on stderr
@@ -200,6 +201,7 @@ main() {
          -VERBOSE|V)   verbose_mode=true                        ;;
          -user-default)      user_default_file=true  		    ;;
          -lz4)				lz4_override=true						;;
+         -zstd)				zstd_override=true						;;
 
               [0-8]) [ "$start_from" ] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -1623,6 +1625,11 @@ do_stage_7() {
 	if [ "$lz4_override" ]; then
 		COMPRESSION_TYPE="lz4"
 		COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+	fi
+	
+	if [ "$zstd_override" ]; then
+		COMPRESSION_TYPE="zstd"
+		COMPRESSION_TYPE_CODE="-comp zstd -Xcompression-level 15 -b 262144"
 	fi
 	
 	
