@@ -132,6 +132,7 @@ main() {
     local partial_file=$build_dir/$partial_name
     local seed_fname="random-seed"
     local user_defaults
+    apt_yes=""
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
