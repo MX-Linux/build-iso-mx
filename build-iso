@@ -1178,8 +1178,8 @@ do_stage_4() {
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
     
 
-    say "Customize Mozilla Browser"
-    customize_firefox $LOCALE
+    #say "Customize Mozilla Browser"
+    #customize_firefox $LOCALE
 
     _say_
     say "Write version files"
