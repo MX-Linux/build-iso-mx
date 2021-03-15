@@ -334,6 +334,7 @@ libffi7
 libgcc1
 libgcrypt20
 libgmp10
+libgtk3-perl
 libgnutls30
 libgpg-error0
 libgtk3-perl
