@@ -961,7 +961,7 @@ do_stage_4() {
     if gather_any remove \
         && do_part 11 "Remove some packages"; then
         gather_say remove "Remove $(pqn %n) package%s"
-        apt-get "$apt_yes" purge $(gather remove)
+        apt-get purge $(gather remove) "$apt_yes"
         end_part_lax
     fi
 
@@ -1031,7 +1031,7 @@ do_stage_4() {
     if [ "$ARCH" = "amd64" ] ; then
         say "Adding multiarch support"
         dpkg --add-architecture i386
-        sudo apt-get update && apt-get "$apt_yes" install libc6:i386 libgcc-s1:i386 gcc-10-base:i386
+        sudo apt-get update && apt-get install libc6:i386 libgcc-s1:i386 gcc-10-base:i386 "$apt_yes"
     fi
 
     #update icons cache files
