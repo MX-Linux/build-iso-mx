@@ -1190,6 +1190,12 @@ do_stage_4() {
     rm /etc/antix-version
     ln -frs /etc/mx-version /etc/antix-version
     
+    ##fix at-spi-dbus.desktop startup sequence
+    if [ -e /etc/xdg/autostart/at-spi-dbus-bus.desktop ]; then
+		cp /etc/xdg/autostart/at-spi-dbus-bus.desktop /etc/xdg/autostart/zz-at-spi-dbus-bus.desktop
+		rm /etc/xdg/autostart/at-spi-dbus-bus.desktop
+	fi
+    
     ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
     systemctl mask cgmanager.service
     

@@ -632,10 +632,10 @@ vdpau-driver-all
 vainfo
 va-driver-all
 vim-tiny
-# virtualbox-guest-dkms
-# virtualbox-guest-utils
-# virtualbox-guest-x11
-# virtualbox-guest-utils-modified-init
+virtualbox-guest-dkms
+virtualbox-guest-utils
+virtualbox-guest-x11
+virtualbox-guest-utils-modified-init
 vlc  
 vlc-data 
 #vlc-nox 
