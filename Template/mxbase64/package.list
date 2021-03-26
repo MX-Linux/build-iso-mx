@@ -694,6 +694,7 @@ xfce4-cpufreq-plugin
 xfce4-cpugraph-plugin
 xfce4-datetime-plugin
 xfce4-diskperf-plugin
+xfce4-docklike-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
 # xfce4-hardware-monitor-plugin
