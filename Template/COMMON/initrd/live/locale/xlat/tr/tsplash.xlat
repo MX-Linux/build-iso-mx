@@ -1,4 +1,5 @@
 _Copy_X_to_RAM_="%s 'i RAM'a kopyala"
+_Copying_X_="%s kopyalanıyor"
 _Create_X_swap_file_="%s takas dosyası oluştur"
 _console_login_="uçbirime giriş"
 _prepare_consoles_="Uçbirimi hazırla"

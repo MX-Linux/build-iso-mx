@@ -1,4 +1,5 @@
 _Copy_X_to_RAM_="Копировать %s в оперативную память"
+_Copying_X_="Копирование %s"
 _Create_X_swap_file_="Создать файл подкачки %s"
 _console_login_="консольный логин"
 _prepare_consoles_="подготовка консолей"

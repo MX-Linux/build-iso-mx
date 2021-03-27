@@ -37,9 +37,13 @@ LEAN_SERVICES="
     cpufrequtils
     cron
     cups
+    dundee
     irqbalance
     loadcpufreq
+    lvm2
+    mdadm
     nfs-common
+    ofono
     rpcbind
     rsync
     saned
@@ -47,6 +51,7 @@ LEAN_SERVICES="
     ssh
     stop-bootlogd
     sudo
+    tlp
     #transmission-daemon
 "
 
@@ -65,7 +70,6 @@ XTRA_LEAN_SERVICES="
     hwclockfirst.sh
     ifupdown-clean
     lm-sensors
-    lvm2
     mountnfs-bootclean.sh
     mountoverflowtmp
     nfs-common
@@ -79,6 +83,7 @@ XTRA_LEAN_SERVICES="
 
 MEAN_SERVICES="
     avahi-daemon
+    connman
     dnsmasq
     ifplugd
     mountnfs-bootclean.sh
