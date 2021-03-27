@@ -475,8 +475,8 @@ mx-user
 mx-viewer
 mx-welcome
 mx19-archive-keyring
-mx19-artwork
-mxfb-art
+mx21-artwork
+#mxfb-art
 mxfb-docs
 nano
 ncurses-base
