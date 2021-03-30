@@ -6,8 +6,8 @@ antix_specific_code() {
     mkdir -p $dir/var/log/samba $dir/var/log/fsck
 
     # Create the /etc/resolv.conf symlink if it does not already exist
-    /etc/resolvconf/run/resolv.conf $dir/etc/resolv.conf 2>/dev/null
-    
+    ln -s /etc/resolvconf/run/resolv.conf $dir/etc/resolv.conf 2>/dev/null
+
     rm -f $dir/etc/fstab.hotplug
     
     local protect=$dir/etc/live/protect
