@@ -89,12 +89,14 @@ automount=off|amnt=off)                          AUTOMOUNT_OFF=true ;;
            desktheme=*)    DESK_THEME=$value                        ;;
                 norepo)       NO_REPO=true                          ;;
               norepo=*)   IGNORE_REPO=$value                        ;;
+           deskdelay=*) DESKTOP_DELAY=$value                        ;;
              nomodeset)    NO_MODESET=true    ; VBOX_DECOR=true     ;;
             fontsize=*)     FONT_SIZE=$value                        ;;
         skylakeflicker)   FIX_SKYLAKE=true                          ;;
                  issue)   FORCE_ISSUE=true                          ;;
              vboxdecor)    VBOX_DECOR=true                          ;;
          i915powersave) ENABLE_I915_POWER_SAVE=true                 ;;
+           nomicrocode) NO_MICRO_CODE=true                          ;;
          live_swap=off)      NO_SWAP=true                           ;;
        live_swap=force)   FORCE_SWAP=true                           ;;
      live_swap=all-off)      NO_SWAP=true  ; NO_SWAP_FILE=true      ;;
@@ -128,15 +130,14 @@ main() {
 do_start() {
     echo_script "$_Localizing_configuring_X_Windows_" $0
 
-    get_init_param DISTRO ""
-
-    # Load microcode
     local mc_file=/sys/devices/system/cpu/microcode/reload
 
     if [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ]; then
-        echo_live "Load microcode"
+        echo_live "$_Load_microcode_"
         echo 1 > $mc_file
     fi
+
+    get_init_param DISTRO ""
 
     # Try really hard to get the distro name
     if [ ${#DISTRO} = 0 ]; then
@@ -334,6 +335,7 @@ do_start() {
     set_default_desktop    "$CMD_DESKTOP"      $DEF_USER $USER_HOME
     set_desktop_theme      "$DESK_THEME"       $DEF_USER $USER_HOME
     set_user_dpi           "${CMD_UDPI:-$dpi}" $DEF_USER $USER_HOME
+    set_user_desktop_delay "$DESKTOP_DELAY"    $DEF_USER $USER_HOME
     if [ -n "$user_automount" ]; then
         set_user_automount "$DEF_USER" "$USER_HOME" "$AUTOMOUNT" "$AUTOMOUNT_OFF" 'create'
     else
@@ -552,7 +554,7 @@ localize_skel() {
 #------------------------------------------------------------------------------
 set_keyboard() {
     local kb_file=/etc/default/keyboard
-    local default_xkb_opts="terminate:ctrl_alt_bksp,grp_led:scroll"
+    local default_xkb_opts=""
 
     first_write $kb_file || [ "$DO_XKBD" ] || return
 
@@ -581,10 +583,6 @@ Keyboard_Out
 #------------------------------------------------------------------------------
 localize_repo() {
     local mirror=$1  tz=$2  lang_mirror=$3  lang_tz=$4
-
-	if [ ! -e "$(which localize-repo)" ]; then
-		return
-	fi
 
     if [ -n "$mirror" -a -n "${mirror##[a-zA-Z][a-zA-Z]}" ]; then
         error "$_Bad_mirror_code_X_expected_two_letters_" $(pquote $mirror)
@@ -1001,6 +999,26 @@ set_user_dpi() {
 }
 
 #------------------------------------------------------------------------------
+# Set the desktop delay used by desktop-session.  Hopefully, this code is no
+# longer needed.
+#------------------------------------------------------------------------------
+set_user_desktop_delay() {
+    local delay=$1  user=$2  home=$3
+    [ ${#delay} -gt 0 ] || return
+
+    local ds_conf=$home/.desktop-session/desktop-session.conf
+    test -e $ds_conf || return
+    local bad=$(echo $delay | sed -r 's/^([0-9]+(\.[0-9]*)?|.[0-9]+)//')
+
+    if [ ${#bad} -gt 0 ]; then
+        error "$_Bad_desktop_delay_parameter_X_" $(pquote $delay)
+        return
+    fi
+    echo_live "$_Setting_desktop_delay_to_X_" $(pquote $delay)
+    su -c "sed -r -i 's/^\s*(STARTUP_DELAY=).*/\1$delay/' $ds_conf" $user
+}
+
+#------------------------------------------------------------------------------
 # Set automounting mode via users .desktop-session/automount.conf file (sigh)
 #------------------------------------------------------------------------------
 set_user_automount() {
@@ -1112,7 +1130,7 @@ valid_user() {
     [ -z "$user" ] && return 1
 
     #echo "try: $user"
-    local ent=$(grep "^$user:.*:/home/.*:*/bin/.*sh$" /etc/passwd)
+    local ent=$(grep "^$user:.*:/home/.*:/bin/.*sh$" /etc/passwd)
     local uid=$(echo $ent | cut -d: -f3)
     [ -z "$uid" ] && return 1
     [ $uid -lt 1000 ] && return 1

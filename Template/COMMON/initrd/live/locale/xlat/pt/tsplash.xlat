@@ -1,5 +1,6 @@
 _Copy_X_to_RAM_="Copiar %s para a RAM"
-_Create_X_swap_file_="Criar ficheiro swap %s"
+_Copying_X_="A copiar %s"
+_Create_X_swap_file_="Criar ficheiro de trocas (swap) de %s"
 _console_login_="início de sessão na consola"
 _prepare_consoles_="preparar consolas"
 _return_here_="regressar aqui"

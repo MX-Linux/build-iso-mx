@@ -11,8 +11,8 @@
 #  Documentation/x86/microcode.txt
 #------------------------------------------------------------------------------
 
-     VERSION="3.04"
-VERSION_DATE="Fri May 17 18:13:07 MDT 2019"
+     VERSION="3.11"
+VERSION_DATE="Thu 21 Nov 2019 10:16:41 PM MST"
 
 ME=${0##*/}
 
@@ -38,6 +38,9 @@ DEFAULT_COMPRESS="gzip"
 MAX_PREAMBS=10
 
 BLOCK_SIZE=512
+
+MAX_XTRA_SIZE=20
+INITRD_XTRA_DIR=
 
 usage() {
     local ret=${1:-0}
@@ -66,9 +69,11 @@ Options:
   -p  --pretend          Show commands without running them
   -r  --repack           Repack the initrd file
   -s  --silent           Only show error messages
+  -t  --template         Remove binaries and modules when repacking
   -q  --quiet            Say very little
   -V  --verbose          Show commands in addition to running them
   -v  --version          Show the version then exit
+  -x  --xtra=<dir>       Copy files under <dir> into main file system
 Usage
 
     exit $ret
@@ -97,9 +102,12 @@ eval_argument() {
            -pretend|p) PRETEND=true                    ;;
             -repack|r) REPACK=true                     ;;
             -silent|s) SILENT=true                     ;;
+          -template|t) TEMPLATE=true                   ;;
              -quiet|q) QUIET=true                      ;;
            -verbose|V) VERBOSE=true                    ;;
            -version|v) show_version                    ;;
+              -xtra|x) XTRA_DIR=$val                   ;;
+              -xtra=*) XTRA_DIR=$val                   ;;
                     *) fatal "Unknown parameter -$arg" ;;
     esac
 }
@@ -112,7 +120,9 @@ takes_param() {
      -compress|c) return 0 ;;
           -dir|d) return 0 ;;
          -from|f) return 0 ;;
+         -file|f) return 0 ;;
         -level|l) return 0 ;;
+         -xtra|x) return 0 ;;
     esac
     return 1
 }
@@ -121,7 +131,7 @@ takes_param() {
 # Start reading here
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT  SHORT_STACK="CcdhlfNnprsqVv"
+    local SHIFT  SHORT_STACK="CcdhlfNnprsqVvx"
 
     local COMPRESS_PROG COMP_LEVEL DO_CLEAR NO_MD5 NO_MICROCODE
     local PRETEND QUIET REPACK VERBOSE SILENT
@@ -153,6 +163,9 @@ main() {
 #------------------------------------------------------------------------------
 unpack_initrd() {
     local file=$1  dir=$2
+
+    [ -n "$XTRA_DIR" ] && warn "Xtra dir %s ignored during unpack" "$(pqw "$XTRA_DIR")"
+    [ -n "$TEMPLATE" ] && warn "Template mode ignored during unpack"
 
     test -e "$file" || fatal "File %s not found" "$file"
     test -r "$file" || fatal "Cannot read file %s" "$file"
@@ -293,6 +306,8 @@ repack_initrd() {
     test -e "$dir" || fatal "The directory %s does not exist" "$dir"
     test -d "$dir" || fatal "%s is not a directory" "$dir"
 
+    [ -n "$XTRA_DIR" -a $(id -u) -ne 0 ] && fatal  "Must be root to use --xtra option"
+
     local mc_file="$dir/$MICROCODE_FNAME";
     local prog=${COMPRESS_PROG:-$(cat "$dir/$COMPRESS_FNAME" 2>/dev/null)}
 
@@ -328,11 +343,26 @@ repack_initrd() {
         cmd rm -f "$file"
     fi
 
+    local INITRD_XTRA_DIR="$dir/live/xtra"
+    if [ -n "$XTRA_DIR" ]; then
+        test -d "$XTRA_DIR" || fatal "Xtra dir %s is not a directory" "$(pqw "$XTRA_DIR")"
+        local xtra_size=$(du -scm "$XTRA_DIR" | tail -n1 | cut -f1)
+        [ $xtra_size -gt $MAX_XTRA_SIZE ] && fatal "Size of xtra directory %s is too large" "$(nqw $xtra_size MiB)"
+        qsay "Bind mount xtra dir %s" "$(pq "$XTRA_DIR")"
+        trap on_exit  EXIT
+        mkdir -p "$INITRD_XTRA_DIR"
+        mount --bind "$XTRA_DIR" "$INITRD_XTRA_DIR"
+        mountpoint -q "$INITRD_XTRA_DIR" || fatal "Failed to bind mount xtra directory"
+    fi
+    local excluder=exclude_files
+    [ "$TEMPLATE" ] && excluder=exclude_files_and_template
     # Create the cpio archive, ignore our two meta-data files and then compress
-    (cd "$dir" && cmd find . | exclude_files | cmd cpio $REPACK_ARGS) \
+    (cd "$dir" && cmd find . | $excluder | cmd cpio $REPACK_ARGS) \
         | cmd $prog $args | cmd append_file "$file"
 
     [ "$NO_MD5" ] && return
+
+    on_exit
 
     # Create .md5 file
     local fname=$(basename $file)
@@ -350,6 +380,18 @@ exclude_files() {
         -e '^\./\.git'      \
         -e '/\.[^/]*\.swp$' \
         -e '/\.[^/]*~$'
+}
+
+#------------------------------------------------------------------------------
+# Do the normal exclude and then also exclude modules, binaries, binary libs
+#
+#------------------------------------------------------------------------------
+exclude_files_and_template() {
+    exclude_files | grep -E -v \
+        -e '^\./bin/ntfs-3g|eject|cryptsetup)'  \
+        -e '^\./lib/modules'                    \
+        -e '^\./lib/x86_64-linux-gnu'           \
+        -e '^\./lib.*/(lib|ld).*\.so'
 }
 
 #------------------------------------------------------------------------------
@@ -541,8 +583,11 @@ warn() {
 #------------------------------------------------------------------------------
 # Convenience routines for "quoting" text using color
 #------------------------------------------------------------------------------
-pq()  { echo "$hi_co$*$m_co"      ;}
-nq()  { echo "$num_co$*$m_co"     ;}
+pq()   { echo "$hi_co$*$m_co"      ;}
+nq()   { echo "$num_co$*$m_co"     ;}
+nqw()  { echo "$num_co$*$warn_co"  ;}
+pqw()  { echo "$hi_co$*$warn_co"   ;}
+
 
 #------------------------------------------------------------------------------
 # Define color variables.  These are globals but are lower case in order to
@@ -563,6 +608,20 @@ set_colors() {
          bold_co=$yellow
          warn_co=$yellow
           num_co=$magenta
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+on_exit() {
+    local dir=$INITRD_XTRA_DIR
+    [ -z "$dir" ] && return
+    test -d "$dir" || return
+
+    qsay "Unmount xtra dir %s" "$(pq "$XTRA_DIR")"
+
+    mountpoint -q "$dir" && umount "$dir"
+    rmdir -p --ignore-fail-on-non-empty "$dir"
 }
 
 set_colors
