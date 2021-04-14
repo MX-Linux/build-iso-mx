@@ -1,34 +1,30 @@
 #!/bin/bash
 ME=${0##*/}
 
-DATA_FILE=antiX-data
+VERSION="2.00.01"
+VERSION_DATE="Mon Apr 12 03:09:23 PM MDT 2021"
 
-SEP="/"
+SEP="|"
 
-VAR_NAMES="
+CREATED_VARS="
 ASCII_CODE_NAME
-CODE_NAME
-CORE_OPTIONS
-DISTO_VERSION
 DISTRO
-DISTRO_NAME
-FLAV
 FULL_DISTRO_NAME
 FULL_DISTRO_NAME_SPACE
-ISO_ARCH
-OPTIONS
-RELEASE_DATE
-"
+RELEASE_DATE"
 
-CONF_FILES="
+CONF_FILES=(
 boot/grub/grub.cfg
 boot/grub/theme/help.txt
 boot/grub/theme/theme.txt
 boot/isolinux/isolinux.cfg
 boot/isolinux/readme.msg
 boot/syslinux/readme.msg
-boot/syslinux/syslinux.cfg
-"
+boot/syslinux/syslinux.cfg)
+
+DATA_FILES=()
+IN_FILES=()
+FILES=()
 
 usage() {
     local ret=${1:-0}
@@ -37,13 +33,7 @@ usage() {
 Usage:  $ME [options] file1, file2, dir, ...
 
 Perform simple string substitutions on the files listed on the command line
-based on the information in the data file.
-
-If a directory is specified then we operate on these files under that
-directory:$(echo "$CONF_FILES" | sed 's/^/    /')
-These variables are processed:$(echo "$VAR_NAMES" | sed 's/^/    /')
-Note that FULL_DISTRO_NAME, DISTRO, and RELEASE_DATE are created if they do
-not already exist in the data file.
+based on the information in the data file(s).
 
 Options:
   -a  --antiX              Use antiX-data data file
@@ -56,6 +46,13 @@ Options:
   -p  --pretend            Don't Change the files, just show the new lines
   -r  --release=<date>     Use <date> as the release date
   -s  --strict             Error out if a file is not found
+  -V  --vars               Just show the variable names then exit
+
+If a directory is specified then we operate on these files under that
+directory:$(echo "${CONF_FILES[@]}" | sed 's/^/    /')
+
+These variables will be created if they aren't defined in a data file:
+    $(echo $CREATED_VARS)
 Usage
 
     exit $ret
@@ -64,21 +61,22 @@ Usage
 eval_argument() {
     local arg=$1 val=$2
     case $arg in
-           -antiX|a)  DATA_FILE=antiX-data   ;;
-            -data|d)  DATA_FILE=$val         ;;
-        -data=*|d=*)  DATA_FILE=$val         ;;
-         -flavour|f)  FLAVOUR=$val           ;;
-     -flavour=*|f=*)  FLAVOUR=$val           ;;
-            -help|h)  usage                  ;;
-         -inplace|i)  IN_PLACE=--in-place    ;;
-                 i*)  IN_PLACE=${arg#i}      ;;
-         -inplace=*)  IN_PLACE=$val          ;;
-              -MX|m)  DATA_FILE=MX-data      ;;
-         -pretend|p)  PRETEND=true           ;;
-         -release|r)  RELEASE_DATE=$val      ;;
-     -release=*|r=*)  RELEASE_DATE=$val      ;;
-          -strict|s)  STRICT=true            ;;
-                  *)  fatal "Unknown argument: -$arg" ;;
+           -antiX|a)  DATA_FILES+=(antiX-data)                 ;;
+            -data|d)  DATA_FILES+=("$val")                     ;;
+        -data=*|d=*)  DATA_FILES+=("$val")                     ;;
+         -flavour|f)  FLAVOUR=$val                             ;;
+     -flavour=*|f=*)  FLAVOUR=$val                             ;;
+            -help|h)  usage                                    ;;
+         -inplace|i)  IN_PLACE=--in-place                      ;;
+                 i*)  IN_PLACE=${arg#i}                        ;;
+         -inplace=*)  IN_PLACE=$val                            ;;
+              -MX|m)  DATA_FILES+=(MX-data)                    ;;
+         -pretend|p)  PRETEND=true                             ;;
+         -release|r)  RELEASE_DATE=$val                        ;;
+     -release=*|r=*)  RELEASE_DATE=$val                        ;;
+          -strict|s)  STRICT=true                              ;;
+            -vars|V)  SHOW_VARS=true                           ;;
+                  *)  fatal "Unknown argument: -$arg"          ;;
     esac
 }
 
@@ -90,33 +88,47 @@ takes_param() {
 }
 
 main() {
-    local SHIFT SHORT_STACK="adfhmprs"
-    [ $# -eq 0 ] && usage
-    local fcnt=0
+    local SHIFT SHORT_STACK="adfhmprsV"
+    [[ $# -eq 0 ]] && usage
 
-    while [ $# -gt 0 ]; do
+    while [[ $# -gt 0 ]]; do
         read_params "$@"
         shift $SHIFT
 
-        while [ $# -gt 0 -a ${#1} -gt 0 -a -n "${1##-*}" ]; do
-            files="$files$1\n"
+        while [[ $# -gt 0 && ! $1 =~ ^- ]]; do
+            echo "file $1"
+            IN_FILES+=($1)
             shift
-            fcnt=$((fcnt + 1))
         done
     done
 
-    [ $fcnt -lt 1 ] && fatal "Expected at least one filename"
+    [[ ${#IN_FILES[@]} -lt 1 ]] && fatal "Expected at least one filename"
 
-    test -r $DATA_FILE || fatal "Could not read data file: $DATA_FILE"
-    
-    . $DATA_FILE
-    
+    [[ ${#DATA_FILES[@]} -eq 0 ]] && DATA_FILES=(antiX-data)
+
+    local regex="s/^\s*([A-Z0-9_]+)(=.*)?$/\1/p"
+    VAR_NAMES=$(sed -n -r "$regex" "${DATA_FILES[@]}" <(echo "$CREATED_VARS") | sort)
+
+    if [[ -n "$SHOW_VARS" ]]; then
+        echo "$VAR_NAMES"
+        exit 0
+    fi
+
+    local data_file
+    for data_file in "${DATA_FILES[@]}"; do
+        [[ -z "$data_file" ]] && continue
+        test -r "$data_file" || fatal "Could not read data file: $data_file"
+        source "$data_file"
+    done
+
+    # Create DISTRO, ASCII_CODE_NAME, FULL_DISTRO_NAME, RELEASE,
+    # and FULL_DISTRO_NAME_SPACE variables as needed
     : ${DISTRO:=$DISTRO_NAME-${DISTRO_VERSION}}
     : ${ASCII_CODE_NAME:=$(echo "$CODE_NAME" | utf8_to_ascii)}
 
-    if [ -z "$FULL_DISTRO_NAME" ]; then
-        : ${FULL_DISTRO_NAME:=${DISTRO}_$ISO_ARCH}
-        [ "$FLAV" ] && FULL_DISTRO_NAME=$FULL_DISTRO_NAME-$FLAV
+    if [[ -z "$FULL_DISTRO_NAME" ]]; then
+        FULL_DISTRO_NAME="${DISTRO}_$ISO_ARCH"
+        [[ -n "$FLAV" ]] && FULL_DISTRO_NAME=$FULL_DISTRO_NAME-$FLAV
     fi
 
     : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
@@ -124,21 +136,21 @@ main() {
     : ${FULL_DISTRO_NAME_SPACE:=$FULL_DISTRO_NAME}
     FULL_DISTRO_NAME_SPACE=${FULL_DISTRO_NAME_SPACE//_/ }
 
+    # create SED and SED_P variables
     build_sed_exprs
 
-    #echo $SED; echo $SED_P
-    #exit
+    # Put expanded list in FILES
+    expand_dirs "${IN_FILES[@]}"
 
-    files=$(expand_dirs "$files")
-
-    while read file; do
+    local file
+    for file in "${FILES[@]}"; do
 
         test -e "$file" || loop_warn "Could not find file: $file" || continue
         test -r "$file" || loop_warn "Can not read file: $file"   || continue
-        [ -z "$IN_PLACE" ] \
-            || test -r "$file" || loop_warn "Can not write to file: $file" || continue
+        [[ -z $IN_PLACE ]] \
+            || test -w "$file" || loop_warn "Can not write to file: $file" || continue
 
-        if [ "$PRETEND" ]; then
+        if [[ -n $PRETEND ]]; then
             echo "FILE $file:"
             eval "sed -n $SED_P \"$file\"" | egrep -v "%[A-Z_]+%"
             echo
@@ -146,12 +158,13 @@ main() {
             eval "sed $IN_PLACE $SED $file"
         fi
 
-    done<<Files
-$(echo -e "$files")
-Files
+    done
 
 }
 
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
 build_sed_exprs() {
     local name val
     for name in $VAR_NAMES; do
@@ -161,32 +174,36 @@ build_sed_exprs() {
     done
 }
 
+#------------------------------------------------------------------------------
+# If any input "files" are directories then look for our standard config files
+# under that directory.  If they exist, add them to the list.
+#------------------------------------------------------------------------------
 expand_dirs() {
-    local file files=$1
+    local file
+    for file; do
 
-    while read file; do
         if ! test -d $file; then
-        echo "$file"
-        continue
-    fi
+            FILES+=("$file")
+            continue
+        fi
 
-    local dir=$file
-    local found= conf 
-    for conf in $CONF_FILES; do
-        file="$dir/$conf"
-        test -e "$file" || continue
-        echo "$file"
-        found=true
+        local dir=${file%/}
+        local found=  conf
+        for conf in "${CONF_FILES[@]}"; do
+            file="$dir/$conf"
+            test -f "$file" || continue
+            FILES+=("$file")
+            found=true
+        done
+
+        [[ -z "$found" ]] && loop_warn "No config files found under directory: $dir"
     done
-
-    [ "$found" ] || loop_warn "No config files found under directory: $dir"
-
-    done<<Files
-$(echo -e "$files")
-Files
 
 }
 
+#------------------------------------------------------------------------------
+# Convert utf8 to ascii.  This is for making the ASCII_CODE_NAME
+#------------------------------------------------------------------------------
 utf8_to_ascii() {
     iconv -f utf-8 -t ascii//translit
 }
@@ -209,7 +226,7 @@ read_params() {
     local arg val
 
     # Loop through the cmdline args
-    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+    while [[ $# -gt 0 && $1 =~ ^- ]]; do
         arg=${1#-}
         shift
         SHIFT=$((SHIFT + 1))
@@ -227,9 +244,9 @@ read_params() {
 
         # Deal with all options that take a parameter
         if takes_param "$arg"; then
-            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            [[ $# -lt 1 ]] && fatal "Expected a parameter after: -$arg"
             val=$1
-            [ -n "$val" -a -z "${val##-*}" ] \
+            [[ $val =~ ^- ]] \
                 && fatal "Suspicious argument after -$arg: $val"
             SHIFT=$((SHIFT + 1))
             shift
@@ -245,7 +262,7 @@ read_params() {
 }
 
 loop_warn() {
-    [ "$STRICT" ] && fatal "$@"
+    [[ -n $STRICT ]] && fatal "$@"
     echo "$ME warning: $*" >&2
     return 1
 }

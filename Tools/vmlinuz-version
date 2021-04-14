@@ -1,0 +1,258 @@
+#!/bin/bash
+
+# See Documentation/x86/boot.txt in Linux source
+
+ME=${0##*/}
+
+DATE_FMT="%Y-%m-%d %H:%M"
+DATE_FMT="%Y-%m-%d"
+
+usage() {
+    local ret=${1:-0}
+
+    cat <<Usage
+Usage:  $ME [options] directory|file1 file2 ...
+
+List all of the vmlinuz image files from the input list along with their Linux
+version strings. Silently ignore files that are not vmlinuz files.  Ignore
+legit vmlinuz files that don't have a /lib/modules/\$VERSION directory.
+
+Options:
+  -c  --current         Only display filename of running kernel
+  -d  --delimit=<s>     Use string <s> as the output delimiter
+  -D  --date=<fmt>      Date format to use
+  -f  --first-only      Only display first column
+  -h  --help            Show this usage
+  -m  --mod-dir=<dir>   Check for /lib/modules/\$VERSION directory under <dir>
+  -n  --noheadings      Don't print headings
+  -r  --reverse         Print the version strings first
+  -R  --raw             Don't send version strings through "cat -v"
+  -s  --short           Remove the path from the filenames
+  -t  --tabs            Use tab as the output delimiter
+  -v  --verbose         Explain processing on stderr
+
+If an output delimiter is give then the headings are automatically turned off.
+Usage
+
+    exit $ret
+}
+
+eval_argument() {
+    local arg=$1 val=$2
+        case $arg in
+           -current|c) CURRENT=$(uname -r)             ;;
+           -delimit|d) DELIMIT=$val                    ;;
+           -delimit=*) DELIMIT=$val                    ;;
+              -date|D) DATE_FMT=$val                   ;;
+              -date=*) DATE_FMT=$val                   ;;
+             -first|f) FIRST_ONLY=true                 ;;
+              -help|h) usage                           ;;
+           -mod-dir|m) MOD_DIR=$val                    ;;
+           -mod-dir=*) MOD_DIR=$val                    ;;
+        -noheadings|n) SHOW_HEADER=                    ;;
+               -raw|R) CAT_OPT=""                      ;;
+           -reverse|r) REVERSE=true                    ;;
+             -short|s) SHORT=true                      ;;
+              -tabs|t) DELIMIT="\t"                    ;;
+           -verbose|v) VERBOSE=true                    ;;
+                    *) fatal "Unknown parameter -$arg" ;;
+    esac
+}
+
+takes_param() {
+    case $1 in
+        -delimit|-mod-dir|[dm]) return 0 ;;
+    esac
+    return 1
+}
+
+main() {
+    local SHIFT SHORT_STACK="cdDfhmnrRstv"
+    local CAT_OPT="-v" CURRENT DELIMIT REVERSE VERBOSE NO_CHECK
+    local MOD_DIR=  SHOW_HEADER=true
+
+    [ $# -eq 0 ] && usage
+
+    # This loop allows complete intermingling of filenames and options
+    local files last_file fcnt=0
+    while [ $# -gt 0 ]; do
+        read_params "$@"
+        shift $SHIFT
+
+        while [ $# -gt 0 -a ${#1} -gt 0 -a -n "${1##-*}" ]; do
+            files="$files$1\n"
+            last_file=$1
+            shift
+            fcnt=$((fcnt + 1))
+        done
+    done
+
+    case $fcnt in
+        0) fatal "Expected at least one filename" ;;
+        1) test -d "$last_file" && files=$(ls -dt "$last_file"/*) ;;
+    esac
+
+
+    #[ $# -gt 0 ] && fatal "Too much intermingling of files and options"
+
+    local ifs="!"
+
+    local file magic vm_version list date f_width=4 v_width=7
+
+    #SEP="\t"
+
+    while read file; do
+        test -e $file    || vsay "$file" "Could not find file"   || continue
+        test -r $file    || vsay "$file" "Could not read file"   || continue
+        test_magic $file || vsay "$file" "Not a vmlinuz file"    || continue
+
+        vm_version=$(vm_version $file)
+
+        if [ "$CURRENT" ]; then
+            if [ "$vm_version" = "$CURRENT" ]; then
+                echo $file
+                exit 0
+            fi
+            continue
+        fi
+
+        if [ -n "$MOD_DIR" -a ! -d "$MOD_DIR/lib/modules/$vm_version" ]; then
+           vsay "$file" "Could not find module directory for %s" "$vm_version"
+           continue
+        fi
+
+        date=$(date "+${DATE_FMT#+}" -d @$(stat -c %Y "$file"))
+
+        [ "$SHORT" ] && file=${file##*/}
+
+        list="$list$vm_version$ifs$file$ifs$date\n"
+
+        [ ${#file}       -gt $f_width ] && f_width=${#file}
+        [ ${#vm_version} -gt $v_width ] && v_width=${#vm_version}
+    done<<Files
+$(echo -e "$files")
+Files
+
+    [ "$CURRENT" ] && exit 1
+
+    local format
+    if [ ${#DELIMIT} -gt 0 ]; then
+        format="%s$DELIMIT%s$DELIMIT%s"
+    elif [ "$REVERSE" ]; then
+        format="%-${v_width}s  %-${f_width}s %s"
+        [ "$SHOW_HEADER" ] && printf "$format\n" Version File  Date
+    else
+        format="%-${f_width}s  %-${v_width}s %s"
+        [ "$SHOW_HEADER" ] && printf "$format\n" File Version  Date
+    fi
+
+    local orig_ifs=$IFS
+    IFS=$ifs
+    while read vm_version file date; do
+        [ ${#vm_version} -gt 0 ] || continue
+        if [ "$REVERSE" ]; then
+            if [ "$FIRST_ONLY" ]; then
+                echo "$vm_version"
+            else
+                printf "$format\n" "$vm_version" "$file" "$date"
+            fi
+        else
+            if [ "$FIRST_ONLY" ]; then
+                echo "$file"
+            else
+                printf "$format\n" "$file" "$vm_version" "$date"
+            fi
+        fi
+    done <<Output
+$(echo -e "$list")
+Output
+    IFS=$orig_ifs
+    exit 0
+}
+
+test_magic() {
+    local file=$1
+    # Add "tr" work-around for bug in Bash-4.4
+    magic=$(dd if=$file count=4 skip=514 bs=1 2>/dev/null | tr \\0 0)
+    [ x"$magic" = x"HdrS" ]
+    return $?
+}
+
+vm_version() {
+    local file=$1
+    hex_offset=$(dd if=$file count=2 skip=526 bs=1 2>/dev/null | hexdump \
+        | head -n1 | cut -d" " -f2)
+    #echo $hex_offset
+    dec_offset=$(awk "BEGIN{ print 0x$hex_offset + 0x200 }")
+    #echo $dec_offset
+    #vsay "$file" "hex offset: %5s  decimal offset: %5s" $hex_offset $dec_offset
+    dd if=$file count=40 skip=$dec_offset bs=1 2>/dev/null | cut -d" " -f1 | cat $CAT_OPT
+}
+
+vsay() {
+    [ "$VERBOSE" ] || return 1
+    local file=$1 format=$2
+    shift 2
+    printf "$file: $format\n" "$@" >&2
+    return 1
+}
+#-------------------------------------------------------------------------------
+# Send "$@".  Expects
+#
+#   SHORT_STACK               variable, list of single chars that stack
+#   fatal(msg)                routine,  fatal("error message")
+#   takes_param(arg)          routine,  true if arg takes a value
+#   eval_argument(arg, [val]) routine,  do whatever you want with $arg and $val
+#
+# Sets "global" variable SHIFT to the number of arguments that have been read.
+#-------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-}
+        shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal "Suspicious argument after -$arg: $val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+    done
+}
+
+fatal() {
+    echo "$ME fatal error: $*" >&2
+    exit 2
+}
+
+main "$@"
+
