@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.99.06"
-VERSION_DATE="Fri Apr 16 05:02:18 PM MDT 2021"
+VERSION="1.99.07"
+VERSION_DATE="Fri Apr 16 08:12:42 PM MDT 2021"
 
 ME=${0##*/}
 
@@ -859,7 +859,7 @@ do_stage_4() {
         end_part_lax
     fi
 
-    if [[ $K_NAME =~ \\* ]] && do_part 2 "Search for complete kernel name"; then
+    if [[ $K_NAME =~ \* ]] && do_part 2 "Search for complete kernel name"; then
         # Use apt-cache to get full kernel name if it contains a "*"
         search_for_k_name
         end_part_strict
