@@ -35,4 +35,4 @@ GRUB_DISABLE_OS_PROBER=false
 #export GRUB_MENU_PICTURE="/usr/share/backgrounds/MXLinux/grub/linen-gradientblu-grub.png"
 #export GRUB_MENU_PICTURE="/usr/share/backgrounds/MX18ALPHAWALL.png"
 
-GRUB_THEME="/boot/grub/themes/Gradient_Glow_Blue/theme.txt"
+GRUB_THEME="/boot/grub/themes/mx_linux/theme.txt"
