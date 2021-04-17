@@ -39,7 +39,7 @@ HOME_URL="https://mxlinux.org"
 #UNSIGNED=""
 
 #standard 64 bit
-K_REVISION="5"
+K_REVISION="6"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="5.10.0"
 UNSIGNED=""
