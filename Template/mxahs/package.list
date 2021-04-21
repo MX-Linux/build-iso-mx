@@ -356,7 +356,7 @@ lightdm-modified-init
 lightdm-gtk-greeter
 lightdm-gtk-greeter-settings
 lightdm-gtk-greeter-mx21
-#light-locker
+light-locker
 linux-base
 linux-libc-dev
 #live-usb-maker-gui
