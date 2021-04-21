@@ -590,7 +590,7 @@ nfs-kernel-server
 #nitroshare
 #nomacs
 #nomacs-l10n
-ntp
+#ntp
 # ntrack-module-libnl-0
 nvidia-detect
 nwipe

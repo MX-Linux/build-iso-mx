@@ -449,7 +449,7 @@ nfs-common-modified-init
 nfs-kernel-server
 # nictools-pci 
 #nitroshare
-ntp    
+#ntp    
 #ndisgtk
 #ndiswrapper
 #ndiswrapper-dkms

@@ -494,7 +494,7 @@ nfs-kernel-server
 # nomacs
 # nomacs-l10n
 ntfs-3g
-ntp
+#ntp
 ntpdate
 #numix-gtk-theme
 #numix-icon-theme

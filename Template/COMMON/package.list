@@ -73,6 +73,7 @@ mpg123
 mtools
 ncurses-term
 ntfs-3g
+ntpsec
 ntpdate
 openssl
 os-prober
