@@ -341,7 +341,8 @@ libreoffice-math
 #libreoffice-pdfimport
 libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
-#libreoffice-style-galaxy 
+#libreoffice-style-galaxy
+libreoffice-style-sifr
 libreoffice-writer 
 libsox-fmt-all
 #libsox2
