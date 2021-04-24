@@ -191,14 +191,14 @@ main() {
         #echo $ld_linux
 
         local ld_dir=$TO_DIR$(dirname "$ld_linux")
-        echo "ld_linux: $ld_linux"
+        vsay "ld_linux: $ld_linux"
         if [ "${ld_dir##*/}" = lib64 ]; then
             my_mkdir "$ld_dir"
             pretend cp -a $FROM_DIR$ld_linux $ld_dir
 
             ld_dir=${ld_dir%/lib64}$X86_64_DIR
         fi
-        echo ld_dir: $ld_dir
+        vsay "ld_dir: $ld_dir"
         my_mkdir "$ld_dir"
         copy_symlink "$FROM_DIR" "$ld_linux" "$ld_dir"
 

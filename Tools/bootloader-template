@@ -1,8 +1,8 @@
 #!/bin/bash
 ME=${0##*/}
 
-VERSION="2.00.01"
-VERSION_DATE="Mon Apr 12 03:09:23 PM MDT 2021"
+VERSION="2.00.03"
+VERSION_DATE="Mon Apr 19 09:56:23 PM MDT 2021"
 
 SEP="|"
 
@@ -41,7 +41,7 @@ Options:
   -f  --flavour=<flav>     Use <flav> as the flavour
   -h  --help               Show this usage
   -i  --in-place<=SUFFIX>  Change files in-place
-                           Make backup of suffix is supplied
+                           Make backup if suffix is supplied
   -m  -MX                  Use MX-data data file
   -p  --pretend            Don't Change the files, just show the new lines
   -r  --release=<date>     Use <date> as the release date

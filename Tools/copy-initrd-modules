@@ -44,14 +44,10 @@ block
 btrfs
 cdrom
 crc16
-crc32
 crc32c-generic
-crc32-pclmul
 crct10dif-common
 crct10dif-generic
 crct10dif-pclmul
-cryptsetup
-dmsetup
 ecb
 ehci-hcd
 ehci-pci
@@ -60,9 +56,6 @@ ext3
 ext4
 f2fs
 fat
-firewire-core
-firewire-ohci
-firewire-sbp2
 fotg210-hcd
 fusbh200-hcd
 fuse
@@ -79,12 +72,7 @@ hid-logitech-hidpp
 hid-microsoft
 hid-monterey
 hid-samsung
-hv_balloon
-hv_vmbus
-hv_utils
-hv_storvsc
 hv_netvsc
-hyperv
 hyperv-keyboard
 hyperv_fb
 isofs
@@ -92,13 +80,9 @@ jbd
 jbd2
 jfs
 libcrc32c
-libahci 
-linear
 loop
 mbcache
-md-mod
 msdos
-multipath
 nls-ascii
 nls-cp437
 nls-utf8
@@ -114,8 +98,6 @@ pstore
 reiserfs
 rts5139
 scsi-mod
-scsi-transport-fc
-sdhci
 sd-mod
 sg
 shpchp
@@ -131,33 +113,20 @@ usb-storage
 usbcore
 usbhid
 usbmon
-raid0
-raid1
-raid10
-raid456
-raid6_pq
-raid_class
 virtio-blk
 virtio-pci
 vfat
 vmd
-virtio-gpu
 whc-rc
 whci-hcd
 xcbc
 xfs
 xhci-hcd
 xhci-pci
-xor
 "
 
 CRYPT_LIST="
 aes
-async_memcpy
-async_pq
-async_raid6_recov
-async_tx
-async_xor
 blowfish
 dm-crypt
 dm-mod
@@ -267,7 +236,7 @@ $(find "$dir" -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
     fi
 
     list2=$(echo "$list1" | sed 's/_/-/g' | sort -u \
-        | eval "xargs modprobe $MP_ARGS" | sed -n 's/^insmod //p' |cut -d' ' -f1| sort -u)
+        | eval "xargs modprobe $MP_ARGS" | sed -n 's/^insmod //p' | sort -u)
 
     local full cnt=0
     [ -z "${from_dir##/*}" ] || from_dir="$PWD/$from_dir"
