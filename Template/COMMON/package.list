@@ -74,7 +74,7 @@ mtools
 ncurses-term
 ntfs-3g
 ntpsec
-ntpdate
+#ntpdate
 openssl
 os-prober
 patch

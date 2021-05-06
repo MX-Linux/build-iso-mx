@@ -497,7 +497,7 @@ nfs-kernel-server
 # nomacs-l10n
 ntfs-3g
 #ntp
-ntpdate
+#ntpdate
 #numix-gtk-theme
 #numix-icon-theme
 nvidia-detect
