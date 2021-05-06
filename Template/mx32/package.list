@@ -455,8 +455,8 @@ nfs-kernel-server
 #ndiswrapper-dkms
 #ndiswrapper-utils-1.9
 #nvidia-detect
-# nomacs
-# nomacs-l10n
+nomacs
+nomacs-l10n
 numix-gtk-theme
 numix-icon-theme
 nwipe
