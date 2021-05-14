@@ -88,7 +88,7 @@ pppoeconf
 psmisc
 psutils
 #pybootchartgui 
-reiser4progs
+#reiser4progs
 reiserfsprogs
 #remaster-antix
 rfkill

@@ -574,7 +574,7 @@ qpdfview
 qt5-gtk-platformtheme
 read-edid
 readline-common
-reiser4progs
+#reiser4progs
 reiserfsprogs
 # resolvconf
 rfkill
@@ -590,6 +590,7 @@ scrot
 sdparm
 sed
 sensible-utils
+sendemail
 sgml-base
 sgml-data
 shared-mime-info
