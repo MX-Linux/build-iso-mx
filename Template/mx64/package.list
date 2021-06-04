@@ -277,7 +277,7 @@ hardinfo
 haveged 
 hddtemp
 hdparm
-hexchat
+#hexchat
 hexedit
 # hibernate
 hicolor-icon-theme
