@@ -16,7 +16,7 @@ RELEASE_DATE"
 CONF_FILES=(
 boot/grub/grub.cfg
 boot/grub/theme/help.txt
-boot/grub/theme/theme.txt
+boot/grub/theme/{bios.txt,l10n.txt,theme.txt,uefisb.txt,uefi.txt}
 boot/isolinux/isolinux.cfg
 boot/isolinux/readme.msg
 boot/syslinux/readme.msg

@@ -782,7 +782,7 @@ do_syslinux() {
 }
 
 #------------------------------------------------------------------------------
-# Copy in grub.cfg and theme.txt templates then do variable substitution
+# Copy in grub.cfg and {bios.txt,l10n.txt,theme.txt,uefisb.txt,uefi.txt} templates then do variable substitution
 #------------------------------------------------------------------------------
 do_grub() {
     local targ_dir=$1/grub
@@ -790,9 +790,9 @@ do_grub() {
     test -e "$my_data_file" || write_my_data_file $my_data_file
 
     template_copy "$targ_dir/grub.cfg" ${SINGLE_PREFIX}grub.cfg
-    template_copy "$targ_dir/theme/"   theme.txt
+    template_copy "$targ_dir/theme/"   {bios.txt,l10n.txt,theme.txt,uefisb.txt,uefi.txt}
 
-    cmd bootloader-template -s -i --data="$DATA_FILE" --data=$my_data_file "$targ_dir"/{grub.cfg,/theme/theme.txt}
+    cmd bootloader-template -s -i --data="$DATA_FILE" --data=$my_data_file "$targ_dir"/{grub.cfg,/theme/{bios.txt,l10n.txt,theme.txt,uefisb.txt,uefi.txt}}
 }
 
 #------------------------------------------------------------------------------
