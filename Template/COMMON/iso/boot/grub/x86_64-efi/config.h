@@ -13,7 +13,7 @@
 #define DISK_CACHE_STATS 0
 #define BOOT_TIME_STATS 0
 /* Define to 1 to make GRUB quieter at boot time.  */
-#define QUIET_BOOT 1
+#define QUIET_BOOT 0
 
 /* We don't need those.  */
 #define MINILZO_CFG_SKIP_LZO_PTR 1
@@ -49,11 +49,11 @@
 /* Name of package.  */
 #define PACKAGE "grub"
 /* Version number of package.  */
-#define VERSION "2.02"
+#define VERSION "2.04"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GRUB 2.02-2ubuntu8"
+#define PACKAGE_STRING "GRUB 2.04-18"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.02-2ubuntu8"
+#define PACKAGE_VERSION "2.04-18"
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "GRUB"
 /* Define to the address where bug reports for this package should be sent. */

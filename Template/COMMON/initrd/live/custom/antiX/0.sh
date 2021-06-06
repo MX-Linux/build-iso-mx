@@ -378,6 +378,8 @@ live_param_filter() {
 
         nomodeset|*.modeset=*);;
         splash=*|fbcon=*);;
+        grubsave);;
+        kernel=*);;
 
 
         *) printf "$param " ;;

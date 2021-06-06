@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x04"
-           VERSION_DATE="Thu Dec 10 12:56:47 AM MST 2020"
+                VERSION="8.30.14-x07"
+           VERSION_DATE="Fri, 04 Jun 2021 11:43:21 +0000"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -72,6 +72,20 @@ TORAM_ALL_OTHER_FILES="boot EFI version"
        FRUGAL_NAME="antiX"
   DEFAULT_BOOT_DIR="antiX"
 
+
+ ADDITIONAL_FILES="initrd1.gz vmlinuz.ver vmlinuz1.ver"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz2 vmlinuz2.ver initrd2.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz3 vmlinuz3.ver initrd3.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz4 vmlinuz4.ver initrd4.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz5 vmlinuz5.ver initrd5.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz6 vmlinuz6.ver initrd6.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz7 vmlinuz7.ver initrd7.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz8 vmlinuz8.ver initrd8.gz"
+ ADDITIONAL_FILES="$ADDITIONAL_FILES vmlinuz9 vmlinuz9.ver initrd9.gz"
+
+         FRUGAL_FILES="$FRUGAL_FILES $ADDITIONAL_FILES"
+ TORAM_ALL_BDIR_FILES="$TORAM_ALL_BDIR_FILES $ADDITIONAL_FILES"
+    
      MAX_MOUNT_CNT=30
        RETRY_DELAY=50               # in hundredths of a second
            VERBOSE=5
@@ -324,7 +338,7 @@ main_wrapper() {
             case $(mntpnt_fstype $NEW_ROOT$BOOT_MP) in
                 ext[234]|iso9660) ;;
                    btrfs|xfs|jfs) ;;
-                               *) chmod 700 $NEW_ROOT/live ;;
+                               *) chmod 755 $NEW_ROOT/live ;;
             esac
         fi
     fi
@@ -598,6 +612,8 @@ main_core() {
     fi
 
     breakpoint 6 "after mounting aufs"
+
+    load_microcode
 
     [ "$WANT_HOMEFS" ] \
         && mount_homefs $PERSIST_FULL_PATH/homefs $NEW_ROOT/home "$WANT_HOMEFS" "$NEED_HOMEFS"
@@ -2739,6 +2755,22 @@ check_kernel_version() {
 }
 
 #------------------------------------------------------------------------------
+# Load microcode by bind mounting /lib/firmware/.  For some reason this fails
+# to work inside a chroot.
+#------------------------------------------------------------------------------
+load_microcode() {
+    local mc_file=/sys/devices/system/cpu/microcode/reload
+
+    [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ] || return
+    msg "Load microcode"
+    mkdir /lib/firmware
+    mount --bind /live/aufs/lib/firmware /lib/firmware
+    echo 1 > $mc_file
+    #sleep 0.1
+    umount /lib/firmware
+}
+
+#------------------------------------------------------------------------------
 # Seed the random device as best we can
 #------------------------------------------------------------------------------
 seed_dev_random() {
@@ -2785,9 +2817,20 @@ mount_linuxfs() {
         try_file_mount  $wrap_mp/$SQFILE_NAME $sqfs_mp ro \
             || fatal_dmesg  "$_Could_not_mount_X_as_a_Y_file_" $sqfile_full 'filesystem'
     fi
+    # btrfs subvolume fix
+    #LINUXFS_DEV=$(df -P $sqfile_full | tail -n1 | cut -d" " -f1)
+    #------------------------
+    local P="$sqfile_full" DF x
+    set ${sqfile_full//// }
+    for x; do 
+        P=$(dirname $P)
+        if DF="$(df -P $P 2>/dev/null)"; then
+           LINUXFS_DEV=$(echo "$DF" | tail -n1 | cut -d" " -f1)
+           break
+        fi
+    done
 
-    LINUXFS_DEV=$(df -P $sqfile_full | tail -n1 | cut -d" " -f1)
-
+    #------------------------
     SQFS_VID=$(get_vid $vid_file)
 
     if [ "$SQFS_VID" ]; then
@@ -2986,12 +3029,17 @@ _try_mount() {
     local winopts=umask=000,dmask=002,fmask=113
     local ntfsopts=recover,rw,$winopts,uid=$USER_UID,gid=$USER_GID
     local fatopts=$winopts,shortname=winnt,uid=$USER_UID,gid=$USER_GID
+    local exfatopts=$winopts
 
     case $type in
      crypto_LUKS) try_luks_mount "$@" ;;
             ext4) log_cmd mount -t $type   -o $opts$LAZYTIME  $dev "$mp" 2>/dev/null ;;
         ext[234]) log_cmd mount -t $type   -o $opts           $dev "$mp" 2>/dev/null ;;
-            vfat) modprobe -q nls-cp437
+           exfat) modprobe -q exfat                                      2>/dev/null
+                  log_cmd mount -t $type   -o $exfatopts      $dev "$mp" 2>/dev/null ;;
+            f2fs) modprobe -q f2fs                                       2>/dev/null
+                  log_cmd mount -t $type   -o $opts           $dev "$mp" 2>/dev/null ;;
+            vfat) modprobe -q nls-cp437                                  
                   log_cmd mount -t vfat    -o $fatopts        $dev "$mp" 2>/dev/null ;;
          iso9660) log_cmd mount -t iso9660 -o ro              $dev "$mp" 2>/dev/null ;;
              udf) log_cmd mount -t udf     -o ro              $dev "$mp" 2>/dev/null ;;
@@ -5234,12 +5282,18 @@ _copy_to_ram() {
     local extra_files="$EXTRA_FILES $name.md5"
 
     local extra ex_full size_k
+    
+    local extra_dir=$dir_dir
+    if [ -f $dir/boot/grub/config/bootmenu.cfg ]; then
+        extra_dir="$dir"
+    fi
+    
     if [ "$TORAM_ALL" ]; then
         extra_files="$extra_files $TORAM_ALL_BDIR_FILES"
 
         # Get the size of the additional files/dirs we are going to copy
         for extra in $TORAM_ALL_OTHER_FILES; do
-            ex_full="$(readlink -f $dir_dir/$extra)"
+            ex_full="$(readlink -f $extra_dir/$extra)"
             [ -e "$ex_full" ] || continue
             size_k="$(du -sk $ex_full | cut -f 1)"
             sq_size_k=$((sq_size_k + size_k))
@@ -5286,12 +5340,18 @@ _copy_to_ram() {
         "$(dq $orig)" "$(dq $dest)"
 
     local from_list
-
+    local feh
     if [ "$TORAM_ALL" ]; then
         for extra in $TORAM_ALL_OTHER_FILES; do
-            from_list="$from_list $(readlink -f $dir_dir/$extra)"
+            from_list="$from_list $(readlink -f $extra_dir/$extra)"
         done
-        log_cmd cp -a $from_list $toram_mp
+        for feh in $from_list; do
+            if [ -e $feh ]; then
+               vmsg 3  "$_Will_copy_files_from_X_to_Y_Please_be_patient_" \
+                   "$(dq $feh)" "$(dq $toram_mp)"
+                   log_cmd cp -a $feh $toram_mp
+            fi
+        done
     fi
 
     local from_list=$orig/$name
@@ -5437,7 +5497,7 @@ mount_persist_device() {
     if [ -z "$from_persist" -a -z "$PERSIST_ID" ]; then
 
         case $(stat -c %t $(readlink -f $SQFILE_DEV)) in
-         [38]|22|b3|fe|103) ;;
+         [38]|22|b3|fd|fe|103) ;;
             *) warn  "Can't use %s as a persistence device" $(pqw $SQFILE_DEV)
                return 20 ;;
         esac
@@ -6942,8 +7002,8 @@ prepare_switch_root() {
     echo 4000000 > /proc/sys/kernel/pid_max 2>/dev/null
 
     mount_tmpfs $new_root/media  10 /media
-    mount_tmpfs $new_root/run    10 /run        mode=755,nodev
-    mount_tmpfs $new_live        10 $live_dir   mode=755
+    mount_tmpfs $new_root/run    1111 /run        mode=755,nodev
+    mount_tmpfs $new_live        100 $live_dir   mode=755
 
     mkdir -p -m 777 $new_root/run/lock
 
