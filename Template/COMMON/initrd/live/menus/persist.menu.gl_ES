@@ -1,0 +1,12 @@
+   1)  Predeterminado
+   2)  persist_all     Gardar como administrativo na RAM, gardar o cartafol persoal no disco (gardar como administrativo ao apagar)
+   3)  persist_root    Gravar root e home na RAM  e despois gravar ao apagar
+   4)  persist_static  Gravar root e home no disco con home separada no disco
+   5)  p_static_root   Gravar root e home xuntas no disco
+   6)  persist_home    Persistencia só na home
+   7)  frugal_persist  Frugal con root na RAM e home no disco
+   8)  frugal_root     Frugal con root e home en RAM e despois gravar ao apagar
+   9)  frugal_static   Frugal con root no disco e home separada no disco
+  10)  f_static_root   Frugal con root e home xuntas no disco
+  11)  frugal_home     Frugal con persistencia só en home
+  12)  frugal_only     Só frugal, sen persistencia

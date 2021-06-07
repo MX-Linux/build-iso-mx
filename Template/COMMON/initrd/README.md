@@ -1,0 +1,2 @@
+# live-initrd.gz
+
