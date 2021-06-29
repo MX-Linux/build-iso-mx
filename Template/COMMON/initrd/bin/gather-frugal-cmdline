@@ -21,6 +21,7 @@ gather_frugal_cmdline() {
                      bp=*|upb=*)                ;;
               gfxsave|gfxsave=*)                ;;
             bootsave|bootsave=*)                ;;
+                       grubsave)                ;;
                    BOOT_IMAGE=*)                ;;
           savestate|nosavestate)                ;;
                 nostore|dostore)                ;;

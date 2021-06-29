@@ -1,0 +1,8 @@
+COUNTRY="Belgo-Deutsch"
+WM_LANG="de"
+KEYBOARDS="be,de,us"
+KEYTABLE="be2-latin1"
+LANG="de_BE.UTF-8"
+MIRROR="be"
+TZ="Europe/Brussels"
+XKBLAYOUT="be,de,us"

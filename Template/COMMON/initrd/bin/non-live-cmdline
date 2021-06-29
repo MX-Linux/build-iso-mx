@@ -73,6 +73,7 @@ for param in $(cat /proc/cmdline); do
 
                         noclear)  ;;
                       gfxsave=*)  ;;
+                       grubsave)  ;;
 
                         checkfs)  ;;
                       nocheckfs)  ;;

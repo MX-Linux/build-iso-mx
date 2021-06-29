@@ -11,8 +11,8 @@
 #  Documentation/x86/microcode.txt
 #------------------------------------------------------------------------------
 
-     VERSION="3.11"
-VERSION_DATE="Thu 21 Nov 2019 10:16:41 PM MST"
+     VERSION="3.13"
+VERSION_DATE="Fri Apr  2 08:35:35 PM MDT 2021"
 
 ME=${0##*/}
 
@@ -27,6 +27,7 @@ GZIP_MAGIC="8b1f"
 LZIP_MAGIC="5a4c"
 LZMA_MAGIC="005d"
   XZ_MAGIC="37fd"
+ZSTD_MAGIC="b528"
 
 CPIO_MAGIC="3730"
 
@@ -50,8 +51,8 @@ Usage:  $ME [options]
 
 Unpack and repack the live initrd.gz for antiX and MX.  Also unpack
 and repack Debian initramfs files.  Supports the following forms of
-compression: bz2, gzip, lz4, lzip, lzma, xz (assuming the associated
-(de)compression tool is available.  Also supports microcode
+compression: bz2, gzip, lz4, lzip, lzma, xz, zstd (assuming the
+associated (de)compression tool is available.  Also supports microcode
 preambles.
 
 Options:
@@ -140,10 +141,12 @@ main() {
     shift $SHIFT
     [ $# -gt 0 ] && fatal "Unexpected arguments: %s" "$*"
 
+    # FIXME: restrict comp_level based on compression program
     case $COMP_LEVEL in
            "") ;;
         [0-9]) COMP_LEVEL="-$COMP_LEVEL" ;;
-            *) fatal "Compression level must be 0 -- 9";;
+       1[0-9]) COMP_LEVEL="-$COMP_LEVEL" ;;
+            *) fatal "Compression level must be 0 -- 19";;
     esac
 
     if [ "$REPACK" ]; then
@@ -195,6 +198,7 @@ unpack_initrd() {
         $LZIP_MAGIC) compress=lzip         ;;
         $LZMA_MAGIC) compress=lzma         ;;
           $XZ_MAGIC) compress=xz           ;;
+        $ZSTD_MAGIC) compress=zstd         ;;
         $CPIO_MAGIC) compress=cpio         ;;
                   *) fatal "Unknown file format %s" $magic ;;
     esac
@@ -273,6 +277,7 @@ microcode_and_unpack() {
     $LZIP_MAGIC) compress=lzip     ;;
     $LZMA_MAGIC) compress=lzma     ;;
       $XZ_MAGIC) compress=xz       ;;
+    $ZSTD_MAGIC) compress=zstd     ;;
               *) fatal "Unknown file format %s" $magic_2 ;;
     esac
 
@@ -324,7 +329,7 @@ repack_initrd() {
     # And clear out compression args if "cat" is used.
     case $prog in
         gzip|bzip2|lz4)          ;;
-          lzma|xz|lzip)          ;;
+     lzma|xz|lzip|zstd)          ;;
                    cat) args=    ;;
 
         *) fatal "Refusing to run unrecognized program %s" "$prog"  ;;

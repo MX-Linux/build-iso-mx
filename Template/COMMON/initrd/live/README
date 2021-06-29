@@ -236,7 +236,7 @@ after you boot with the "services" command.
     B                Enable bootclean.sh service (disabled by default)
     c                disable connmand service
     d [nodbus]       disable dbus service
-    F                Enable fbcondecor (console decoration)
+    F 		      Enabe fbcondecor splash on all virtual consoles
     g                disable gpm service (mouse on virtual consoles)
     i                disable ifplugd service
     l [lean]         disable "lean" services (see below)
@@ -457,7 +457,7 @@ required and home persistence is requested and neither "rootfs" nor "homefs"
 persistence files exist then we will offer to create both a "rootfs" file and
 a "homefs" file.
 
-=head3 Convenience Persistence/Frugal Options
+Persistence/Frugal Options
 
 The following cheat codes are available in the "F5 Persist" menu in the
 legacy bootloader.  They are provided so you don't have to understand

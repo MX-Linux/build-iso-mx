@@ -906,6 +906,7 @@ read_cmdline_params()
                       gfxsave=*) GFX_SAVE=$value ; BOOT_SAVE=true                ;;
                    save|gfxsave) GFX_SAVE=both   ; BOOT_SAVE=true                ;;
                        bootsave) BOOT_SAVE=true                                  ;;
+                       grubsave) BOOT_SAVE=true                                  ;;
                           vga=*) CMD_VGA=$value                                  ;;
 
                       nocheckfs) DO_FSCK=                                        ;;

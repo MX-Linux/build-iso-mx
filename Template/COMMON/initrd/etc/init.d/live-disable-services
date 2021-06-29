@@ -27,10 +27,14 @@ nfs-kernel-server
 GPM_SERVICES="
 gpm
 "
+ELOGIND_SERVICES="
+elogind
+"
 
 LEAN_SERVICES="
     acpi-fakekey
     acpi-support
+    anacron
     bluetooth
     bootlogs
     #cherokee
@@ -38,6 +42,8 @@ LEAN_SERVICES="
     cron
     cups
     dundee
+    gpm
+    haveged
     irqbalance
     loadcpufreq
     lvm2
@@ -84,6 +90,7 @@ XTRA_LEAN_SERVICES="
 MEAN_SERVICES="
     avahi-daemon
     connman
+    connman-vpn
     dnsmasq
     ifplugd
     mountnfs-bootclean.sh
@@ -98,6 +105,7 @@ MEAN_SERVICES="
     rpcbind
     smbd
     ufw
+    wpa-supplicant
 "
 
 NO_DBUS_SERVICES="
@@ -109,6 +117,8 @@ PATH=/live/bin:$PATH
 
 start_init_logging
 load_translation
+
+readlink /sbin/init | grep -q runit && RUNIT=true
 
 main() {
 
@@ -159,6 +169,7 @@ do_start() {
         [ -z "${disable_param##*[B]*}" ] && ENABLE_BOOTCLEAN=true
         [ -z "${disable_param##*[c]*}" ] &&  DISABLE_CONNMAN=true
         [ -z "${disable_param##*[d]*}" ] &&          NO_DBUS=true
+        [ -z "${disable_param##*[e]*}" ] &&      DISABLE_ELOGIND=true
         [ -z "${disable_param##*[g]*}" ] &&      DISABLE_GPM=true
         [ -z "${disable_param##*[i]*}" ] &&  DISABLE_IFPLUGD=true
         [ -z "${disable_param##*[l]*}" ] &&             LEAN=true
@@ -264,6 +275,11 @@ do_start() {
         disable_services 'connman (c)' 'connman'
     fi
 
+    if [ "$DISABLE_ELOGIND" ]; then
+        echo_live "$_Disabling_X_services_Y_" $(pquote elogind) $(paren e)
+        disable_services 'elogind (e)' 'elogind'
+    fi
+
     [ "$OUT" ] && echo "$OUT" | tr "," "\n" > $OUT_FILE
 }
 
@@ -294,6 +310,10 @@ disable_services() {
         for service in $services; do
             # Use leading "#" as a comment (no space)
             [ -z "${service###*}" ] && continue
+
+            [ -n "$RUNIT" ] && [ -d "/etc/sv/$service" ] \
+                && touch "/etc/sv/$service/down"
+
             for slink in /$rc_dir/S*$service; do
                 [ -e "$slink" ] || continue
                 mv -f $slink $dest
