@@ -94,7 +94,7 @@ cups-filters
 cups-filters-core-drivers
 cups-ppdc 
 cups-server-common
-curl   
+curl
 # cryptsetup-modified-functions
 dbus
 dbus-x11
@@ -224,8 +224,8 @@ geany
 ghostscript 
 ghostscript-x 
 giblib1
-gimp  
-gimp-data
+#gimp  
+#gimp-data
 git
 #gksu
 glib-networking
@@ -268,8 +268,8 @@ gtk2-engines-pixbuf
 #gtk2-engines-xfce
 
 gtkdialog
-#gthumb
-guvcview
+gthumb
+#guvcview
 gufw
 gvfs
 gvfs-backends
@@ -307,6 +307,7 @@ java-common
 krb5-locales
 lame
 laptop-detect 
+lazpaint-qt5
 lbreakout2
 lbreakout2-data
 #leafpad 
@@ -319,6 +320,7 @@ libc-dev-bin
 #libc6:i386
 #libgcc1:i386
 #gcc-10-base:i386
+libgtk3-perl
 libelf-dev
 #libgnome2-perl 
 libmtp-runtime
@@ -348,7 +350,6 @@ libreoffice-style-sifr
 libreoffice-writer 
 libsox-fmt-all
 #libsox2
-libgtk3-perl
 libvirglrenderer1
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
@@ -457,8 +458,8 @@ nfs-kernel-server
 #ndiswrapper-dkms
 #ndiswrapper-utils-1.9
 nvidia-detect
-nomacs
-nomacs-l10n
+#nomacs
+#nomacs-l10n
 numix-gtk-theme
 numix-icon-theme
 nwipe
@@ -476,7 +477,8 @@ openvpn
 # orage 
 p7zip-full
 pacpl
-papirus-icon-theme 
+papirus-icon-theme
+papirus-mxblue
 parted 
 #partimage
 partition-info
@@ -539,7 +541,7 @@ qpdfview-ps-plugin
 qpdfview-translations 
 #qtchooser
 #qt4-fsarchiver 
-$qtcore4-l10n
+#qtcore4-l10n
 qt5-gtk-platformtheme
 qt5-style-plugins
 #rarian-compat
@@ -601,6 +603,7 @@ thunar-data
 thunar-gtkhash
 thunar-volman
 thunderbird
+timeshift
 #timeset-gui
 tlp
 traceroute  

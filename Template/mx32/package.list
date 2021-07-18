@@ -93,7 +93,7 @@ cups-filters
 cups-filters-core-drivers
 cups-ppdc 
 cups-server-common
-curl   
+curl
 # cryptsetup-modified-functions
 dbus
 dbus-x11
@@ -222,8 +222,8 @@ geany
 ghostscript 
 ghostscript-x 
 giblib1
-gimp  
-gimp-data
+#gimp  
+#gimp-data
 git
 #gksu
 glib-networking
@@ -266,8 +266,8 @@ gtk2-engines-pixbuf
 #gtk2-engines-xfce
 
 gtkdialog
-#gthumb
-guvcview
+gthumb
+#guvcview
 gufw
 gvfs
 gvfs-backends
@@ -304,6 +304,7 @@ iucode-tool
 java-common
 krb5-locales
 lame
+lazpaint-qt5
 laptop-detect 
 lbreakout2
 lbreakout2-data
@@ -317,6 +318,7 @@ libc-dev-bin
 #libc6:i386
 #libgcc1:i386
 #gcc-10-base:i386
+libgtk3-perl
 libelf-dev
 #libgnome2-perl 
 libmtp-runtime
@@ -346,7 +348,6 @@ libreoffice-style-sifr
 libreoffice-writer 
 libsox-fmt-all
 #libsox2
-libgtk3-perl
 libvirglrenderer1
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
@@ -455,8 +456,8 @@ nfs-kernel-server
 #ndiswrapper-dkms
 #ndiswrapper-utils-1.9
 #nvidia-detect
-nomacs
-nomacs-l10n
+#nomacs
+#nomacs-l10n
 numix-gtk-theme
 numix-icon-theme
 nwipe
@@ -474,7 +475,8 @@ openvpn
 # orage 
 p7zip-full
 pacpl
-papirus-icon-theme 
+papirus-icon-theme
+papirus-mxblue
 parted 
 #partimage
 partition-info
@@ -599,6 +601,7 @@ thunar-data
 thunar-gtkhash
 thunar-volman
 thunderbird
+timeshift
 #timeset-gui
 tlp
 traceroute  
@@ -645,6 +648,7 @@ vpnc
 vpnc-scripts
 wamerican
 wavpack
+webcamoid
 wireless-tools 
 wmctrl
 wodim 
