@@ -474,6 +474,7 @@ openconnect
 openssh-client
 #openssh-server    
 openvpn
+open-vm-tools
 # orage 
 p7zip-full
 pacpl
