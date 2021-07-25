@@ -4,8 +4,6 @@ acpi
 acpi-fakekey
 #acpi-support-base
 acpid
-#adobe-flash-properties-gtk
-#adobe-flashplugin
 advert-block-antix
 #aisleriot
 alsa-tools
@@ -69,9 +67,9 @@ chroot-rescue-mx
 cifs-utils
 clementine
 cli-aptix
-#clipit
 colord
 colord-data
+command-not-found
 compton
 compton-conf
 conky-all
@@ -355,7 +353,6 @@ lightdm-gtk-greeter-mx21
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-base
-#linux-firmware
 #linux-headers-686-pae
 #linux-headers-amd64
 #linux-image-686-pae
@@ -651,6 +648,7 @@ vpnc
 vpnc-scripts
 wamerican
 wavpack
+webcamoid
 wireless-tools
 wmctrl
 wodim
