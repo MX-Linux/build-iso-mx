@@ -18,11 +18,11 @@ cryptsetup
 cryptsetup-bin
 cryptsetup-initramfs
 dbus
+#deb-multimedia-keyring
 debconf-utils
-# deb-multimedia-keyring
-#devuan-keyring
 #desktop-defaults-core-antix
 #desktop-file-utils
+#devuan-keyring
 dmsetup
 dosfstools
 eject
@@ -32,8 +32,8 @@ fbcat
 file
 #firmware-linux-free
 #flashrom
-fuse3
 #fuse-utils
+fuse3
 gawk
 genisoimage
 gettext-base
@@ -73,8 +73,8 @@ mpg123
 mtools
 ncurses-term
 ntfs-3g
-ntpsec
 #ntpdate
+ntpsec
 openssl
 os-prober
 patch
@@ -82,7 +82,7 @@ pciutils
 pcmciautils
 #perl
 #perl-modules
-# pkg-mozilla-archive-keyring
+#pkg-mozilla-archive-keyring
 #ppp
 pppoeconf
 psmisc
@@ -91,8 +91,8 @@ psutils
 #reiser4progs
 reiserfsprogs
 #remaster-antix
+#resolvconf
 rfkill
-# resolvconf
 rsync
 #screen #replaced by tmux
 #siduction-archive-keyring
@@ -105,11 +105,11 @@ sysv-rc-conf
 sysvinit-core
 sysvinit-utils
 testdisk
-ttf-bitstream-vera
 tmux
+ttf-bitstream-vera
 ucf
-#uuid-runtime
 upower
+#uuid-runtime
 vim-tiny
 vrms
 whois

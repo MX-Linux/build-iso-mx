@@ -1,9 +1,4 @@
-#amd64
-#linux-image-amd64
-#linux-headers-amd64
-#i386
-linux-image-686-pae
-linux-headers-686-pae
+
 accountsservice
 acl
 acpi
@@ -14,6 +9,7 @@ advert-block-antix
 alsa-tools
 alsa-utils
 #alsamixergui
+#amd64
 amd64-microcode
 anacron
 antix-archive-keyring
@@ -80,7 +76,7 @@ cpufrequtils
 cron
 cryptsetup
 cryptsetup-bin
-# cryptsetup-modified-functions
+#cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -103,7 +99,7 @@ dconf-gsettings-backend
 dconf-service
 dctrl-tools
 ddm-mx
-# deb-multimedia-keyring
+#deb-multimedia-keyring
 debconf
 debconf-i18n
 debconf-utils
@@ -122,7 +118,7 @@ dictionaries-common
 diffutils
 discover
 discover-data
-# disk-manager
+#disk-manager
 djvulibre-bin
 dkms
 dmidecode
@@ -165,7 +161,6 @@ file-roller
 findutils
 firefox
 #firmware meta package for MX
-mx-debian-firmware
 firmware-amd-graphics
 firmware-atheros
 firmware-b43-installer
@@ -247,7 +242,6 @@ gstreamer1.0-pulseaudio
 gtk-theme-switch
 gtk2-engines-murrine
 gtk2-engines-pixbuf
-
 gtkdialog
 gufw
 gvfs
@@ -263,7 +257,7 @@ hexedit
 #hfsprogs
 #hfsutils
 #hfsutils-tcltk
-# hibernate
+#hibernate
 #hicolor-icon-theme
 hostname
 hplip
@@ -274,6 +268,7 @@ hunspell-en-us
 hwinfo
 hyphen-en-gb
 hyphen-en-us
+#i386
 ifupdown
 info
 init
@@ -299,7 +294,7 @@ laptop-detect
 less
 libacl1
 libapparmor1
-# libapt-inst2.0
+#libapt-inst2.0
 libapt-pkg6.0
 libargon2-1
 libattr1
@@ -397,6 +392,10 @@ lightdm-gtk-greeter-mx21
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-base
+linux-headers-686-pae
+#linux-headers-amd64
+linux-image-686-pae
+#linux-image-amd64
 linux-libc-dev
 live-kernel-updater
 live-usb-maker
@@ -444,6 +443,7 @@ mx-cleanup
 mx-codecs
 mx-conky
 mx-datetime
+mx-debian-firmware
 mx-docs
 mx-goodies
 mx-gpg-keys
@@ -485,14 +485,14 @@ network-manager-openconnect-gnome
 network-manager-openvpn
 network-manager-openvpn-gnome
 network-manager-pptp
-network-manager-vpnc
 network-manager-sysvinit-compat
+network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-# nictools-pci
-# nomacs
-# nomacs-l10n
+#nictools-pci
+#nomacs
+#nomacs-l10n
 ntfs-3g
 #ntp
 #ntpdate
@@ -506,7 +506,7 @@ openconnect
 openssh-client
 openssl
 openvpn
-# orage
+#orage
 os-prober
 p7zip-full
 #p7zip-rar
@@ -521,7 +521,7 @@ pciutils
 pcmciautils
 perl-base
 pinentry-gtk2
-# pkg-mozilla-archive-keyring
+#pkg-mozilla-archive-keyring
 #plane-gtk-theme
 #plymouth
 #plymouth-themes
@@ -569,7 +569,7 @@ read-edid
 readline-common
 #reiser4progs
 reiserfsprogs
-# resolvconf
+#resolvconf
 rfkill
 rpcbind
 rpl
@@ -582,14 +582,14 @@ sane-utils
 scrot
 sdparm
 sed
-sensible-utils
 sendemail
+sensible-utils
 sgml-base
 sgml-data
 shared-mime-info
 smartmontools
-# smbc
-# smbclient
+#smbc
+#smbclient
 smxi-inxi-antix
 spice-vdagent
 squashfs-tools
@@ -604,7 +604,7 @@ syslinux-common
 syslinux-utils
 system-config-printer
 system-config-printer-udev
-# system-config-samba
+#system-config-samba
 system-tools-backends
 systemd
 systemd-shim
@@ -626,7 +626,7 @@ thunar-gtkhash
 thunar-volman
 tlp
 tmux
-# touchpad-indicator
+#touchpad-indicator
 traceroute
 ttf-bitstream-vera
 ttf-mscorefonts-installer
@@ -648,7 +648,7 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-# uswsusp
+#uswsusp
 util-linux
 va-driver-all
 vainfo
@@ -656,10 +656,10 @@ vbetool
 vcdimager
 vdpau-driver-all
 vim-tiny
-# virtualbox-guest-dkms
-# virtualbox-guest-utils
-# virtualbox-guest-utils-modified-init
-# virtualbox-guest-x11
+#virtualbox-guest-dkms
+#virtualbox-guest-utils
+#virtualbox-guest-utils-modified-init
+#virtualbox-guest-x11
 volumeicon-alsa
 vorbis-tools
 vpnc
@@ -697,10 +697,10 @@ xfce4-diskperf-plugin
 xfce4-docklike-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
-# xfce4-hardware-monitor-plugin
+#xfce4-hardware-monitor-plugin
 xfce4-mount-plugin
 xfce4-netload-plugin
-# xfce4-notes
+#xfce4-notes
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
@@ -708,7 +708,7 @@ xfce4-power-manager
 xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
-# xfce4-screensaver
+#xfce4-screensaver
 xfce4-screenshooter
 xfce4-sensors-plugin
 xfce4-session

@@ -1,4 +1,4 @@
-gufw
+
 abiword
 accountsservice
 acl
@@ -77,7 +77,7 @@ cpuidtool
 cron
 cryptsetup
 cryptsetup-bin
-# cryptsetup-modified-functions
+#cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -105,7 +105,7 @@ dctrl-tools
 ddcutil
 ddm-mx
 ddrutility
-# deb-multimedia-keyring
+#deb-multimedia-keyring
 debconf
 debconf-i18n
 debconf-utils
@@ -126,7 +126,7 @@ diffutils
 digitemp
 discover
 discover-data
-# disk-manager
+#disk-manager
 disktype
 dislocker
 djvulibre-bin
@@ -172,7 +172,6 @@ findutils
 fio
 firefox
 #firmware meta package for MX
-mx-debian-firmware
 firmware-amd-graphics
 firmware-atheros
 firmware-b43-installer
@@ -263,8 +262,8 @@ gstreamer1.0-pulseaudio
 gtk-theme-switch
 gtk2-engines-murrine
 gtk2-engines-pixbuf
-
 gtkdialog
+gufw
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -278,7 +277,7 @@ hfsplus
 hfsprogs
 hfsutils
 hfsutils-tcltk
-# hibernate
+#hibernate
 hostname
 hplip
 hplip-data
@@ -322,7 +321,7 @@ laptop-detect
 less
 libacl1
 libapparmor1
-# libapt-inst2.0
+#libapt-inst2.0
 libapt-pkg6.0
 libargon2-1
 libattr1
@@ -467,6 +466,7 @@ mtr
 mx-boot-options
 mx-bootrepair
 mx-datetime
+mx-debian-firmware
 mx-goodies
 mx-gpg-keys
 mx-greybird-themes
@@ -504,16 +504,16 @@ network-manager-openconnect-gnome
 network-manager-openvpn
 network-manager-openvpn-gnome
 network-manager-pptp
-network-manager-vpnc
 network-manager-sysvinit-compat
+network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-# nictools-pci
+#nictools-pci
 nmap
 nmon
-# nomacs
-# nomacs-l10n
+#nomacs
+#nomacs-l10n
 ntfs-3g
 ntp
 ntpdate
@@ -538,7 +538,7 @@ pciutils
 pcmciautils
 perl-base
 pinentry-gtk2
-# pkg-mozilla-archive-keyring
+#pkg-mozilla-archive-keyring
 pm-utils
 pmount
 policykit-1
@@ -592,7 +592,7 @@ remmina-plugin-spice
 remmina-plugin-telepathy
 remmina-plugin-vnc
 rename
-# resolvconf
+#resolvconf
 rfkill
 rkhunter
 rpcbind
@@ -615,8 +615,8 @@ sgml-base
 sgml-data
 shared-mime-info
 smartmontools
-# smbc
-# smbclient
+#smbc
+#smbclient
 smbios-utils
 smxi-inxi-antix
 spice-vdagent
@@ -633,7 +633,7 @@ syslinux-common
 syslinux-utils
 system-config-printer
 system-config-printer-udev
-# system-config-samba
+#system-config-samba
 system-tools-backends
 systemd
 systemd-shim
@@ -654,7 +654,7 @@ thunar-gtkhash
 thunar-volman
 tlp
 tmux
-# touchpad-indicator
+#touchpad-indicator
 traceroute
 ttf-bitstream-vera
 tumbler
@@ -676,7 +676,7 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-# uswsusp
+#uswsusp
 util-linux
 va-driver-all
 vainfo
@@ -724,10 +724,10 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
-# xfce4-hardware-monitor-plugin
+#xfce4-hardware-monitor-plugin
 xfce4-mount-plugin
 xfce4-netload-plugin
-# xfce4-notes
+#xfce4-notes
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
@@ -735,7 +735,7 @@ xfce4-power-manager
 xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
-# xfce4-screensaver
+#xfce4-screensaver
 xfce4-screenshooter
 xfce4-sensors-plugin
 xfce4-session
