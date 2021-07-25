@@ -65,8 +65,8 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 #gzip leave empty #use for full
 #COMPRESSION_TYPE="xz"
 #COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
-COMPRESSION_TYPE="zstd"
-COMPRESSION_TYPE_CODE="-comp zstd"
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 
 #legacy variables that don't change
 USE_UEFI=true
