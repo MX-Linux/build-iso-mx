@@ -515,7 +515,7 @@ modemmanager
 module-assistant
 mtr
 #mugshot
-muon
+# muon
 muon-modified-launcher
 #murrine-themes
 #mx-adwaita-dark-xfce-themes
@@ -631,7 +631,7 @@ phonon4qt5-backend-vlc
 #pidgin-data
 #-- REMOVE (11 June, 2020) pim-data-exporter
 pinentry-qt
-#plasma-discover
+plasma-discover
 #plane-gtk-theme
 plasma-dataengines-addons
 plasma-desktop
