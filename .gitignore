@@ -2,5 +2,7 @@ Deb/
 Output/
 Remaster/
 doc-*.tar.bz2
+initrd
+iso
 sqfs
 work
