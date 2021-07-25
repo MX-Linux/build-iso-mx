@@ -40,7 +40,7 @@ aspell
 aspell-en
 #asunder
 at-spi2-core
-atmel-firmware
+#atmel-firmware
 avahi-daemon
 #b43-fwcutter
 backintime-qt
@@ -180,30 +180,30 @@ ffmpegthumbs
 filelight
 firefox
 #firmware meta package for MX
-firmware-amd-graphics
-firmware-atheros
+#firmware-amd-graphics
+#firmware-atheros
 firmware-b43-installer
 firmware-b43legacy-installer
-firmware-bnx2
-firmware-bnx2x
-firmware-brcm80211
+#firmware-bnx2
+#firmware-bnx2x
+#firmware-brcm80211
 #firmware-cavium #Debian
 #firmware-crystalhd #Debian
-firmware-intel-sound
-firmware-intelwimax
-firmware-ipw2x00
+#firmware-intel-sound
+#firmware-intelwimax
+#firmware-ipw2x00
 #firmware-ivtv #Debian
-firmware-iwlwifi
-firmware-libertas
+#firmware-iwlwifi
+#firmware-libertas
 #firmware-linux #Debian
-firmware-linux-free
-firmware-linux-nonfree
-firmware-misc-nonfree
-firmware-myricom
-firmware-netxen
-firmware-qlogic
+#firmware-linux-free
+#firmware-linux-nonfree
+#firmware-misc-nonfree
+#firmware-myricom
+#firmware-netxen
+#firmware-qlogic
 #firmware-ralink
-firmware-realtek
+#firmware-realtek
 #firmware-samsung #Debian
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
