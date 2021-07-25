@@ -1,12 +1,10 @@
-##kde
+#-- REMOVE (11 June, 2020) pim-data-exporter
 accountsservice
 acl
 acpi
 acpi-fakekey
 #acpi-support-base
 acpid
-#adobe-flash-properties-kde
-#adobe-flashplugin
 advert-block-antix
 #aisleriot
 #akonadi-backend-mysql
@@ -16,6 +14,7 @@ akonadi-contacts-data
 #akregator
 alsa-tools
 alsa-utils
+#amd64
 amd64-microcode
 anacron
 #antix-installer
@@ -27,10 +26,12 @@ apt-config-icons-large
 #apt-mx
 apt-notifier
 apt-transport-https
+apt-transport-https
+apt-xapian-index
 apt-xapian-index
 aptitude
 aptitude-common
-#arandr
+arandr
 arc-theme
 #arc-theme-hdpi
 #arc-theme-xhdpi
@@ -39,7 +40,7 @@ aspell
 aspell-en
 #asunder
 at-spi2-core
-#atmel-firmware
+atmel-firmware
 avahi-daemon
 #b43-fwcutter
 backintime-qt
@@ -75,7 +76,6 @@ ca-certificates
 ca-certificates-java
 cabextract
 catdoc
-#catfish
 cdparanoia
 #ceni
 #cgmanager
@@ -98,7 +98,7 @@ conky-toggle-mx
 #consolekit
 cpufrequtils
 cracklib-runtime
-# cryptsetup-modified-functions
+#cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -126,10 +126,9 @@ debconf-kde-helper
 deborphan
 #default-mysql-client-core
 #default-mysql-server-core
-desktop-base
+#desktop-base
 desktop-defaults-mx-applications
 desktop-defaults-mx-common
-#desktop-defaults-mx-xfce
 desktop-file-utils
 dh-python
 dialog
@@ -138,7 +137,7 @@ dictionaries-common
 digikam
 discover
 discover-data
-# disk-manager
+#disk-manager
 djvulibre-bin
 dkms
 dmz-cursor-theme
@@ -177,35 +176,34 @@ fakeroot
 #feh
 ffmpegthumbnailer 
 ffmpegthumbs
-filelight
 #file-roller
+filelight
 firefox
-#firmware mx metapackage
-mx-debian-firmware
-#firmware-amd-graphics
-#firmware-atheros
+#firmware meta package for MX
+firmware-amd-graphics
+firmware-atheros
 firmware-b43-installer
 firmware-b43legacy-installer
-#firmware-bnx2
-#firmware-bnx2x
-#firmware-brcm80211
+firmware-bnx2
+firmware-bnx2x
+firmware-brcm80211
 #firmware-cavium #Debian
 #firmware-crystalhd #Debian
-#firmware-intel-sound
-#firmware-intelwimax
-#firmware-ipw2x00
+firmware-intel-sound
+firmware-intelwimax
+firmware-ipw2x00
 #firmware-ivtv #Debian
-#firmware-iwlwifi
-#firmware-libertas
-#firmware-linux # Debian
-#firmware-linux-free
-#firmware-linux-nonfree
-#firmware-misc-nonfree
-#firmware-myricom
-#firmware-netxen
-#firmware-qlogic
+firmware-iwlwifi
+firmware-libertas
+#firmware-linux #Debian
+firmware-linux-free
+firmware-linux-nonfree
+firmware-misc-nonfree
+firmware-myricom
+firmware-netxen
+firmware-qlogic
 #firmware-ralink
-#firmware-realtek
+firmware-realtek
 #firmware-samsung #Debian
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
@@ -228,8 +226,8 @@ fonts-lyx
 fonts-noto
 fonts-opensymbol
 fonts-uralic
-fonts-vlgothic # Japanese
-fonts-wqy-microhei # Chinese
+fonts-vlgothic #Japanese
+fonts-wqy-microhei #Chinese
 foomatic-db-compressed-ppds
 formatusb
 frameworkintegration
@@ -310,7 +308,7 @@ hddtemp
 hdparm
 #hexchat
 hexedit
-# hibernate
+#hibernate
 hicolor-icon-theme
 #host
 hplip
@@ -344,9 +342,9 @@ kactivitymanagerd
 #kalternatives
 kamera
 kate
-# kate-data
+#kate-data
 kate5-data
-# katepart
+#katepart
 kcalc
 kde-cli-tools
 kde-cli-tools-data
@@ -354,10 +352,8 @@ kde-config-gtk-style
 kde-config-mailtransport
 kde-config-screenlocker
 kde-config-sddm
-kdegraphics-thumbnailers
-kdenetwork-filesharing
-# kde-runtime
-# kde-runtime-data
+#kde-runtime
+#kde-runtime-data
 kde-servicemenu-checkhash-installdebs 
 kde-servicemenu-extract-and-compress 
 kde-servicemenu-kim4
@@ -365,22 +361,24 @@ kde-servicemenu-rootactions
 kde-spectacle
 kde-standard
 kde-style-breeze
-# kde-style-breeze-qt4
+#kde-style-breeze-qt4
 kde-style-oxygen-qt5
-# kde-style-qtcurve-qt4
+#kde-style-qtcurve-qt4
 kde-style-qtcurve-qt5
-# kde-thumbnailer-epub
+#kde-thumbnailer-epub
 kdeconnect
 kded5
-# kdelibs-bin
-# kdelibs5-data
-# kdelibs5-plugins
+kdegraphics-thumbnailers
+#kdelibs-bin
+#kdelibs5-data
+#kdelibs5-plugins
+kdenetwork-filesharing
 #kdenlive
 #kdepim-runtime
 kdeplasma-addons-data
 kdialog
 #kdiff3
-# kdoctools
+#kdoctools
 kdoctools5
 keditbookmarks
 #kf5-kdepim-apps-libs-data
@@ -403,17 +401,17 @@ kmenuedit
 kmines
 #kompare
 #konq-plugins
-#konversation
 konsole
 konsole-kpart
+#konversation
 #kopete
 #korganizer
 kpackagetool5
-# kppp
+#kppp
 krb5-locales
-kross
 krdc
 #krita
+kross
 kscreen
 #ksnip
 ksshaskpass
@@ -446,6 +444,7 @@ libelf-dev
 libffmpegthumbnailer4v5
 #libgcc1:i386
 #libgnome2-perl
+libkf5baloowidgets-bin
 libmtp-runtime
 libnss-mdns
 libnss-myhostname
@@ -463,9 +462,9 @@ libreoffice-help-en-us
 libreoffice-impress
 libreoffice-java-common
 libreoffice-kde5
-#libreoffice-lightproof-en # needed?
+#libreoffice-lightproof-en #needed?
 libreoffice-math
-# libreoffice-pdfimport
+#libreoffice-pdfimport
 libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 #libreoffice-style-galaxy
@@ -479,13 +478,14 @@ libvirglrenderer1
 #light-locker
 #lightdm
 #lightdm-gtk-greeter
-#lightdm-gtk-greeter-mx19
+#lightdm-gtk-greeter-mx21
 #lightdm-gtk-greeter-settings
 #lightdm-modified-init
-libkf5baloowidgets-bin
 linux-base
 #linux-firmware
 #linux-firmware replaces firmware-linux and firmware-*
+linux-headers-amd64
+linux-image-amd64
 linux-libc-dev
 #live-usb-maker-gui
 lm-sensors
@@ -515,15 +515,14 @@ modemmanager
 module-assistant
 mtr
 #mugshot
-# muon
-muon-modified-launcher
+#muon
+#muon-modified-launcher
 #murrine-themes
 #mx-adwaita-dark-xfce-themes
 #mx-antix-libs
 #mx-apps
-#mx-apps-kde
-#mx-bluebird-themes
 mx-apps-kde
+#mx-bluebird-themes
 mx-boot-options
 mx-bootrepair
 #mx-broadcom-manager
@@ -532,6 +531,7 @@ mx-cleanup
 mx-codecs
 mx-conky
 mx-datetime
+mx-debian-firmware
 #mx-defaultlook
 mx-docs
 #mx-findshares
@@ -582,21 +582,22 @@ network-manager-openconnect
 network-manager-openvpn
 #network-manager-openvpn-gnome
 network-manager-pptp
-network-manager-vpnc
 network-manager-sysvinit-compat
+network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-# nictools-pci
+#nictools-pci
 #nitroshare
 nomacs
 nomacs-l10n
 #ntp
-# ntrack-module-libnl-0
+#ntrack-module-libnl-0
 nvidia-detect
 nwipe
 obexfs
 okular-extra-backends
+open-vm-tools
 openconnect
 #openjdk-8-jre
 #openjdk-8-jre-headless
@@ -607,7 +608,6 @@ openconnect
 openssh-client
 #openssh-server
 openvpn
-open-vm-tools
 #orage
 oxygen-icon-theme
 oxygen-sounds
@@ -616,6 +616,7 @@ packagekit
 packagekit-tools
 pacpl
 papirus-icon-theme
+papirus-mxblue
 parted
 #partimage
 partition-info
@@ -629,13 +630,12 @@ phonon4qt5
 phonon4qt5-backend-vlc
 #pidgin
 #pidgin-data
-#-- REMOVE (11 June, 2020) pim-data-exporter
 pinentry-qt
-plasma-discover
 #plane-gtk-theme
 plasma-dataengines-addons
 plasma-desktop
 plasma-desktop-data
+plasma-discover
 plasma-framework
 plasma-integration
 plasma-look-and-feel-theme-mx
@@ -643,7 +643,7 @@ plasma-modified-defaults-mx
 plasma-nm
 plasma-pa
 plasma-runners-addons
-# plasma-scriptengine-javascript
+#plasma-scriptengine-javascript
 plasma-wallpapers-addons
 plasma-widgets-addons
 plasma-workspace
@@ -697,9 +697,9 @@ python3-gi-cairo
 python3-pycurl
 python3-smbc
 python3-software-properties
-#qdbus
-#qbittorrent
 qapt-deb-installer
+#qbittorrent
+#qdbus
 qdbus-qt5
 #qdirstat
 qml-module-org-kde-activities
@@ -725,7 +725,7 @@ qml-module-qtgraphicaleffects
 qml-module-qtmultimedia
 qml-module-qtqml-models2
 qml-module-qtquick-controls
-# qml-module-qtquick-controls-styles-breeze
+#qml-module-qtquick-controls-styles-breeze
 qml-module-qtquick-controls2
 qml-module-qtquick-dialogs
 qml-module-qtquick-layouts
@@ -747,7 +747,7 @@ qt5-image-formats-plugins
 qt5-style-kvantum
 qt5-style-plugins
 #qtchooser
-# qtcore4-l10n
+#qtcore4-l10n
 qtvirtualkeyboard-plugin
 #rarian-compat
 rdesktop
@@ -766,20 +766,21 @@ sddm-modified-init
 sddm-theme-breeze
 sdparm
 #seahorse
+sendemail
 sgml-base
 sgml-data
 shared-mime-info
 #shotwell
-#skanlite
 signon-plugin-oauth2
 simple-scan
 #simsu
+#skanlite
 smb4k
-# smbc
-# smbclient
+#smbc
+#smbclient
 #smtube
 #smxi-inxi-antix
-# sni-qt
+#sni-qt
 software-properties-kde
 sonnet-plugins
 sound-theme-freedesktop
@@ -845,8 +846,8 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-# user-manager
-# uswsusp
+#user-manager
+#uswsusp
 va-driver-all
 vainfo
 vbetool
@@ -962,7 +963,7 @@ xserver-xorg-input-libinput
 xserver-xorg-input-mouse
 xserver-xorg-input-synaptics
 xserver-xorg-input-wacom
-xserver-xorg-legacy # is this needed?
+xserver-xorg-legacy #is this needed?
 xserver-xorg-video-all
 xserver-xorg-video-amdgpu
 xserver-xorg-video-ati
