@@ -174,7 +174,7 @@ fakeroot
 #fbxkb
 #featherpad
 #feh
-ffmpegthumbnailer 
+ffmpegthumbnailer
 ffmpegthumbs
 #file-roller
 filelight
@@ -354,8 +354,8 @@ kde-config-screenlocker
 kde-config-sddm
 #kde-runtime
 #kde-runtime-data
-kde-servicemenu-checkhash-installdebs 
-kde-servicemenu-extract-and-compress 
+kde-servicemenu-checkhash-installdebs
+kde-servicemenu-extract-and-compress
 kde-servicemenu-kim4
 kde-servicemenu-rootactions
 kde-spectacle
@@ -693,7 +693,7 @@ pulseaudio-utils
 pv
 python3-bluez
 python3-gi-cairo
-#python3-pkg-resources 
+#python3-pkg-resources
 python3-pycurl
 python3-smbc
 python3-software-properties

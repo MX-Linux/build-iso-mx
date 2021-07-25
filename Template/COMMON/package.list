@@ -1,4 +1,4 @@
-antix-archive-keyring 
+antix-archive-keyring
 antix-libs
 #antix-snapshot-cli - replaced by iso-snapshot
 #apt-antix
@@ -7,9 +7,9 @@ antix-libs
 #btrfs-tools
 busybox
 #ceni
-cli-installer-antix 
+cli-installer-antix
 cli-shell-utils
-#console-common 
+#console-common
 console-data
 console-setup
 console-setup-linux
@@ -28,7 +28,7 @@ dosfstools
 eject
 elinks
 #encfs
-fbcat 
+fbcat
 file
 #firmware-linux-free
 #flashrom
@@ -46,14 +46,14 @@ hwinfo
 iputils-ping
 #irssi
 #irssi-plugin-otr
-#irssi-scripts         
+#irssi-scripts
 jfsutils
 kbd
 keyboard-configuration
 less
 libmtp-runtime
 libnss-myhostname
-#live-init-antix 
+#live-init-antix
 live-kernel-updater
 #live-usb-cli-antix
 live-usb-maker
@@ -69,7 +69,7 @@ menu
 mlocate
 #module-init-tools
 most
-mpg123 
+mpg123
 mtools
 ncurses-term
 ntfs-3g
@@ -87,7 +87,7 @@ pcmciautils
 pppoeconf
 psmisc
 psutils
-#pybootchartgui 
+#pybootchartgui
 #reiser4progs
 reiserfsprogs
 #remaster-antix
@@ -115,7 +115,7 @@ vrms
 whois
 #wpasupplicant
 xdelta3
-xdg-user-dirs 
+xdg-user-dirs
 xfsprogs
 xkb-data
 xorriso
