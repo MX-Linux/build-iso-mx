@@ -696,7 +696,7 @@ python3-gi-cairo
 python3-pycurl
 python3-smbc
 python3-software-properties
-qapt-deb-installer
+#qapt-deb-installer - not working OK
 #qbittorrent
 #qdbus
 qdbus-qt5
