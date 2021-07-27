@@ -86,7 +86,6 @@ chroot-rescue-mx
 cifs-utils
 clementine
 cli-aptix
-#clipit
 colord
 colord-data
 command-not-found
@@ -866,6 +865,7 @@ vpnc
 vpnc-scripts
 wamerican
 wavpack
+webcamoid
 wireless-tools
 wmctrl
 wodim
