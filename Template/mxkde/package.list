@@ -31,7 +31,7 @@ apt-xapian-index
 apt-xapian-index
 aptitude
 aptitude-common
-arandr
+#arandr
 arc-theme
 #arc-theme-hdpi
 #arc-theme-xhdpi
