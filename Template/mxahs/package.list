@@ -690,8 +690,8 @@ xfce4-genmon-plugin
 #xfce4-mixer
 xfce4-mount-plugin
 xfce4-netload-plugin
-#xfce4-notes
-#xfce4-notes-plugin
+xfce4-notes
+xfce4-notes-plugin
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
