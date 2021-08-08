@@ -753,6 +753,7 @@ read-edid
 rpcbind
 rpl
 #rtkit
+rtl8821ce-dkms
 samba
 samba-common
 samba-common-bin
