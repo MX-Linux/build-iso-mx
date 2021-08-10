@@ -7047,7 +7047,8 @@ prepare_switch_root() {
     breakpoint 0 after move
 
     # Remove libs, modules, and programs we won't need to save a little RAM
-    rm -f $(find $root_dir/lib -type f -o -type l | egrep -v "/(x86_64-linux-gnu|live-init|ld|libc|libm)[.-][^/]*$")
+    rm -f $(find $root_dir/lib -type f -o -type l | egrep -v "/(x86_64-linux-gnu|live-init|ld|libc|libm|libdl|libmount|libblkid|libselinux|libpcre2|libpthread)[.-][^/]*$")
+
 
     (cd $root_dir/bin && rm -rf fbcondecor_helper ntfs-3g)
     rm -rf /$root_dir/etc/splash
