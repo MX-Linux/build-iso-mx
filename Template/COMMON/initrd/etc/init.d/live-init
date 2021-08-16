@@ -313,8 +313,8 @@ do_start() {
     #==========================================================================
 
     # Find the "default" user.  This is usually "demo" but can vary on snapshots
-    # and such.  First check the default user for SLiM and lightdm.  Then get
-    # more desparate.
+    # and such.  First check the default user for SLiM, Slimski and lightdm.
+    # Then get more desparate.
 
     unset DEF_USER USER_HOME
 
@@ -973,7 +973,7 @@ set_server_dpi() {
     echo_live "$_Setting_X_to_Y_" "$(pquote server dpi)" $(pquote $dpi)
 
     local file
-    for file in /etc/slim.conf /usr/share/slim/themes/antiX/slim-install.conf; do
+    for file in /etc/slim.conf /etc/slimski.local.conf /usr/share/slim/themes/antiX/slim-install.conf /usr/share/slimski/themes/antiX/slimski-install.local.conf; do
         [ -e $file ] || continue
         # remove existing dpi argument and add a new one
         sed -i -e "/^xserver_arguments/ s/-dpi\s+[0-9]+\s*//p" \
@@ -1111,9 +1111,15 @@ find_def_user() {
 }
 
 #------------------------------------------------------------------------------
-# Get default user from slim.conf and lightdm.conf
+# Get default user from slim.conf, slimski.local.conf and lightdm.conf
 #------------------------------------------------------------------------------
-ax_user() { sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slim.conf 2>/dev/null | tail -n1 ; }
+ax_user() {
+    if [ -f /etc/slimski.local.conf ]; then
+        sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slimski.local.conf 2>/dev/null | tail -n1 ;
+    elif [ -f /etc/slim.conf ]; then
+        sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slim.conf 2>/dev/null | tail -n1 ;
+    fi
+}
 mx_user() { sed -r -n 's/^\s*autologin-user=([^\s]+)/\1/p' /etc/lightdm/lightdm.conf 2>/dev/null | tail -n1 ; }
 
 #------------------------------------------------------------------------------
@@ -1171,9 +1177,12 @@ set_default_desktop() {
     [ "$desktop" ] || return
 
     local file=$home/.desktop-session/default-desktop
+    local slimski_file=$home/.config/slimski.lastused
     echo_live "$_Setting_X_to_Y_" desktop $(pquote $desktop)
     su -c "mkdir -p $(dirname $file)" $user
+    su -c "mkdir -p $(dirname $slimski_file)" $user
     echo $desktop | su -c "tee $file" $user >/dev/null
+    echo $desktop | su -c "tee $slimski_file" $user >/dev/null
 }
 
 #------------------------------------------------------------------------------

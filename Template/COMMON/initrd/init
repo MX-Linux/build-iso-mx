@@ -26,7 +26,7 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x07"
+                VERSION="8.30.14-x08"
            VERSION_DATE="Fri, 04 Jun 2021 11:43:21 +0000"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
@@ -1646,15 +1646,16 @@ is_removable() {
     return $?
 }
 
-
 #------------------------------------------------------------------------------
 # Function: get_drive <partition>
 #------------------------------------------------------------------------------
 get_drive() {
     local drive part=${1##*/}
     case $part in
-        mmcblk*) echo ${part%p[0-9]}                        ;;
-              *) drive=${part%[0-9]}  ; echo ${drive%[0-9]} ;;
+                  mmcblk*p[0-9]|nvme*p[0-9]) echo ${part%p[0-9]}      ;;
+        mmcblk*p[0-9][0-9]|nvme*p[0-9][0-9]) echo ${part%p[0-9][0-9]} ;;
+                                          *) drive=${part%[0-9][0-9]}
+                                             echo ${drive%[0-9]}      ;;
     esac
 }
 
@@ -2114,11 +2115,32 @@ find_device() {
 # a frugal system
 #------------------------------------------------------------------------------
 create_grub_entry() {
-    local bdir=$1  uuid=$2 crypt_flag=$3
+    local bdir=$1  uuid=$2 crypt_flag=$3 fstype=$4
+    local insmod
+    case "$fstype" in 
+           btrfs) insmod=btrfs    ;;
+        ext[234]) insmod=ext2     ;;
+           exfat) insmod=exfat    ;;
+    fat|dos|vfat) insmod=fat      ;;
+            f2fs) insmod=f2fs     ;;
+             jfs) insmod=jfs      ;;
+            ntfs) insmod=ntfs     ;;
+        reiserfs) insmod=reiserfs ;;
+             xfs) insmod=xfs      ;;
+               *) insmod=         ;;
+    esac
+
+    if [ -n "$insmod" ]; then
+        insmod="insmod $insmod" 
+    fi
+
     if [ -n "$crypt_flag" ]; then
     
         cat <<Crypt_Entry
 menuentry "$DISTRO_PRETTY_NAME Encrypted Frugal Install" {
+    insmod part_msdos
+    insmod part_gpt
+    $insmod
     insmod luks
     cryptomount -u ${uuid//-/}
     set root=(crypto0)
@@ -2130,6 +2152,9 @@ Crypt_Entry
     else
         cat <<Grub_Entry
 menuentry "$DISTRO_PRETTY_NAME Frugal Install" {
+    insmod part_msdos
+    insmod part_gpt
+    $insmod
     search --no-floppy --set=root --fs-uuid $uuid
     linux /$bdir/vmlinuz bdir=$bdir buuid=$uuid $(gather_frugal_cmdline)
     initrd /$bdir/initrd.gz
@@ -2324,7 +2349,7 @@ find_frugal_file() {
             return 40
         fi
 
-        create_grub_entry "$bdir" "$(device_uuid ${orig_device:-$device})" "$DECRYPT_DEV" >  $sqfile_dir/grub.entry
+        create_grub_entry "$bdir" "$(device_uuid ${orig_device:-$device})" "$DECRYPT_DEV"  "$(device_fstype ${orig_device:-$device})" >  $sqfile_dir/grub.entry
 
         case $(device_fstype $BIOS_DEV) in
             vfat|ext[234]) device_uuid $BIOS_DEV > $sqfile_dir/bios-dev-uuid
@@ -4324,16 +4349,18 @@ Blkid
 }
 
 #------------------------------------------------------------------------------
-# sort blkid output by device name, including a numerical sort when the sd
-# partition numbers have two-digits.  Strip off leading "/dev/" and the ":".
+# sort blkid output by device name, including a numerical sort when the
+# partition numbers have two-digits. Strip off leading "/dev/" and the ":".
 #------------------------------------------------------------------------------
 sorted_blkid() {
-    blkid | sed -r \
-            -e 's=^/dev/==' \
-            -e 's=^([sv]d.[0-9][0-9]):=\1+\1:=' \
-            -e 's=^([sv]d.)([0-9]):=\10\2+\1\2:=' \
-        | sort \
-        | sed -e 's/^[sv]d.[0-9][0-9]+//' -e 's/://'
+    blkid  |
+    sed -r '
+         s=^/dev/==
+         s=^([^:]+):=\1:\1=
+         s=^([^:]+[^0-9])([0-9]):=\10\2:=
+         ' |
+     sort  |
+     sed -r 's=^[^:]+:=='
 }
 
 #------------------------------------------------------------------------------
@@ -7048,7 +7075,6 @@ prepare_switch_root() {
 
     # Remove libs, modules, and programs we won't need to save a little RAM
     rm -f $(find $root_dir/lib -type f -o -type l | egrep -v "/(x86_64-linux-gnu|live-init|ld|libc|libm|libdl|libmount|libblkid|libselinux|libpcre2|libpthread)[.-][^/]*$")
-
 
     (cd $root_dir/bin && rm -rf fbcondecor_helper ntfs-3g)
     rm -rf /$root_dir/etc/splash
