@@ -129,7 +129,6 @@ efivar
 emacsen-common
 ethtool
 #eudev
-exfat-fuse
 exfat-utils
 exo-utils
 extlinux
