@@ -108,8 +108,8 @@ curl
 dbus
 dbus-x11
 dc
-dconf-cli
-dconf-editor
+#dconf-cli
+#dconf-editor
 dconf-gsettings-backend
 dconf-service
 #dconf-tools
