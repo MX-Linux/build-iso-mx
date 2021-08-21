@@ -610,7 +610,7 @@ printer-driver-ptouch
 printer-driver-pxljr
 printer-driver-sag-gdi
 printer-driver-splix
-projectm-data
+#projectm-data
 pulseaudio
 pulseaudio-module-bluetooth
 #pulseaudio-module-x11
