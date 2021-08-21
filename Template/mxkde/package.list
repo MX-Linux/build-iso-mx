@@ -844,7 +844,7 @@ xserver-xorg-video-tdfx
 xserver-xorg-video-trident
 xserver-xorg-video-vesa
 xserver-xorg-video-vmware
-#xutils
+xutils
 #xutils-dev
 yad
 yakuake
