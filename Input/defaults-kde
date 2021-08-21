@@ -13,7 +13,7 @@ CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
 DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
-DISTRO_VERSION="21_KDE_Beta1"
+DISTRO_VERSION="21_KDE_beta1"
 #DISTRO_VERSION="19.3_ahs"
 #DISTRO_VERSION="19.3_base"
 #DISTRO_VERSION="19.3_flux_base"
@@ -49,7 +49,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="July 26,2021"
+RELEASE_DATE="August 25, 2021"
 TIME_ZONE="America/New_York"
 
 #DE particular items
@@ -65,8 +65,8 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 #gzip leave empty #use for full
 #COMPRESSION_TYPE="xz"
 #COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
-COMPRESSION_TYPE="xz"
-COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+COMPRESSION_TYPE="zstd"
+#COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 
 #legacy variables that don't change
 USE_UEFI=true
