@@ -14,9 +14,6 @@ ASCII_CODE_NAME="Wildflower"
 DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
 DISTRO_VERSION="21_KDE_beta1"
-#DISTRO_VERSION="19.3_ahs"
-#DISTRO_VERSION="19.3_base"
-#DISTRO_VERSION="19.3_flux_base"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -25,18 +22,6 @@ HOME_URL="https://mxlinux.org"
 #R is K_Revision
 #A is architecture.
 #Note that the templates don't use all values.
-
-#ahs
-#K_REVISION="3"
-#K_TEMPLATE="%V%G-%R-%A"
-#K_VERSION="5.8.0"
-#UNSIGNED="-unsigned"
-
-#standard 32 bit
-#K_REVISION="12"
-#K_TEMPLATE="%V%G-%R-686-pae"
-#K_VERSION="4.19.0"
-#UNSIGNED=""
 
 #standard 64 bit
 K_REVISION="8"
@@ -49,7 +34,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="August 25, 2021"
+RELEASE_DATE="August 22, 2021"
 TIME_ZONE="America/New_York"
 
 #DE particular items
@@ -66,15 +51,11 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 #COMPRESSION_TYPE="xz"
 #COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 COMPRESSION_TYPE="zstd"
-#COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 
 #legacy variables that don't change
 USE_UEFI=true
 MEM_TEST_BUG=
 NO_SET_HOSTNAME=""
-
-#seems to have no effect, isos get signed automatically
-SIGN_FILES="false"
 
 #default live boot options
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
