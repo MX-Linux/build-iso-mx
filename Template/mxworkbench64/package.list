@@ -1,4 +1,3 @@
-
 abiword
 accountsservice
 acl
@@ -486,7 +485,6 @@ mx-tweak-data
 mx-usb-unmounter
 mx-user
 mx-viewer
-mx19-archive-keyring
 nano
 ncdu
 ncurses-base

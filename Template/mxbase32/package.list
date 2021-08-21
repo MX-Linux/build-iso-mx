@@ -1,4 +1,3 @@
-
 accountsservice
 acl
 acpi
@@ -468,7 +467,6 @@ mx-usb-unmounter
 mx-user
 mx-viewer
 mx-welcome
-mx19-archive-keyring
 mx21-artwork
 nano
 ncurses-base

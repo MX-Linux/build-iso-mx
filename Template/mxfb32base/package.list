@@ -1,4 +1,3 @@
-
 accountsservice
 acl
 acpi
@@ -389,7 +388,6 @@ libxtables12
 libzstd1
 lightdm
 lightdm-gtk-greeter
-#lightdm-gtk-greeter-mx19
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-base
@@ -473,7 +471,6 @@ mx-usb-unmounter
 mx-user
 mx-viewer
 mx-welcome
-mx19-archive-keyring
 mx21-artwork
 #mxfb-art
 mxfb-docs
