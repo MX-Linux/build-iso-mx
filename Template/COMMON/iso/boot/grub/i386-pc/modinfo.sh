@@ -34,7 +34,7 @@ grub_target_img_ldflags='@TARGET_IMG_BASE_LDFLAGS@'
 # Version
 grub_version="2.04"
 grub_package="grub"
-grub_package_string="GRUB 2.04-18"
-grub_package_version="2.04-18"
+grub_package_string="GRUB 2.04-20"
+grub_package_version="2.04-20"
 grub_package_name="GRUB"
 grub_package_bugreport="bug-grub@gnu.org"
