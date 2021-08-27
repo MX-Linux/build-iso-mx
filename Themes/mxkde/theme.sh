@@ -3,10 +3,11 @@
 THEME_DIR=$(dirname $(readlink -f $0))
 source $THEME_DIR/../theme-functions.sh
 start_theme "$@"
-
+rm -R /etc/skel/.conky
 copy_file grub                  /etc/default/
-#copy_file 10_linux              /etc/grub.d/
-copy_file 20_memtest86+         /etc/grub.d/
+copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
+copy_file 10_linux              /etc/grub.d/
+#copy_file 20_memtest86+         /etc/grub.d/
 copy_dir desktop-base/               /usr/share/desktop-base/          --create
 copy_dir conky/               /etc/skel/.conky/          --create
 copy_dir extra/               /usr/share/fonts/extra       --create
@@ -50,8 +51,8 @@ copy_file plymouthd.conf /etc/plymouth/
 #copy_file luckybackup-su.desktop /usr/share/applications/
 #copy_file luckybackup.svg /usr/share/icons/hicolor/scalable/apps/
 
-copy_dir Desktop/               /etc/skel/Desktop/           --create
-copy_dir cache		/etc/skel/.cache/ 	--create
+#copy_dir Desktop/               /etc/skel/Desktop/           --create
+#copy_dir cache		/etc/skel/.cache/ 	--create
 
 ##alpha
 

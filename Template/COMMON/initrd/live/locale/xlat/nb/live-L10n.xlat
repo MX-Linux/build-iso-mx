@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Bruker %s som tastaturoppsett"
+_Localizing_console_and_timezone_="Lokaltilpasser konsoll og tidssone"
+_Recreate_symlink_X_="Lager symlenke på nytt: %s"
+_Setting_hostname_to_X_="Bruker %s som vertsnavn"
+_Setting_locale_to_X_="Bruker %s som lokale"
+_Setting_timezone_and_localtime_to_X_="Bruker %s som tidssone og lokaltid "
+_Unknown_time_zone_X_="Ukjent tidssone: %s"

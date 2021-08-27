@@ -36,10 +36,11 @@ do_start() {
     for param in $CMDLINE; do
         local value=${param#*=}
         case $param in
-            gfxsave=*) gfx_cmd=$value      ;;
-                vga=*) vga_cmd=$value      ;;
-              gfxsave) gfx_cmd=both        ;;
-             bootsave) boot_save=true      ;;
+            gfxsave=*) gfx_cmd=$value  ; grub_save=true ;;
+                vga=*) vga_cmd=$value                  ;;
+              gfxsave) gfx_cmd=both    ; grub_save=true ;;
+             bootsave) boot_save=true  ; grub_save=true ;;
+             grubsave) grub_save=true                   ;;
         esac
     done
 
@@ -53,7 +54,7 @@ do_start() {
 
     . $INITRD_OUT
 
-    [ -n "$gfx_cmd$boot_save" ] || return
+    [ -n "$gfx_cmd$boot_save$grub_save" ] || return
 
     if ! [ -e /live/config/remasterable ]; then
         echo_live "Can't update %s on read-only boot media" "$(pquote gfxboot)"
@@ -76,7 +77,7 @@ do_start() {
     if [ -n "$gfx_cmd" ]; then
         local script=/live/bin/gfxsave
         local dir=$BOOT_LOADER_MP/boot
-        local env="GFX_LOG_FILE=/var/log/live/gfxsave.log VERBOSE=3"
+        local env="GFX_LOG_FILE=/var/log/live/gfxsave.log VERBOSE=7"
         #echo $script $dir $gfx_cmd
         env $env $script "$dir" $gfx_cmd
     fi
@@ -84,6 +85,10 @@ do_start() {
     if [ -n "$boot_save" ]; then
         #echo grub2-save $BOOT_LOADER_MP
         grub2-save $BOOT_LOADER_MP
+    fi
+
+    if [ -n "$grub_save" ]; then
+        which live-grubsave >/dev/null && live-grubsave
     fi
 
     sync

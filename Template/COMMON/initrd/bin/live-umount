@@ -12,7 +12,7 @@
 # use --umount:
 #
 #   targ=/live/bin/live-umount [ -x $targ ] \
-#       && exec $targ --umount </dev/tty1 >/dev/tty1 2>&1
+#       && exec $targ --umount </dev/console >/dev/console 2>&1
 #
 # The script grabs the runlevel Then we umount /live/aufs since this was a
 # convenience bind-mount anyway and it is going to be the target for our
@@ -110,8 +110,6 @@ main() {
 do_scripts() {
     PATH=$BUSYBOX_BIN:/bin
     export PATH
-
-    disable_tty1
 
     breakpoint s1 "Before running scripts"
 
@@ -405,7 +403,7 @@ do_shutdown() {
     mount -t proc   proc        /proc
     mount -t sysfs  sys         /sys
     mount -t devtmpfs devtmpfs  /dev
-    #exec < /dev/tty1 > /dev/tty1
+    #exec < /dev/console > /dev/console
 
     breakpoint s "Start shutdown mode"
 
@@ -621,15 +619,6 @@ Read_Mounts
     return $ret
 }
 
-
-#------------------------------------------------------------------------------
-# Create a random hex string $cnt * 2 chars long
-#------------------------------------------------------------------------------
-random_string() {
-    local cnt=${1:-16}
-    dd if=/dev/urandom status=none bs=1 count=$cnt | od -An -x | tr -d " "
-}
-
 #------------------------------------------------------------------------------
 # Function: umount_most
 #
@@ -637,6 +626,8 @@ random_string() {
 # exact reverse chronological order.
 #------------------------------------------------------------------------------
 umount_most() {
+    local try list mp dev
+
     # This seems to be required to umount some loop devices
     if [ $V_LEVEL -ge 9 ]; then
         echo 'losetup >'
@@ -645,52 +636,26 @@ umount_most() {
         losetup >/dev/null 2>/dev/null
     fi
 
-    # Create a random string that is not in /proc/mounts (sigh)
-    local rand i
-    for i in $(seq 1 10); do
-        rand=$(random_string)
-        grep -q "$rand" /proc/mounts || break
-    done
-
-    local try dev mp type opts other
     for try in $(seq 1 3); do
-        local did_umount=
-         while read dev mp type opts other; do
+        list=$(mountpoint_list) || return
+        vmsg 7 "umounting$white $list"
+        vmsgN 7 "          "
 
-            case $type in
-                tmpfs|devtmpfs) case $mp in
-                                    /aufs*)          ;;
-                                         *) continue ;;
-                                esac ;;
-            esac
-
-            mp=${mp//$rand/ }
-            case $mp in
-                /|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/run/*) continue;;
-            esac
-
+        for mp in $list; do
             vmsgN 7 "$nc$mp "
-            umount "$mp"
-            did_umount=true
-        done<<Mountpoint_List
-$(tac /proc/mounts | sed "s/\\\\040/$rand/g")
-Mountpoint_List
-
+            umount $mp
+        done
         vmsg 7
-        [ -z "$did_umount" ] && return
 
     done
-
     echo "> ps no (threads)"
     ps_no_kthreads
     echo "> lsof"
     lsof
     echo "> df -h"
     df -h
-    err "Failed to umount some filesystems"
+    err  "$_Failed_to_umount_some_filesystems_"
 }
-
-
 
 #------------------------------------------------------------------------------
 # Function: find_mounted_cd <file>
@@ -778,7 +743,7 @@ shutdown_or_reboot() {
 
         [ -n "$OUR_TTY" ] && chvt $OUR_TTY
         printf "${cyan}======== Press$magenta ENTER$cyan key to $command ========"
-        #read x </dev/tty1
+        #read x </dev/console
         read x
     fi
 
@@ -806,7 +771,7 @@ run_scripts() {
     for script; do
         full=/live/etc/init.d/$script
         test -x $full || continue
-        $full stop >/dev/tty1 2>/dev/tty1 </dev/tty1
+        $full stop
 
         #[ "$DB_PLUS" ] || continue
 
@@ -896,7 +861,7 @@ breakpoint() {
     echo "$green==>$cyan limited shell @ breakpoint [$red$1$cyan]$white $2"
     echo "$green    Use the$white exit$green command or hit$white Ctrl-d$green to continue"
     export PS1="${green}ubp $red$1$cyan>$nc "
-    OPATH=$PATH PATH=$BUSYBOX_BIN setsid cttyhack bash </dev/tty1 >/dev/tty1 2>&1
+    OPATH=$PATH PATH=$BUSYBOX_BIN setsid cttyhack bash </dev/console >/dev/console 2>&1
     echo
 }
 
@@ -959,15 +924,6 @@ ps_no_kthreads() {
 $($BUSYBOX_BIN/ps)
 Ps_No_Kthreads
 }
-
-#------------------------------------------------------------------------------
-# Disable login on tty1
-#------------------------------------------------------------------------------
-disable_tty1() {
-    sed -r -i "s/^\s*(1:2345:respawn)/# \1/" /etc/inittab
-    /sbin/telinit q
-}
-
 
 #------------------------------------------------------------------------------
 # Function: vsg <level> [-n] <message1> <message2> ...

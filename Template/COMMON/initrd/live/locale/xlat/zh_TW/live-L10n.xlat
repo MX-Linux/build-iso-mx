@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="配置控制台%s 按鍵圖"
+_Localizing_console_and_timezone_="本地化控制台和時區"
+_Recreate_symlink_X_="重建符號鏈接 %s"
+_Setting_hostname_to_X_="將主機名設置為 %s "
+_Setting_locale_to_X_="將語言環境設置為 %s"
+_Setting_timezone_and_localtime_to_X_="將時區和本地時間設置為 %s"
+_Unknown_time_zone_X_="未知時區 %s"

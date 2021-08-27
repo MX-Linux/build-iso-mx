@@ -1,4 +1,5 @@
 _Copy_X_to_RAM_="%s को RAM में कॉपी करें"
+_Copying_X_="%s कॉपी हो रहा है"
 _Create_X_swap_file_="%s स्वैप फाइल बनाएँ"
 _console_login_="कंसोल लॉगिन"
 _prepare_consoles_="कंसोल तैयार करना"

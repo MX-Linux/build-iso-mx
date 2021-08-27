@@ -1,0 +1,223 @@
+#!/bin/bash
+
+# See Documentation/x86/boot.txt in Linux source
+
+ME=${0##*/}
+
+CPIO_FILE=/live/boot-dev/boot/syslinux/gfx-cpio
+CPIO_DIR=./gfx-cpio-dir
+REPACK_ARGS="-o --owner root:root --quiet"
+UNPACK_ARGS="-idum --quiet"
+
+
+usage() {
+    local ret=${1:-0}
+
+    cat <<Usage
+Usage:  $ME [options]
+
+Unpack and repack the live gfx-cpio archive used by the
+live syslinux (and isolinux) bootloader
+
+Options:
+  -c  --clear          Delete directory before unpacking
+  -d  --dir=<dir>      Unpack in <dir> instead of $CPIO_DIR
+  -f  --from=<file>    Unpack <file> instead of $CPIO_FILE
+  -h  --help           Show this usage
+  -p  --pretend        Show commands without running them
+  -r  --repack         Repack the initrd
+  -q  --quiet          Don't say anything
+  -v  --verbose        Show commands in addition to running them
+Usage
+
+    exit $ret
+}
+
+eval_argument() {
+    local arg=$1 val=$2
+        case $arg in
+             -clear|c) CLEAR=true                      ;;
+               -dir|d) CPIO_DIR=$val                   ;;
+               -dir=*) CPIO_DIR=$val                   ;;
+              -help|h) usage                           ;;
+              -from|f) CPIO_FILE=$val                  ;;
+              -from=*) CPIO_FILE=$val                  ;;
+           -pretend|p) PRETEND=true                    ;;
+            -repack|r) REPACK=true                     ;;
+             -quiet|q) QUIET=true                      ;;
+           -verbose|v) VERBOSE=true                    ;;
+                    *) fatal "Unknown parameter -$arg" ;;
+    esac
+}
+
+takes_param() {
+    case $1 in
+        -dir|[d]) return 0 ;;
+       -from|[f]) return 0 ;;
+    esac
+    return 1
+}
+
+main() {
+    local SHIFT SHORT_STACK="cdhir"
+
+    #[ $# -eq 0 ] && usage
+
+    # This loop allows complete intermingling of filenames and options
+    read_params "$@"
+    shift $SHIFT
+    [ $# -gt 0 ] && fatal "Unexpected arguments: %s" "$*"
+
+    if [ "$REPACK" ]; then
+        qsay "Repack: %s ---> %s"  "$(pq ${CPIO_DIR%/}/)" "$(pq $CPIO_FILE)"
+        repack_cpio "$CPIO_FILE" "$CPIO_DIR"
+    else
+        qsay "Unpack: %s ---> %s" "$(pq $CPIO_FILE)" "$(pq ${CPIO_DIR%/}/)"
+        unpack_cpio "$CPIO_FILE" "$CPIO_DIR"
+    fi
+
+    exit 0
+}
+
+unpack_cpio() {
+    local file=$1  dir=$2
+
+    test -e "$file" || fatal "File %s not found" "$file"
+    test -r "$file" || fatal "Cannot read file %s" "$file"
+
+    if test -d "$dir"; then
+        if ! empty_dir "$dir"; then
+            if [ "$CLEAR" ]; then
+                cmd rm -r "$dir"
+            else
+                fatal "The target directory %s is not empty" "$dir"
+            fi
+        fi
+    else
+        test -e "$dir"  && fatal "%s is not a directory" "$dir"
+    fi
+
+    cmd mkdir -p "$dir" || fatal "Could not make directory %s" "$dir"
+
+    cmd cat "$file" | (cd "$dir" && cmd cpio $UNPACK_ARGS) || fatal "Unpack failed"
+}
+
+repack_cpio() {
+    local file=$1  dir=$2
+    test -e "$dir" || fatal "The directory %s does not exist" "$dir"
+    test -d "$dir" || fatal "%s is not a directory" "$dir"
+
+    local targ_dir=$(dirname "$file")
+    cmd mkdir -p "$targ_dir"
+
+    (cd "$dir" && cmd find . | grep -v "^\./\." | cmd cpio $REPACK_ARGS) | cmd write_file "$file"
+}
+
+empty_dir() {
+    local dir=$1
+    local cnt=$(ls "$dir" | grep -v "^lost+found$" | wc -l)
+    [ $cnt -eq 0 ]
+    return $?
+}
+
+cmd() {
+    if [ "$PRETEND" ]; then
+        echo "$@" >&2
+        return 0
+    fi
+    [ "$VERBOSE" ] && echo "$@" >&2
+    "$@"
+}
+
+write_file() {
+    local file=$1
+    cat > "$file"
+}
+
+#-------------------------------------------------------------------------------
+# Send "$@".  Expects
+#
+#   SHORT_STACK               variable, list of single chars that stack
+#   fatal(msg)                routine,  fatal("error message")
+#   takes_param(arg)          routine,  true if arg takes a value
+#   eval_argument(arg, [val]) routine,  do whatever you want with $arg and $val
+#
+# Sets "global" variable SHIFT to the number of arguments that have been read.
+#-------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-}
+        shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal "Suspicious argument after -$arg: $val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+    done
+}
+
+qsay() {
+    [ "$QUIET" ] && return
+    local fmt=$1
+    shift
+    printf "$m_co$fmt$nc_co\n" "$@"
+}
+
+fatal() {
+    local fmt=$1; shift
+    printf "$ME$err_co fatal error:$warn_co $fmt\n" "$@" >&2
+    exit 2
+}
+
+pq()  { echo "$hi_co$*$m_co"      ;}
+
+set_colors() {
+   local e=$(printf "\e")
+
+         black="$e[0;30m" ;    blue="$e[0;34m" ;    green="$e[0;32m" ;    cyan="$e[0;36m" ;
+           red="$e[0;31m" ;  purple="$e[0;35m" ;    brown="$e[0;33m" ; lt_gray="$e[0;37m" ;
+       dk_gray="$e[1;30m" ; lt_blue="$e[1;34m" ; lt_green="$e[1;32m" ; lt_cyan="$e[1;36m" ;
+        lt_red="$e[1;31m" ; magenta="$e[1;35m" ;   yellow="$e[1;33m" ;   white="$e[1;37m" ;
+         nc_co="$e[0m"    ;   brown="$e[0;33m" ;
+
+           m_co=$cyan
+          hi_co=$white
+          err_co=$red
+         bold_co=$yellow
+         warn_co=$yellow
+}
+
+set_colors
+main "$@"
+

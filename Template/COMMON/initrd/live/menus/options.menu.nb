@@ -1,0 +1,16 @@
+   1)  Forvalgt
+   2)  checkmd5        Kontroller live-mediets integritet
+   3)  checkfs         Kontroller live-USB og ext2/3/4-filsystemene som brukes til varig lagring
+   4)  toram           Kopier det komprimerte filsystemet til RAM
+   5)  i915_invert     Inverter video på noen Intel-grafikksystemer
+   6)  no_i915_invert  Slå av invertering av video på Intel-grafikksystemer
+   7)  from=usb        Fullfør oppstart fra live-USB
+   8)  from=hd         Fullfør oppstart fra harddisk
+   9)  hwclock=ask     La systemet hjelpe til med å bestemme oppsett av klokke
+  10)  hwclock=utc     Maskinvareklokka bruker UTC (kun Linux-systemer)
+  11)  hwclock=local   Maskinvareklokka bruker lokaltid (Windows-systemer)
+  12)  password        Endre passord før oppstart
+  13)  nostore         Slå av live-USB-lagringsfunksjonalitet (kun live-USB)
+  14)  dostore         Slå på live-USB-lagringsfunksjonalitet (kun live-USB)
+  15)  savestate       Lagre noen filer mellom omstarter (kun live-USB)
+  16)  nosavestate     Ikke lagre noen filer mellom omstarter (kun live-USB)

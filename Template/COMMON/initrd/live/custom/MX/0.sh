@@ -1,10 +1,10 @@
 # File: /live/custom/antiX/0.sh
-# MX Specific /init code
+# antiX Specific /init code
 
 LIST_MODULES=true
 CHECK_BOOTCODES=true
 
-MENUS_LIST=wltopfsv
+MENUS_LIST=wltompfdsv
 
 DO_DEB=true
 DO_FSCK=true
@@ -29,18 +29,26 @@ live_param_filter() {
 
         # Our Live params
         hwclock=utc|hwclock=local|xorg|xorg=*|noearlyvid|earlyvid) ;;
-        confont=*|conkeys=*|conkbd=*);;
-        dpi=*|hostname=*|kbd=*|kbopt=*|kbvar=*);;
+        amnt|amnt=*|automount|automount=*|confont=*|conkeys=*);;
+        mount=*|noautomount) ;;
+        desktop=*|dpi=*|fstab=*|hostname=*|kbd=*|kbopt=*|kbvar=*);;
         lang=*|mirror=*|noloadkeys|noprompt);;
         nosplash|password|password=*|prompt|pw|pw=*|tz=*|ubp=*|ushow=*);;
         uverb=*|xres=*|noxorg);;
+        desktheme=*) ;;
         nosavestate|savestate|dbsavestate) ;;
         norepo|norepo=*|nostore) ;;
+        deskdelay=*) ;;
         udpi=*|sdpi=*) ;;
         fontsize=*) ;;
         skylakeflicker)  ;;
         i915powersave) ;;
+        wicd|nowicd) ;;
         nomicrocode);;
+        live_swap=off)  ;;
+        live_swap=force)  ;;
+        live_swap=all-off)  ;;
+        mk_swap_file=*)     ;;
 
         # Most kernel codes from version 4.19 (plus additions)
         3c574_cs.*=*|3c589_cs.*=*|3c59x.*=*|3w-9xxx.*=*|3w-sas.*=*|8139cp.*=*|8139too.*=*|8250.*=*|8390.*=*);;
@@ -368,8 +376,11 @@ live_param_filter() {
         zl10039.*=*|zl10353.*=*|zl6100.*=*|zr36016.*=*|zr36050.*=*|zr36060.*=*|zr36067.*=*|zr364xx.*=*|zram.*=*);;
         zswap.*=*);;
 
-         nomodeset|*.modeset=*);;
-         splash=*|fbcon=*);;
+        nomodeset|*.modeset=*);;
+        splash=*|fbcon=*);;
+        grubsave);;
+        kernel=*);;
+
 
         *) printf "$param " ;;
         esac
@@ -382,4 +393,5 @@ live_param_filter() {
         [ "${disable##*[x]*}" ] ||      touch /live/config/xtra-lean
         [ "${disable##*[d]*}" ] ||      touch /live/config/no-dbus
     fi
+
 }

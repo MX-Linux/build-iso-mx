@@ -52,7 +52,7 @@ UEFI_VDRIVER="fbdev"
 VIDEO_TWEAKS_FILE="/live/config/video-tweaks"
 XORG_BUS_ID_FILE="/etc/X11/xorg-bus-id"
 
-if test -d /live/config/uefi; then
+if test -e /live/config/uefi; then
     UEFI_BOOT=true
     DEFAULT_VDRIVER=$UEFI_VDRIVER
 fi
@@ -89,6 +89,7 @@ automount=off|amnt=off)                          AUTOMOUNT_OFF=true ;;
            desktheme=*)    DESK_THEME=$value                        ;;
                 norepo)       NO_REPO=true                          ;;
               norepo=*)   IGNORE_REPO=$value                        ;;
+           deskdelay=*) DESKTOP_DELAY=$value                        ;;
              nomodeset)    NO_MODESET=true    ; VBOX_DECOR=true     ;;
             fontsize=*)     FONT_SIZE=$value                        ;;
         skylakeflicker)   FIX_SKYLAKE=true                          ;;
@@ -312,8 +313,8 @@ do_start() {
     #==========================================================================
 
     # Find the "default" user.  This is usually "demo" but can vary on snapshots
-    # and such.  First check the default user for SLiM and lightdm.  Then get
-    # more desparate.
+    # and such.  First check the default user for SLiM, Slimski and lightdm.
+    # Then get more desparate.
 
     unset DEF_USER USER_HOME
 
@@ -334,6 +335,7 @@ do_start() {
     set_default_desktop    "$CMD_DESKTOP"      $DEF_USER $USER_HOME
     set_desktop_theme      "$DESK_THEME"       $DEF_USER $USER_HOME
     set_user_dpi           "${CMD_UDPI:-$dpi}" $DEF_USER $USER_HOME
+    set_user_desktop_delay "$DESKTOP_DELAY"    $DEF_USER $USER_HOME
     if [ -n "$user_automount" ]; then
         set_user_automount "$DEF_USER" "$USER_HOME" "$AUTOMOUNT" "$AUTOMOUNT_OFF" 'create'
     else
@@ -552,7 +554,7 @@ localize_skel() {
 #------------------------------------------------------------------------------
 set_keyboard() {
     local kb_file=/etc/default/keyboard
-    local default_xkb_opts="grp:alt_shift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+    local default_xkb_opts="grp:rctrl_rshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
 
     first_write $kb_file || [ "$DO_XKBD" ] || return
 
@@ -971,7 +973,7 @@ set_server_dpi() {
     echo_live "$_Setting_X_to_Y_" "$(pquote server dpi)" $(pquote $dpi)
 
     local file
-    for file in /etc/slim.conf /usr/share/slim/themes/antiX/slim-install.conf; do
+    for file in /etc/slim.conf /etc/slimski.local.conf /usr/share/slim/themes/antiX/slim-install.conf /usr/share/slimski/themes/antiX/slimski-install.local.conf; do
         [ -e $file ] || continue
         # remove existing dpi argument and add a new one
         sed -i -e "/^xserver_arguments/ s/-dpi\s+[0-9]+\s*//p" \
@@ -994,6 +996,26 @@ set_user_dpi() {
     add_or_edit "^[ !]*Xft.dpi:" "Xft.dpi: $dpi" $home/.Xresources $user create
 
     scale_conky "$dpi" "$user" $home
+}
+
+#------------------------------------------------------------------------------
+# Set the desktop delay used by desktop-session.  Hopefully, this code is no
+# longer needed.
+#------------------------------------------------------------------------------
+set_user_desktop_delay() {
+    local delay=$1  user=$2  home=$3
+    [ ${#delay} -gt 0 ] || return
+
+    local ds_conf=$home/.desktop-session/desktop-session.conf
+    test -e $ds_conf || return
+    local bad=$(echo $delay | sed -r 's/^([0-9]+(\.[0-9]*)?|.[0-9]+)//')
+
+    if [ ${#bad} -gt 0 ]; then
+        error "$_Bad_desktop_delay_parameter_X_" $(pquote $delay)
+        return
+    fi
+    echo_live "$_Setting_desktop_delay_to_X_" $(pquote $delay)
+    su -c "sed -r -i 's/^\s*(STARTUP_DELAY=).*/\1$delay/' $ds_conf" $user
 }
 
 #------------------------------------------------------------------------------
@@ -1089,9 +1111,15 @@ find_def_user() {
 }
 
 #------------------------------------------------------------------------------
-# Get default user from slim.conf and lightdm.conf
+# Get default user from slim.conf, slimski.local.conf and lightdm.conf
 #------------------------------------------------------------------------------
-ax_user() { sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slim.conf 2>/dev/null | tail -n1 ; }
+ax_user() {
+    if [ -f /etc/slimski.local.conf ]; then
+        sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slimski.local.conf 2>/dev/null | tail -n1 ;
+    elif [ -f /etc/slim.conf ]; then
+        sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slim.conf 2>/dev/null | tail -n1 ;
+    fi
+}
 mx_user() { sed -r -n 's/^\s*autologin-user=([^\s]+)/\1/p' /etc/lightdm/lightdm.conf 2>/dev/null | tail -n1 ; }
 
 #------------------------------------------------------------------------------
@@ -1149,9 +1177,12 @@ set_default_desktop() {
     [ "$desktop" ] || return
 
     local file=$home/.desktop-session/default-desktop
+    local slimski_file=$home/.config/slimski.lastused
     echo_live "$_Setting_X_to_Y_" desktop $(pquote $desktop)
     su -c "mkdir -p $(dirname $file)" $user
+    su -c "mkdir -p $(dirname $slimski_file)" $user
     echo $desktop | su -c "tee $file" $user >/dev/null
+    echo $desktop | su -c "tee $slimski_file" $user >/dev/null
 }
 
 #------------------------------------------------------------------------------

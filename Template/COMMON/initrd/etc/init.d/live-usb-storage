@@ -152,7 +152,7 @@ get_home_users() {
         [ $uid -lt 1000 ] && continue
         echo $ent | cut -d: -f$field
     done<<Home_Ents
-$(grep  ":/home/.*:/bin/.*sh$" /etc/passwd)
+$(grep  ":/home/.*:*/bin/.*sh$" /etc/passwd)
 Home_Ents
 }
 

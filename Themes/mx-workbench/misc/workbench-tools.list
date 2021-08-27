@@ -20,7 +20,7 @@ org.gnome.DiskUtility
 ncdu
 
 Category=GRUB Boot Functions
-mx-bootrepair 
+mx-boot-repair 
 mx-boot-options
 chroot-rescue-scan 
 

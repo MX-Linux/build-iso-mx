@@ -1,0 +1,16 @@
+   1)  Predeterminado
+   2)  checkmd5        Verificar a integridade do dispositivo externo
+   3)  checkfs         Verificar os sistemas de ficheiros ext2/3/4 do USV-executable e da área persistente
+   4)  toram           Copiar o sistema de ficheiros comprimido para a RAM
+   5)  i915_invert     Inverter o vídeo nalgúns isstemas gráficos Intel
+   6)  no_i915_invert  Desactivar a inversión de gráficos Intel
+   7)  from=usb        Terminar o arranque a partir dun USB-executable
+   8)  from=hd         erminar o arranque a partir do disco ríxido
+   9)  hwclock=ask     Facer que o sistema axude a determinar a configuración do reloxo
+  10)  hwclock=utc     O reloxo interno usa UTC (só en sistemas Linux)
+  11)  hwclock=local   O reloxo interno usa a hora local (sistemas Windows)
+  12)  password        Cambiar os contrasinais antes de iniciar
+  13)  nostore         Desactivar a funcionalidade o almacenamento no USB-executable (só para USB-executable)
+  14)  dostore         Activar a funcionalidade o almacenamento no USB-executable (só para USB-executable))
+  15)  savestate       Gardar algúns ficheiros entre reinicios (só para USB-executable)
+  16)  nosavestate     Non gardar ficheiros entre reinicios (só para USB-executable)

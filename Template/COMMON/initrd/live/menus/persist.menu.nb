@@ -1,0 +1,12 @@
+   1)  Forvalgt
+   2)  persist_all     Lagre rot i RAM, lagre hjem på disk (lagre rot ved avslutning)
+   3)  persist_root    Lagre rot og hjem i RAM, og lagre dem ved avslutning
+   4)  persist_static  Lagre rot og hjem på disk med hjem separert på disk
+   5)  p_static_root   Lagre rot og hjem sammen på disk
+   6)  persist_home    Kun varig lagring av hjem
+   7)  frugal_persist  Nøysom med rot i RAM og hjem på disk
+   8)  frugal_root     Nøysom med rot og hjem i RAM, og lagre dem ved avslutning
+   9)  frugal_static   Nøysom med rot på disk og hjem separert på disk
+  10)  f_static_root   Nøysom med rot og hjem sammen på disk
+  11)  frugal_home     Nøysom med kun varig lagring av hjem
+  12)  frugal_only     Kun nøysom uten varig lagring

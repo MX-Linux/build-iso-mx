@@ -94,7 +94,7 @@ update_grub2() {
     # : ${resolution:=$DEFAULT_RESOLUTION}
 
     local out line default_entry=0 entry_cnt=0 custom_cnt=0
-    local is_custom is_blank
+    local is_custom is_blank dyn=""
     while read line; do
 
         # Want to assume all lines we process are not zero-length
@@ -128,8 +128,23 @@ update_grub2() {
             if [ "$is_custom" ]; then
                 custom_cnt=$((custom_cnt + 1))
                 if [ $custom_cnt -eq 1 ]; then
-                    line="menuentry \"Custom $arch ($(date '+%e %B %Y'))\" {"
-                    default_entry=$entry_cnt
+                    #line="menuentry \"Custom $arch ($(date '+%e %B %Y'))\" {"
+                    # check for "dynamic" ("$kernel", "$intird" and/or "$kopts") parameter
+                    if [ -z "${line##*\"\$kernel\"*}" ]; then
+                       dyn="${dyn}${dyn:+ }"'"$kernel"'
+                    fi
+                    if [ -z "${line##*\"\$initrd\"*}" ]; then
+                       dyn="${dyn}${dyn:+ }"'"$initrd"'
+                    fi
+                    if [ -z "${line##*\"\$kopts\"*}" ]; then
+                       dyn="${dyn}${dyn:+ }"'"$kopts"'
+                    fi
+                    dyn="${dyn}${dyn:+ }"'--id=custom {'
+                    #line=$(echo "$line" | sed 's/"Custom".*/"Custom"" $arch ('"$(date '+%e %B %Y' )"')"/')
+                    line=$(echo "$line" | sed 's/"Custom".*/"Custom"/')
+                    line="$line"'"'" $arch ($(date '+%e %B %Y'))"'"'
+                    line="$line $dyn" 
+                    default_entry="custom"
                 fi
             fi
 
@@ -139,7 +154,12 @@ update_grub2() {
         elif [ -n "$is_custom" -a $custom_cnt -eq 1 ]; then
 
             if [ -z "${line##linux *}" ]; then
-                line=$(echo "$line" | sed -r "s|^(linux\s).*|\1$kernel $params|")
+                #line=$(echo "$line" | sed -r "s|^(linux\s).*|\1$kernel $params|")
+				if [ -z "${line##*\$@*}" ]; then
+                    line=$(echo "$line" | sed -r "s|^(linux\s+[^ ]+).*|\1 $params \$@|")
+                else
+                    line=$(echo "$line" | sed -r "s|^(linux\s).*|\1$kernel $params|")
+                fi 
 
             elif [ -n "$resolution" -a -z "${line##gfxpayload=*}" ]; then
                 line="gfxpayload=$resolution"
@@ -149,7 +169,13 @@ update_grub2() {
         elif [ -z "${line##linux *}" ]; then
 
             if echo "$line" | grep -q "\<menus\>"; then
-                line=$(echo "$line" | sed -r "s|^(linux\s*[^ ]+).*|\1 $params $MENUS|")
+                #line=$(echo "$line" | sed -r "s|^(linux\s*[^ ]+).*|\1 $params $MENUS|")
+				if [ -z "${line##*/\$\{kernel\}*}" ]; then
+                    line=$(echo "$line" | sed -r "s|^(linux\s+[^ ]+).*|\1 $params $MENUS \$@|")
+                else
+					line=$(echo "$line" | sed -r "s|^(linux\s*[^ ]+).*|\1 $params $MENUS|")
+                fi 
+
             fi
 
         fi
@@ -169,6 +195,7 @@ Read_File
     printf "    With: %s\n" "$params"
     printf "    Kernel: %s\n" $kernel
     sleep 1
+    
 }
 
 gather_params() {
@@ -192,6 +219,7 @@ gather_params() {
                    mk_swap_file)          ;;
                  mk_swap_file=*)          ;;
                         vcard=*)          ;;
+                       grubsave)          ;;
                               *) out=$out${out:+ }$p ;;
         esac
     done

@@ -41,6 +41,7 @@ ohci_hcd
 pcie-aspm
 printk
 pstore
+raid6_pq
 reiserfs
 scsi_mod
 sd-mod

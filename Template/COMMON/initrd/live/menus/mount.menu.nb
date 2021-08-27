@@ -1,0 +1,3 @@
+   1)  Forvalgt
+   2)  automount       Monter enheter automatisk når de plugges inn
+   3)  noautomount     Slå av all ekstra montering og automontering
