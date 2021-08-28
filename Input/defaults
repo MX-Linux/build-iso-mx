@@ -16,7 +16,7 @@ DISTRO_NAME="MX"
 #DISTRO_VERSION="21"
 #DISTRO_VERSION="21_ahs"
 #DISTRO_VERSION="21_base"
-DISTRO_VERSION="21_fluxbox_beta1"
+DISTRO_VERSION="21_fluxbox_rc1"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
