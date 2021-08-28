@@ -9,28 +9,24 @@ $ git clone https://github.com/MX-Linux/build-iso-mx
 $ cd build-iso-mx
 	------------	------------
 
-
-
-Edit the build-iso script to add the required handler. It needs to be added in 2 locations
+Edit the build-iso script to add the required handler. 
 	------------	------------	
-Line 495 and line 510. Check the examples below for the changes before and after modifiaction.
+Near the bottom of the script, about a page up, using the examples below, find the lines that have content similar to the following and add your intended build name and be sure to follow the current conventions used in the line
 
-Line 495
-        mx32|mx64|mxahs|mxkde|mxbase64) ISO_RESPIN_OF=$FLAV ;;
-        mx32|mx64|mxahs|mxkde|mxbase64|mxbase32) ISO_RESPIN_OF=$FLAV ;;
-
-Line 510
-        mx32|mx64|mxahs|mxkde|mxbase64) ;;
-        mx32|mx64|mxahs|mxkde|mxbase64|mxbase32) ;;
+Line # 3947
+    case $flav in
+         mx32|mx64|mxahs|mxkde|mxworkbench32|mxworkbench64) return 0 ;;
+         
+The line above would now read ... 
+         mx32|mx64|mxahs|mxkde|mxbase32|mxworkbench32|mxworkbench64) return 0 ;;
 
 Save the changes and close the editor.
 	------------	------------	
 
 
-
 Next, we create the required template.
 	------------	------------
-In the Template folder, copy the template of the build that is the closest fit
+In the Template folder, copy the template of the build that is the closest fit, e.g.
 
 $ cp -r mx32 mxbase32
 
@@ -39,14 +35,13 @@ packages as needed for the build.
 	------------	------------
 
 
-
 Now we create or use a theme for the new build
 	------------	------------
 Familiarise yourself with how each theme is laid out and either use one as is, or 
 create a new one that fits your need. If creating a new theme, be sure to follow
 the same layout and structure as the themes already in use. 
 
-when build-iso runs, you will be given an opportunity to choose a theme.
+When build-iso runs, you will be given an opportunity to choose a theme.
 	------------	------------
 
 

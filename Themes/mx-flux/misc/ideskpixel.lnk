@@ -1,0 +1,11 @@
+# idesk helper icon, which will allow to keep idesk running
+# if idesk background rotation is in use
+table Icon
+  Caption: 
+  Icon: /etc/skel/.idesktop/ideskpixel.png
+  X: 1
+  Y: 1
+  Command[0]: true
+  Command[1]: true
+  Command[2]: true
+end
