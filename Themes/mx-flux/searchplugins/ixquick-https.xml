@@ -1,0 +1,15 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/">
+<os:ShortName>Ixquick HTTPS</os:ShortName>
+<os:Description>Ixquick HTTPS Search Bar</os:Description>
+<os:InputEncoding>utf-8</os:InputEncoding>
+<os:Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAELUExURf////Hz9/P1+ABuxwB82wBftfz9/gBDmnCr3OTs9eru8z2LzNHb5wA6jwB22HiawQBRpvb2+Sub60RzqCRcmwBarQVNmc3b6gBxzC52ud/u+dLk89/p8g9LkLXD2Im95l6v6dri7eHy/QB40/7+/5Kuzq+6za/V8kN6tABfut3m7wBzzjJXjwmM6ClnqeDs9gBBkiqS4avD3Cxgndnh61Sc2At60R+AzVqa0C1xssvc7QBmvABWqhF5z9vn8gIyevX4+vP5/eLs9SRqrQBTpwBx0vn7/QR50+vy+Y+mxBN1x5a21gBQnyOCzyKD0aDK6wBNosLZ7ODv+3qhyf7+/uDo8X6Ss0+UzwB42k6y2cYAAADDSURBVHjaYmBAAwABBEN2MAZAAMGQRSCUARBAUORozgFlAQQQFKm7+4ZAWAABxMDgIS0VpKTAZ+bPKaPFw8gAEEAMDE7hfoZCuizaXpJ6Ip6MDAABBFSkb+oawaLMzBogpsrEwAAQQGBd8rYSzNY2luIgNkAAgZEbtyarKLs3mA0QQGBk5SLg7GMgDNYAEEBgFMyrEWoka28CYgMEEAg5GPOzMTAo6oSpADkAAQRCXHJghqAaUJgBIIAwEEAAYSCAAAMARBsPYr2pVGQAAAAASUVORK5CYII=</os:Image>
+<UpdateInterval>3</UpdateInterval>
+<UpdateUrl>https://ixquick.com/toolbar/searchbar/en/ixquick_ff_secure_en.src</UpdateUrl>
+<IconUpdateUrl>https://ixquick.com/toolbar/searchbar/en/ixquick.png</IconUpdateUrl>
+<os:Url type="text/html" method="POST" template="https://ixquick.com/do/search">
+  <os:Param name="query" value="{searchTerms}"/>
+  <os:Param name="cat" value="web"/>
+  <os:Param name="pl" value="ff"/>
+  <os:Param name="language" value="english"/>
+</os:Url>
+</SearchPlugin>

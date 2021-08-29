@@ -13,10 +13,10 @@ CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
 DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
-DISTRO_VERSION="21"
+#DISTRO_VERSION="21"
 #DISTRO_VERSION="21_ahs"
 #DISTRO_VERSION="21_base"
-#DISTRO_VERSION="21_flux_base"
+DISTRO_VERSION="21_fluxbox_rc1"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -34,7 +34,7 @@ HOME_URL="https://mxlinux.org"
 
 #standard 32 bit
 #K_REVISION="8"
-#K_TEMPLATE="%V%G-%R-%A"
+#K_TEMPLATE="%V%G-%R-%A-pae"
 #K_VERSION="5.10.0"
 #UNSIGNED=""
 
@@ -49,7 +49,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="June 6, 2021"
+RELEASE_DATE="September 03, 2021"
 TIME_ZONE="America/New_York"
 
 #DE particular items

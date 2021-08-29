@@ -1,0 +1,62 @@
+#!/bin/sh
+
+#tag for mx-system update
+#mx-system 20.05.01
+#!/bin/sh
+
+set -e
+
+if [ -f /usr/lib/grub/grub-mkconfig_lib ]; then
+  . /usr/lib/grub/grub-mkconfig_lib
+  LX=linux16
+elif [ -f /usr/lib/grub/update-grub_lib ]; then
+  . /usr/lib/grub/update-grub_lib
+  LX=linux
+else
+  # no grub file, so we notify and exit gracefully
+  echo "Cannot find grub config file, exiting." >&2
+  exit 0
+fi
+
+# We can't cope with loop-mounted devices here.
+case ${GRUB_DEVICE_BOOT} in
+  /dev/loop/*|/dev/loop[0-9]) exit 0 ;;
+esac
+
+prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/\t/")"
+
+efi_vars_dir=/sys/firmware/efi/vars
+
+if [ ! -e "$efi_vars_dir" ] && [ -e /boot/memtest86+.bin ]; then
+  MEMTESTPATH=$( make_system_path_relative_to_its_root "/boot/memtest86+.bin" )
+  echo "Found memtest86+ image: $MEMTESTPATH" >&2
+  cat << 'EOF'
+if [ "${grub_platform}" == "pc" ]; then
+true
+menuentry "Memory test (memtest86+)" {
+EOF
+  printf '%s\n' "${prepare_boot_cache}"
+  cat << EOF
+	$LX	$MEMTESTPATH
+}
+fi
+EOF
+fi
+
+if [ -e "$efi_vars_dir" ] && [ -e /boot/uefi-mt/mtest-64.efi ]; then
+  MEMTESTPATH=$( make_system_path_relative_to_its_root "/boot/uefi-mt/mtest-64.efi" )
+  echo "Found mtest-64.efi image: $MEMTESTPATH" >&2
+  cat << 'EOF'
+if [ "${grub_platform}" == "efi" ]; then
+   if [ "${grub_cpu}" == "x86_64" ]; then
+true
+menuentry "Memory Test (64-bit UEFI)" {
+EOF
+  printf '%s\n' "${prepare_boot_cache}"
+  cat << EOF
+	chainloader	$MEMTESTPATH
+}
+  fi
+fi
+EOF
+fi

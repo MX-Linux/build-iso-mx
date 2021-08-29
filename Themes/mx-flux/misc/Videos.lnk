@@ -1,0 +1,10 @@
+table Icon
+  Caption: Videos
+  Icon: /usr/share/icons/mxfb-intro-news.png
+  X: 100
+  Y: 100
+  Command[0]: ideskrun sensible-browser https://bit.ly/2Sm1PJl
+  Command[1]: mx-idesktool Videos.lnk
+  Command[2]: ideskmenu
+end
+
