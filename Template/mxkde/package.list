@@ -193,6 +193,7 @@ firmware-b43legacy-installer
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
 #firmware-zd1211
+firmware-sof-signed
 flac
 flake
 foliate

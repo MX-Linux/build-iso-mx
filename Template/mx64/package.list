@@ -172,6 +172,7 @@ firmware-qlogic
 #firmware-ralink
 firmware-realtek
 #firmware-samsung #Debian
+firmware-sof-signed
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
 #firmware-zd1211
