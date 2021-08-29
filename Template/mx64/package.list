@@ -8,6 +8,8 @@ advert-block-antix
 #aisleriot
 alsa-tools
 alsa-utils
+alsa-topology-conf
+also-ucm-conf
 #amd64
 amd64-microcode
 anacron
@@ -172,6 +174,7 @@ firmware-qlogic
 #firmware-ralink
 firmware-realtek
 #firmware-samsung #Debian
+firmware-sof-signed
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
 #firmware-zd1211

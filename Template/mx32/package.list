@@ -8,6 +8,8 @@ advert-block-antix
 #aisleriot
 alsa-tools
 alsa-utils
+alsa-topology-conf
+also-ucm-conf
 #amd64
 amd64-microcode
 anacron
@@ -175,6 +177,7 @@ firmware-realtek
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
 #firmware-zd1211
+firmware-sof-signed
 flac
 flake
 #flashplugin-nonfree
