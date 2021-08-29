@@ -8,6 +8,8 @@ advert-block-antix
 #aisleriot
 alsa-tools
 alsa-utils
+alsa-topology-conf
+also-ucm-conf
 #amd64
 amd64-microcode
 anacron

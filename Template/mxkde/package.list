@@ -14,6 +14,8 @@ akonadi-contacts-data
 #akregator
 alsa-tools
 alsa-utils
+alsa-topology-conf
+also-ucm-conf
 amd64-microcode
 anacron
 #antix-installer
