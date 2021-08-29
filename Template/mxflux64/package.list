@@ -7,6 +7,8 @@ acpid
 adduser
 advert-block-antix
 alsa-tools
+alsa-topology-conf
+alsa-ucm-conf
 alsa-utils
 amd64-microcode
 anacron
@@ -167,6 +169,7 @@ firmware-myricom
 firmware-netxen
 firmware-qlogic
 firmware-realtek
+firmware-sof-signed
 firmware-zd1211
 flake
 fluxbox
