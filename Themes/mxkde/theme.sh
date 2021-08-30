@@ -22,10 +22,8 @@ copy_file timezone		/etc/
 copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
 copy_file 99-sandbox-mx.conf	/etc/sysctl.d/
 copy_file virtualbox-guest-utils /etc/init.d/
-#copy_file catfish.desktop	/usr/share/applications/ 
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
-#copy_file Window_Buttons.desktop	/usr/share/applications/
 copy_file nano.desktop		/usr/share/applications/
 copy_file sddm.conf		/etc/
 copy_file pc-speaker.conf	/etc/modprobe.d/
@@ -34,23 +32,12 @@ copy_file desktop.menu          /usr/local/share/boot-menus/
 copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 copy_file pppoeconf.desktop     /usr/share/applications/
 #copy_file daemon.conf 		/etc/pulse/
-#copy_file i915-power-saving.conf 	/etc/modprobe.d/
-#copy_file hang-on-shutdown.conf  	/etc/modprobe.d/
 #copy_file 98qtconfig /etc/X11/Xsession.d/
 #copy_file compton.desktop /etc/skel/.local/share/applications/
 #copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 copy_file yad-icon-browser.desktop /etc/skel/.local/share/applications/ --create
-#copy_file ndisgtk.desktop /usr/share/applications/
-#copy_file ndisgtk.svg /usr/share/icons/hicolor/scalable/apps/
-#copy_file ndisgtk.svg /usr/share/icons/hicolor/48x48/apps/
 copy_file uswsusp.conf /etc/
 copy_file plymouthd.conf /etc/plymouth/ --create
-#copy_file luckybackup.desktop /usr/share/applications/
-#copy_file luckybackup-su.desktop /usr/share/applications/
-#copy_file luckybackup.svg /usr/share/icons/hicolor/scalable/apps/
-
-#copy_dir Desktop/               /etc/skel/Desktop/           --create
-#copy_dir cache		/etc/skel/.cache/ 	--create
 
 ##alpha
 
