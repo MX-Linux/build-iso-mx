@@ -56,7 +56,7 @@ copy_file plymouthd.conf /etc/plymouth/ --create
 
 ##alpha
 
-copy_file MXALPHAWALL.png /usr/share/backgrounds/
-copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
+#copy_file MXALPHAWALL.png /usr/share/backgrounds/
+#copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
 exit
