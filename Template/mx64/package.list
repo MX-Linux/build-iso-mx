@@ -9,7 +9,7 @@ advert-block-antix
 alsa-tools
 alsa-utils
 alsa-topology-conf
-also-ucm-conf
+alsa-ucm-conf
 #amd64
 amd64-microcode
 anacron
