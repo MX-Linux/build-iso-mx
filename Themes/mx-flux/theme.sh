@@ -7,7 +7,7 @@ start_theme "$@"
 rm -R /etc/skel/.conky
 copy_file grub                  /etc/default/
 copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
-#copy_file 10_linux              /etc/grub.d/
+copy_file 10_linux              /etc/grub.d/
 #copy_file 20_memtest86+         /etc/grub.d/
 copy_dir desktop-base/               /usr/share/desktop-base/          --create
 copy_dir conky/               /etc/skel/.conky/          --create
@@ -51,8 +51,8 @@ copy_file plymouthd.conf /etc/plymouth/ --create
 #copy_file luckybackup-su.desktop /usr/share/applications/
 #copy_file luckybackup.svg /usr/share/icons/hicolor/scalable/apps/
 
-copy_dir Desktop/               /etc/skel/Desktop/           --create
-copy_dir cache		/etc/skel/.cache/ 	--create
+#copy_dir Desktop/               /etc/skel/Desktop/           --create
+#copy_dir cache		/etc/skel/.cache/ 	--create
 #copy_file preferences-desktop-locale.png /usr/share/pixmaps/
 copy_file ideskpixel.lnk	/etc/skel/.idesktop/
 copy_file Videos.lnk	/etc/skel/.idesktop/
@@ -62,6 +62,6 @@ copy_file mxfb-root-warn.jpg	/usr/share/backgrounds/
 ##alpha
 
 #copy_file MXALPHAWALL.png /usr/share/backgrounds/
-copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
+#copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/
 
 exit
