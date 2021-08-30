@@ -2795,6 +2795,12 @@ make_build_dir() {
     [[ -n $deb_files ]] && cp --target-directory=$b_dir/Deb $deb_files
 
     cp -r $0 Input $tools $regex_files $b_dir
+    
+    #make custom user-defaults file defaults in chroot, if it exists and switch was used
+    if [[ -n $user_default_file ]]; then 
+		cp $user_defaults $b_dir/Input/defaults
+	fi
+	
     mkdir $b_dir/Output
     touch $b_dir/$partial_name $b_dir/Output/$ME.log
 
