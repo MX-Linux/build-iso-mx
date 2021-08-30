@@ -36,7 +36,6 @@ copy_file pppoeconf.desktop     /usr/share/applications/
 #copy_file compton.desktop /etc/skel/.local/share/applications/
 #copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 copy_file yad-icon-browser.desktop /etc/skel/.local/share/applications/ --create
-copy_file uswsusp.conf /etc/
 copy_file plymouthd.conf /etc/plymouth/ --create
 
 ##alpha
