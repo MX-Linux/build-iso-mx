@@ -54,9 +54,9 @@ copy_file plymouthd.conf /etc/plymouth/ --create
 #copy_dir Desktop/               /etc/skel/Desktop/           --create
 #copy_dir cache		/etc/skel/.cache/ 	--create
 #copy_file preferences-desktop-locale.png /usr/share/pixmaps/
-copy_file ideskpixel.lnk	/etc/skel/.idesktop/
-copy_file Videos.lnk	/etc/skel/.idesktop/
-copy_file mxfb-root-warn.jpg	/usr/share/backgrounds/
+#copy_file ideskpixel.lnk	/etc/skel/.idesktop/
+#copy_file Videos.lnk	/etc/skel/.idesktop/
+#copy_file mxfb-root-warn.jpg	/usr/share/backgrounds/
 #copy_file apps		/etc/skel/.fluxbox/
 
 ##alpha

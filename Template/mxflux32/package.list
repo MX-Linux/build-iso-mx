@@ -423,6 +423,7 @@ memtest86+
 menu
 menu-xdg
 mesa-utils
+mesa-vulkan-drivers
 mime-support
 mlocate
 mobile-broadband-provider-info
