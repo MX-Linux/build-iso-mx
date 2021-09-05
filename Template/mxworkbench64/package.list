@@ -7,6 +7,8 @@ acpid
 adduser
 alsa-tools
 alsa-utils
+alsa-topology-conf
+alsa-ucm-conf
 amd64-microcode
 anacron
 apt
@@ -62,6 +64,7 @@ clamtk
 cli-aptix
 clonezilla
 cmospwd
+command-not-found
 coreutils
 cpio
 cpufrequtils
@@ -171,6 +174,7 @@ firmware-myricom
 firmware-netxen
 firmware-qlogic
 firmware-realtek
+firmware-sof-signed
 firmware-ti-connectivity
 firmware-zd1211
 flake
@@ -199,7 +203,6 @@ fsarchiver
 ftp
 fwupd
 galculator
-gcc-10-base
 gconf-service
 gconf2-common
 gcr
@@ -219,6 +222,9 @@ glib-networking-common
 glib-networking-services
 gnome-accessibility-themes
 gnome-icon-theme
+gnome-mime-data
+gnome-themes-standard
+gnupg-agent
 gnupg2
 gocr
 gpart
@@ -226,6 +232,7 @@ gparted
 gpgv
 grep
 growisofs
+grub-themes-mx
 grsync
 gsettings-desktop-schemas
 gsmartcontrol
@@ -406,6 +413,7 @@ meld
 memtester
 menu-xdg
 mesa-utils
+mesa-vulkan-drivers
 mime-support
 mobile-broadband-provider-info
 modemmanager
@@ -415,6 +423,7 @@ mpt-status
 mtr
 mx-boot-options
 mx-bootrepair
+mx-comfort-themes
 mx-datetime
 mx-debian-firmware
 mx-goodies
@@ -635,6 +644,7 @@ x11-xkb-utils
 x11-xserver-utils
 xauth
 xbitmaps
+xdg-user-dirs
 xdg-user-dirs-gtk
 xdg-utils
 xfburn
@@ -644,6 +654,7 @@ xfce4-cpufreq-plugin
 xfce4-cpugraph-plugin
 xfce4-datetime-plugin
 xfce4-diskperf-plugin
+xfce4-docklike-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
 #xfce4-hardware-monitor-plugin
@@ -680,6 +691,7 @@ xfonts-base
 xfonts-encodings
 xfonts-scalable
 xfonts-utils
+xfwm4
 xinit
 xinput
 xinput-calibrator
