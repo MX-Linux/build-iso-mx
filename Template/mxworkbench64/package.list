@@ -261,8 +261,8 @@ hfsutils-tcltk
 hostname
 hplip
 hplip-data
-hunspell-en-gb
-hunspell-en-us
+# hunspell-en-gb
+# hunspell-en-us
 hyphen-en-gb
 hyphen-en-us
 i2c-tools
@@ -428,7 +428,6 @@ mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
-mx-greybird-themes
 mx-idevice-mounter
 mx-live-usb-maker
 mx-menu-editor
@@ -482,6 +481,7 @@ openssh-client
 openvpn
 p7zip-full
 papirus-icon-theme
+papirus-mxblue
 partclone
 parted
 partition-info
@@ -654,7 +654,6 @@ xfce4-cpufreq-plugin
 xfce4-cpugraph-plugin
 xfce4-datetime-plugin
 xfce4-diskperf-plugin
-xfce4-docklike-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
 #xfce4-hardware-monitor-plugin

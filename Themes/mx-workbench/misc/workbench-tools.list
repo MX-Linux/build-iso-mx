@@ -12,8 +12,6 @@ gparted
 clonezilla
 gsmartcontrol 
 org.gnome.baobab
-disk-manager 
-gnome-qt4-fsarchiver 
 nwipe
 testdisk
 org.gnome.DiskUtility
