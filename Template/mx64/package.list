@@ -10,7 +10,6 @@ alsa-tools
 alsa-utils
 alsa-topology-conf
 alsa-ucm-conf
-#amd64
 amd64-microcode
 anacron
 #antix-installer
