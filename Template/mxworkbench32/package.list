@@ -727,4 +727,7 @@ yad
 zenmap
 zfs-fuse
 zip
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
 zsync

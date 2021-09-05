@@ -121,6 +121,7 @@ djvulibre-bin
 dkms
 dmidecode
 dmraid
+dmz-cursor-theme
 dns-root-data
 dnsmasq-base
 dnsutils
@@ -213,7 +214,6 @@ ghostscript
 ghostscript-x
 giblib1
 git
-glances
 glib-networking
 glib-networking-common
 glib-networking-services
@@ -318,7 +318,6 @@ libext2fs2
 libfastjson4
 libfdisk1
 libffi7
-libgcc1
 libgcrypt20
 libgmp10
 libgnutls30
@@ -402,7 +401,6 @@ lxrandr
 lynx
 manpages
 mawk
-md5deep
 mdadm
 meld
 memtester
@@ -466,7 +464,6 @@ nmon
 #nomacs
 #nomacs-l10n
 nwipe
-obdgpslogger
 obexfs
 onboard
 open-vm-tools
@@ -528,7 +525,6 @@ remmina-plugin-nx
 remmina-plugin-rdp
 remmina-plugin-secret
 remmina-plugin-spice
-remmina-plugin-telepathy
 remmina-plugin-vnc
 rename
 rkhunter
@@ -724,7 +720,9 @@ xserver-xorg-video-vmware
 xutils
 xutils-dev
 yad
-zenmap
 zfs-fuse
 zip
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
 zsync
