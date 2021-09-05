@@ -50,6 +50,7 @@ bzip2
 ca-certificates
 cabextract
 can-utils
+catfish
 cdparanoia
 ceni
 checkaptgpg
@@ -187,8 +188,8 @@ fonts-lyx
 fonts-noto
 fonts-opensymbol
 fonts-uralic
-fonts-vlgothic
-fonts-wqy-microhei
+fonts-vlgothic #Japanese
+fonts-wqy-microhei #Chinese
 foomatic-db-compressed-ppds
 formatusb
 fping
@@ -211,12 +212,12 @@ ghex
 ghostscript
 ghostscript-x
 giblib1
+git
 glances
 glib-networking
 glib-networking-common
 glib-networking-services
 gnome-accessibility-themes
-gnome-disk-utility
 gnome-icon-theme
 gnupg2
 gocr
@@ -378,6 +379,7 @@ libxtables12
 libzstd1
 lightdm
 lightdm-gtk-greeter
+lightdm-gtk-greeter-mx21
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linssid
@@ -422,6 +424,7 @@ mx-gpg-keys
 mx-greybird-themes
 mx-idevice-mounter
 mx-live-usb-maker
+mx-menu-editor
 mx-network-assistant
 mx-packageinstaller
 mx-packageinstaller-pkglist
@@ -462,12 +465,11 @@ nmap
 nmon
 #nomacs
 #nomacs-l10n
-ntp
-ntpdate
 nwipe
 obdgpslogger
 obexfs
 onboard
+open-vm-tools
 openconnect
 openipmi
 openssh-client
@@ -533,6 +535,7 @@ rkhunter
 rpcbind
 rpl
 rsyslog
+rtl8821ce-dkms
 rtorrent
 safecopy
 samba
@@ -567,6 +570,8 @@ system-config-printer-udev
 system-tools-backends
 systemd
 systemd-shim
+sysv-rc-conf
+sysvinit-core
 tar
 tcl
 tcl8.6
@@ -581,6 +586,8 @@ thunar-volman
 tlp
 #touchpad-indicator
 traceroute
+transmission-common
+transmission-gtk
 tumbler
 tumbler-common
 tumbler-plugins-extra
@@ -615,6 +622,7 @@ w3m
 wakeonlan
 wamerican
 wavpack
+webcamoid
 whiptail
 wipe
 wireless-tools
@@ -719,5 +727,4 @@ yad
 zenmap
 zfs-fuse
 zip
-zlib1g
 zsync

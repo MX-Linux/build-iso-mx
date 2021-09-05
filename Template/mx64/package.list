@@ -48,11 +48,9 @@ bluez-obexd
 bluez-tools
 bootlogd
 broadcom-sta-dkms
-#browser-plugin-freshplayer-pepperflash
 btrfs-progs
 build-essential
 #bum
-#bunsen-pepperflash
 bzip2
 ca-certificates
 ca-certificates-java
