@@ -19,7 +19,6 @@ copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/
 copy_file timezone		/etc/
-copy_file 99-sandbox-mx.conf	/etc/sysctl.d/
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
 copy_file nano.desktop		/usr/share/applications/
