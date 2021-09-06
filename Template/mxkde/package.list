@@ -380,6 +380,7 @@ kwin-style-breeze
 kwin-x11
 lame
 laptop-detect
+lazpaint-qt5
 lbreakout2
 lbreakout2-data
 libblockdev-crypto2
@@ -509,8 +510,8 @@ nfs-common-modified-init
 nfs-kernel-server
 #nictools-pci
 #nitroshare
-nomacs
-nomacs-l10n
+#nomacs
+#nomacs-l10n
 #ntp
 #ntrack-module-libnl-0
 nvidia-detect
