@@ -599,6 +599,7 @@ tdb-tools
 telnet
 thunar
 thunar-archive-plugin
+thunar-shares-plugin
 thunar-data
 thunar-gtkhash
 thunar-volman
