@@ -7,6 +7,8 @@ acpid
 adduser
 alsa-tools
 alsa-utils
+alsa-topology-conf
+alsa-ucm-conf
 amd64-microcode
 anacron
 apt
@@ -50,6 +52,7 @@ bzip2
 ca-certificates
 cabextract
 can-utils
+catfish
 cdparanoia
 ceni
 checkaptgpg
@@ -61,6 +64,7 @@ clamtk
 cli-aptix
 clonezilla
 cmospwd
+command-not-found
 coreutils
 cpio
 cpufrequtils
@@ -120,6 +124,7 @@ djvulibre-bin
 dkms
 dmidecode
 dmraid
+dmz-cursor-theme
 dns-root-data
 dnsmasq-base
 dnsutils
@@ -169,6 +174,7 @@ firmware-myricom
 firmware-netxen
 firmware-qlogic
 firmware-realtek
+firmware-sof-signed
 firmware-ti-connectivity
 firmware-zd1211
 flake
@@ -187,8 +193,8 @@ fonts-lyx
 fonts-noto
 fonts-opensymbol
 fonts-uralic
-fonts-vlgothic
-fonts-wqy-microhei
+fonts-vlgothic #Japanese
+fonts-wqy-microhei #Chinese
 foomatic-db-compressed-ppds
 formatusb
 fping
@@ -197,7 +203,6 @@ fsarchiver
 ftp
 fwupd
 galculator
-gcc-10-base
 gconf-service
 gconf2-common
 gcr
@@ -211,13 +216,15 @@ ghex
 ghostscript
 ghostscript-x
 giblib1
-glances
+git
 glib-networking
 glib-networking-common
 glib-networking-services
 gnome-accessibility-themes
-gnome-disk-utility
 gnome-icon-theme
+gnome-mime-data
+gnome-themes-standard
+gnupg-agent
 gnupg2
 gocr
 gpart
@@ -225,6 +232,7 @@ gparted
 gpgv
 grep
 growisofs
+grub-themes-mx
 grsync
 gsettings-desktop-schemas
 gsmartcontrol
@@ -253,8 +261,8 @@ hfsutils-tcltk
 hostname
 hplip
 hplip-data
-hunspell-en-gb
-hunspell-en-us
+# hunspell-en-gb
+# hunspell-en-us
 hyphen-en-gb
 hyphen-en-us
 i2c-tools
@@ -317,7 +325,6 @@ libext2fs2
 libfastjson4
 libfdisk1
 libffi7
-libgcc1
 libgcrypt20
 libgmp10
 libgnutls30
@@ -378,6 +385,7 @@ libxtables12
 libzstd1
 lightdm
 lightdm-gtk-greeter
+lightdm-gtk-greeter-mx21
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linssid
@@ -400,12 +408,12 @@ lxrandr
 lynx
 manpages
 mawk
-md5deep
 mdadm
 meld
 memtester
 menu-xdg
 mesa-utils
+mesa-vulkan-drivers
 mime-support
 mobile-broadband-provider-info
 modemmanager
@@ -415,13 +423,14 @@ mpt-status
 mtr
 mx-boot-options
 mx-bootrepair
+mx-comfort-themes
 mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
-mx-greybird-themes
 mx-idevice-mounter
 mx-live-usb-maker
+mx-menu-editor
 mx-network-assistant
 mx-packageinstaller
 mx-packageinstaller-pkglist
@@ -462,18 +471,17 @@ nmap
 nmon
 #nomacs
 #nomacs-l10n
-ntp
-ntpdate
 nwipe
-obdgpslogger
 obexfs
 onboard
+open-vm-tools
 openconnect
 openipmi
 openssh-client
 openvpn
 p7zip-full
 papirus-icon-theme
+papirus-mxblue
 partclone
 parted
 partition-info
@@ -526,13 +534,13 @@ remmina-plugin-nx
 remmina-plugin-rdp
 remmina-plugin-secret
 remmina-plugin-spice
-remmina-plugin-telepathy
 remmina-plugin-vnc
 rename
 rkhunter
 rpcbind
 rpl
 rsyslog
+rtl8821ce-dkms
 rtorrent
 safecopy
 samba
@@ -567,6 +575,8 @@ system-config-printer-udev
 system-tools-backends
 systemd
 systemd-shim
+sysv-rc-conf
+sysvinit-core
 tar
 tcl
 tcl8.6
@@ -581,6 +591,8 @@ thunar-volman
 tlp
 #touchpad-indicator
 traceroute
+transmission-common
+transmission-gtk
 tumbler
 tumbler-common
 tumbler-plugins-extra
@@ -615,6 +627,7 @@ w3m
 wakeonlan
 wamerican
 wavpack
+webcamoid
 whiptail
 wipe
 wireless-tools
@@ -631,6 +644,7 @@ x11-xkb-utils
 x11-xserver-utils
 xauth
 xbitmaps
+xdg-user-dirs
 xdg-user-dirs-gtk
 xdg-utils
 xfburn
@@ -676,6 +690,7 @@ xfonts-base
 xfonts-encodings
 xfonts-scalable
 xfonts-utils
+xfwm4
 xinit
 xinput
 xinput-calibrator
@@ -716,8 +731,9 @@ xserver-xorg-video-vmware
 xutils
 xutils-dev
 yad
-zenmap
 zfs-fuse
 zip
-zlib1g
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
 zsync
