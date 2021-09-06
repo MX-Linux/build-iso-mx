@@ -32,6 +32,7 @@ bash-config
 bc
 bind9-host
 binutils
+binwalk
 blockout2
 blueman
 bluetooth
@@ -109,6 +110,7 @@ desktop-defaults-mx-xfce
 desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 desktop-file-utils
+detox
 dh-python
 di
 dialog
