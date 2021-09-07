@@ -27,8 +27,6 @@ bar
 base-files
 base-passwd
 bash
-bash-completion
-bash-config
 bc
 bind9-host
 binutils
@@ -65,7 +63,6 @@ clamtk
 cli-aptix
 clonezilla
 cmospwd
-command-not-found
 coreutils
 cpio
 cpufrequtils
@@ -738,5 +735,6 @@ zfs-fuse
 zip
 zsh
 zsh-autosuggestions
+zsh-theme-powerlevel10k
 zsh-syntax-highlighting
 zsync
