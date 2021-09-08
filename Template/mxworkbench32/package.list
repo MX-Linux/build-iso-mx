@@ -16,7 +16,7 @@ apt-notifier
 apt-transport-https
 apt-utils
 apt-xapian-index
-arandr
+# arandr
 arpwatch
 at-spi2-core
 atmel-firmware
@@ -31,7 +31,7 @@ bc
 bind9-host
 binutils
 binwalk
-blockout2
+# blockout2
 blueman
 bluetooth
 bluez
@@ -52,7 +52,7 @@ ca-certificates
 cabextract
 can-utils
 catfish
-cdparanoia
+# cdparanoia
 ceni
 checkaptgpg
 chntpw
@@ -108,7 +108,7 @@ desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 desktop-file-utils
 detox
-dh-python
+# dh-python
 di
 dialog
 dictionaries-common
@@ -148,7 +148,7 @@ f2fs-tools
 fakeroot
 fbxkb
 fdisk
-featherpad
+# featherpad
 feh
 file-roller
 findutils
@@ -610,12 +610,11 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-#uswsusp
 util-linux
 va-driver-all
 vainfo
 vbetool
-vcdimager
+# vcdimager
 vdpau-driver-all
 vim
 vmfs-tools
@@ -656,10 +655,10 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
-#xfce4-hardware-monitor-plugin
+# xfce4-hardware-monitor-plugin
 xfce4-mount-plugin
 xfce4-netload-plugin
-#xfce4-notes
+# xfce4-notes
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
@@ -667,7 +666,7 @@ xfce4-power-manager
 xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
-#xfce4-screensaver
+# xfce4-screensaver
 xfce4-screenshooter
 xfce4-sensors-plugin
 xfce4-session
@@ -714,7 +713,7 @@ xserver-xorg-video-ati
 xserver-xorg-video-cirrus
 xserver-xorg-video-fbdev
 xserver-xorg-video-intel
-xserver-xorg-video-mach64
+# xserver-xorg-video-mach64
 xserver-xorg-video-mga
 xserver-xorg-video-neomagic
 xserver-xorg-video-nouveau
@@ -724,8 +723,8 @@ xserver-xorg-video-radeon
 xserver-xorg-video-savage
 xserver-xorg-video-siliconmotion
 xserver-xorg-video-sisusb
-xserver-xorg-video-tdfx
-xserver-xorg-video-trident
+# xserver-xorg-video-tdfx
+# xserver-xorg-video-trident
 xserver-xorg-video-vesa
 xserver-xorg-video-vmware
 xutils
