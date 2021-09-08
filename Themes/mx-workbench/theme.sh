@@ -7,7 +7,6 @@ start_theme "$@"
 copy_file grub                  /etc/default/
 copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
 copy_file 10_linux              /etc/grub.d/
-#copy_file 20_memtest86+         /etc/grub.d/
 #copy_dir conky/               /etc/skel/.conky/          --create
 copy_dir extra/               /usr/share/fonts/extra       --create
 copy_file alsamixer.desktop /usr/share/applications/
@@ -18,7 +17,6 @@ copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/
 copy_file timezone		/etc/
-#copy_file 98vboxadd-xclient     /etc/X11/Xsession.d/
 copy_file display-im6.desktop		/usr/share/applications/ 
 copy_file display-im6.q16.desktop	/usr/share/applications/
 copy_file synaptic.desktop 		/usr/share/applications/
@@ -31,8 +29,12 @@ copy_file desktop.menu          /usr/local/share/boot-menus/
 copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 copy_file pppoeconf.desktop     /usr/share/applications/
 
-#copy_dir Desktop/               /etc/skel/Desktop/           --create
-#copy_dir cache		/etc/skel/.cache/ 	--create
+# setup zsh and powerlevel10k
+copy_file .zshrc /etc/skel/
+copy_file .p10k.zsh /etc/skel/
+[ $ISO_ARCH = "x64" ] && copy_file gitstatusd-linux-x86_64 /etc/skel/.cache/gitstatus/ --create
+[ $ISO_ARCH = "386" ] && copy_file gitstatusd-linux-i686 /etc/skel/.cache/gitstatus/ --create
+copy_file adduser.conf /etc/
 
 # copy custom Workbench stuff
 copy_file workbench-tools.desktop /usr/share/applications/
