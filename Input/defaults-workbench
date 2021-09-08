@@ -40,7 +40,7 @@ TIME_ZONE="America/New_York"
 #DE particular items
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
-ISO_SHELL="/usr/bin/zsh"
+ISO_SHELL="/bin/zsh"
 
 #options for building squashfs
 #lz4 is good for testing but large isos
