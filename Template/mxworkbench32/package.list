@@ -488,6 +488,9 @@ partition-info
 passwd
 perl-base
 pinentry-gtk2
+plymouth
+plymouth-themes
+plymouth-themes-mx
 pm-utils
 pmount
 policykit-1
