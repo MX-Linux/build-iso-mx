@@ -16,7 +16,7 @@ apt-notifier
 apt-transport-https
 apt-utils
 apt-xapian-index
-arandr
+# arandr
 arpwatch
 at-spi2-core
 atmel-firmware
