@@ -132,10 +132,17 @@ source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# Set some ls aliases
+alias ls='ls --color=auto'
+alias ll='ls -lh'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Set terminal tab name
 case $TERM in
-  xterm*)
-         precmd() { print -Pn "\e]0;%m:%~\a" }
-         preexec() { print -Pn "\e]0;$1\a" }
+    xterm*|rxvt*)
+        precmd() { print -Pn "\e]0;%m:%~\a" }
+        preexec() { print -Pn "\e]0;$1\a" }
     ;;
 esac
 
