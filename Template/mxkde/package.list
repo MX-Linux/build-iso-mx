@@ -289,6 +289,7 @@ isomount
 iucode-tool
 java-common
 javascript-common
+job-scheduler
 k3b
 kaccounts-providers
 kactivities-bin
@@ -677,7 +678,7 @@ sane-utils
 #scrollkeeper
 scrot
 sddm
-sddm-modified-init
+#sddm-modified-init
 sddm-theme-breeze
 sdparm
 sendemail

@@ -81,7 +81,6 @@ Usage
 
 # Output from start_main() does not get vlogged
 main() {
-
     unset UMOUNT_ERRORS
     MAIN_T=$(date +%s)
 
@@ -1124,7 +1123,7 @@ do_stage_4() {
             say "Set up live user account $(pq $user)"
             grep -q "^$user:" /etc/group || groupadd $user
             local user_pw=$(mkpasswd -m sha-512 $user)
-            useradd -s /bin/bash -g $user -d /home/$user -p $user_pw $user
+            useradd -s ${ISO_SHELL:="/bin/bash"} -g $user -d /home/$user -p $user_pw $user
         fi
 
         gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
@@ -1267,6 +1266,7 @@ do_stage_4() {
 }
 
 apply_theme() {
+    export ISO_ARCH
     local theme=${1:-$THEME}
     [[ $theme = none ]] && return
 

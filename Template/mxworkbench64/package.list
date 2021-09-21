@@ -16,7 +16,7 @@ apt-notifier
 apt-transport-https
 apt-utils
 apt-xapian-index
-arandr
+# arandr
 arpwatch
 at-spi2-core
 atmel-firmware
@@ -27,12 +27,11 @@ bar
 base-files
 base-passwd
 bash
-bash-completion
-bash-config
 bc
 bind9-host
 binutils
-blockout2
+binwalk
+# blockout2
 blueman
 bluetooth
 bluez
@@ -53,7 +52,7 @@ ca-certificates
 cabextract
 can-utils
 catfish
-cdparanoia
+# cdparanoia
 ceni
 checkaptgpg
 chntpw
@@ -64,7 +63,6 @@ clamtk
 cli-aptix
 clonezilla
 cmospwd
-command-not-found
 coreutils
 cpio
 cpufrequtils
@@ -109,7 +107,8 @@ desktop-defaults-mx-xfce
 desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 desktop-file-utils
-dh-python
+detox
+# dh-python
 di
 dialog
 dictionaries-common
@@ -149,7 +148,7 @@ f2fs-tools
 fakeroot
 fbxkb
 fdisk
-featherpad
+# featherpad
 feh
 file-roller
 findutils
@@ -221,6 +220,7 @@ glib-networking
 glib-networking-common
 glib-networking-services
 gnome-accessibility-themes
+gnome-disk-utility
 gnome-icon-theme
 gnome-mime-data
 gnome-themes-standard
@@ -288,6 +288,7 @@ iso-codes
 isomaster
 isomount
 iucode-tool
+job-scheduler
 kmod
 krb5-locales
 lame
@@ -488,6 +489,9 @@ partition-info
 passwd
 perl-base
 pinentry-gtk2
+plymouth
+plymouth-themes
+plymouth-themes-mx
 pm-utils
 pmount
 policykit-1
@@ -610,12 +614,11 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-#uswsusp
 util-linux
 va-driver-all
 vainfo
 vbetool
-vcdimager
+# vcdimager
 vdpau-driver-all
 vim
 vmfs-tools
@@ -656,10 +659,10 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
-#xfce4-hardware-monitor-plugin
+# xfce4-hardware-monitor-plugin
 xfce4-mount-plugin
 xfce4-netload-plugin
-#xfce4-notes
+# xfce4-notes
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
@@ -667,7 +670,7 @@ xfce4-power-manager
 xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
-#xfce4-screensaver
+# xfce4-screensaver
 xfce4-screenshooter
 xfce4-sensors-plugin
 xfce4-session
@@ -714,7 +717,7 @@ xserver-xorg-video-ati
 xserver-xorg-video-cirrus
 xserver-xorg-video-fbdev
 xserver-xorg-video-intel
-xserver-xorg-video-mach64
+# xserver-xorg-video-mach64
 xserver-xorg-video-mga
 xserver-xorg-video-neomagic
 xserver-xorg-video-nouveau
@@ -724,8 +727,8 @@ xserver-xorg-video-radeon
 xserver-xorg-video-savage
 xserver-xorg-video-siliconmotion
 xserver-xorg-video-sisusb
-xserver-xorg-video-tdfx
-xserver-xorg-video-trident
+# xserver-xorg-video-tdfx
+# xserver-xorg-video-trident
 xserver-xorg-video-vesa
 xserver-xorg-video-vmware
 xutils
@@ -735,5 +738,6 @@ zfs-fuse
 zip
 zsh
 zsh-autosuggestions
+zsh-theme-powerlevel10k
 zsh-syntax-highlighting
 zsync

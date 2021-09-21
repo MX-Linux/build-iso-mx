@@ -7,6 +7,8 @@ acpid
 adduser
 alsa-tools
 alsa-utils
+alsa-topology-conf
+alsa-ucm-conf
 amd64-microcode
 anacron
 apt
@@ -14,7 +16,7 @@ apt-notifier
 apt-transport-https
 apt-utils
 apt-xapian-index
-arandr
+# arandr
 arpwatch
 at-spi2-core
 atmel-firmware
@@ -25,12 +27,11 @@ bar
 base-files
 base-passwd
 bash
-bash-completion
-bash-config
 bc
 bind9-host
 binutils
-blockout2
+binwalk
+# blockout2
 blueman
 bluetooth
 bluez
@@ -51,7 +52,7 @@ ca-certificates
 cabextract
 can-utils
 catfish
-cdparanoia
+# cdparanoia
 ceni
 checkaptgpg
 chntpw
@@ -106,7 +107,8 @@ desktop-defaults-mx-xfce
 desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 desktop-file-utils
-dh-python
+detox
+# dh-python
 di
 dialog
 dictionaries-common
@@ -121,6 +123,7 @@ djvulibre-bin
 dkms
 dmidecode
 dmraid
+dmz-cursor-theme
 dns-root-data
 dnsmasq-base
 dnsutils
@@ -145,7 +148,7 @@ f2fs-tools
 fakeroot
 fbxkb
 fdisk
-featherpad
+# featherpad
 feh
 file-roller
 findutils
@@ -170,6 +173,7 @@ firmware-myricom
 firmware-netxen
 firmware-qlogic
 firmware-realtek
+firmware-sof-signed
 firmware-ti-connectivity
 firmware-zd1211
 flake
@@ -198,7 +202,6 @@ fsarchiver
 ftp
 fwupd
 galculator
-gcc-10-base
 gconf-service
 gconf2-common
 gcr
@@ -213,12 +216,15 @@ ghostscript
 ghostscript-x
 giblib1
 git
-glances
 glib-networking
 glib-networking-common
 glib-networking-services
 gnome-accessibility-themes
+gnome-disk-utility
 gnome-icon-theme
+gnome-mime-data
+gnome-themes-standard
+gnupg-agent
 gnupg2
 gocr
 gpart
@@ -226,6 +232,7 @@ gparted
 gpgv
 grep
 growisofs
+grub-themes-mx
 grsync
 gsettings-desktop-schemas
 gsmartcontrol
@@ -254,8 +261,8 @@ hfsutils-tcltk
 hostname
 hplip
 hplip-data
-hunspell-en-gb
-hunspell-en-us
+# hunspell-en-gb
+# hunspell-en-us
 hyphen-en-gb
 hyphen-en-us
 i2c-tools
@@ -281,6 +288,7 @@ iso-codes
 isomaster
 isomount
 iucode-tool
+job-scheduler
 kmod
 krb5-locales
 lame
@@ -318,7 +326,6 @@ libext2fs2
 libfastjson4
 libfdisk1
 libffi7
-libgcc1
 libgcrypt20
 libgmp10
 libgnutls30
@@ -402,12 +409,12 @@ lxrandr
 lynx
 manpages
 mawk
-md5deep
 mdadm
 meld
 memtester
 menu-xdg
 mesa-utils
+mesa-vulkan-drivers
 mime-support
 mobile-broadband-provider-info
 modemmanager
@@ -417,11 +424,11 @@ mpt-status
 mtr
 mx-boot-options
 mx-bootrepair
+mx-comfort-themes
 mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
-mx-greybird-themes
 mx-idevice-mounter
 mx-live-usb-maker
 mx-menu-editor
@@ -466,7 +473,6 @@ nmon
 #nomacs
 #nomacs-l10n
 nwipe
-obdgpslogger
 obexfs
 onboard
 open-vm-tools
@@ -476,12 +482,16 @@ openssh-client
 openvpn
 p7zip-full
 papirus-icon-theme
+papirus-mxblue
 partclone
 parted
 partition-info
 passwd
 perl-base
 pinentry-gtk2
+plymouth
+plymouth-themes
+plymouth-themes-mx
 pm-utils
 pmount
 policykit-1
@@ -528,7 +538,6 @@ remmina-plugin-nx
 remmina-plugin-rdp
 remmina-plugin-secret
 remmina-plugin-spice
-remmina-plugin-telepathy
 remmina-plugin-vnc
 rename
 rkhunter
@@ -605,12 +614,11 @@ usb-modeswitch
 usb-modeswitch-data
 usbmuxd
 usbutils
-#uswsusp
 util-linux
 va-driver-all
 vainfo
 vbetool
-vcdimager
+# vcdimager
 vdpau-driver-all
 vim
 vmfs-tools
@@ -639,6 +647,7 @@ x11-xkb-utils
 x11-xserver-utils
 xauth
 xbitmaps
+xdg-user-dirs
 xdg-user-dirs-gtk
 xdg-utils
 xfburn
@@ -650,10 +659,10 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
-#xfce4-hardware-monitor-plugin
+# xfce4-hardware-monitor-plugin
 xfce4-mount-plugin
 xfce4-netload-plugin
-#xfce4-notes
+# xfce4-notes
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
@@ -661,7 +670,7 @@ xfce4-power-manager
 xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
-#xfce4-screensaver
+# xfce4-screensaver
 xfce4-screenshooter
 xfce4-sensors-plugin
 xfce4-session
@@ -684,6 +693,7 @@ xfonts-base
 xfonts-encodings
 xfonts-scalable
 xfonts-utils
+xfwm4
 xinit
 xinput
 xinput-calibrator
@@ -707,7 +717,7 @@ xserver-xorg-video-ati
 xserver-xorg-video-cirrus
 xserver-xorg-video-fbdev
 xserver-xorg-video-intel
-xserver-xorg-video-mach64
+# xserver-xorg-video-mach64
 xserver-xorg-video-mga
 xserver-xorg-video-neomagic
 xserver-xorg-video-nouveau
@@ -717,17 +727,17 @@ xserver-xorg-video-radeon
 xserver-xorg-video-savage
 xserver-xorg-video-siliconmotion
 xserver-xorg-video-sisusb
-xserver-xorg-video-tdfx
-xserver-xorg-video-trident
+# xserver-xorg-video-tdfx
+# xserver-xorg-video-trident
 xserver-xorg-video-vesa
 xserver-xorg-video-vmware
 xutils
 xutils-dev
 yad
-zenmap
 zfs-fuse
 zip
 zsh
 zsh-autosuggestions
+zsh-theme-powerlevel10k
 zsh-syntax-highlighting
 zsync
