@@ -122,7 +122,7 @@ main() {
 
     KEYTABLE=${CMD_KEYS:-$KEYTABLE}
     if [ -n "$KEYTABLE" -a -z "$NO_LOAD_KEYS" ]; then
-        echo_live "$_Configuring_console_for_a_X_keymap_" "$(pquote $KEYTABLE)"
+        # echo_live "$_Configuring_console_for_a_X_keymap_" "$(pquote $KEYTABLE)"
         # install keymap and set console font
         rm -f /etc/console/*
         #/usr/sbin/install-keymap "$KEYTABLE"

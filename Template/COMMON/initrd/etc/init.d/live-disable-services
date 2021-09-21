@@ -312,7 +312,7 @@ disable_services() {
             [ -z "${service###*}" ] && continue
 
             [ -n "$RUNIT" ] && [ -d "/etc/sv/$service" ] \
-                && unlink "/etc/service/$service"
+                && unlink "/etc/service/$service" 2>/dev/null
 
             for slink in /$rc_dir/S*$service; do
                 [ -e "$slink" ] || continue

@@ -555,14 +555,18 @@ localize_skel() {
 set_keyboard() {
     local kb_file=/etc/default/keyboard
     local default_xkb_opts="grp:rctrl_rshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
-
     first_write $kb_file || [ "$DO_XKBD" ] || return
 
     XKBLAYOUT=${CMD_KBD:-$XKBLAYOUT}
-    [ "$XKBLAYOUT"  ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-layout)  $(pquote $XKBLAYOUT)
-    [ "$XKBMODEL"   ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-model)   $(pquote $XKBMODEL)
-    [ "$XKBVARIANT" ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-variant) $(pquote $XKBVARIANT)
-    [ "$XKBOPTIONS" ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-options) $(pquote $XKBOPTIONS)
+    #[ "$XKBLAYOUT"  ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-layout)  $(pquote $XKBLAYOUT)
+    #[ "$XKBMODEL"   ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-model)   $(pquote $XKBMODEL)
+    #[ "$XKBVARIANT" ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-variant) $(pquote $XKBVARIANT)
+    #[ "$XKBOPTIONS" ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-options) $(pquote $XKBOPTIONS)
+
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-layout)  $(pquote ${XKBLAYOUT:=us})
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-model)   $(pquote ${XKBMODEL:=pc105})
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-variant) $(pquote ${XKBVARIANT})
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-options) $(pquote ${XKBOPTIONS:=$default_xkb_opts})
 
     cat > $kb_file <<Keyboard_Out
 # KEYBOARD CONFIGURATION FILE
@@ -576,6 +580,11 @@ XKBOPTIONS="${XKBOPTIONS:=$default_xkb_opts}"
 
 BACKSPACE="guess"
 Keyboard_Out
+    
+    # feh: need re-set console keyboard for password prompt
+    echo_live "CONSOLE KEYMAP: $(pquote $kb_file)"
+    # suppress "ugly" warnings due to an old, known but never fixed German keysym issue
+    setupcon -k 2>&1 | grep -v 'Unknown X keysym "dead_belowmacron"'
 }
 
 #------------------------------------------------------------------------------
