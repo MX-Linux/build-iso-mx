@@ -242,7 +242,6 @@ gstreamer1.0-pulseaudio
 gtk-theme-switch
 gtk2-engines-murrine
 gtk2-engines-pixbuf
-gtk3-nocsd
 gtkdialog
 gufw
 gvfs
