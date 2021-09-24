@@ -251,6 +251,7 @@ gtk-theme-switch
 gtk2-engines-pixbuf
 #gtk2-engines-xfce
 #gtk3-engines-xfce
+gtk3-nocsd
 gufw
 guvcview
 gvfs
