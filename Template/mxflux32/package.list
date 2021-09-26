@@ -583,7 +583,9 @@ rpcbind
 rpl
 rsync
 rsyslog
-rtl8821ce-dkms
+rtl8812au-dkms 
+rtl8821ce-dkms 
+rtl8821cu-dkms
 samba
 samba-common
 samba-common-bin
