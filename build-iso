@@ -897,7 +897,7 @@ do_stage_4() {
 
     if do_part 5 "Install kernel & headers"; then
         local kname=linux-image-$K_NAME
-        ! is_antiX && kname=$full_kname$UNSIGNED
+        ! is_antiX && kname=$kname$UNSIGNED
         apt-get $APT_GET_OPTS install linux-headers-$K_NAME $kname
         end_part_strict
     fi
