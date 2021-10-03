@@ -755,7 +755,7 @@ vainfo
 vbetool
 vcdimager
 vdpau-driver-all
-virtualbox-guest-dkms
+#virtualbox-guest-dkms
 virtualbox-guest-utils
 virtualbox-guest-utils-modified-init
 virtualbox-guest-x11

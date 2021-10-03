@@ -641,7 +641,7 @@ vbetool
 vcdimager
 vdpau-driver-all
 vim-tiny
-virtualbox-guest-dkms
+#virtualbox-guest-dkms
 virtualbox-guest-utils
 virtualbox-guest-utils-modified-init
 virtualbox-guest-x11
