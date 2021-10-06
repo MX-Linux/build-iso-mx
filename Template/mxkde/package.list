@@ -680,7 +680,7 @@ sane-utils
 #scrollkeeper
 scrot
 sddm
-#sddm-modified-init
+sddm-modified-init
 sddm-theme-breeze
 sdparm
 sendemail
