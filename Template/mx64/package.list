@@ -547,7 +547,8 @@ read-edid
 rpcbind
 rpl
 #rtkit
-rtl8812au-dkms 
+rtl8812au-dkms
+rtl8814au-dkms
 rtl8821ce-dkms 
 rtl8821cu-dkms
 samba
