@@ -26,6 +26,13 @@ usb_save=/live/etc/init.d/live-usb-save
 # Set up 12 hour clock format for some countries eg US
 /usr/local/bin/clock12or24
 
+#make /etc/machine-id from /var/lib/dbus/machine-id if not present
+    if [ ! -e /etc/machine-id ]; then
+    	if [ -e /var/lib/dbus/machine-id ]; then
+    		cp /var/lib/dbus/machine-id /etc/machine-id
+    	fi
+    fi
+
 #make sure an apt cache archive partial folder exists for apt-notifier
  [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
 
