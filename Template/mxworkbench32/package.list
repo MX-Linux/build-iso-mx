@@ -545,6 +545,7 @@ rpcbind
 rpl
 rsyslog
 rtl8812au-dkms
+rtl8814au-dkms
 rtl8821ce-dkms
 rtl8821cu-dkms
 rtorrent
