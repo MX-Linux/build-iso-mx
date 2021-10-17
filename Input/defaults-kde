@@ -34,7 +34,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="October 18, 2021"
+RELEASE_DATE="October 20, 2021"
 TIME_ZONE="America/New_York"
 
 #DE particular items
