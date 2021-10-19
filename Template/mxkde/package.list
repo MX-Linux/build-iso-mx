@@ -313,7 +313,7 @@ kde-servicemenu-checkhash-installdebs
 kde-servicemenu-extract-and-compress
 kde-servicemenu-kim4
 kde-servicemenu-rootactions
-#kde-spectacle # crashy
+kde-spectacle 
 kde-standard
 kde-style-breeze
 kde-style-oxygen-qt5
@@ -365,7 +365,6 @@ krdc
 #krita
 kross
 kscreen
-ksnip
 ksshaskpass
 ksudoku
 ksysguard
