@@ -27,8 +27,6 @@ apt-config-icons-large
 #apt-mx
 #apt-notifier
 apt-transport-https
-apt-transport-https
-apt-xapian-index
 apt-xapian-index
 aptitude
 aptitude-common
