@@ -1,3 +1,28 @@
+# arandr
+# blockout2
+# cdparanoia
+# cryptsetup-modified-functions
+# dh-python
+# disk-manager
+# featherpad
+# hibernate
+# hunspell-en-gb
+# hunspell-en-us
+# libapt-inst2.0
+# nictools-pci
+# nomacs
+# nomacs-l10n
+# smbc
+# smbclient
+# system-config-samba
+# touchpad-indicator
+# vcdimager
+# xfce4-hardware-monitor-plugin
+# xfce4-notes
+# xfce4-screensaver
+# xserver-xorg-video-mach64
+# xserver-xorg-video-tdfx
+# xserver-xorg-video-trident
 abiword
 accountsservice
 acl
@@ -6,9 +31,9 @@ acpi-fakekey
 acpid
 adduser
 alsa-tools
-alsa-utils
 alsa-topology-conf
 alsa-ucm-conf
+alsa-utils
 amd64-microcode
 anacron
 apt
@@ -16,7 +41,6 @@ apt-notifier
 apt-transport-https
 apt-utils
 apt-xapian-index
-# arandr
 arpwatch
 at-spi2-core
 atmel-firmware
@@ -31,7 +55,6 @@ bc
 bind9-host
 binutils
 binwalk
-# blockout2
 blueman
 bluetooth
 bluez
@@ -52,7 +75,6 @@ ca-certificates
 cabextract
 can-utils
 catfish
-# cdparanoia
 ceni
 checkaptgpg
 chntpw
@@ -69,7 +91,6 @@ cpufrequtils
 cpuid
 cpuidtool
 cron
-#cryptsetup-modified-functions
 cups
 cups-browsed
 cups-bsd
@@ -108,7 +129,6 @@ desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 desktop-file-utils
 detox
-# dh-python
 di
 dialog
 dictionaries-common
@@ -116,7 +136,6 @@ diffutils
 digitemp
 discover
 discover-data
-#disk-manager
 disktype
 dislocker
 djvulibre-bin
@@ -148,7 +167,6 @@ f2fs-tools
 fakeroot
 fbxkb
 fdisk
-# featherpad
 feh
 file-roller
 findutils
@@ -232,8 +250,8 @@ gparted
 gpgv
 grep
 growisofs
-grub-themes-mx
 grsync
+grub-themes-mx
 gsettings-desktop-schemas
 gsmartcontrol
 gstreamer1.0-alsa
@@ -257,12 +275,9 @@ hfsplus
 hfsprogs
 hfsutils
 hfsutils-tcltk
-#hibernate
 hostname
 hplip
 hplip-data
-# hunspell-en-gb
-# hunspell-en-us
 hyphen-en-gb
 hyphen-en-us
 i2c-tools
@@ -289,13 +304,13 @@ isomaster
 isomount
 iucode-tool
 job-scheduler
+keepassx
 kmod
 krb5-locales
 lame
 laptop-detect
 libacl1
 libapparmor1
-#libapt-inst2.0
 libapt-pkg6.0
 libargon2-1
 libattr1
@@ -467,11 +482,8 @@ network-manager-vpnc
 nfs-common
 nfs-common-modified-init
 nfs-kernel-server
-#nictools-pci
 nmap
 nmon
-#nomacs
-#nomacs-l10n
 nwipe
 obexfs
 onboard
@@ -525,6 +537,7 @@ python3-bluez
 python3-smbc
 qla-tools
 qpdfview
+qt-fsarchiver
 qt5-gtk-platformtheme
 rdesktop
 rdiff-backup
@@ -563,8 +576,6 @@ sensible-utils
 sgml-base
 sgml-data
 shared-mime-info
-#smbc
-#smbclient
 smbios-utils
 spice-vdagent
 ssh-askpass-gnome
@@ -578,7 +589,6 @@ syslinux-common
 syslinux-utils
 system-config-printer
 system-config-printer-udev
-#system-config-samba
 system-tools-backends
 systemd
 systemd-shim
@@ -596,7 +606,6 @@ thunar-data
 thunar-gtkhash
 thunar-volman
 tlp
-#touchpad-indicator
 traceroute
 transmission-common
 transmission-gtk
@@ -621,7 +630,6 @@ util-linux
 va-driver-all
 vainfo
 vbetool
-# vcdimager
 vdpau-driver-all
 vim
 vmfs-tools
@@ -662,10 +670,8 @@ xfce4-datetime-plugin
 xfce4-diskperf-plugin
 xfce4-fsguard-plugin
 xfce4-genmon-plugin
-# xfce4-hardware-monitor-plugin
 xfce4-mount-plugin
 xfce4-netload-plugin
-# xfce4-notes
 xfce4-notifyd
 xfce4-panel
 xfce4-places-plugin
@@ -673,7 +679,6 @@ xfce4-power-manager
 xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
-# xfce4-screensaver
 xfce4-screenshooter
 xfce4-sensors-plugin
 xfce4-session
@@ -720,7 +725,6 @@ xserver-xorg-video-ati
 xserver-xorg-video-cirrus
 xserver-xorg-video-fbdev
 xserver-xorg-video-intel
-# xserver-xorg-video-mach64
 xserver-xorg-video-mga
 xserver-xorg-video-neomagic
 xserver-xorg-video-nouveau
@@ -730,8 +734,6 @@ xserver-xorg-video-radeon
 xserver-xorg-video-savage
 xserver-xorg-video-siliconmotion
 xserver-xorg-video-sisusb
-# xserver-xorg-video-tdfx
-# xserver-xorg-video-trident
 xserver-xorg-video-vesa
 xserver-xorg-video-vmware
 xutils
@@ -741,6 +743,6 @@ zfs-fuse
 zip
 zsh
 zsh-autosuggestions
-zsh-theme-powerlevel10k
 zsh-syntax-highlighting
+zsh-theme-powerlevel10k
 zsync
