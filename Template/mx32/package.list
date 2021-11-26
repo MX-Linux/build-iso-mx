@@ -205,7 +205,7 @@ ftp
 #fuseiso9660
 galculator
 #galternatives
-#gcc-10-base:i386
+gcc-10-base
 gconf-service
 gconf2
 gconf2-common
@@ -309,13 +309,13 @@ lbreakout2-data
 #leafpad
 libblockdev-crypto2
 libc-dev-bin
-#libc6:i386
+libc6
 libcanberra-gstreamer
 libcanberra-gtk-module
 libcanberra-gtk3-module
 libcanberra-pulse
 libelf-dev
-#libgcc1:i386
+libgcc-s1
 #libgnome2-perl
 libgtk3-perl
 libmtp-runtime

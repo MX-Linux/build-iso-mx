@@ -852,12 +852,6 @@ do_stage_4() {
     if [[ $ARCH = "amd64" ]] ; then
         say "Adding multiarch support"
         dpkg --add-architecture i386
-        ! is_antiX \
-            && apt-get update && apt-get install libc6:i386 libgcc-s1:i386 gcc-10-base:i386 "$apt_yes"
-
-        #sudo apt-get update && apt-get install grub-efi-amd64-bin
-    #else
-        #sudo apt-get update && apt-get install grub-efi-ia32-bin
     fi
 
     if do_part 1 "Update repos and do apt-get update"; then

@@ -212,6 +212,7 @@ frameworkintegration
 ftp
 #fuseiso9660
 #gcr
+gcc-10-base:i386
 gdb-minimal
 gddrescue
 gdisk
@@ -387,6 +388,8 @@ libc-dev-bin
 libcanberra-gstreamer
 libcanberra-gtk3-module
 libcanberra-pulse
+libc6:i386 
+libgcc-s1:i386 
 libelf-dev
 libffmpegthumbnailer4v5
 libkf5baloowidgets-bin

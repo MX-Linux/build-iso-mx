@@ -196,6 +196,7 @@ fuse3
 galculator
 gawk
 gcc-10-base
+gcc-10-base:i386
 gconf-service
 gconf2-common
 gcr
@@ -292,6 +293,7 @@ libbz2-1.0
 libc-bin
 libc-dev-bin
 libc6
+libc6:i386
 libcap-ng0
 libcap2
 libcap2-bin
@@ -311,6 +313,7 @@ libfastjson4
 libfdisk1
 libffi7
 libgcc-s1
+libgcc-s1:i386
 libgcrypt20
 libgmp10
 libgnutls30
