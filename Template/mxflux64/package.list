@@ -721,8 +721,8 @@ xfce4-power-manager-plugins
 xfce4-terminal
 #xfce4-whiskermenu-plugin
 xfconf
-xfdesktop4
-xfdesktop4-data
+#xfdesktop4
+#xfdesktop4-data
 xfonts-100dpi
 xfonts-75dpi
 xfonts-base
@@ -730,7 +730,7 @@ xfonts-encodings
 xfonts-scalable
 xfonts-utils
 xfsprogs
-xfwm4
+#xfwm4
 xinit
 xinput
 xkb-data
