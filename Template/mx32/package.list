@@ -261,7 +261,7 @@ gthumb
 gtk-theme-switch
 gtk2-engines-murrine
 gtk2-engines-pixbuf
-#gtk2-engines-xfce
+gtk2-engines
 #gtk3-nocsd
 gtkdialog
 gufw
