@@ -1700,7 +1700,9 @@ do_stage_7() {
     start_timer
     #                                                    262144 = 0x40000
     #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144
-    $SUDO mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE
+    local UNCOMPRESSEDSIZE=$($SUDO mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE |grep "uncompressed filesystem" | cut -d"(" -f2 | cut -d" " -f1)
+    local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
+    echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
 
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
