@@ -16,7 +16,7 @@ DISTRO_NAME="MX"
 #DISTRO_VERSION="21"
 #DISTRO_VERSION="21_ahs"
 #DISTRO_VERSION="21_base"
-DISTRO_VERSION="21_fluxbox_rc1"
+DISTRO_VERSION="21.1_fluxbox"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -39,7 +39,7 @@ HOME_URL="https://mxlinux.org"
 #UNSIGNED=""
 
 #standard 64 bit
-K_REVISION="9"
+K_REVISION="11"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="5.10.0"
 UNSIGNED=""
@@ -49,7 +49,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="September 03, 2021"
+RELEASE_DATE="April 15, 2022"
 TIME_ZONE="America/New_York"
 
 #DE particular items
