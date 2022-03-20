@@ -20,12 +20,6 @@ restore=/live/etc/init.d/live-restore-services
 usb_save=/live/etc/init.d/live-usb-save
 [ -x $usb_save ] && $usb_save sys
 
-# Detect and set up correct broadcom
-/usr/local/bin/BroadcomStartup
-
-# Set up 12 hour clock format for some countries eg US
-/usr/local/bin/clock12or24
-
 #make /etc/machine-id from /var/lib/dbus/machine-id if not present
     if [ ! -e /etc/machine-id ]; then
     	if [ -e /var/lib/dbus/machine-id ]; then
@@ -35,6 +29,17 @@ usb_save=/live/etc/init.d/live-usb-save
 
 #make sure an apt cache archive partial folder exists for apt-notifier
  [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
+
+#exit if systemd
+if [ -e "/etc/live/config/systemd" ]; then
+    exit 0 
+fi
+
+# Detect and set up correct broadcom
+/usr/local/bin/BroadcomStartup
+
+# Set up 12 hour clock format for some countries eg US
+/usr/local/bin/clock12or24
 
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
