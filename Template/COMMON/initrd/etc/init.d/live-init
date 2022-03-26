@@ -386,8 +386,9 @@ create_fstab() {
 
     case $distro in
         antiX) automount_and_fstab "$@" $swap_opts            ;;
-      MX|MX-*) add_fstab_swap $swap_opts                      ;;
-            *) error 'Unknown distro %s' "$(pquote $distro)"  ;;
+            *) add_fstab_swap $swap_opts                      ;;
+    # MX|MX-*) add_fstab_swap $swap_opts                      ;;
+    #       *) error 'Unknown distro %s' "$(pquote $distro)"  ;;
     esac
 }
 
