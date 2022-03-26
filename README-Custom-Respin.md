@@ -9,6 +9,12 @@ $ git clone https://github.com/MX-Linux/build-iso-mx
 $ cd build-iso-mx
 	------------	------------
 
+-----------------------------------------------------------------------
+Update: The build-iso script was adjusted to avoid editing the scipt
+        to add template names. 
+        The following step "Edit the build-iso script..." is not needed.
+-----------------------------------------------------------------------
+
 Edit the build-iso script to add the required handler. 
 	------------	------------	
 Near the bottom of the script, about a page up, using the examples below, find the lines that have content similar to the following and add your intended build name and be sure to follow the current conventions used in the line
