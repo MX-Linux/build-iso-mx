@@ -1,0 +1,8 @@
+COUNTRY="Norske"
+WM_LANG="nb"
+KEYBOARDS="no,us"
+KEYTABLE="no-latin1"
+LANG="nn_NO.UTF-8"
+MIRROR="no"
+TZ="Europe/Oslo"
+XKBLAYOUT="no,us"

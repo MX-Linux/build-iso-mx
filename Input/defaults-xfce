@@ -13,10 +13,8 @@ CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
 DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
-#DISTRO_VERSION="21"
+#DISTRO_VERSION="21.1"
 DISTRO_VERSION="21.1_ahs"
-#DISTRO_VERSION="21_base"
-#DISTRO_VERSION="21_flux_base"
 HOME_URL="https://mxlinux.org"
 
 #Kernel templates...comment and uncomment depending on what you are building
@@ -33,13 +31,13 @@ K_VERSION="5.16.0"
 UNSIGNED="-unsigned"
 
 #standard 32 bit
-#K_REVISION="11"
+#K_REVISION="13"
 #K_TEMPLATE="%V%G-%R-%A"
 #K_VERSION="5.10.0"
 #UNSIGNED=""
 
 #standard 64 bit
-#K_REVISION="11"
+#K_REVISION="13"
 #K_TEMPLATE="%V%G-%R-%A"
 #K_VERSION="5.10.0"
 #UNSIGNED=""
@@ -74,7 +72,7 @@ MEM_TEST_BUG=
 NO_SET_HOSTNAME=""
 
 #seems to have no effect, isos get signed automatically
-SIGN_FILES="false"
+SIGN_FILES="true"
 
 #default live boot options
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
