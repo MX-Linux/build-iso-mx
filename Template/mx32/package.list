@@ -279,7 +279,7 @@ open-vm-tools
 #openssh-blacklist
 #openssh-blacklist-extra
 #openssh-server
-#orage
+orage
 pacpl
 papirus-mxblue
 #partimage
