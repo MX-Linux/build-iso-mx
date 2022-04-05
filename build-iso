@@ -2310,7 +2310,7 @@ is_zombie_or_kthread() {
 search_for_k_name() {
     local search_name=$(echo $K_NAME | sed -e "s/\./\\./g" -e "s/\*/[0-9]+/g")
     say "Search for kernel matching regex $(pq $K_NAME)"
-    local name=$(apt-cache search "^linux-image-$search_name" | cut -d" " -f1 | sort -V | tail -n 1)
+    local name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
     if [[ -z $name ]]; then
         warn "No kernel matching $(pqw $K_NAME) found.  Possible kernels:"
         apt-cache search linux-image-.\*-antix | cut -d" " -f1
