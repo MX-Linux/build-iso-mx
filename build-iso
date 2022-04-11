@@ -456,7 +456,7 @@ do_stage_0() {
     pick_prog GZIP     $GZIP_PROGS
 
     require_programs chroot debootstrap isohybrid mksquashfs md5sum sudo tee zsync \
-        pkill column expand strings iconv
+        pkill column expand strings iconv unbuffer
 
     mkdir -p $output_dir || my_exit
 
@@ -838,8 +838,9 @@ do_stage_4() {
     fi
 
     if ! is_antiX; then
-        for early_deb in /*.deb; do
-            say "Install early deb package $(pq $early_deb)"
+        local early_deb
+        for early_deb in $(ls /*.deb 2>/dev/null); do
+            say "Install deb package $(pq $early_deb)"
             dpkg -i $early_deb && rm $early_deb
         done
     fi
@@ -1717,7 +1718,7 @@ do_stage_7() {
 
     local output="/tmp/mksquash_output"
     local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
-    $SUDO mksquashfs $sqfs_dir $linuxfs_file | tee $output
+    $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file | tee $output
     local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1) 
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm "output"
