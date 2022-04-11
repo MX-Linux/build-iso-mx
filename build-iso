@@ -1717,10 +1717,15 @@ do_stage_7() {
     start_timer
     #                                                    262144 = 0x40000
     #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144
-    local UNCOMPRESSEDSIZE=$($SUDO mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE |grep "uncompressed filesystem" | cut -d"(" -f2 | cut -d" " -f1)
-    local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
-    echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
 
+#also capture uncompressed filesystem output into a variable and place that in a file in the SQFILE_DIR location
+
+    local output="/tmp/mksquash_output"
+    local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
+    $SUDO mksquashfs $sqfs_dir $linuxfs_file | tee $output
+    local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1) 
+    echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
+    rm "output"
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
