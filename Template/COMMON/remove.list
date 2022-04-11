@@ -2,3 +2,4 @@ gnustep-base-common
 gnustep-base-runtime    
 gnustep-common 
 # ceni
+mx-buildiso-dkms

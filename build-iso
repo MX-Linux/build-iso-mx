@@ -456,7 +456,7 @@ do_stage_0() {
     pick_prog GZIP     $GZIP_PROGS
 
     require_programs chroot debootstrap isohybrid mksquashfs md5sum sudo tee zsync \
-        pkill column expand strings iconv
+        pkill column expand strings iconv unbuffer
 
     mkdir -p $output_dir || my_exit
 
@@ -838,15 +838,11 @@ do_stage_4() {
     fi
 
     if ! is_antiX; then
-        [[ -e /antix-archive-keyring.deb ]] \
-            && dpkg -i antix-archive-keyring.deb && rm /antix-archive-keyring.deb
-
-        [[ -e /mx19-archive-keyring.deb  ]] \
-            && dpkg -i mx19-archive-keyring.deb && rm /mx19-archive-keyring.deb
-
-
-        [[ -e /mx21-archive-keyring.deb ]] \
-            && dpkg -i mx21-archive-keyring.deb && rm /mx21-archive-keyring.deb
+        local early_deb
+        for early_deb in $(ls /*.deb 2>/dev/null); do
+            say "Install deb package $(pq $early_deb)"
+            dpkg -i $early_deb && rm $early_deb
+        done
     fi
     
     # for 64 bit set multiarch
@@ -1722,10 +1718,10 @@ do_stage_7() {
 
     local output="/tmp/mksquash_output"
     local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
-    $SUDO mksquashfs $sqfs_dir $linuxfs_file | tee $output
+    $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE | tee $output
     local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1) 
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
-    rm "output"
+    rm "$output"
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
@@ -1783,6 +1779,7 @@ do_stage_8() {
 
     if [[ $SIGN_FILES == true ]]; then
         say "Sign $(basename $full_iso_file)"
+        rm -f $full_iso_file.sig 2>/dev/null
         local gpg_sudo
         is_antiX && gpg_sudo=$SUDO
         $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
