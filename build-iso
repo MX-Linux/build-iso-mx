@@ -1721,7 +1721,7 @@ do_stage_7() {
     $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file | tee $output
     local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1) 
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
-    rm "output"
+    rm "$output"
     local size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
@@ -1779,6 +1779,7 @@ do_stage_8() {
 
     if [[ $SIGN_FILES == true ]]; then
         say "Sign $(basename $full_iso_file)"
+        rm -f $full_iso_file.sig 2>/dev/null
         local gpg_sudo
         is_antiX && gpg_sudo=$SUDO
         $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
