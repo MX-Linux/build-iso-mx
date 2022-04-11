@@ -838,15 +838,10 @@ do_stage_4() {
     fi
 
     if ! is_antiX; then
-        [[ -e /antix-archive-keyring.deb ]] \
-            && dpkg -i antix-archive-keyring.deb && rm /antix-archive-keyring.deb
-
-        [[ -e /mx19-archive-keyring.deb  ]] \
-            && dpkg -i mx19-archive-keyring.deb && rm /mx19-archive-keyring.deb
-
-
-        [[ -e /mx21-archive-keyring.deb ]] \
-            && dpkg -i mx21-archive-keyring.deb && rm /mx21-archive-keyring.deb
+        for early_deb in /*.deb; do
+            say "Install early deb package $(pq $early_deb)"
+            dpkg -i $early_deb && rm $early_deb
+        done
     fi
     
     # for 64 bit set multiarch
