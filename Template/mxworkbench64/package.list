@@ -1,28 +1,3 @@
-# arandr
-# blockout2
-# cdparanoia
-# cryptsetup-modified-functions
-# dh-python
-# disk-manager
-# featherpad
-# hibernate
-# hunspell-en-gb
-# hunspell-en-us
-# libapt-inst2.0
-# nictools-pci
-# nomacs
-# nomacs-l10n
-# smbc
-# smbclient
-# system-config-samba
-# touchpad-indicator
-# vcdimager
-# xfce4-hardware-monitor-plugin
-# xfce4-notes
-# xfce4-screensaver
-# xserver-xorg-video-mach64
-# xserver-xorg-video-tdfx
-# xserver-xorg-video-trident
 abiword
 adduser
 alsa-topology-conf
@@ -31,6 +6,7 @@ apt
 apt-notifier
 apt-utils
 arpwatch
+at
 atmel-firmware
 attr
 baobab
@@ -50,6 +26,7 @@ bsdmainutils
 bsdutils
 can-utils
 catfish
+cdrdao
 ceni
 chntpw
 clamav
@@ -68,6 +45,7 @@ dc3dd
 dcfldd
 dconf-editor
 ddcutil
+ddrescueview
 ddrutility
 debconf
 debconf-i18n
@@ -78,6 +56,7 @@ desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 detox
 di
+diffstat
 diffutils
 digitemp
 disktype
@@ -86,15 +65,22 @@ dmidecode
 dmraid
 dnsutils
 dpt-i2o-raidutils
+dstat
+dump
 dvtm
 e2fsprogs
+ecryptfs-utils
 evemu-tools
 exo-utils
+expect
 ext3grep
+ext4magic
+fatresize
 fbxkb
 fdisk
 feh
 file-roller
+filezilla
 findutils
 fio
 firmware-amd-graphics
@@ -124,8 +110,10 @@ formatusb
 fping
 freefilesync
 fsarchiver
+fstransform
 fwupd
 galculator
+gamin
 gconf-service
 gconf2-common
 gcr
@@ -140,6 +128,7 @@ gnome-disk-utility
 gnome-mime-data
 gnome-themes-standard
 gnupg-agent
+gpa
 gpart
 gparted
 gpgv
@@ -148,6 +137,7 @@ grsync
 gstreamer1.0-pulseaudio
 gtk2-engines-murrine
 gtkdialog
+guymager
 gzip
 hardinfo
 hfsplus
@@ -155,26 +145,35 @@ hfsprogs
 hfsutils
 hfsutils-tcltk
 hostname
+hwdata
 i2c-tools
+icmpinfo
 idle3-tools
 iftop
 ifupdown
+imagemagick
 init
 initramfs-tools
 ioping
 iotop
 iperf
+iperf3
 iproute2
 iptables
+iptraf-ng
 iputils-arping
 iputils-tracepath
 isc-dhcp-client
 isc-dhcp-common
 isomaster
+jmtpfs
 job-scheduler
 keepassx
+keepassxc
 kmod
 lame
+lbzip2
+lftp
 libacl1
 libapparmor1
 libapt-pkg6.0
@@ -272,7 +271,10 @@ locales
 login
 logrotate
 lsb-base
+lsscsi
+lshw
 lynx
+lz4
 mawk
 meld
 memtester
@@ -296,11 +298,14 @@ network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 nmap
 nmon
+nvme-cli
 onboard
 open-vm-tools
 openipmi
+ophcrack
 papirus-mxblue
 partclone
+partimage
 passwd
 perl-base
 pinentry-gtk2
@@ -309,10 +314,12 @@ plymouth-themes
 plymouth-themes-mx
 policykit-1-gnome
 procps
+psensor
+pssh
 pulseaudio-module-bluetooth
 qla-tools
+qpdf
 qpdfview
-qt-fsarchiver
 rdesktop
 rdiff-backup
 readline-common
@@ -328,35 +335,46 @@ remmina-plugin-vnc
 rename
 rkhunter
 rsyslog
-rtl8812au-dkms
 rtl8814au-dkms
 rtl8821ce-dkms
 rtl8821cu-dkms
 rtorrent
 safecopy
+samdump2
+scalpel
 screen
 scrounge-ntfs
+secure-delete
 sed
 sensible-utils
 smbios-utils
 ssh-askpass-gnome
+stress-ng
 stressapptest
 synaptic
+sysfsutils
+sysstat
 system-config-printer
 system-config-printer-udev
 tar
+tcpdump
 thunar
 thunar-archive-plugin
 thunar-data
 thunar-gtkhash
 thunar-volman
+time
+transmission
 transmission-common
 transmission-gtk
+tree
 tumbler
 tumbler-common
 tumbler-plugins-extra
 tzdata
 udev
+udftools
+udpcast
 unhide
 util-linux
 vim
@@ -368,6 +386,7 @@ webcamoid
 whiptail
 wipe
 wireshark
+xbacklight
 xdg-user-dirs-gtk
 xfburn
 xfce4-appfinder
@@ -407,8 +426,10 @@ xfwm4
 xinput-calibrator
 xserver-xorg-legacy
 xutils-dev
+zerofree
 zfs-fuse
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
 zsh-theme-powerlevel10k
+zstd
