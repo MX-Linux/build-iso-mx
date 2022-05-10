@@ -14,7 +14,6 @@ baobab
 base-files
 base-passwd
 bash
-bash-completion
 bash-config
 #blackbird-gtk-theme
 blueman
@@ -23,7 +22,6 @@ bluez
 bluez-cups
 bluez-tools
 bsdmainutils
-bsdutils
 cdparanoia
 colord
 colord-data
@@ -33,16 +31,11 @@ conky-all
 conky-manager
 conky-toggle-mx
 coreutils
-cpio
-cron
 #cryptsetup-modified-functions
-dash
 dconf-cli
 dconf-editor
 #deb-multimedia-keyring
-debconf
 debconf-i18n
-debian-archive-keyring
 debianutils
 desktop-defaults-mx-xfce
 desktop-defaults-mx-xfce-desktop
@@ -65,7 +58,6 @@ fdisk
 featherpad
 feh
 file-roller
-findutils
 #firmware meta package for MX
 firmware-amd-graphics
 firmware-atheros
@@ -97,7 +89,6 @@ gdbm-l10n
 gdebi
 gnome-accessibility-themes
 gparted
-gpgv
 grep
 #gsfonts
 gstreamer1.0-plugins-base
@@ -113,13 +104,9 @@ hfsutils
 hfsutils-tcltk
 #hibernate
 #hicolor-icon-theme
-hostname
 hunspell-en-gb
 hunspell-en-us
 #i386
-ifupdown
-init
-initramfs-tools
 iproute2
 iptables
 isc-dhcp-client
@@ -138,7 +125,6 @@ libblkid1
 libbsd0
 libbz2-1.0
 libc-bin
-libc6
 libcanberra-gtk-module
 libcanberra-gtk3-module
 libcap-ng0
@@ -224,14 +210,11 @@ lightdm-modified-init
 linux-headers-amd64
 #linux-image-686-pae
 linux-image-amd64
-locales
-login
 logrotate
 lsb-base
 luckybackup
 luckybackup-data
 matcha-themes
-mawk
 mount
 mugshot
 mx-cleanup
@@ -266,7 +249,6 @@ onboard
 #orage
 #p7zip-rar
 pacpl
-passwd
 pavucontrol
 perl-base
 pinentry-gtk2
@@ -279,14 +261,12 @@ pinentry-gtk2
 policykit-1-gnome
 poppler-data
 poppler-utils
-procps
 pulseaudio-module-bluetooth
 qpdfview
 readline-common
 #reiser4progs
 #resolvconf
 rsyslog
-sed
 sendemail
 sensible-utils
 #smbc
@@ -297,7 +277,6 @@ system-config-printer
 system-config-printer-udev
 #system-config-samba
 tango-icon-theme
-tar
 thunar
 thunar-archive-plugin
 thunar-data
@@ -308,10 +287,7 @@ ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra
-tzdata
-udev
 #uswsusp
-util-linux
 vcdimager
 #virtualbox-guest-dkms
 #virtualbox-guest-utils
@@ -361,7 +337,6 @@ xfconf
 xfdesktop4
 xfdesktop4-data
 xfwm4
-xserver-xorg-legacy
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident

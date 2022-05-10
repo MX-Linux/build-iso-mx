@@ -44,7 +44,6 @@ lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-headers-amd64
 linux-image-amd64
-mawk
 mx-comfort-themes
 mx-installer
 mx-live-usb-maker
@@ -63,7 +62,6 @@ rtl8814au-dkms
 rtl8821ce-dkms
 rtl8821cu-dkms
 ssh-askpass-gnome
-tar
 thunar
 thunar-archive-plugin
 thunar-data
@@ -72,8 +70,6 @@ thunar-volman
 tumbler
 tumbler-common
 tumbler-plugins-extra
-tzdata
-udev
 volumeicon-alsa
 xdg-user-dirs-gtk
 xfce-superkey-mx

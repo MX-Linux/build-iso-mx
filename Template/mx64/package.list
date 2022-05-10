@@ -434,7 +434,6 @@ xfdesktop4-data
 xfwm4
 #xscreensaver
 #xscreensaver-data
-xserver-xorg-legacy #is this needed?
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident

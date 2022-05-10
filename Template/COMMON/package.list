@@ -246,6 +246,7 @@ openssh-client
 openssl
 openvpn
 os-prober
+passwd
 p7zip-full
 papirus-icon-theme
 parted
@@ -278,6 +279,7 @@ printer-driver-ptouch
 printer-driver-pxljr
 printer-driver-sag-gdi
 printer-driver-splix
+procps
 psmisc
 psutils
 pulseaudio
@@ -297,6 +299,7 @@ samba-common-bin
 sane-utils
 scrot
 sdparm
+sed
 sgml-base
 sgml-data
 shared-mime-info
@@ -394,6 +397,7 @@ xserver-xorg-input-libinput
 xserver-xorg-input-mouse
 xserver-xorg-input-synaptics
 xserver-xorg-input-wacom
+xserver-xorg-legacy # is this needed?
 xserver-xorg-video-all
 xserver-xorg-video-amdgpu
 xserver-xorg-video-ati

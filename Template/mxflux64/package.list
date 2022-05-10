@@ -13,11 +13,9 @@ baobab
 base-files
 base-passwd
 bash
-bash-completion
 bash-config
 blackbird-gtk-theme
 blueman
-bsdutils
 catfish
 cdparanoia
 clipman
@@ -29,16 +27,11 @@ conky-all
 conky-manager
 conky-toggle-mx
 coreutils
-cpio
-cron
 custom-toolbox
-dash
 dconf-cli
 dconf-editor
 deadbeef
-debconf
 debconf-i18n
-debian-archive-keyring
 debianutils
 #desktop-defaults-mx-xfce
 #desktop-defaults-mx-xfce-desktop
@@ -55,7 +48,6 @@ fdisk
 featherpad
 feh
 file-roller
-findutils
 firmware-amd-graphics
 firmware-atheros
 firmware-bnx2
@@ -90,7 +82,6 @@ geany
 gkrellm
 gnome-accessibility-themes
 gparted
-gpgv
 grep
 gsfonts
 gsimplecal
@@ -101,12 +92,8 @@ gtkdialog
 gzip
 hardinfo
 hicolor-icon-theme
-hostname
 hunspell-en-gb
 hunspell-en-us
-ifupdown
-init
-initramfs-tools
 iproute2
 iptraf-ng
 isc-dhcp-client
@@ -124,7 +111,6 @@ libbpf0
 libbsd0
 libbz2-1.0
 libc-bin
-libc6
 libc6:i386
 libcap-ng0
 libcap2
@@ -220,8 +206,6 @@ linux-image-amd64
 linux-headers-amd64
 #live-grubsave-mx
 lo-main-helper
-locales
-login
 logrotate
 logsave
 lsb-base
@@ -229,7 +213,6 @@ lsb-base
 #luckybackup-data
 lxappearance
 matcha-themes
-mawk
 mesa-vulkan-drivers
 mount
 mugshot
@@ -275,7 +258,6 @@ nvidia-detect
 open-vm-tools
 pacpl
 papirus-mxblue
-passwd
 pavucontrol
 perl-base
 phonon-backend-gstreamer-common
@@ -287,7 +269,6 @@ plymouth-x11
 policykit-1-gnome
 poppler-data
 poppler-utils
-procps
 pulseaudio-utils
 qpdfview
 qpdfview-djvu-plugin
@@ -303,7 +284,6 @@ rtl8812au-dkms
 rtl8814au-dkms
 rtl8821ce-dkms 
 rtl8821cu-dkms
-sed
 sendemail
 sensible-utils
 # smbc
@@ -315,7 +295,6 @@ system-config-printer-udev
 # system-config-samba
 system-keyboard-qt
 tango-icon-theme
-tar
 thunar
 thunar-archive-plugin
 thunar-custom-actions-mx
@@ -328,9 +307,6 @@ ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra
-tzdata
-udev
-util-linux
 vcdimager
 #virtualbox-guest-dkms
 virtualbox-guest-utils
@@ -358,7 +334,6 @@ xfconf
 #xfdesktop4
 #xfdesktop4-data
 #xfwm4
-xserver-xorg-legacy
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident

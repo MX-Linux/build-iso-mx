@@ -500,7 +500,6 @@ vlc-data
 webcamoid
 #xdg-user-dirs-gtk
 #xf86-video-sis-antix
-xserver-xorg-legacy #is this needed?
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident
