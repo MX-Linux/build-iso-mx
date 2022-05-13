@@ -15,6 +15,9 @@ DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
 DISTRO_VERSION="21.1_KDE"
 HOME_URL="https://mxlinux.org"
+ARCH="amd64"
+ISO_FlAV="mxkde"
+THEME="mxkde"
 
 #Kernel templates...comment and uncomment depending on what you are building
 #V is K_version of kernel
