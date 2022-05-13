@@ -11,7 +11,6 @@
 BUG_REPORT_URL="https://mxlinux.org"
 CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
-DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
 DISTRO_VERSION="21.1_minimal"
 #DISTRO_VERSION="19.3_ahs"

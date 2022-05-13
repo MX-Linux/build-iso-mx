@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 #==============================================================================
 # build-iso: Build antiX liveCD/USB isos from scratch using debootstrap.
@@ -23,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.99.07"
-VERSION_DATE="Fri Apr 16 08:12:42 PM MDT 2021"
+VERSION="1.99.08"
+VERSION_DATE="May 13, 2022"
 
 ME=${0##*/}
 
@@ -181,7 +180,6 @@ main() {
             -fast|f)        do_fast=true                        ;;
      -FAST-UMOUNT|F)    check_tmpfs=true                        ;;
             -help|h)   usage                                    ;;
-
         -iso-only|i)       iso_only=true                        ;;
      -INTERACTIVE|I)    interactive=true                        ;;
              -jbb|j)       jbb_mode=true                        ;;
@@ -266,7 +264,7 @@ main() {
 
     local pretty_fmt="%15s: $text_co%s$nc\n"
 
-    [[ $# -gt 0 ]]             && fatal "Extra command line parameters: $(pqw $@)"
+    [[ $# -gt 0 ]]           && fatal "Extra command line parameters: $(pqw $@)"
     [[ -z $script_dir ]]     && fatal "No script_dir!"
     [[ $script_dir = "/" ]]  && fatal "script_dir can't be root dir!"
 
@@ -495,7 +493,7 @@ Remaster_Blurb
                 ru se si sk tr tw ua uk us
 
     choose "Debian release" DEBIAN_RELEASE \
-                stable testing unstable wheezy jessie
+                stable testing unstable bullseye bookworm
 
     choose "which locales to enable" ENABLE_LOCALES  \
                 "Default (about 60)"                 \
@@ -570,6 +568,7 @@ Remaster_Blurb
 
     cat <<Output > $output_file
 ARCH="$ARCH"
+DEBIAN_RELEASE="$DEBIAN_RELEASE"
 FLAV="$FLAV"
 GZIP="$GZIP"
 ISO_ARCH="$ISO_ARCH"
