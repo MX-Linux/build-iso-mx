@@ -116,7 +116,6 @@ main() {
     local make_xinitrc=/usr/share/antiX/lib/make-xinitrc
 
     local live_files_list=$input_dir/live-files.list
-    local initrd_modules_file=$input_dir/initrd-modules
     local strict_regex_file=$input_dir/strict-exceptions.regex
     local lax_regex_file=$input_dir/lax-errors.regex
     local regex_files="$lax_regex_file $strict_regex_file"
