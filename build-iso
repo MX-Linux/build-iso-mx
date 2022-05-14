@@ -1250,14 +1250,14 @@ do_stage_4() {
 
     local update_cmd=updatedb
     say "Run $update_cmd"
-    sudo echo 3 > /proc/sys/vm/drop_caches
+    echo 3 | sudo tee /proc/sys/vm/drop_caches
     sleep 2
     mount -t tmpfs -o size=100k tmpfs /var/cache/apt/archives
     $update_cmd --add-prunepaths /var/cache/apt/archives/ || error "The $(pqw $update_cmd) program failed"
     $update_cmd || error "The $(pqw $update_cmd) program failed"
     umount /var/cache/apt/archives
     sleep 2
-    sudo echo 3 > /proc/sys/vm/drop_caches
+    echo 3 | sudo tee /proc/sys/vm/drop_caches
     # We send on the exact kernel name we found
     echo "K_NAME=\"$K_NAME\"" > $output_file
 
