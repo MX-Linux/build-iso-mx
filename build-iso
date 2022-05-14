@@ -707,12 +707,12 @@ do_stage_3() {
 
     # Get realtime log updates from the chroot
     (tail -n 0 -f $sqfs_output_dir/$ME.log >> $log_file) &
-    TAIL_PID_1=$!
+    export TAIL_PID_1=$!
 
     if [[ -z $no_log_errors ]]; then
         touch $err_file
         (tail -n 0 -f $err_file > $sqfs_output_dir/$ME.err) &
-        TAIL_PID_2=$!
+        export TAIL_PID_2=$!
     fi
     HOST_HOSTNAME=$(hostname)
     HOME_OWNER=$(stat -c %U:%G $HOME)
