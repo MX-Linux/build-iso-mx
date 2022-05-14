@@ -228,7 +228,7 @@ main() {
     local e=$(printf "\e") shade=1
     case $color_mode in
      high|hi|"") color_mode="high" ;;
-         low|lo) color_mod="low"   ;;
+         low|lo) color_mode="low"  ;;
             off)                   ;;
               *) fatal "Bad --color operand: $color_mode" ;;
     esac
