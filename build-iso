@@ -225,7 +225,7 @@ main() {
     [[ -n $reset_mode ]] && : ${start_from:=0}
     [[ -n $iso_only   ]] && SKIP_STAGE="$SKIP_STAGE${SKIP_STAGE:+,}$ISO_SKIP_STAGE"
 
-    local e=$(printf "\e") shade=1
+    local e=$(printf "\e") 
     case $color_mode in
      high|hi|"") color_mode="high" ;;
          low|lo) color_mode="low"  ;;
