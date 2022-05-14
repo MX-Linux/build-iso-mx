@@ -715,7 +715,6 @@ do_stage_3() {
         export TAIL_PID_2=$!
     fi
     HOST_HOSTNAME=$(hostname)
-    HOME_OWNER=$(stat -c %U:%G $HOME)
 
     local  args
     local next_output_file=$sqfs_output_dir/stage-$((stage + 1)).out
