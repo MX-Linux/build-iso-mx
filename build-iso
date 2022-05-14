@@ -2273,8 +2273,8 @@ my_ps() {
 }
 
 get_cache_free_swap() {
-    local lab total used free shared buff cache
-    while read lab total used free shared buff cache; do
+    local lab free cache swap
+    while read lab total used free shared cache available; do
         case $lab in
             Mem:) echo free=$free
                   echo cache=$cache ;;
