@@ -58,7 +58,7 @@ pinentry-gtk2
 policykit-1-gnome
 pulseaudio-module-bluetooth
 rsyslog
-rtl8814au-dkms
+rtl8812au-dkms
 rtl8821ce-dkms
 rtl8821cu-dkms
 ssh-askpass-gnome

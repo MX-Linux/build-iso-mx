@@ -319,7 +319,6 @@ qt5-style-plugins
 #rdesktop
 #rtkit
 rtl8812au-dkms 
-rtl8814au-dkms
 rtl8821ce-dkms 
 rtl8821cu-dkms
 #scrollkeeper
