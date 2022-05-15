@@ -275,9 +275,6 @@ qt5-style-kvantum
 qt5-style-plugins
 qtvirtualkeyboard-plugin
 rdesktop
-rtl8812au-dkms 
-rtl8821ce-dkms 
-rtl8821cu-dkms
 sddm
 sddm-modified-init
 sddm-theme-breeze

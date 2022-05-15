@@ -292,6 +292,9 @@ reiserfsprogs
 rfkill
 rpcbind
 rpl
+rtl8812au-dkms
+rtl8821ce-dkms
+rtl8821cu-dkms
 rsync
 samba
 samba-common

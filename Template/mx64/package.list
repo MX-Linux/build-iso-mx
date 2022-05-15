@@ -316,9 +316,6 @@ qt5-style-plugins
 #rarian-compat
 #rdesktop
 #rtkit
-rtl8812au-dkms
-rtl8821ce-dkms 
-rtl8821cu-dkms
 #scrollkeeper
 seahorse
 sendemail
