@@ -86,6 +86,7 @@ gsfonts
 gsimplecal
 gthumb
 gtk2-engines-murrine
+gtk2-engines
 #gtk3-nocsd
 gtkdialog
 gzip
