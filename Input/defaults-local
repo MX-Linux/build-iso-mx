@@ -7,6 +7,6 @@
 # affect what gets bulit, only how it gets built.
 #----------------------------------------------------------------------
 
-ENABLE_LOCALES="Default"
-ISO_SYMLINK="/data/ISO/test-antiX.iso"
+# ENABLE_LOCALES="Default"
+# ISO_SYMLINK="/data/ISO/test-antiX.iso"
 LOCAL_MIRROR="us"
