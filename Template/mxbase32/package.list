@@ -86,7 +86,6 @@ hardinfo
 hunspell-en-gb
 hunspell-en-us
 #i386
-iproute2
 iptables
 isc-dhcp-client
 isc-dhcp-common
