@@ -255,7 +255,6 @@ readline-common
 rofi
 rofi-calc
 roxterm
-rsyslog
 sendemail
 sensible-utils
 # smbc

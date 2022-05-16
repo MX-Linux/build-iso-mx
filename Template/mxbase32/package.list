@@ -242,7 +242,6 @@ qpdfview
 readline-common
 #reiser4progs
 #resolvconf
-rsyslog
 sendemail
 sensible-utils
 #smbc
