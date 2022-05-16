@@ -68,16 +68,6 @@ fbxkb
 featherpad
 feh
 file-roller
-#firmware meta package for MX
-#firmware-cavium #Debian
-#firmware-crystalhd #Debian
-#firmware-ivtv #Debian
-#firmware-linux #Debian
-#firmware-ralink
-#firmware-samsung #Debian
-#firmware-siano #Debian
-#firmware-ti-connectivity #Debian
-#firmware-zd1211
 flac
 #flashplugin-nonfree
 foliate
@@ -416,5 +406,4 @@ xserver-xorg-video-tdfx
 xserver-xorg-video-trident
 xutils-dev
 yelp
-#zd1211-firmware
 #zukitwo-themes
