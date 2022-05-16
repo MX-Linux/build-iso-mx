@@ -112,6 +112,7 @@ firmware-misc-nonfree
 firmware-myricom
 firmware-netxen
 firmware-qlogic
+firmware-sof-signed
 firmware-realtek
 firmware-zd1211
 firmwire-amd-graphics

@@ -75,7 +75,6 @@ file-roller
 #firmware-linux #Debian
 #firmware-ralink
 #firmware-samsung #Debian
-firmware-sof-signed
 #firmware-siano #Debian
 #firmware-ti-connectivity #Debian
 #firmware-zd1211
