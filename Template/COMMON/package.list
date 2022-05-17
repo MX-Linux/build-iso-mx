@@ -129,6 +129,8 @@ gnome-icon-theme
 gnupg2
 gocr
 grub-pc
+grub-efi-amd64-bin
+grub-efi-ia32-bin
 grub-themes-mx
 gsettings-desktop-schemas
 gsmartcontrol
