@@ -84,6 +84,7 @@ fbcat
 file
 firefox
 firmware-amd-graphics
+firmware-ath9k-htc
 firmware-atheros
 firmware-b43-installer
 firmware-b43legacy-installer
@@ -128,9 +129,9 @@ glib-networking
 gnome-icon-theme
 gnupg2
 gocr
-grub-pc
 grub-efi-amd64-bin
 grub-efi-ia32-bin
+grub-pc
 grub-themes-mx
 gsettings-desktop-schemas
 gsmartcontrol
