@@ -21,6 +21,7 @@ lightdm-modified-init
 linux-headers-amd64
 linux-image-amd64
 mx-comfort-themes
+mx-goodies
 mx-installer
 mx-live-usb-maker
 mx-usb-unmounter
