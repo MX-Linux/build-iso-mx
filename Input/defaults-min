@@ -16,8 +16,8 @@ DEBIAN_RELEASE="bullseye"
 DISTRO_NAME="MX"
 DISTRO_VERSION="21.1_minimal"
 HOME_URL="https://mxlinux.org"
-ARCH="amd64"
-ISO_FLAV="mxmin64"
+#ARCH="amd64"
+#ISO_FLAV="mxmin64"
 THEME="mxmin"
 
 #Kernel templates...comment and uncomment depending on what you are building
