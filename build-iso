@@ -543,6 +543,8 @@ Remaster_Blurb
     -e "s/%A/$K_ARCH/"      \
     -e "s/%V/$K_VERSION/")
 
+    [[ $K_NAME =~ \* ]] && search_for_k_name
+
     #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
 
     [[ -n $THEME ]] || select_theme
