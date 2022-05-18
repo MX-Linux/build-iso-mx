@@ -30,6 +30,8 @@ ME=${0##*/}
 UPDATE_SKIP_PART="2-10,14-17,19"
 ISO_SKIP_STAGE="2-5,7"
 
+ARCH=
+
 usage() {
     cat <<Usage
 Usage: $ME [options] [N]
@@ -1861,10 +1863,10 @@ do_save() {
 #------------------------------------------------------------------------------
 # enter_stage stage title
 # $1 is used when we grep and sed ourselves to find out info about the various
-# stages.  See do_pretend() and --show-stages.
+# stages. See do_pretend() and --show-stages.
 #
-# titles starting with "!" skip the continue question.  Make sure we don't get
-# caught in an endless loop.  Uusally only needed during development.
+# titles starting with "!" skip the continue question. Make sure we don't get
+# caught in an endless loop. Usually only needed during development.
 #------------------------------------------------------------------------------
 enter_stage() {
     title=${2#!}
