@@ -1,5 +1,5 @@
 firmware-ipw2x00 
-zd1211-firmware
+firmware-zd1211
 nfs-common-modified-init
 udev-modified-init
 cups
