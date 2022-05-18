@@ -842,7 +842,7 @@ do_stage_4() {
         local early_deb
         for early_deb in $(ls /*.deb 2>/dev/null); do
             say "Install deb package $(pq $early_deb)"
-            dpkg -i $early_deb && rm $early_deb
+            apt-get install $early_deb && rm $early_deb
         done
     fi
     
@@ -951,7 +951,7 @@ do_stage_4() {
 
         for deb in $debs; do
             say "install $(pq ${deb##*/})"
-            dpkg -i $deb
+            apt-get install $deb
         done
         end_part_lax
     else
