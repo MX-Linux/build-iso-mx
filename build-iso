@@ -543,7 +543,19 @@ Remaster_Blurb
     -e "s/%A/$K_ARCH/"      \
     -e "s/%V/$K_VERSION/")
 
-    [[ $K_NAME =~ \* ]] && search_for_k_name
+    local $HOST_ARCH
+    case $(arch) in
+           i386) HOST_ARCH=386 ;;
+         x86_64) HOST_ARCH=x64 ;;
+              *) error "Cannot detect Host ARCH"
+    esac
+
+    # Detect kernel if using wildcards
+    # This won't work if host is running a different ARCH
+    if [[ $K_NAME =~ \* ]]; then
+         [[ $ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
+might want to avoid using wildcards for kernels, otherwise you won't be able to start the build at different steps."
+    fi
 
     #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
 
