@@ -30,7 +30,7 @@ ME=${0##*/}
 UPDATE_SKIP_PART="2-10,14-17,19"
 ISO_SKIP_STAGE="2-5,7"
 
-ARCH=
+unset ARCH
 
 usage() {
     cat <<Usage
@@ -533,7 +533,7 @@ Remaster_Blurb
     case $ARCH in
          i386) K_ARCH=$distro_k_arch   ; ISO_ARCH=386  ;;
         amd64) K_ARCH=amd64            ; ISO_ARCH=x64  ;;
-             *) error "Invalid ARCH $(pqw $ARCH).  Expected $(pqw i386) or $(pqw amd64)". ;;
+            *) error "Invalid ARCH $(pqw $ARCH).  Expected $(pqw i386) or $(pqw amd64)". ;;
     esac
 
     K_NAME=$(echo $K_TEMPLATE | sed \
@@ -553,7 +553,7 @@ Remaster_Blurb
     # Detect kernel if using wildcards
     # This won't work if host is running a different ARCH
     if [[ $K_NAME =~ \* ]]; then
-         [[ $ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
+         [[ $ISO_ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
 might want to avoid using wildcards for kernels, otherwise you won't be able to start the build at different steps."
     fi
 
