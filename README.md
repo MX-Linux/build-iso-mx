@@ -20,18 +20,22 @@ For usage instructions, run:
 - `./build-iso --show-stages` to show the stages of processing
 - `./build-iso --show-parts` to show parts of stage-4 and how to control them
 
-Most likely, you would want to run  
-    ./build-iso --user-default defaults
-or  
-    ./build-iso --user-default defaults-kde
-or whatever defaults in the `Input` directory.
+Most likely, you would want to run
+````
+./build-iso --user-default defaults
+````
+or
+````
+./build-iso --user-default defaults-kde
+````
+or whatever `defaults-*` file in the `Input/` directory.
 
 Refer to [README-Custom-Respin.md](README-Custom-Respin.md) for more on customizations.
 
 
 ## Special notes
 
-Please allow roughly 10 GB drive space for most completed projects.
+Allow roughly 10 GB drive space for most completed projects.
 
 Consider having separate build-iso-mx folders for different architectures.
 

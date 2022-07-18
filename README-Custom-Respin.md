@@ -31,15 +31,15 @@ When build-iso runs, you will be given an opportunity to choose a theme.
 
 ## Provisioning the ISO naming schema
 
-In the Input folder, edit the defaults file to add your distro name, look for line/s containing `DISTRO_VERSION="19.2"`
+In the Input folder, edit the defaults file to add your distro name, look for line/s containing `DISTRO_VERSION="21.1"`
 
 Type the version name you wish to add into a new line and comment out those no longer required by placing `#` in front.
 
 example:
 
-    #DISTRO_VERSION="19.2"
-    #DISTRO_VERSION="19.2_ahs"
-    DISTRO_VERSION="19.2_base32"   <-- this line was added
+    #DISTRO_VERSION="21.1"
+    #DISTRO_VERSION="21.1_ahs"
+    DISTRO_VERSION="21.1_base32"   <-- this line was added
 
 
 
@@ -59,10 +59,10 @@ example:
 While editing the Input/defaults file, select the entry with the best fit 
 and enter the kernel Version, Template and Revision for the distro you're assembling
 
-    #standard 32 bit
-    #K_REVISION="9"                 <---- Change to match latest kernel Revision #
-    #K_TEMPLATE="%V%G-%R-686-pae"   <---- Ensure the template matches your Architecture
-    #K_VERSION="4.19.0"             <---- Select the kernel Version
+    #standard 64 bit
+    #K_REVISION="13"                <---- Change to match latest kernel Revision #
+    #K_TEMPLATE="%V%G-%R-%A"        <---- Ensure the template matches your Architecture
+    #K_VERSION="5.10.0"             <---- Select the kernel Version
     #UNSIGNED=""
 
 Using the example above, changing the revision from 9 to 10 is all that's needed
