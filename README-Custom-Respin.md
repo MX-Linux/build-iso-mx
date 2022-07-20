@@ -9,7 +9,7 @@ $ cd build-iso-mx
 ````
 
 
-## Creating the required template.
+## Templates
 
 In the Template folder, copy the template of the build that is the closest fit, e.g.
 ````
@@ -20,7 +20,7 @@ Now we have a template, we need to edit the packages.list file to include/exclud
 packages as needed for the build.
 
 
-## Using (or creating) a theme for the new build
+## Themes
 
 Familiarise yourself with how each theme is laid out and either use one as is, or 
 create a new one that fits your need. If creating a new theme, be sure to follow
@@ -29,47 +29,84 @@ the same layout and structure as the themes already in use.
 When build-iso runs, you will be given an opportunity to choose a theme.
 
 
-## Provisioning the ISO naming schema
+## Build Variables
 
-In the Input folder, edit the defaults file to add your distro name, look for line/s containing `DISTRO_VERSION="21.1"`
+The variables are stored in what's called `defaults`.
 
-Type the version name you wish to add into a new line and comment out those no longer required by placing `#` in front.
+There are three files that is of your concern, with their precedence 
 
-example:
+- `defaults-system` -- lowest
+- `defaults` or `defaults-<buildname>`
+- `defaults-local` -- highest
+
+The `<buildname>` can be `base`, `kde`, `min`, etc. (see the Input folder for more examples).
+It can also be a name of your own liking, as long as you put it in the Input folder.
+
+Start with `defaults-system` to see what values are available,
+then override it on your `defaults-<buildname>` (if you're to create one).
+Try not to change `defaults-local` too often and consider it for temporary use (e.g. testing).
+
+You can also use `defaults` or `defaults-base` as your boilerplate to create your own, e.g.
+````
+$ cp defaults-base defaults-base32
+````
+
+
+### Provisioning the ISO naming schema
+
+In the Input folder, edit the defaults file to add your distro name, look for line/s containing `DISTRO_VERSION="<version>"`
+
+Type the version name you wish to add into a new line and comment out those no longer required by placing `#` in front, e.g.
 
     #DISTRO_VERSION="21.1"
-    #DISTRO_VERSION="21.1_ahs"
     DISTRO_VERSION="21.1_base32"   <-- this line was added
 
 
+### Adjusting the system defaults to match your preferences
 
-## Adjusting the system defaults to match your preferences
+Available variables
 
-    #system defaults, these end up inside the squash file system mostly
-    LIVE_USER="demo"                <-- best left as is
-    LOCALE="en_US.UTF-8"            <-- changed if desired
-    MIRROR="us"                     <-- changed if desired
-    NEW_HOSTNAME="mx1"              <-- changed if desired
-    RELEASE_DATE="Aug 09, 2020"     <-- change to TODAYS date
-    TIME_ZONE="America/New_York"    <-- changes if desired
+- `ARCH` -- pick between `amd64` and `i386`
+- `DISTRO_NAME` -- you can pick a distro name, default: `MX`
+- `RELEASE_DATE` -- change to today's date
 
+----
 
-## Setting Kernel type and revision
+- `ENABLE_LOCALES` -- pick one of `Default`, `Single`, and `All`
+- `DEBIAN_RELEASE` -- debian version to base on, e.g. `bullseye`
+- `MIRROR` -- debian mirror, default: `us`
+- `LOCALE` -- a valid unix locale, default: `en_US.UTF-8`
+- `TIME_ZONE` -- a valid timezone, default: `America/New_York`
 
-While editing the Input/defaults file, select the entry with the best fit 
-and enter the kernel Version, Template and Revision for the distro you're assembling
+----
 
-    #standard 64 bit
-    #K_REVISION="13"                <---- Change to match latest kernel Revision #
-    #K_TEMPLATE="%V%G-%R-%A"        <---- Ensure the template matches your Architecture
-    #K_VERSION="5.10.0"             <---- Select the kernel Version
-    #UNSIGNED=""
-
-Using the example above, changing the revision from 9 to 10 is all that's needed
-to intall the latest security patched kernel revision at the time of writing.
+- `LIVE_USER` -- default username, default: `demo`
+- `NEW_HOSTNAME` -- arbitrary system hostname, default: `mx1`
 
 
-## Choosing compression for the ISO
+### Setting Kernel type and revision
+
+Using the example above, changing the revision to a higher number is all that's needed
+to intall the latest security patched kernel revision.
+Consult to the Debian package repo to check for the highest available revision number.
+You can also use `K_REVISION="*"` to refer to the latest value.
+
+Available variables:
+
+- `K_VERSION`="5.10.0"             <---- Select the kernel Version
+- `K_REVISION`="13"                <---- Change to match latest kernel Revision #
+- `K_TEMPLATE`="%V%G-%R-%A"        <---- Ensure the template matches your Architecture
+- `UNSIGNED`=""
+
+Variables for `K_TEMPLATE` starts with `%`:
+
+- `V`: value of `K_VERSION`
+- `G`: not actually used
+- `R`: value of `K_REVISION`
+- `A`: is architecture.
+
+
+### Choosing compression for the ISO
 
 In the Input folder, edit the defaults file to change compression type.
 When producing an ISO for release, uncomment the 2 lines with zx as the compression 
@@ -80,4 +117,3 @@ that is roughly 30% smaller.
     #COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
     COMPRESSION_TYPE="lz4"
     COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
-

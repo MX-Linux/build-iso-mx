@@ -9,4 +9,4 @@
 
 # ENABLE_LOCALES="Default"
 # ISO_SYMLINK="/data/ISO/test-antiX.iso"
-LOCAL_MIRROR="us"
+# LOCAL_MIRROR="us"
