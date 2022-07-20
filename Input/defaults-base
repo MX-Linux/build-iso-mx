@@ -7,77 +7,84 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-#this is basic version info.  used to make mx-version among other things
-ENABLE_LOCALES="Default"
+
+# this is basic version info.  used to make mx-version among other things
+
 BUG_REPORT_URL="https://mxlinux.org"
+HOME_URL="https://mxlinux.org"
 CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
-DEBIAN_RELEASE="bullseye"
+
+#DISTRO_VERSION="21.1"
+DISTRO_VERSION="21.1_base"
+
 DISTRO_NAME="MX"
-DISTRO_VERSION="21_base"
-#DISTRO_VERSION="19.3_ahs"
-#DISTRO_VERSION="19.3_base"
-#DISTRO_VERSION="19.3_flux_base"
-HOME_URL="https://mxlinux.org"
+ARCH="amd64"
+RELEASE_DATE="February 20,2021"
 
-#Kernel templates...comment and uncomment depending on what you are building
-#V is K_version of kernel
-#G not actually used
-#R is K_Revision
-#A is architecture.
-#Note that the templates don't use all values.
 
-#ahs
-#K_REVISION="3"
+# system defaults, these end up inside the squash file system mostly
+
+ENABLE_LOCALES="Default"
+DEBIAN_RELEASE="bullseye"
+MIRROR="us"
+LOCALE="en_US.UTF-8"
+TIME_ZONE="America/New_York"
+
+LIVE_USER="demo"
+NEW_HOSTNAME="mx1"
+
+
+# kernel
+
+# ahs
+#K_REVISION="4mx"
 #K_TEMPLATE="%V%G-%R-%A"
-#K_VERSION="5.8.0"
+#K_VERSION="5.16.0"
 #UNSIGNED="-unsigned"
 
-#standard 32 bit
-#K_REVISION="12"
-#K_TEMPLATE="%V%G-%R-686-pae"
-#K_VERSION="4.19.0"
+# standard 32 bit
+#K_REVISION="13"
+#K_TEMPLATE="%V%G-%R-%A-pae"
+#K_VERSION="5.10.0"
 #UNSIGNED=""
 
-#standard 64 bit
+# standard 64 bit
 K_REVISION="9"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="5.10.0"
 UNSIGNED=""
 
-#system defaults, these end up inside the squash file system mostly
-LIVE_USER="demo"
-LOCALE="en_US.UTF-8"
-MIRROR="us"
-NEW_HOSTNAME="mx1"
-RELEASE_DATE="February 20,2021"
-TIME_ZONE="America/New_York"
 
-#DE particular items
+# DE particular items
+
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 
-#options for building squashfs
-#lz4 is good for testing but large isos
-#options You need both 
-#xz use -comp xz -Xbcj x86
-#xz use -comp xz -b 262144 #use for base
-#lz4 use -comp lz4 -Xhc
-#gzip leave empty #use for full
+
+# options for building squashfs
+
+# lz4 is good for testing but large isos
+# options You need both 
+# xz use -comp xz -Xbcj x86
+# xz use -comp xz -b 262144 #use for base
+# lz4 use -comp lz4 -Xhc
+# gzip leave empty #use for full
 #COMPRESSION_TYPE="xz"
 #COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
-COMPRESSION_TYPE="lz4"
-COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+#COMPRESSION_TYPE="lz4"
+#COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+COMPRESSION_TYPE="zstd"
+COMPRESSION_TYPE_CODE="-comp zstd -Xcompression-level 15 -b 262144"
 
-#legacy variables that don't change
-USE_UEFI=true
-MEM_TEST_BUG=
-NO_SET_HOSTNAME=""
 
-#seems to have no effect, isos get signed automatically
+# seems to have no effect, isos get signed automatically
+
 SIGN_FILES="false"
 
-#default live boot options
+
+# default live boot options
+
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
- CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
-   MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
+CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
+MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
