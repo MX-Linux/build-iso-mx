@@ -14,10 +14,10 @@ RELEASE_DATE="February 20,2021"
 
 
 # ahs
-K_REVISION="5mx"
-K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="5.16.0"
-UNSIGNED="-unsigned"
+#K_REVISION="5mx"
+#K_TEMPLATE="%V%G-%R-%A"
+#K_VERSION="5.16.0"
+#UNSIGNED="-unsigned"
 
 
 # DE particular items

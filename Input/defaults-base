@@ -25,6 +25,9 @@ RELEASE_DATE="February 20,2021"
 
 # system defaults, these end up inside the squash file system mostly
 
+ISO_FLAV="mx64"
+THEME="mx"
+
 ENABLE_LOCALES="Default"
 DEBIAN_RELEASE="bullseye"
 MIRROR="us"

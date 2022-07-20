@@ -9,7 +9,8 @@
 
 
 DISTRO_VERSION="21.1_KDE"
-ISO_FlAV="mxkde"
+
+ISO_FLAV="mxkde"
 THEME="mxkde"
 
 
