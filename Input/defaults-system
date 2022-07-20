@@ -22,3 +22,4 @@
       GZIP_PROGS="pigz gzip"
   DUMMY_SERVICES="initctl invoke-rc.d restart start stop start-stop-daemon service"
        PS_FORMAT="pid,user,etimes,args"
+    LOCAL_MIRROR="us"

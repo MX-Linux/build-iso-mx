@@ -9,7 +9,7 @@ $ cd build-iso-mx
 ````
 
 
-## Creating the required template.
+## Templates
 
 In the Template folder, copy the template of the build that is the closest fit, e.g.
 ````
@@ -20,7 +20,7 @@ Now we have a template, we need to edit the packages.list file to include/exclud
 packages as needed for the build.
 
 
-## Using (or creating) a theme for the new build
+## Themes
 
 Familiarise yourself with how each theme is laid out and either use one as is, or 
 create a new one that fits your need. If creating a new theme, be sure to follow
@@ -29,7 +29,21 @@ the same layout and structure as the themes already in use.
 When build-iso runs, you will be given an opportunity to choose a theme.
 
 
-## Provisioning the ISO naming schema
+## Build Variables
+
+The variables are stored in what's called `defaults`.
+
+There are three files that is of your concern, with their precedence 
+
+- `defaults-system` -- lowest
+- `defaults` or `defaults-<buildname>`
+- `defaults-local` -- highest
+
+The `<buildname>` can be `base`, `kde`, `min`, etc. (see the Input folder for more examples).
+It can also be a name of your own liking, as long as you put it in the Input folder.
+
+
+### Provisioning the ISO naming schema
 
 In the Input folder, edit the defaults file to add your distro name, look for line/s containing `DISTRO_VERSION="21.1"`
 
@@ -43,7 +57,7 @@ example:
 
 
 
-## Adjusting the system defaults to match your preferences
+### Adjusting the system defaults to match your preferences
 
     #system defaults, these end up inside the squash file system mostly
     LIVE_USER="demo"                <-- best left as is
@@ -54,7 +68,7 @@ example:
     TIME_ZONE="America/New_York"    <-- changes if desired
 
 
-## Setting Kernel type and revision
+### Setting Kernel type and revision
 
 While editing the Input/defaults file, select the entry with the best fit 
 and enter the kernel Version, Template and Revision for the distro you're assembling
@@ -69,7 +83,7 @@ Using the example above, changing the revision from 9 to 10 is all that's needed
 to intall the latest security patched kernel revision at the time of writing.
 
 
-## Choosing compression for the ISO
+### Choosing compression for the ISO
 
 In the Input folder, edit the defaults file to change compression type.
 When producing an ISO for release, uncomment the 2 lines with zx as the compression 
