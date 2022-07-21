@@ -1,0 +1,7 @@
+broadcom-sta-dkms
+dkms
+rtl8812au-dkms
+rtl8821ce-dkms
+rtl8821cu-dkms
+systemd
+systemd-shim

@@ -73,8 +73,8 @@ Available variables
 ----
 
 - `ENABLE_LOCALES` -- pick one of `Default`, `Single`, and `All`
-- `DEBIAN_RELEASE` -- debian version to base on, e.g. `bullseye`
-- `MIRROR` -- debian mirror, default: `us`
+- `DEBIAN_RELEASE` -- debian version to base on, make sure the debootstrap script exists, e.g. `bullseye`
+- `MIRROR` -- debian mirror, check out [this list](https://www.debian.org/mirror/list) to see options
 - `LOCALE` -- a valid unix locale, default: `en_US.UTF-8`
 - `TIME_ZONE` -- a valid timezone, default: `America/New_York`
 

@@ -41,7 +41,7 @@ ARCH="amd64"
 LOCALE="en_US.UTF-8"
 ENABLE_LOCALES="Default"
 DEBIAN_RELEASE="bullseye"
-LOCAL_MIRROR="us"
+LOCAL_MIRROR="http://ftp.us.debian.org/debian"
 TIME_ZONE="America/New_York"
 
 LIVE_USER="demo"

@@ -488,14 +488,6 @@ Remaster_Blurb
     # Fill in default value
     : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
 
-    choose "local mirror" LOCAL_MIRROR                       \
-                us gr au be bg br ch cz de dk ee es "fi" fr  \
-                gr hk hr hu ie is it jp kr nl no nz pl pt ro \
-                ru se si sk tr tw ua uk us
-
-    choose "Debian release" DEBIAN_RELEASE \
-                stable testing unstable bullseye bookworm
-
     choose "which locales to enable" ENABLE_LOCALES  \
                 "Default (about 60)"                 \
                 "All (about 400)"                    \
@@ -657,14 +649,14 @@ do_stage_2() {
         gather_say exclude "Exclude $(pqn %n) package%s"
 
         local args="--arch=$ARCH"
-        local exclude_list=$(gather_join exclude)
+        local exclude_list=$(gather_join exclude-debootstrap)
+        local keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
         [[ -n $exclude_list ]] && args="$args --exclude=$exclude_list"
-
-        local url="http://ftp.$LOCAL_MIRROR.debian.org/debian"
+        [[ -r $keyring ]] && args="$args --keyring=$keyring"
 
         check_errors_strict
         start_timer
-        $SUDO debootstrap $args $DEBIAN_RELEASE $sqfs_dir $url
+        $SUDO debootstrap $args $DEBIAN_RELEASE $sqfs_dir $LOCAL_MIRROR
         end_timer "run debootstrap $ARCH $DEBIAN_RELEASE"
         check_errors_lax
 
@@ -871,6 +863,8 @@ do_stage_4() {
             && sed -i -e 's/\<contrib\>//g' -e 's/\<non-free\>//g' $list_dir/debian.list
 
         apt-get $APT_GET_OPTS update
+        apt-get $APT_GET_OPTS upgrade
+        apt-get $APT_GET_OPTS dist-upgrade
         end_part_lax
     fi
 
@@ -928,7 +922,7 @@ do_stage_4() {
     if gather_any pesky-package \
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
-        for package in $(gather pesky-package); do
+        for package in $(compile_pkg_list pesky-package exclude-chroot); do
             DEBIAN_FRONTEND=dialog apt-get install $package
         done
         end_part_lax
@@ -1385,9 +1379,6 @@ do_stage_5() {
     # Clean up our loose ends (once here instead of after every chroot)
     $SUDO rm -rf $sqfs_dir$build_dir
 
-    # We used LOCAL_MIRROR while building inside the chroot
-    set_chroot_mirror $MIRROR "DEFAULT mirror"
-
     say "Delete $(pq /etc/mtab)"
     $SUDO rm -f $sqfs_dir/etc/mtab
 
@@ -1666,7 +1657,7 @@ Bootloader_Data
     local misc_dir=$iso_file_dir/misc/$full_distro_name
     mkdir -p $misc_dir
     gather package                               > $misc_dir/package-list.antiX
-    gather exclude                               > $misc_dir/exclude-list
+    gather exclude-bootstrap                     > $misc_dir/exclude-list
     pretty_output | strip_color                  > $misc_dir/info
     awk '{ print $1}' $work_dir/package-list.out > $misc_dir/package-list.all
     write_version_info                           > $misc_dir/version-info
@@ -2382,7 +2373,7 @@ customize_firefox() {
 apt_get_packages() {
     local file=$1  label=$2
     shift 2
-    local pkg_list=$(gather $file)
+    local pkg_list=$(compile_pkg_list $file exclude-chroot)
     local cnt=$(echo "$pkg_list" | wc -w)
     [[ $cnt -eq 0 ]] && return
 
@@ -2402,7 +2393,7 @@ install_packages() {
 
 check_missing() {
     local pkg missing file=$1  label=$2
-    local pkg_list=$(gather $file)
+    local pkg_list=$(compile_pkg_list $file exclude-chroot)
     local cnt=$(echo "$pkg_list" | wc -w)
     [[ $cnt -eq 0 ]] && return
 
@@ -2790,9 +2781,6 @@ prep_chroot() {
         $SUDO cp -H /etc/resolv.conf $sqfs_dir/etc/resolv.conf
     fi
 
-    # Always use local mirror when working in chroot
-    set_chroot_mirror $LOCAL_MIRROR "LOCAL mirror"
-
     # TERM helps nano to work in chroot, LC_ALL is for Deb
     export TERM=xterm LC_ALL=C
 }
@@ -2923,22 +2911,6 @@ umount_chroot() {
     done
 
     [[ -n $UMOUNT_ERRORS ]] && fatal "Umount errors!"
-}
-
-#------------------------------------------------------------------------------
-# We do this outside of the chroot so we know for sure it is set correctly
-# before running mksquashfs.  We want it to always be local when running in
-# the chroot and always be the real MIRROR when running mksquashfs.
-#------------------------------------------------------------------------------
-set_chroot_mirror() {
-    local mirror=$1; shift
-    [[ -n $mirror ]] || return
-
-    local file=$sqfs_dir/etc/apt/sources.list.d/debian.list
-    [[ -f $file ]] || return
-
-    say "Set apt mirror to $@ $(pq $mirror)"
-    $SUDO sed -i "s=/ftp\.\(..\.\)\\?debian\.org/=/ftp.$mirror.debian.org/=" $file
 }
 
 #==============================================================================
@@ -3615,15 +3587,16 @@ do_stats() {
 
 do_one_stat() {
     if [[ -n $verbose_mode ]]; then
-        gather_say exclude       "    $(pqn %3d) excluded  package%s"
-        gather_say basic-package "    $(pqn %3d) basic     package%s"
-        gather_say pesky-package "    $(pqn %3d) pesky     package%s"
-        gather_say package       "    $(pqn %3d) antiX     package%s"
-        gather_say remove        "    $(pqn %3d) remove    package%s"
-        gather_say add           "    $(pqn %3d) add       package%s"
-        gather_say reinstall     "    $(pqn %3d) reinstall package%s"
+        gather_say exclude-bootstrap  "    $(pqn %3d) excluded (bootstrap) package%s"
+        gather_say exclude-chroot     "    $(pqn %3d) excluded (chroot)    package%s"
+        gather_say basic-package      "    $(pqn %3d) basic                package%s"
+        gather_say pesky-package      "    $(pqn %3d) pesky                package%s"
+        gather_say package            "    $(pqn %3d) antiX                package%s"
+        gather_say remove             "    $(pqn %3d) remove               package%s"
+        gather_say add                "    $(pqn %3d) add                  package%s"
+        gather_say reinstall          "    $(pqn %3d) reinstall            package%s"
     else
-        gather_say package       "    $(pqn %3d) antiX     package%s"
+        gather_say package            "    $(pqn %3d) antiX                package%s"
     fi
     local needed=$((($TMPFS_SIZE * $(gather_cnt package))/ 10 ))
     say "$(printf "size of tmps: $(pqn %6d) meg\n" $needed)"
@@ -3784,7 +3757,22 @@ flav_dirs() {
     echo " " $dir/*-AND-$respin-AND-* $dir/$flav
 }
 
-flavour_list() { ls $template | grep  "^[a-z0-9]\+$" ;}
+flavour_list() { ls $template | grep  "^[a-z0-9_]\+$" ;}
+
+#------------------------------------------------------------------------------
+# compile_pkg_list package-list exclude-list
+#
+# Take package-list and remove exclude-list from it
+#------------------------------------------------------------------------------
+compile_pkg_list() {
+    local pkg_list=$(gather $1)
+    local exclude_list=$(gather $2)
+    local result
+    for i in $pkg_list ; do
+      [[ ! $exclude_list =~ .*$i.* ]] && result="$result $i"
+    done
+    echo $result
+}
 
 #------------------------------------------------------------------------------
 # get_template_file [-e] file-name var-name
