@@ -1,0 +1,31 @@
+#----------------------------------------------------------------------
+# defaults file for build-antiX-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+
+DISTRO_VERSION="21.1_KDE_Devuan"
+ISO_FLAV="mxkde_devuan"
+THEME="mxkde"
+RELEASE_DATE="July 20,2022"
+
+DEBIAN_RELEASE="beowulf"
+LOCAL_MIRROR="http://deb.devuan.org/merged"
+
+APT_GET_OPTS="-q -y -o DPkg::Options::=--force-confold -o Dpkg::Options::=--force-overwrite"
+
+# ahs
+#K_REVISION="5mx"
+#K_TEMPLATE="%V%G-%R-%A"
+#K_VERSION="5.16.0"
+#UNSIGNED="-unsigned"
+
+
+# DE particular items
+
+X_TERM_EMULATOR="/usr/bin/konsole"
+CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"

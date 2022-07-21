@@ -1,0 +1,3 @@
+usr/share/sddm/themes/debian-theme # rm link that adds duplicate 
+etc/apt/sources.list.d/debian-stable-updates.list
+etc/apt/sources.list.d/debian.list
