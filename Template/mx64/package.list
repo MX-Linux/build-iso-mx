@@ -320,7 +320,7 @@ timeshift
 transmission-common
 transmission-gtk
 #ttf-freefont
-ttf-mscorefonts-installer
+#ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra

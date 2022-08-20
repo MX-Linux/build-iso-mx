@@ -274,7 +274,7 @@ thunar-gtkhash
 thunar-volman
 tint2
 touchpad-indicator
-ttf-mscorefonts-installer
+#ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra
