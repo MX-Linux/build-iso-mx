@@ -546,6 +546,9 @@ Remaster_Blurb
     local $HOST_ARCH
     case $(arch) in
            i386) HOST_ARCH=386 ;;
+           i486) HOST_ARCH=386 ;;
+           i686) HOST_ARCH=386 ;;
+           i686) HOST_ARCH=386 ;;
          x86_64) HOST_ARCH=x64 ;;
               *) error "Cannot detect Host ARCH"
     esac
