@@ -42,7 +42,6 @@ crda
 cryptsetup
 cryptsetup-bin
 cryptsetup-initramfs
-cups
 cups-browsed
 cups-bsd
 cups-filters-core-drivers
@@ -93,7 +92,6 @@ firmware-bnx2x
 firmware-brcm80211
 firmware-intel-sound
 firmware-intelwimax
-firmware-ipw2x00
 firmware-iwlwifi
 firmware-libertas
 firmware-linux-free
@@ -137,12 +135,7 @@ gsettings-desktop-schemas
 gsmartcontrol
 gstreamer1.0-alsa
 gstreamer1.0-libav
-gtk-theme-switch
-gtk2-engines-pixbuf
 gufw
-gvfs
-gvfs-backends
-gvfs-fuse
 haveged
 hddtemp
 hdparm
@@ -305,7 +298,6 @@ tmux
 traceroute
 ttf-bitstream-vera
 ucf
-udev-modified-init
 udevil
 udisks2
 unpaper
@@ -346,7 +338,6 @@ xserver-xorg-input-kbd
 xserver-xorg-input-mouse
 xserver-xorg-input-synaptics
 xserver-xorg-input-wacom
-xserver-xorg-legacy # is this needed?
 xserver-xorg-video-all
 xserver-xorg-video-cirrus
 xserver-xorg-video-intel

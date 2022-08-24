@@ -7,39 +7,51 @@
 # which has the highest
 #----------------------------------------------------------------------
 
+
 #this is basic version info.  used to make mx-version among other things
+
 BUG_REPORT_URL="https://mxlinux.org"
+HOME_URL="https://mxlinux.org"
 CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
-DEBIAN_RELEASE="bullseye"
+
+DISTRO_VERSION="21.1"
+#DISTRO_VERSION="21.2_ahs"
+#DISTRO_VERSION="21.2_kde"
+#DISTRO_VERSION="21.2_fluxbox"
+
+
 DISTRO_NAME="MX"
-#DISTRO_VERSION="21.1"
-#DISTRO_VERSION="21.1_ahs"
-#DISTRO_VERSION="21.1_kde"
-DISTRO_VERSION="21.2_fluxbox"
-HOME_URL="https://mxlinux.org"
+RELEASE_DATE="August 28, 2022"
 
-#Kernel templates...comment and uncomment depending on what you are building
-#V is K_version of kernel
-#G not actually used
-#R is K_Revision
-#A is architecture.
-#Note that the templates don't use all values.
 
-#ahs
+# system defaults, these end up inside the squash file system mostly
+
+DEBIAN_RELEASE="bullseye"
+MIRROR="us"
+LOCALE="en_US.UTF-8"
+TIME_ZONE="America/New_York"
+
+LIVE_USER="demo"
+NEW_HOSTNAME="mx1"
+
+
+# kernel
+
+# ahs
 #K_REVISION="4mx"
 #K_TEMPLATE="%V%G-%R-%A"
 #K_VERSION="5.16.0"
 #UNSIGNED="-unsigned"
 
-#standard 32 bit
-#K_REVISION="17"
+# standard 32 bit
+#K_REVISION="13"
 #K_TEMPLATE="%V%G-%R-%A-pae"
 #K_VERSION="5.10.0"
 #UNSIGNED=""
 
-#standard 64 bit
-K_REVISION="17"
+# standard 64 bit
+K_REVISION="*"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="5.10.0"
 UNSIGNED=""
@@ -52,31 +64,31 @@ NEW_HOSTNAME="mx1"
 RELEASE_DATE="August 28, 2022"
 TIME_ZONE="America/New_York"
 
-#DE particular items
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 
-#options for building squashfs
-#lz4 is good for testing but large isos
-#options You need both 
-#xz use -comp xz -Xbcj x86
-#xz use -comp xz -b 262144 #use for base
-#lz4 use -comp lz4 -Xhc
-#gzip leave empty #use for full
+
+# options for building squashfs
+
+# lz4 is good for testing but large isos
+# options You need both 
+# xz use -comp xz -Xbcj x86
+# xz use -comp xz -b 262144 #use for base
+# lz4 use -comp lz4 -Xhc
+# gzip leave empty #use for full
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 #COMPRESSION_TYPE="lz4"
 #COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
 
-#legacy variables that don't change
-USE_UEFI=true
-MEM_TEST_BUG=
-NO_SET_HOSTNAME=""
 
-#sign isos
+# sign isos
+
 SIGN_FILES="true"
 
-#default live boot options
+
+# default live boot options
+
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
- CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
-   MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
+CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
+MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
