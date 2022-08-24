@@ -8,10 +8,10 @@
 #----------------------------------------------------------------------
 
 
-DISTRO_VERSION="21.1_fluxbox"
+DISTRO_VERSION="21.2_fluxbox"
 
 DISTRO_NAME="MX"
-RELEASE_DATE="April 9, 2022"
+RELEASE_DATE="August 28, 2022"
 
 
 # system defaults, these end up inside the squash file system mostly
