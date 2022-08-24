@@ -1,8 +1,2 @@
-firmware-ipw2x00 
-firmware-zd1211
-nfs-common-modified-init
-udev-modified-init
-cups
-printer-driver-cups-pdf
 desktop-defaults-mx-kde
 hspell
