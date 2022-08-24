@@ -249,7 +249,6 @@ policykit-1
 powermgmt-base
 pppoeconf
 printer-driver-all
-printer-driver-cups-pdf
 procps
 psmisc
 psutils
