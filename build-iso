@@ -1647,7 +1647,7 @@ Bootloader_Data
         rm -rf $initrd_dir/lib/modules/
 
         # Note: please use built-in list so we are all in sync.  Thanks!     #anticap
-        $SUDO $tools/copy-initrd-modules $initrd_encrypt --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
+        $tools/copy-initrd-modules $initrd_encrypt --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
 
         #anticap#$tools/copy-initrd-programs --to $initrd_dir --clean
         $tools/copy-initrd-programs $initrd_encrypt --to $initrd_dir --from $sqfs_dir
