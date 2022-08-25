@@ -133,3 +133,4 @@ priority, the files are:
     defaults
     defaults-system
 
+Note:  using the --user-default switch will allow the user to specify an alternate file to use in place of "defaults"
