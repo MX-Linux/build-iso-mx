@@ -23,55 +23,56 @@
   DUMMY_SERVICES="initctl invoke-rc.d restart start stop start-stop-daemon service"
        PS_FORMAT="pid,user,etimes,args"
 
-
-
-# this is basic version info.  used to make mx-version among other things
-
+# this is basic version info. used to make mx-version among other things
 BUG_REPORT_URL="https://mxlinux.org"
 HOME_URL="https://mxlinux.org"
 CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
 
+DISTRO_VERSION="21.2"
 DISTRO_NAME="MX"
-ARCH="amd64"
-
+RELEASE_DATE="August 28, 2022"
 
 # system defaults, these end up inside the squash file system mostly
-
-LOCALE="en_US.UTF-8"
-ENABLE_LOCALES="Default"
 DEBIAN_RELEASE="bullseye"
 LOCAL_MIRROR="us"
+LOCALE="en_US.UTF-8"
 TIME_ZONE="America/New_York"
 
 LIVE_USER="demo"
 NEW_HOSTNAME="mx1"
 
-
 # kernel
-
 # standard 64 bit
 K_REVISION="*"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="5.10.0"
 UNSIGNED=""
 
+# system defaults, these end up inside the squash file system mostly
+LIVE_USER="demo"
+LOCALE="en_US.UTF-8"
+MIRROR="us"
+NEW_HOSTNAME="mx1"
+RELEASE_DATE="August 28, 2022"
+TIME_ZONE="America/New_York"
+
+X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
+CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 
 # options for building squashfs
-
 COMPRESSION_TYPE="zstd"
 COMPRESSION_TYPE_CODE="-comp zstd -Xcompression-level 15 -b 262144"
 
+# sign isos
+SIGN_FILES="true"
 
 # legacy variables that don't change
-
 USE_UEFI=true
 MEM_TEST_BUG=
 NO_SET_HOSTNAME=""
 
-
 # default live boot options
-
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
 CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
 MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
