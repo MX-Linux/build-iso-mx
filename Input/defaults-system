@@ -5,10 +5,13 @@
 # set in this file will not show up in --pretend mode are at the end of
 # stage-0 unless you use the --verbose flag.
 #
-# It is designed to hold values that almost never change except when
-# the build-antiX-iso program goes through a major update.  These
+# Initially, it was designed to hold values that almost never change except when
+# the build-antiX-iso program goes through a major update. These
 # values can be changed but they are kept out of the way here because
 # they seldom need to be changed.
+
+# However, if one uses --user-defaults, "defaults" file is no longer loaded so
+# it's important to have here the common default values
 #----------------------------------------------------------------------
 
     APT_GET_OPTS="-q -y -o DPkg::Options::=--force-confold"
@@ -35,9 +38,6 @@ RELEASE_DATE="August 28, 2022"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bullseye"
-LOCAL_MIRROR="us"
-LOCALE="en_US.UTF-8"
-TIME_ZONE="America/New_York"
 
 LIVE_USER="demo"
 NEW_HOSTNAME="mx1"
@@ -53,8 +53,8 @@ UNSIGNED=""
 LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
+LOCAL_MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="August 28, 2022"
 TIME_ZONE="America/New_York"
 
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"

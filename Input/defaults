@@ -23,9 +23,6 @@ RELEASE_DATE="August 28, 2022"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bullseye"
-MIRROR="us"
-LOCALE="en_US.UTF-8"
-TIME_ZONE="America/New_York"
 
 LIVE_USER="demo"
 NEW_HOSTNAME="mx1"
@@ -53,8 +50,8 @@ UNSIGNED=""
 LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
+LOCAL_MIRROR="us"
 NEW_HOSTNAME="mx1"
-RELEASE_DATE="August 28, 2022"
 TIME_ZONE="America/New_York"
 
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
