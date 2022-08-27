@@ -338,6 +338,7 @@ xserver-xorg-input-kbd
 xserver-xorg-input-mouse
 xserver-xorg-input-synaptics
 xserver-xorg-input-wacom
+xserver-xorg-legacy
 xserver-xorg-video-all
 xserver-xorg-video-cirrus
 xserver-xorg-video-intel
