@@ -7,6 +7,9 @@
 # which has the highest
 #----------------------------------------------------------------------
 
+#master generic defaults file, usually not used in favor of 
+#flavor specific defaults-* files
+
 # this is basic version info. used to make mx-version among other things
 BUG_REPORT_URL="https://mxlinux.org"
 HOME_URL="https://mxlinux.org"
@@ -83,3 +86,4 @@ NO_SET_HOSTNAME=""
 antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
 CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
 MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
+
