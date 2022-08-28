@@ -71,6 +71,9 @@ gtk2-engines
 #gtk3-nocsd
 gtkdialog
 gzip
+gvfs
+gvfs-backends
+gvfs-fuse
 hardinfo
 hicolor-icon-theme
 hunspell-en-gb
@@ -295,6 +298,7 @@ xdg-user-dirs-gtk
 xfburn
 xfce4-appfinder
 xfce4-clipman
+xfce4-notifyd
 #xfce4-screenshooter
 #xfce4-settings
 xfce4-terminal

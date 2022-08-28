@@ -77,6 +77,9 @@ gstreamer1.0-pulseaudio
 gtk2-engines-murrine
 gtkdialog
 gzip
+gvfs
+gvfs-backends
+gvfs-fuse
 hardinfo
 hfsplus
 hfsprogs
