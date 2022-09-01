@@ -6,11 +6,11 @@ MP_ARGS="-D -a"
 usage() {
         cat <<Usage
 Usage: $ME [options] [file]
-Copies modules listed in file from /lib/modules/\$KERN to 
+Copies modules listed in file from /lib/modules/\$KERN to
 ./lib/modules/\$KERN in the CWD.  Also copies all dependencies.
 
 If only one kernel directory exists then we choose that kernel
-automatically.  
+automatically.
 
 If no --dir or -- option is given and there are no files on
 the command line then "default mode" is used.  The list of
@@ -44,10 +44,14 @@ block
 btrfs
 cdrom
 crc16
+crc32
 crc32c-generic
+crc32-pclmul
 crct10dif-common
 crct10dif-generic
 crct10dif-pclmul
+cryptsetup
+dmsetup
 ecb
 ehci-hcd
 ehci-pci
@@ -57,6 +61,9 @@ ext4
 exfat
 f2fs
 fat
+firewire-core
+firewire-ohci
+firewire-sbp2
 fotg210-hcd
 fusbh200-hcd
 fuse
@@ -73,7 +80,13 @@ hid-logitech-hidpp
 hid-microsoft
 hid-monterey
 hid-samsung
+hv_balloon
+hv_vmbus
+hv_utils
+hv_sock
+hv_storvsc
 hv_netvsc
+hyperv
 hyperv-keyboard
 hyperv_fb
 isofs
@@ -81,9 +94,13 @@ jbd
 jbd2
 jfs
 libcrc32c
+libahci
+linear
 loop
 mbcache
+md-mod
 msdos
+multipath
 nls-ascii
 nls-cp437
 nls-utf8
@@ -93,12 +110,15 @@ ohci-hcd
 ohci-pci
 overlay
 pci-hyperv
+pci-hyperv-intf
 pcie-aspm
 printk
 pstore
 reiserfs
 rts5139
 scsi-mod
+scsi-transport-fc
+sdhci
 sd-mod
 sg
 shpchp
@@ -114,20 +134,33 @@ usb-storage
 usbcore
 usbhid
 usbmon
+raid0
+raid1
+raid10
+raid456
+raid6_pq
+raid_class
 virtio-blk
 virtio-pci
 vfat
 vmd
+virtio-gpu
 whc-rc
 whci-hcd
 xcbc
 xfs
 xhci-hcd
 xhci-pci
+xor
 "
 
 CRYPT_LIST="
 aes
+async_memcpy
+async_pq
+async_raid6_recov
+async_tx
+async_xor
 blowfish
 dm-crypt
 dm-mod
@@ -156,15 +189,15 @@ main() {
                 fi;;
         esac
 
-        case $arg in 
+        case $arg in
             -dir|-from|-kernel|-to|[dfkt])
                 [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
                 val=$1
                 shift;;
-            *=*) 
+            *=*)
                 val=${arg#*=}
                 arg=${arg%%=*} ;;
-             *) 
+             *)
                  val="???" ;;
         esac
 
@@ -237,7 +270,7 @@ $(find "$dir" -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
     fi
 
     list2=$(echo "$list1" | sed 's/_/-/g' | sort -u \
-        | eval "xargs modprobe $MP_ARGS" | sed -n 's/^insmod //p' | sort -u)
+        | eval "xargs modprobe $MP_ARGS" | sed -n 's/^insmod //p' |cut -d' ' -f1| sort -u)
 
     local full cnt=0
     [ -z "${from_dir##/*}" ] || from_dir="$PWD/$from_dir"
