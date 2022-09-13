@@ -16,13 +16,13 @@ HOME_URL="https://mxlinux.org"
 CODE_NAME="Wildflower"
 ASCII_CODE_NAME="Wildflower"
 
-DISTRO_VERSION="21.2"
+DISTRO_VERSION="21.2.1"
 #DISTRO_VERSION="21.2_ahs"
 #DISTRO_VERSION="21.2_kde"
 #DISTRO_VERSION="21.2_fluxbox"
 
 DISTRO_NAME="MX"
-RELEASE_DATE="August 28, 2022"
+RELEASE_DATE="September 18, 2022"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bullseye"

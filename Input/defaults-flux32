@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="21.2_fluxbox"
+DISTRO_VERSION="21.2.1_fluxbox"
 
 # system defaults, these end up inside the squash file system mostly
 
