@@ -11,6 +11,14 @@
 
 DISTRO_VERSION="21.2.1_fluxbox"
 
+#32 bit version of fluxbox release, defaults from defaults-system
+
+# standard 32 bit
+K_REVISION="*"
+K_TEMPLATE="%V%G-%R-%A-pae"
+K_VERSION="5.10.0"
+UNSIGNED=""
+
 # system defaults, these end up inside the squash file system mostly
 
 # DE particular items
