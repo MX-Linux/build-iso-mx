@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# defaults file for build-antiX-iso
+# defaults file for build-iso
 #
 # This file contains almost all of the variables that determine what
 # actually gets built.  It has a middle priority in between
