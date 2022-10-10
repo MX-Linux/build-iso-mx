@@ -151,7 +151,6 @@ linux-headers-amd64
 linux-image-amd64
 logrotate
 lsb-base
-lshw
 lsscsi
 lynx
 lz4
@@ -177,7 +176,6 @@ network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 nmap
 nmon
-ntfs-3g
 nvme-cli
 onboard
 open-vm-tools
@@ -196,7 +194,6 @@ progress
 psensor
 pssh
 pulseaudio-module-bluetooth
-pv
 qla-tools
 qpdf
 qpdfview
