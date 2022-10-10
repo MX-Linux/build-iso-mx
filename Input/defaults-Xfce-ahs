@@ -8,19 +8,16 @@
 #----------------------------------------------------------------------
 
 
-#DISTRO_VERSION="21.1"
-DISTRO_VERSION="21.1_ahs"
-RELEASE_DATE="February 20,2021"
+DISTRO_VERSION="21.2.1_ahs"
 
-
+# kernel
 # ahs
-#K_REVISION="5mx"
-#K_TEMPLATE="%V%G-%R-%A"
-#K_VERSION="5.16.0"
-#UNSIGNED="-unsigned"
+K_REVISION="4mx"
+K_TEMPLATE="%V%G-%R-%A"
+K_VERSION="5.18.0"
+UNSIGNED="-unsigned"
 
-
-# DE particular items
-
-X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
-CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mxahs
+ARCH=amd64

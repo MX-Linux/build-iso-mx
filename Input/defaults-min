@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# defaults file for build-antiX-iso
+# defaults file for build-iso
 #
 # This file contains almost all of the variables that determine what
 # actually gets built.  It has a middle priority in between
@@ -7,20 +7,17 @@
 # which has the highest
 #----------------------------------------------------------------------
 
+DISTRO_VERSION="21.2.1_minimal"
 
-ENABLE_LOCALES="single"
-DISTRO_VERSION="21.1_minimal"
 ARCH="amd64"
 ISO_FLAV="mxmin64"
 THEME="mxmin"
-# RELEASE_DATE="May 10,2022"
 
+ENABLE_LOCALES="single"
 
 # DE particular items
-
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
-
 
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -b 262144"

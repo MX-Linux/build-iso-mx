@@ -71,6 +71,9 @@ gtk2-engines
 #gtk3-nocsd
 gtkdialog
 gzip
+gvfs
+gvfs-backends
+gvfs-fuse
 hardinfo
 hicolor-icon-theme
 hunspell-en-gb
@@ -217,6 +220,7 @@ mx-select-sound
 mx-tour
 mx-usb-unmounter
 mx-welcome
+mx-viewer
 mx21-archive-keyring
 mx21-artwork
 mxfb-accessories
@@ -278,7 +282,7 @@ thunar-gtkhash
 thunar-volman
 tint2
 touchpad-indicator
-ttf-mscorefonts-installer
+#ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra
@@ -293,14 +297,9 @@ whiptail
 wmalauncher
 xdg-user-dirs-gtk
 xfburn
-xfce-superkey-mx
 xfce4-appfinder
 xfce4-clipman
 xfce4-notifyd
-xfce4-places-plugin
-xfce4-power-manager
-xfce4-power-manager-data
-xfce4-power-manager-plugins
 #xfce4-screenshooter
 #xfce4-settings
 xfce4-terminal
@@ -312,7 +311,6 @@ xfconf
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident
-xterm
 xutils-dev
 yelp
 zlib1g

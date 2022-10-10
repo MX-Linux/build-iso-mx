@@ -141,7 +141,7 @@ kmod
 lame
 lbzip2
 lftp
-ightdm
+lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-mx21
 lightdm-gtk-greeter-settings
@@ -192,9 +192,11 @@ plymouth
 plymouth-themes
 plymouth-themes-mx
 policykit-1-gnome
+progress
 psensor
 pssh
 pulseaudio-module-bluetooth
+pv
 qla-tools
 qpdf
 qpdfview

@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# defaults file for build-antiX-iso
+# defaults file for build-iso
 #
 # This file contains almost all of the variables that determine what
 # actually gets built.  It has a middle priority in between
@@ -7,15 +7,16 @@
 # which has the highest
 #----------------------------------------------------------------------
 
+DISTRO_VERSION="21.2.1_Workbench"
 
-DISTRO_VERSION="21.1_Workbench"
+ARCH="amd64"
 ISO_FLAV="mxworkbench64"
 THEME="mx-workbench"
-RELEASE_DATE="April 16, 2022"
 
+ENABLE_LOCALES="single"
 
 #DE particular items
-
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
+
 ISO_SHELL="/bin/zsh"

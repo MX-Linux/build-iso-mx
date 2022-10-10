@@ -122,6 +122,9 @@ gtk2-engines
 #gtk3-nocsd
 gtkdialog
 #guvcview
+gvfs
+gvfs-backends
+gvfs-fuse
 hardinfo
 #hexchat
 #hibernate
@@ -221,6 +224,7 @@ mx-system-sounds
 #mx-timeset-gui
 mx-tour
 mx-usb-unmounter
+mx-viewer
 mx-welcome
 mx21-artwork
 mythes-en-us
@@ -322,7 +326,7 @@ timeshift
 transmission-common
 transmission-gtk
 #ttf-freefont
-ttf-mscorefonts-installer
+#ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra

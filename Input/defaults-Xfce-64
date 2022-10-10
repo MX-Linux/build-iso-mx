@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# defaults file for build-iso
+# defaults file for build-antiX-iso
 #
 # This file contains almost all of the variables that determine what
 # actually gets built.  It has a middle priority in between
@@ -7,14 +7,12 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.2.1_KDE"
+#most items set in defaults-lcoal, 64 bit Xfce is default release of MX
 
-ISO_FLAV="mxkde"
-THEME="mxkde"
-ARCH="amd64"
+X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
+CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 
-ENABLE_LOCALES="Default"
-
-# DE particular items
-X_TERM_EMULATOR="/usr/bin/konsole"
-
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mx64
+ARCH=amd64

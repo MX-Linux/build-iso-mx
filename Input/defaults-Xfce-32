@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# defaults file for build-iso
+# defaults file for build-antiX-iso
 #
 # This file contains almost all of the variables that determine what
 # actually gets built.  It has a middle priority in between
@@ -7,14 +7,15 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.2.1_KDE"
+#32 bit version of Xfce release, defaults from defaults-system
 
-ISO_FLAV="mxkde"
-THEME="mxkde"
-ARCH="amd64"
+# standard 32 bit
+K_REVISION="18"
+K_TEMPLATE="%V%G-%R-%A-pae"
+K_VERSION="5.10.0"
+UNSIGNED=""
 
-ENABLE_LOCALES="Default"
-
-# DE particular items
-X_TERM_EMULATOR="/usr/bin/konsole"
-
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mx32
+ARCH=i386

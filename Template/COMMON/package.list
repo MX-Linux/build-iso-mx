@@ -1,5 +1,3 @@
-#ntpdate
-#sysvinit
 accountsservice
 acl
 acpi
@@ -32,7 +30,7 @@ checkaptgpg
 chroot-rescue-mx
 cifs-utils
 cli-aptix
-cli-installer-antix
+cli-installer-mx
 cli-shell-utils
 console-data
 console-setup
@@ -213,7 +211,6 @@ mx-tools
 mx-tweak
 mx-tweak-data
 mx-user
-mx-viewer
 ncurses-term
 neofetch
 netcat-traditional
@@ -249,7 +246,6 @@ policykit-1
 powermgmt-base
 pppoeconf
 printer-driver-all
-printer-driver-cups-pdf
 procps
 psmisc
 psutils
@@ -340,6 +336,7 @@ xserver-xorg-input-kbd
 xserver-xorg-input-mouse
 xserver-xorg-input-synaptics
 xserver-xorg-input-wacom
+xserver-xorg-legacy
 xserver-xorg-video-all
 xserver-xorg-video-cirrus
 xserver-xorg-video-intel
