@@ -270,7 +270,7 @@ $(find "$dir" -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
     fi
 
     list2=$(echo "$list1" | sed 's/_/-/g' | sort -u \
-        | eval "xargs modprobe $MP_ARGS" | sed -n 's/^insmod //p' |cut -d' ' -f1| sort -u)
+        | eval "xargs /sbin/modprobe -n $MP_ARGS" | sed -n 's/^insmod //p' |cut -d' ' -f1| sort -u)
 
     local full cnt=0
     [ -z "${from_dir##/*}" ] || from_dir="$PWD/$from_dir"
