@@ -17,10 +17,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Display help
-        ./build-iso -h
+        run: ./build-iso -h
 
       - name: Show the stages of processing
-        ./build-iso --show-stages
+        run: ./build-iso --show-stages
 
-       - name: Show the parts of Stage 4 (chroot) and how to control them
-         ./build-iso --show-parts
+      - name: Show the parts of Stage 4 (chroot) and how to control them
+        run: ./build-iso --show-parts
