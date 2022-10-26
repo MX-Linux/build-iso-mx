@@ -21,11 +21,9 @@ lightdm-modified-init
 linux-headers-686-pae
 linux-image-686-pae
 mx-comfort-themes
-mx-goodies
 mx-installer
 mx-live-usb-maker
 mx-usb-unmounter
-mx-system
 network-manager-gnome
 onboard
 papirus-mxblue
