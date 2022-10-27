@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  # Runs every time that a commit is git pushed
+  push:
+  schedule:
+    # Runs every Sunday at 7:59 AM UTC
+    - cron: 59 7 * * 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Provisioning (apt-get update)
+        run: sudo bin/provision-apt-get-update
+
+      - name: Provisioning (apt-get upgrade, main branch only)
+        run: sudo bin/provision-apt-get-upgrade
+        if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Provisioning (apt-get install)
+        run: sudo bin/provision-apt-get-install
