@@ -19,9 +19,9 @@ jobs:
       - name: Provisioning (apt-get update)
         run: sudo bin/provision-apt-get-update
 
-      - name: Provisioning (apt-get upgrade, main branch only)
+      - name: Provisioning (apt-get upgrade, master branch only)
         run: sudo bin/provision-apt-get-upgrade
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Provisioning (apt-get install)
         run: sudo bin/provision-apt-get-install
