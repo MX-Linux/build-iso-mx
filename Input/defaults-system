@@ -38,8 +38,6 @@ RELEASE_DATE="September 18, 2022"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bullseye"
-LOCAL_MIRROR="us"
-TIME_ZONE="America/New_York"
 
 LIVE_USER="demo"
 NEW_HOSTNAME="mx1"
