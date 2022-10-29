@@ -10,3 +10,5 @@
 # ENABLE_LOCALES="Default"
 # ISO_SYMLINK="/data/ISO/test-antiX.iso"
 # LOCAL_MIRROR="us"
+# DEBIAN_RELEASE="bullseye"
+# RELEASE_DATE="April 9, 2022"
