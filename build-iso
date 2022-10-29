@@ -27,7 +27,10 @@
 # NOTE: set -o pipefail is needed to ensure that any error or failure causes the whole pipeline to fail.
 # Without this specification, the CI status will provide a false sense of security by showing builds
 # as succeeding in spite of errors or failures.
-
+if [ -n "$GITHUB_WORKSPACE" ]; then
+  set -eo pipefail
+  echo 'set -eo pipefail in GitHub Workflows environment'
+fi
 
 VERSION="1.99.08"
 VERSION_DATE="May 13, 2022"
