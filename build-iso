@@ -3591,6 +3591,7 @@ clear_outputs() {
 }
 
 my_exit() {
+    github_cat_file $err_file
     local ret=${1:-0}
     echo $ret > $exit_file
     exit $ret
@@ -4101,11 +4102,23 @@ github_echo() {
 
 # Large and prominent display of the beginning or end of a stage in GitHub Workflows
 github_display_stage() {
-	BEGIN_OR_END=$1
-	NUM_STAGE=$2 # Stage number
-	github_echo '###############################'
+    BEGIN_OR_END=$1
+    NUM_STAGE=$2 # Stage number
+    github_echo '###############################'
     github_echo "$BEGIN_OR_END: Stage $NUM_STAGE"
     github_echo '###############################'
+}
+
+# Display file contents in GitHub Workflows
+github_cat_file() {
+    FILENAME=$1
+    github_echo '--------------------'
+    github_echo "BEGIN: cat $FILENAME"
+    github_echo '--------------------'
+    cat $FILENAME
+    github_echo '------------------'
+    github_echo "END: cat $FILENAME"
+    github_echo '------------------'  
 }
 #=================================================================
 # END: actions to execute ONLY in the GitHub Workflows environment
