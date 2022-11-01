@@ -4077,7 +4077,7 @@ github_only() {
 
 # Echo command to execute in GitHub Workflows
 github_echo() {
-    bin/github-only echo "$@"
+    github-only echo "$@"
 }
 #=================================================================
 # END: actions to execute ONLY in the GitHub Workflows environment
