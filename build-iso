@@ -337,6 +337,7 @@ main() {
     while true; do
 
         # Read previous output files and set the stage
+        github_echo 'Reading the previous output files and setting the stage'
         for stage in $all_stages; do
             output_file=$output_dir/stage-$stage.out
             [[ -r $output_file ]] || break
@@ -345,6 +346,7 @@ main() {
         done
 
         # Variables derived from output files
+        github_echo 'Setting variables derived from output files'
         local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
         [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
 
@@ -4062,6 +4064,24 @@ update_list_names() {
         mv $old $new
     done
 }
+
+#===================================================================
+# BEGIN: actions to execute ONLY in the GitHub Workflows environment
+#===================================================================
+# General command for GitHub Workflows
+github_only() {
+    if [ -n "$GITHUB_WORKSPACE" ]; then
+        $@
+    fi
+}
+
+# Echo command to execute in GitHub Workflows
+github_echo() {
+    bin/github-only echo "$@"
+}
+#=================================================================
+# END: actions to execute ONLY in the GitHub Workflows environment
+#=================================================================
 
 main "$@"
 
