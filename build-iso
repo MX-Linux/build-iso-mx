@@ -391,7 +391,7 @@ main() {
         echo -ne "\e]0;$ME stage:$stage $full_distro_name\a"
         DID_WINDOW_TITLE=true
 
-        github_echo 'Checking to determine if the current stage should be skipped'
+        github_echo "\nChecking to determine if the current stage should be skipped"
         if has_word SKIP_STAGE $stage; then
             say "Skipping stage $(pqn $stage)"
             leave_stage notime
@@ -636,6 +636,7 @@ Output
     do_one_stat
     printf "$pretty_fmt"  REMASTER_DIR  $remaster_dir
     printf "$pretty_fmt" "on device"    $(df $remaster_dir | tail -n1 | cut -f1 -d" ")
+    github_only leave_stage
 }
 
 #------------------------------------------------------------------------------
