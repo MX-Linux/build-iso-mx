@@ -407,6 +407,7 @@ main() {
         fi
 
         if [[ $stage -ne $chroot_stage && -z $no_log_errors ]]; then
+            github_echo 'Not in chroot stage, allowed to log errors'
             github_echo "Checking for the existence of $exit_file (before main_case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file)
 
@@ -1918,6 +1919,7 @@ enter_stage() {
     has_word EXIT_STAGE $stage && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn $stage)$nc"
     grep ^$stage$ $did_stage_file && fatal "Re-entering stage $stage"
 
+    github_display_stage 'BEGIN' $stage
     _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(date +"%F %T %Z")"
     [[ -z $quiet_mode && $stage -gt 0 ]] \
         && say "Making: $(pq $full_distro_name) with kernel $(pq $K_NAME)"
@@ -1942,6 +1944,7 @@ leave_stage() {
     [[ $# -gt 0 ]] && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
+    github_display_stage 'END' $stage
     return 0
 }
 #==============================================================================
@@ -4090,6 +4093,15 @@ github_only() {
 # Echo command to execute in GitHub Workflows
 github_echo() {
     github_only echo "$@"
+}
+
+# Large and prominent display of the beginning or end of a stage in GitHub Workflows
+github_display_stage() {
+	BEGIN_OR_END=$1
+	NUM_STAGE=$2 # Stage number
+	github_echo '###############################'
+    github_echo "$BEGIN_OR_END: Stage $NUM_STAGE"
+    github_echo '###############################'
 }
 #=================================================================
 # END: actions to execute ONLY in the GitHub Workflows environment
