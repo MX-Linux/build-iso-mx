@@ -28,9 +28,8 @@
 # Without this specification, the CI status will provide a false sense of security by showing builds
 # as succeeding in spite of errors or failures.
 if [ -n "$GITHUB_WORKSPACE" ]; then
-  wait # Generic command to keep in the event "set -eo pipefail" needs to be temporarily disabled.
   set -o pipefail
-  echo 'set -eo pipefail in GitHub Workflows environment'
+  echo 'set -o pipefail in GitHub Workflows environment'
 fi
 
 VERSION="1.99.08"
@@ -564,14 +563,18 @@ Remaster_Blurb
               *) error "Cannot detect Host ARCH"
     esac
 
-    # Detect kernel if using wildcards
-    # This won't work if host is running a different ARCH
-    if [[ $K_NAME =~ \* ]]; then
-         [[ $ISO_ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
+    if [ -n "$GITHUB_WORKSPACE" ]; then
+        echo 'Skipping kernel detection in the GitHub Workflows environment'
+    else
+        # Detect kernel if using wildcards
+        # This won't work if host is running a different ARCH
+        if [[ $K_NAME =~ \* ]]; then
+             [[ $ISO_ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
 might want to avoid using wildcards for kernels, otherwise you won't be able to start the build at different steps."
-    fi
+        fi
 
-    #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
+        #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
+    fi
 
     [[ -n $THEME ]] || select_theme
 
