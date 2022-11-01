@@ -636,6 +636,7 @@ Output
     do_one_stat
     printf "$pretty_fmt"  REMASTER_DIR  $remaster_dir
     printf "$pretty_fmt" "on device"    $(df $remaster_dir | tail -n1 | cut -f1 -d" ")
+    github_only leave_stage
     github_only my_exit
 }
 
