@@ -383,7 +383,7 @@ main() {
         [[ -n $stats_mode   ]] && do_stats   && exit
         [[ -n $UPDATE_mode  ]] && update_add_remove_lists && exit
 
-        github_echo 'Making sure that the chroot environment has been invoked at the wrong time'
+        github_echo 'Making sure that the chroot environment has not been invoked at the wrong time'
         [[ $script_dir = $build_dir && $stage != $chroot_stage ]] \
             && fatal "In chroot environment but stage is $(pqw $stage)"
 
@@ -2088,6 +2088,7 @@ kill_chroot_procs() {
 #==============================================================================
 
 check_errors_reset() {
+    github_echo "Creating $err_file if not already present"
     [[ -e $err_file ]] || touch $err_file
     local offset=$(cat $err_file 2>/dev/null | wc -l)
     : ${offset:=0}
@@ -2149,10 +2150,11 @@ _check_errors_() {
 }
 
 read_error_regexes() {
-
+    github_echo "Checking if $lax_regex_file and is readable"
     [[ -r $lax_regex_file ]] || error "Could not find/read lax-error file $file"
     LAX_ERRORS=$(join_lines $lax_regex_file "|")
 
+    github_echo "Checking if $strict_regex_file and is readable"
     [[ -r $strict_regex_file ]] || error "Could not find/read strict-exception file $file"
     STRICT_EXCEPTIONS=$(join_lines $strict_regex_file "|")
 }
