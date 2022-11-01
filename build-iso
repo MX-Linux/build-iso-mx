@@ -407,18 +407,22 @@ main() {
         fi
 
         if [[ $stage -ne $chroot_stage && -z $no_log_errors ]]; then
-
+            github_echo "Checking for the existence of $exit_file"
             [[ -e $exit_file ]] && exit $(cat $exit_file)
 
             # The tee and sed only apply to stdrr.  Stdout goes right through.
             # This highlights stderr output and stores it in a file which we
             # periodically scan with the check_errors_* routines
+            github_echo "Storing stderr output in $err_file and"
+            github_echo 'executing main_case in a subshell that breaks'
+            github_echo 'the exit command'
             main_case  7>&1 1>&2 2>&7 \
                 | tee -a $err_file | sed -e "s/^/$red/" -e "s/$/$nc/"
 
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command.  This fixes it by using my_exit() which
             # writes $exit_file before exiting
+            github_echo "Checking for the existence of $exit_file"
             [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
 
         else
