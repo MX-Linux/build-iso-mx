@@ -29,7 +29,7 @@
 # as succeeding in spite of errors or failures.
 if [ -n "$GITHUB_WORKSPACE" ]; then
   wait # Generic command to keep in the event "set -eo pipefail" needs to be temporarily disabled.
-  set -eo pipefail
+  set -o pipefail
   echo 'set -eo pipefail in GitHub Workflows environment'
 fi
 
