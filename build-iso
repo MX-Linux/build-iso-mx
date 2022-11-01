@@ -4091,9 +4091,11 @@ github_only() {
 }
 
 # Echo command to execute in GitHub Workflows
+# Not having the wait command makes it harder to troubleshoot and debug
+# because certain commands are executed before previous ones are finished.
 github_echo() {
 	wait
-    github_only echo "$@"
+    github_only echo -e "$@"
     wait
 }
 
