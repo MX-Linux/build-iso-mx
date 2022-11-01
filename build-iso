@@ -407,7 +407,7 @@ main() {
         fi
 
         if [[ $stage -ne $chroot_stage && -z $no_log_errors ]]; then
-            github_echo "Checking for the existence of $exit_file"
+            github_echo "Checking for the existence of $exit_file (before main_case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file)
 
             # The tee and sed only apply to stdrr.  Stdout goes right through.
@@ -422,7 +422,7 @@ main() {
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command.  This fixes it by using my_exit() which
             # writes $exit_file before exiting
-            github_echo "Checking for the existence of $exit_file"
+            github_echo "Checking for the existence of $exit_file (after main case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
 
         else
