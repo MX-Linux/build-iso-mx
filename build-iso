@@ -4092,7 +4092,9 @@ github_only() {
 
 # Echo command to execute in GitHub Workflows
 github_echo() {
+	wait
     github_only echo "$@"
+    wait
 }
 
 # Large and prominent display of the beginning or end of a stage in GitHub Workflows
