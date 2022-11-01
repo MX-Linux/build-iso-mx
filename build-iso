@@ -3592,6 +3592,7 @@ clear_outputs() {
 
 my_exit() {
     github_cat_file $err_file
+    github_cat_file $output_file
     local ret=${1:-0}
     echo $ret > $exit_file
     exit $ret
