@@ -28,8 +28,8 @@
 # Without this specification, the CI status will provide a false sense of security by showing builds
 # as succeeding in spite of errors or failures.
 if [ -n "$GITHUB_WORKSPACE" ]; then
-  set -eo pipefail
-  echo 'set -eo pipefail in GitHub Workflows environment'
+  set -o pipefail
+  echo 'set -o pipefail in GitHub Workflows environment'
 fi
 
 VERSION="1.99.08"
