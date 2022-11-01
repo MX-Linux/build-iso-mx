@@ -367,8 +367,10 @@ main() {
         local deboot_cache_opts="debootstrap $ARCH-$DEBIAN_RELEASE $sqfs_dir"
 
         # Do weird modes here after variables are set
+        github_echo 'Checking for chroot mode'
         [[ -n $chroot_mode ]] && do_chroot && exit
 
+        github_echo 'Making sure that the current stage is not before the starting stage'
         if [[ -n $start_from ]]; then
             [[ $stage -lt $start_from ]] \
                 && fatal "Only at stage $(pqnw $stage). Can't start from stage $(pqnw $start_from)."
@@ -381,6 +383,7 @@ main() {
         [[ -n $stats_mode   ]] && do_stats   && exit
         [[ -n $UPDATE_mode  ]] && update_add_remove_lists && exit
 
+        github_echo 'Making sure that the chroot environment has been invoked at the wrong time'
         [[ $script_dir = $build_dir && $stage != $chroot_stage ]] \
             && fatal "In chroot environment but stage is $(pqw $stage)"
 
@@ -388,6 +391,7 @@ main() {
         echo -ne "\e]0;$ME stage:$stage $full_distro_name\a"
         DID_WINDOW_TITLE=true
 
+        github_echo 'Checking to determine if the current stage should be skipped'
         if has_word SKIP_STAGE $stage; then
             say "Skipping stage $(pqn $stage)"
             leave_stage notime
