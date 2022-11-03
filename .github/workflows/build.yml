@@ -31,3 +31,6 @@ jobs:
 
       - name: Stage 0
         run: ./build-iso --VERBOSE --user-default defaults-Xfce-64-github-00
+
+      - name: Stage 1
+        run: ./build-iso --VERBOSE --user-default defaults-Xfce-64-github-01
