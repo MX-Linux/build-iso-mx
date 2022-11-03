@@ -106,7 +106,7 @@ main() {
     local manual_mode pretend_mode auto_mode chroot_mode delete_mode delete_all
     local quiet_mode start_from reset_mode iso_only full_auto update_mode UPDATE_mode
     local show_parts show_stages interactive color_mode verbose_mode stats_mode
-    local no_log_errors no_check_errors disable_errors do_fast check_tmpfs
+    local no_log_errors disable_errors do_fast check_tmpfs
     local save_mode jbb_mode
 
     local script_dir=$(dirname $(readlink -f $0))
@@ -2126,12 +2126,6 @@ _check_errors_() {
         fi
 
         [[ -z $errors ]] && check_errors_reset && return
-
-        local cnt=$(echo "$errors" | wc -l)
-        if [[ -n $no_check_errors ]]; then
-            say "$(plural $cnt "Skipping $(pqn %n) $type error%s")"
-            return
-        fi
 
         yell "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         say_in $err_co "$errors"
