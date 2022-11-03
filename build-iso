@@ -28,8 +28,8 @@
 # Without this specification, the CI status will provide a false sense of security by showing builds
 # as succeeding in spite of errors or failures.
 if [ -n "$GITHUB_WORKSPACE" ]; then
-  set -o pipefail
-  echo 'set -o pipefail in GitHub Workflows environment'
+  set -eo pipefail
+  echo 'set -eo pipefail in GitHub Workflows environment'
 fi
 
 VERSION="1.99.08"
@@ -408,13 +408,13 @@ main() {
 
         if [[ $stage -ne $chroot_stage && -z $no_log_errors ]]; then
             github_echo 'Not in chroot stage, allowed to log errors'
-            github_echo "Checking for the existence of $exit_file (before main_case)"
+            github_echo "Checking for the existence of the exit file ($exit_file) (before main_case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file)
 
             # The tee and sed only apply to stdrr.  Stdout goes right through.
             # This highlights stderr output and stores it in a file which we
             # periodically scan with the check_errors_* routines
-            github_echo "Storing stderr output in $err_file and"
+            github_echo "Storing stderr output in err_file ($err_file) and"
             github_echo 'executing main_case in a subshell that breaks'
             github_echo 'the exit command'
             main_case  7>&1 1>&2 2>&7 \
@@ -423,7 +423,7 @@ main() {
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command.  This fixes it by using my_exit() which
             # writes $exit_file before exiting
-            github_echo "Checking for the existence of $exit_file (after main case)"
+            github_echo "Checking for the existence of the exit file ($exit_file) (after main case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
 
         else
@@ -1940,10 +1940,12 @@ enter_stage() {
 }
 
 leave_stage() {
+	github_display_other 'BEGIN' 'leave_stage'
     touch $output_file
     [[ $# -gt 0 ]] && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
+    github_display_other 'END' 'leave_stage'
     github_display_stage 'END' $stage
     return 0
 }
@@ -2097,7 +2099,7 @@ kill_chroot_procs() {
 #==============================================================================
 
 check_errors_reset() {
-    github_echo "Creating $err_file if not already present"
+    github_echo "Creating error_file ($err_file_ if not already present"
     [[ -e $err_file ]] || touch $err_file
     local offset=$(cat $err_file 2>/dev/null | wc -l)
     : ${offset:=0}
@@ -2115,17 +2117,24 @@ _check_errors_() {
     [[ -n $disable_errors ]] && return
     : ${ERROR_OFFSET:=1}
     #say "Checking for $(pq $type) errors @offset $ERROR_OFFSET"
+    github_echo "Checking for $(pq $type) errors @offset $ERROR_OFFSET"
     local errors cnt
     while true; do
 
         if [[ -n $regex ]]; then
+            github_echo "regex: $regex"
+            github_only set +e
+            # The following command leads to an error in GitHub Workflows
             errors=$(tail -n +$ERROR_OFFSET $err_file | egrep $flag "($regex)" | egrep -v "^\s*$")
-
+            github_only set -e
+            github_echo "errors: $errors"
         elif [[ $type = STRICT ]]; then
+            github_echo "type: $type"
             errors=$(tail -n +$ERROR_OFFSET $err_file | egrep -v $flag "^\s*$")
+            github_echo "errors: $errors"
         fi
 
-        [[ -z $errors ]] && check_errors_reset && return
+        [[ -z $errors ]]  && github_echo 'No errors' && check_errors_reset && return
 
         local cnt=$(echo "$errors" | wc -l)
         if [[ -n $no_check_errors ]]; then
@@ -2159,11 +2168,11 @@ _check_errors_() {
 }
 
 read_error_regexes() {
-    github_echo "Checking if $lax_regex_file and is readable"
+    github_echo "Checking if lax_regex_file ($lax_regex_file) exists and is readable"
     [[ -r $lax_regex_file ]] || error "Could not find/read lax-error file $file"
     LAX_ERRORS=$(join_lines $lax_regex_file "|")
 
-    github_echo "Checking if $strict_regex_file and is readable"
+    github_echo "Checking if strict_regex_file ($strict_regex_file) exists and is readable"
     [[ -r $strict_regex_file ]] || error "Could not find/read strict-exception file $file"
     STRICT_EXCEPTIONS=$(join_lines $strict_regex_file "|")
 }
@@ -2936,6 +2945,7 @@ copy_theme_dir() {
 # after four attempts to umount it then we error out at the end of the routine.
 #------------------------------------------------------------------------------
 umount_chroot() {
+    github_display_other 'BEGIN' 'umount_chroot'
     for mp in $(mount | cut -d" " -f3 | grep "^$remaster_dir/work/.*/squashfs/"); do
         local name=${err_co}chroot:$bold_co${mp##$remaster_dir/*/squashfs}
 
@@ -2958,6 +2968,8 @@ umount_chroot() {
     done
 
     [[ -n $UMOUNT_ERRORS ]] && fatal "Umount errors!"
+    # The process fails at this point in GitHub Workflows without a wait command (included in github_display_other).
+    github_display_other 'END' 'umount_chroot'
 }
 
 #------------------------------------------------------------------------------
@@ -3591,10 +3603,13 @@ clear_outputs() {
 }
 
 my_exit() {
+    github_display_other 'BEGIN' 'my_exit'
     github_cat_file $err_file
+    wait
     github_cat_file $output_file
     local ret=${1:-0}
     echo $ret > $exit_file
+    github_display_other 'END' 'my_exit'
     exit $ret
 }
 
@@ -3711,11 +3726,13 @@ pretty_output() {
 # window title if it was set.
 #------------------------------------------------------------------------------
 on_exit() {
+    github_display_other 'BEGIN' 'on_exit'
     test -z $UMOUNT_ERRORS && umount_chroot
 
     [[ -n $exit_file ]] && rm -f $exit_file
 
     #kill_children
+    github_echo 'clear_pids'
     clear_pids
 
     test -n $DID_WINDOW_TITLE &&  echo -ne "\e]0;\a"
@@ -3732,6 +3749,7 @@ on_exit() {
     fi
     _say_ "$SIGN_OFF"
     #fi
+    github_display_other 'END' 'on_exit'
 }
 
 #------------------------------------------------------------------------------
@@ -3765,6 +3783,9 @@ require_programs() {
         PATH=$root_path which $prog >/dev/null 2>&1 || missing="$missing $prog"
     done
     [[ -n $missing ]] && error "Missing these required programs: $(pqw $missing)"
+    # The script fails here in the GitHub Workflows environment
+    # without the use of the wait command (included in github_echo).
+    github_echo 'Finished checking for required programs'
 }
 
 #==============================================================================
@@ -4120,6 +4141,15 @@ github_cat_file() {
     github_echo '------------------'
     github_echo "END: cat $FILENAME"
     github_echo '------------------'  
+}
+
+# Large and prominent display of the beginning and end of other processes in GitHub Workflows
+github_display_other() {
+    BEGIN_OR_END=$1
+    PROCESS=$2
+    github_echo '-----------------------'
+    github_echo "$BEGIN_OR_END: $PROCESS"
+    github_echo '-----------------------'
 }
 #=================================================================
 # END: actions to execute ONLY in the GitHub Workflows environment
