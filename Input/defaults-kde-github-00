@@ -1,0 +1,23 @@
+#----------------------------------------------------------------------
+# defaults file for build-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+DISTRO_VERSION="21.2.1_KDE"
+
+ISO_FLAV="mxkde"
+THEME="mxkde"
+ARCH="amd64"
+
+ENABLE_LOCALES="Default"
+
+# DE particular items
+X_TERM_EMULATOR="/usr/bin/konsole"
+
+# Everything above this line is from Input/defaults-kde
+
+all_stages='0'

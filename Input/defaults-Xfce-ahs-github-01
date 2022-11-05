@@ -1,0 +1,27 @@
+#----------------------------------------------------------------------
+# defaults file for build-antiX-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+
+DISTRO_VERSION="21.2.1_ahs"
+
+# kernel
+# ahs
+K_REVISION="4mx"
+K_TEMPLATE="%V%G-%R-%A"
+K_VERSION="5.18.0"
+UNSIGNED="-unsigned"
+
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mxahs
+ARCH=amd64
+
+# Everything above this line is from Input/defaults-Xfce-ahs
+
+all_stages='1'
