@@ -1,0 +1,49 @@
+#----------------------------------------------------------------------
+# defaults file for build-antiX-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+#most defaults set from defaults-system
+
+DISTRO_VERSION="21.2.1_fluxbox"
+
+#32 bit version of fluxbox release, defaults from defaults-system
+
+# standard 32 bit
+K_REVISION="18"
+K_TEMPLATE="%V%G-%R-%A-pae"
+K_VERSION="5.10.0"
+UNSIGNED=""
+
+# system defaults, these end up inside the squash file system mostly
+
+# DE particular items
+
+X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
+CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
+
+# options for building squashfs
+
+# lz4 is good for testing but large isos
+# options You need both 
+# xz use -comp xz -Xbcj x86
+# xz use -comp xz -b 262144 #use for base
+# lz4 use -comp lz4 -Xhc
+# gzip leave empty #use for full
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+#COMPRESSION_TYPE="lz4"
+#COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
+
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mxflux32
+ARCH=i386
+
+# Everything above this line is from Input/defaults-flux32
+
+all_stages='1'

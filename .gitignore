@@ -4,5 +4,6 @@ Remaster/
 doc-*.tar.bz2
 /initrd
 /iso
+/log
 /sqfs
 /work
