@@ -345,6 +345,26 @@ main() {
             source $output_file
         done
 
+        if [[ -n "$GITHUB_WORKSPACE" && $stage -gt 0 ]]; then
+            output_file_0="$output_dir/stage-0.out"
+            source $output_file_0
+            echo ''
+            echo 'BASIC BUILD PARAMETERS:'
+            echo "ARCH: $ARCH"
+            echo "DEBIAN_RELEASE: $DEBIAN_RELEASE"
+            echo "FLAV: $FLAV"
+            echo "GZIP: $GZIP"
+            echo "ISO_ARCH: $ISO_ARCH"
+            echo "ISO_FLAV: $ISO_FLAV"
+            echo "K_NAME=: $K_NAME"
+            echo "MAKE_ISO: $MAKE_ISO"
+            echo "RELEASE_DATE: $RELEASE_DATE"
+            echo "RESPIN_INHERIT: $RESPIN_INHERIT"
+            echo "THEME: $THEME"
+            echo "ISO_RESPIN_OF: $ISO_RESPIN_OF"
+            echo ''
+        fi
+
         # Variables derived from output files
         github_echo 'Setting variables derived from output files'
         local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
