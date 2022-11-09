@@ -722,7 +722,9 @@ do_stage_2() {
 
         check_errors_strict
         start_timer
+        github_display_other 'BEGIN' "$SUDO debootstrap $args $DEBIAN_RELEASE $sqfs_dir $url"
         $SUDO debootstrap $args $DEBIAN_RELEASE $sqfs_dir $url
+        github_display_other 'END' "$SUDO debootstrap $args $DEBIAN_RELEASE $sqfs_dir $url"
         end_timer "run debootstrap $ARCH $DEBIAN_RELEASE"
         check_errors_lax
 
@@ -747,6 +749,7 @@ do_stage_2() {
     copy_template_dir squashfs $sqfs_dir
 
     leave_stage
+    github_only my_exit
 }
 
 #------------------------------------------------------------------------------
