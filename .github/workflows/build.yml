@@ -46,6 +46,3 @@ jobs:
 
       - name: Stage 1
         run: ./build-iso --VERBOSE --user-default "defaults-$BASE_SCRIPT-github-01"
-
-      - name: Stage 2
-        run: ./build-iso --VERBOSE --user-default "defaults-$BASE_SCRIPT-github-02"

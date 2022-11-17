@@ -23,4 +23,3 @@ rm -rf Output
 
 scripts/build-stage "$BUILD_SCRIPT-00"
 scripts/build-stage "$BUILD_SCRIPT-01"
-scripts/build-stage "$BUILD_SCRIPT-02"
