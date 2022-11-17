@@ -662,8 +662,6 @@ Output
     do_one_stat
     printf "$pretty_fmt"  REMASTER_DIR  $remaster_dir
     printf "$pretty_fmt" "on device"    $(df $remaster_dir | tail -n1 | cut -f1 -d" ")
-
-    github_display_stage 'END' '0'
     github_only leave_stage notime
     github_only my_exit
 }
@@ -682,7 +680,6 @@ do_stage_1() {
     github_echo "$SUDO chown root:root $sqfs_dir"
     $SUDO chown root:root $sqfs_dir
 
-    github_display_stage 'END' '1'
     leave_stage notime
     github_only my_exit
 }
@@ -751,7 +748,6 @@ do_stage_2() {
     $SUDO rm -f  $sqfs_dir/etc/apt/sources.list
     copy_template_dir squashfs $sqfs_dir
 
-    github_display_stage 'END' '2'
     leave_stage
     github_only my_exit
 }
@@ -1979,6 +1975,7 @@ enter_stage() {
 }
 
 leave_stage() {
+	github_display_stage 'END' $stage
 	github_display_other 'BEGIN' 'leave_stage'
     touch $output_file
     [[ $# -gt 0 ]] && github_display_other 'END' 'leave_stage' && github_echo 'return' && return
