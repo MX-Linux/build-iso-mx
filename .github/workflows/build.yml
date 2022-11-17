@@ -1,8 +1,6 @@
 name: Build
 
 on:
-  # Runs every time that a pull request is made
-  pull_request:
   # Runs every time that a commit is git pushed
   push:
   schedule:
