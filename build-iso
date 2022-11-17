@@ -28,8 +28,9 @@
 # Without this specification, the CI status will provide a false sense of security by showing builds
 # as succeeding in spite of errors or failures.
 if [ -n "$GITHUB_WORKSPACE" ]; then
-  set -o pipefail
-  echo 'set -o pipefail in GitHub Workflows environment'
+  wait # Generic command to keep in the event "set -eo pipefail" needs to be temporarily disabled.
+  set -eo pipefail
+  echo 'set -eo pipefail in GitHub Workflows environment'
 fi
 
 VERSION="1.99.08"
@@ -337,7 +338,6 @@ main() {
     while true; do
 
         # Read previous output files and set the stage
-        github_echo 'Reading the previous output files and setting the stage'
         for stage in $all_stages; do
             output_file=$output_dir/stage-$stage.out
             [[ -r $output_file ]] || break
@@ -346,7 +346,6 @@ main() {
         done
 
         # Variables derived from output files
-        github_echo 'Setting variables derived from output files'
         local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
         [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
 
@@ -367,10 +366,8 @@ main() {
         local deboot_cache_opts="debootstrap $ARCH-$DEBIAN_RELEASE $sqfs_dir"
 
         # Do weird modes here after variables are set
-        github_echo 'Checking for chroot mode'
         [[ -n $chroot_mode ]] && do_chroot && exit
 
-        github_echo 'Making sure that the current stage is not before the starting stage'
         if [[ -n $start_from ]]; then
             [[ $stage -lt $start_from ]] \
                 && fatal "Only at stage $(pqnw $stage). Can't start from stage $(pqnw $start_from)."
@@ -383,7 +380,6 @@ main() {
         [[ -n $stats_mode   ]] && do_stats   && exit
         [[ -n $UPDATE_mode  ]] && update_add_remove_lists && exit
 
-        github_echo 'Making sure that the chroot environment has not been invoked at the wrong time'
         [[ $script_dir = $build_dir && $stage != $chroot_stage ]] \
             && fatal "In chroot environment but stage is $(pqw $stage)"
 
@@ -391,7 +387,6 @@ main() {
         echo -ne "\e]0;$ME stage:$stage $full_distro_name\a"
         DID_WINDOW_TITLE=true
 
-        github_echo "\nChecking to determine if the current stage should be skipped"
         if has_word SKIP_STAGE $stage; then
             say "Skipping stage $(pqn $stage)"
             leave_stage notime
@@ -407,23 +402,18 @@ main() {
         fi
 
         if [[ $stage -ne $chroot_stage && -z $no_log_errors ]]; then
-            github_echo 'Not in chroot stage, allowed to log errors'
-            github_echo "Checking for the existence of $exit_file (before main_case)"
+
             [[ -e $exit_file ]] && exit $(cat $exit_file)
 
             # The tee and sed only apply to stdrr.  Stdout goes right through.
             # This highlights stderr output and stores it in a file which we
             # periodically scan with the check_errors_* routines
-            github_echo "Storing stderr output in $err_file and"
-            github_echo 'executing main_case in a subshell that breaks'
-            github_echo 'the exit command'
             main_case  7>&1 1>&2 2>&7 \
                 | tee -a $err_file | sed -e "s/^/$red/" -e "s/$/$nc/"
 
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command.  This fixes it by using my_exit() which
             # writes $exit_file before exiting
-            github_echo "Checking for the existence of $exit_file (after main case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
 
         else
@@ -574,18 +564,14 @@ Remaster_Blurb
               *) error "Cannot detect Host ARCH"
     esac
 
-    if [ -n "$GITHUB_WORKSPACE" ]; then
-        echo 'Skipping kernel detection in the GitHub Workflows environment'
-    else
-        # Detect kernel if using wildcards
-        # This won't work if host is running a different ARCH
-        if [[ $K_NAME =~ \* ]]; then
-             [[ $ISO_ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
+    # Detect kernel if using wildcards
+    # This won't work if host is running a different ARCH
+    if [[ $K_NAME =~ \* ]]; then
+         [[ $ISO_ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
 might want to avoid using wildcards for kernels, otherwise you won't be able to start the build at different steps."
-        fi
-
-        #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
     fi
+
+    #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
 
     [[ -n $THEME ]] || select_theme
 
@@ -637,8 +623,6 @@ Output
     do_one_stat
     printf "$pretty_fmt"  REMASTER_DIR  $remaster_dir
     printf "$pretty_fmt" "on device"    $(df $remaster_dir | tail -n1 | cut -f1 -d" ")
-    github_only leave_stage
-    github_only my_exit
 }
 
 #------------------------------------------------------------------------------
@@ -1919,7 +1903,6 @@ enter_stage() {
     has_word EXIT_STAGE $stage && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn $stage)$nc"
     grep ^$stage$ $did_stage_file && fatal "Re-entering stage $stage"
 
-    github_display_stage 'BEGIN' $stage
     _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(date +"%F %T %Z")"
     [[ -z $quiet_mode && $stage -gt 0 ]] \
         && say "Making: $(pq $full_distro_name) with kernel $(pq $K_NAME)"
@@ -1944,7 +1927,6 @@ leave_stage() {
     [[ $# -gt 0 ]] && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
-    github_display_stage 'END' $stage
     return 0
 }
 #==============================================================================
@@ -2097,7 +2079,6 @@ kill_chroot_procs() {
 #==============================================================================
 
 check_errors_reset() {
-    github_echo "Creating $err_file if not already present"
     [[ -e $err_file ]] || touch $err_file
     local offset=$(cat $err_file 2>/dev/null | wc -l)
     : ${offset:=0}
@@ -2159,11 +2140,10 @@ _check_errors_() {
 }
 
 read_error_regexes() {
-    github_echo "Checking if $lax_regex_file and is readable"
+
     [[ -r $lax_regex_file ]] || error "Could not find/read lax-error file $file"
     LAX_ERRORS=$(join_lines $lax_regex_file "|")
 
-    github_echo "Checking if $strict_regex_file and is readable"
     [[ -r $strict_regex_file ]] || error "Could not find/read strict-exception file $file"
     STRICT_EXCEPTIONS=$(join_lines $strict_regex_file "|")
 }
@@ -3591,8 +3571,6 @@ clear_outputs() {
 }
 
 my_exit() {
-    github_cat_file $err_file
-    github_cat_file $output_file
     local ret=${1:-0}
     echo $ret > $exit_file
     exit $ret
@@ -4081,49 +4059,6 @@ update_list_names() {
         mv $old $new
     done
 }
-
-#===================================================================
-# BEGIN: actions to execute ONLY in the GitHub Workflows environment
-#===================================================================
-# General command for GitHub Workflows
-github_only() {
-    if [ -n "$GITHUB_WORKSPACE" ]; then
-        $@
-    fi
-}
-
-# Echo command to execute in GitHub Workflows
-# Not having the wait command makes it harder to troubleshoot and debug
-# because certain commands are executed before previous ones are finished.
-github_echo() {
-	wait
-    github_only echo -e "$@"
-    wait
-}
-
-# Large and prominent display of the beginning or end of a stage in GitHub Workflows
-github_display_stage() {
-    BEGIN_OR_END=$1
-    NUM_STAGE=$2 # Stage number
-    github_echo '###############################'
-    github_echo "$BEGIN_OR_END: Stage $NUM_STAGE"
-    github_echo '###############################'
-}
-
-# Display file contents in GitHub Workflows
-github_cat_file() {
-    FILENAME=$1
-    github_echo '--------------------'
-    github_echo "BEGIN: cat $FILENAME"
-    github_echo '--------------------'
-    cat $FILENAME
-    github_echo '------------------'
-    github_echo "END: cat $FILENAME"
-    github_echo '------------------'  
-}
-#=================================================================
-# END: actions to execute ONLY in the GitHub Workflows environment
-#=================================================================
 
 main "$@"
 

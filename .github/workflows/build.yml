@@ -28,6 +28,3 @@ jobs:
 
       - name: Creating the Remaster directory
         run: mkdir -p Remaster
-
-      - name: Stage 0
-        run: ./build-iso --VERBOSE --user-default defaults-Xfce-64-github-00
