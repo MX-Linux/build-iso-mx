@@ -41,8 +41,5 @@ jobs:
       - name: Stage 0
         run: ./build-iso --VERBOSE --user-default "defaults-$BASE_SCRIPT-github-00"
 
-      - name: Display the Stage 0 output file (used to set basic build parameters"
-        run: cat Output/stage-0.out
-
       - name: Stage 1
         run: ./build-iso --VERBOSE --user-default "defaults-$BASE_SCRIPT-github-01"
