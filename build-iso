@@ -423,7 +423,7 @@ main() {
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command.  This fixes it by using my_exit() which
             # writes $exit_file before exiting
-            github_echo "Checking for the existence of the exit file ($exit_file) (after main_case)"
+            github_echo "Checking for the existence of the exit file ($exit_file) (after main case)"
             [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
 
         else
@@ -652,11 +652,9 @@ do_stage_1() {
     convenience_link $iso_dir    iso
     convenience_link $initrd_dir initrd
 
-    github_echo "$SUDO chown root:root $sqfs_dir"
     $SUDO chown root:root $sqfs_dir
 
     leave_stage notime
-    github_only my_exit
 }
 
 #------------------------------------------------------------------------------
@@ -1944,7 +1942,7 @@ enter_stage() {
 leave_stage() {
 	github_display_other 'BEGIN' 'leave_stage'
     touch $output_file
-    [[ $# -gt 0 ]] && github_display_other 'END' 'leave_stage' && github_echo 'return' && return
+    [[ $# -gt 0 ]] && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
     github_display_other 'END' 'leave_stage'
@@ -2101,7 +2099,7 @@ kill_chroot_procs() {
 #==============================================================================
 
 check_errors_reset() {
-    github_echo "Creating error_file ($err_file_ if not already present)"
+    github_echo "Creating error_file ($err_file_ if not already present"
     [[ -e $err_file ]] || touch $err_file
     local offset=$(cat $err_file 2>/dev/null | wc -l)
     : ${offset:=0}
@@ -2995,11 +2993,8 @@ convenience_link() {
     local dir=$1 link=$2 label=${3:-$2}
     [[ -z $link ]] && error "No link passed to convenience_link()" && return
 
-    github_echo "Creating convenience link"
-    github_echo "mkdir -p $dir"
     mkdir -p $dir || error "Could not create $label dir $(pqw $dir)"
     rm -f $script_dir/$link
-    github_echo "ln -sf $dir $script_dir/$link"
     ln -sf $dir $script_dir/$link
 }
 
