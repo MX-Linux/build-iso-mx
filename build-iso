@@ -637,7 +637,7 @@ Output
     do_one_stat
     printf "$pretty_fmt"  REMASTER_DIR  $remaster_dir
     printf "$pretty_fmt" "on device"    $(df $remaster_dir | tail -n1 | cut -f1 -d" ")
-    github_only leave_stage notime
+    github_only leave_stage
     github_only my_exit
 }
 
@@ -1931,13 +1931,8 @@ enter_stage() {
 
     echo $stage >> $did_stage_file
 
-    if [ -n "$GITHUB_WORKSPACE" ]; then
-        echo 'Continuing in the GitHub Workflows environment'
-        echo 'and skipping the yes/no prompt'
-    else
-        [[ -z $auto_mode && ! $2 =~ ^! ]] \
-            && ! YES_no_loud "\nDo you want to continue" && my_exit
-    fi
+    [[ -z $auto_mode && ! $2 =~ ^! ]] \
+        && ! YES_no_loud "\nDo you want to continue" && my_exit
 
     touch $err_file
     check_errors_reset
@@ -1947,13 +1942,13 @@ enter_stage() {
 }
 
 leave_stage() {
-	github_display_stage 'END' $stage
 	github_display_other 'BEGIN' 'leave_stage'
     touch $output_file
     [[ $# -gt 0 ]] && github_display_other 'END' 'leave_stage' && github_echo 'return' && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
     github_display_other 'END' 'leave_stage'
+    github_display_stage 'END' $stage
     return 0
 }
 #==============================================================================
@@ -2106,7 +2101,7 @@ kill_chroot_procs() {
 #==============================================================================
 
 check_errors_reset() {
-    github_echo "Creating error_file ($err_file if not already present)"
+    github_echo "Creating error_file ($err_file_ if not already present)"
     [[ -e $err_file ]] || touch $err_file
     local offset=$(cat $err_file 2>/dev/null | wc -l)
     : ${offset:=0}
