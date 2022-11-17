@@ -1,6 +1,5 @@
 [![Info](https://github.com/MX-Linux/build-iso-mx/actions/workflows/info.yml/badge.svg)](https://github.com/MX-Linux/build-iso-mx/actions/workflows/info.yml)
 [![Environment](https://github.com/MX-Linux/build-iso-mx/actions/workflows/env.yml/badge.svg)](https://github.com/MX-Linux/build-iso-mx/actions/workflows/env.yml)
-[![Build](https://github.com/MX-Linux/build-iso-mx/actions/workflows/build.yml/badge.svg)](https://github.com/MX-Linux/build-iso-mx/actions/workflows/build.yml)
 
 # build-iso-mx
 **antiX** build-iso system with settings for MX. This script is used to create variate ISO flavors.
