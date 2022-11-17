@@ -25,6 +25,3 @@ jobs:
 
       - name: Provisioning (apt-get install)
         run: sudo bin/provision-apt-get-install
-
-      - name: Creating the Remaster directory
-        run: mkdir -p Remaster
