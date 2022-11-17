@@ -509,11 +509,6 @@ Remaster_Blurb
     # Fill in default value
     : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
 
-    # Update the release date for GitHub Workflows
-    if [ -n "$GITHUB_WORKSPACE" ]; then
-        RELEASE_DATE=`date +"%B %d, %Y"`
-    fi
-
     choose "local mirror" LOCAL_MIRROR                       \
                 us gr au be bg br ch cz de dk ee es "fi" fr  \
                 gr hk hr hu ie is it jp kr nl no nz pl pt ro \
