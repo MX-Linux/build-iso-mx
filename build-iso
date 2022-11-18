@@ -664,7 +664,7 @@ do_stage_2() {
         local keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
         [[ -n $exclude_list ]] && args="$args --exclude=$exclude_list"
         [[ -r $keyring ]] && args="$args --keyring=$keyring"
-        local url="http://ftp.$LOCAL_MIRROR.debian.org/debian"
+        local url="$(eval echo $MIRROR_URL_TEMPLATE)"
 
         check_errors_strict
         start_timer

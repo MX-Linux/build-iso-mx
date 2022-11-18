@@ -54,6 +54,7 @@ LIVE_USER="demo"
 LOCALE="en_US.UTF-8"
 MIRROR="us"
 LOCAL_MIRROR="us"
+MIRROR_URL_TEMPLATE='http://ftp.$LOCAL_MIRROR.debian.org/debian'
 NEW_HOSTNAME="mx1"
 TIME_ZONE="America/New_York"
 
