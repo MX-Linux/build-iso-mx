@@ -55,10 +55,10 @@ dmsetup
 ecb
 ehci-hcd
 ehci-pci
+exfat
 ext2
 ext3
 ext4
-exfat
 f2fs
 fat
 firewire-core
@@ -259,7 +259,7 @@ main() {
         local dir=$mod_dir/$d
         test -d "$dir" || fatal "Subdirectory $dir does not exist"
         list1="$list1
-$(find "$dir" -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
+$(find "$dir" -type f -name '*\.ko*' -printf "%f\n" | sed -nr 's/\.ko(|\.[[:alpha:]]+)$//p')"
     done
 
     repeats=$(echo "$list1" | sed 's/_/-/g' | sort | uniq --repeated | grep .)

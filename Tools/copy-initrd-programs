@@ -6,13 +6,15 @@ ME=${0##*/}
 : ${BIN_SUBDIR:=bin}
 : ${LIB_SUBDIR:=lib}
 
-: ${DEFAULT_PROG_LIST:=ntfs-3g eject}
+: ${DEFAULT_PROG_LIST:=ntfs-3g eject kmod}
 : ${ENCRYPT_PROG_LIST:=cryptsetup}
 
+: ${DEFAULT_KMOD_LIST:=depmod insmod lsmod modinfo modprobe}
 
 X86_64_DIR=/lib/x86_64-linux-gnu
 
-VAR_LIST="PATH_LIST BIN_SUBDIR LIB_SUBDIR DEFAULT_PROG_LIST ENCRYPT_PROG_LIST"
+VAR_LIST="PATH_LIST BIN_SUBDIR LIB_SUBDIR"
+VAR_LIST+=" DEFAULT_PROG_LIST ENCRYPT_PROG_LIST DEFAULT_KMOD_LIST"
 
 #PRETEND=true
 
@@ -156,10 +158,19 @@ main() {
     # And ind the libraries needed for each program
     for abs_prog in $abs_prog_list; do
         local from_prog="$FROM_DIR$abs_prog"
+        local basename_prog=$(basename "$abs_prog")
 
         qsay "  add program: %s" "$(basename $abs_prog)"
-        pretend cp "$from_prog" "$bin_dir"
-
+        [ -e "$bin_dir/$basename_prog" ] && pretend rm "$bin_dir/$basename_prog"
+        pretend cp "$from_prog" "$bin_dir/$basename_prog"
+        # kmod handling
+        if [ "$basename_prog" = kmod ] && [ -x "$bin_dir/kmod" ]; then
+            local kmods="$DEFAULT_KMOD_LIST"
+            local mod
+            for mod in $kmods; do
+                pretend ln -nsf kmod "$bin_dir"/$mod
+            done
+        fi
         local raw_libs
         if [ -n "$FROM_DIR" ]; then
             local LINUX_ARG=$(get_linux_arg "$from_prog")
@@ -191,14 +202,14 @@ main() {
         #echo $ld_linux
 
         local ld_dir=$TO_DIR$(dirname "$ld_linux")
-        vsay "ld_linux: $ld_linux"
+        echo "ld_linux: $ld_linux"
         if [ "${ld_dir##*/}" = lib64 ]; then
             my_mkdir "$ld_dir"
             pretend cp -a $FROM_DIR$ld_linux $ld_dir
 
             ld_dir=${ld_dir%/lib64}$X86_64_DIR
         fi
-        vsay "ld_dir: $ld_dir"
+        echo ld_dir: $ld_dir
         my_mkdir "$ld_dir"
         copy_symlink "$FROM_DIR" "$ld_linux" "$ld_dir"
 
@@ -265,9 +276,31 @@ do_clean() {
     local to_dir=$1  lib_dir=$2  bin_dir=$3  prog_list=$4
 
     local prog
+    local restore=""
     for prog in $prog_list; do
+        local busybox="$bin_dir"/busybox
         local full=$bin_dir/$prog
         test -e "$full" && pretend rm -f "$full"
+        if [ -x "$busybox"  ] && "$busybox" --list | grep -q "^$prog$"; then
+                restore+=" $prog"
+        fi
+        [ "$prog" = kmod ] || continue
+        if [ ! -x "$bin_dir/kmod" ] && [ -x "$busybox"  ]; then
+            local kmods="$DEFAULT_KMOD_LIST"
+            local mod
+            for mod in $kmods; do
+                [ x"$(readlink "$bin_dir"/$mod)" = xbusybox ] && continue
+                restore+=" $mod"
+            done
+        fi
+    done
+    # restore busybox links
+    local link
+    for link in $restore; do
+        local full=$bin_dir/$link
+        if [ -x "$busybox"  ] && "$busybox" --list | grep -q "^$link$"; then
+            pretend ln -nsf busybox "$bin_dir"/$link
+        fi
     done
 
     local lib
@@ -420,6 +453,4 @@ set_colors() {
 }
 
 main "$@"
-
-
 
