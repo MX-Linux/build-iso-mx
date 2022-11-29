@@ -702,7 +702,7 @@ hw_video_modules() {
 
     find /sys/devices -name modalias -print0 | xargs -0 sort -u \
         | tr '\n' '\0' | xargs -0 modprobe -a -D -q 2>/dev/null | sort -u \
-        | sed -n -r "s/^insmod [^ ]*\/($video_modules_regex)\.ko.*/\1/p"
+        | sed -n -r "s/^insmod [^ ]*\/($video_modules_regex)\.ko(|\.[[:alpha:]]+)[[:space:]]*$/\1/p"
 }
 
 #------------------------------------------------------------------------------
@@ -724,11 +724,11 @@ kms_modules_regex() {
 # Create a list of all modules that depend on drm.ko
 #------------------------------------------------------------------------------
 all_kms_modules() {
-    grep 'drm\.ko' /lib/modules/$(uname -r)/modules.dep \
-        | sed -e "s/:.*//"  \
-        -e "s|.*/||"        \
-        -e "s/\.ko$//"      \
-        | grep -v -E "^(drm|drm_kms_helper|ttm)$"   \
+    grep -E "drm\.ko(|\.[[:alpha:]]+)" /lib/modules/$(uname -r)/modules.dep \
+        | sed -r -e "s/:.*//" \
+        -e "s|.*/||" \
+        -e "s/\.ko(|\.[[:alpha:]]+)$//" \
+        | grep -v -E "^(drm|drm_kms_helper|ttm)$" \
         | sort -u
 }
 
@@ -1146,7 +1146,7 @@ valid_user() {
     [ -z "$user" ] && return 1
 
     #echo "try: $user"
-    local ent=$(grep "^$user:.*:/home/.*:/bin/.*sh$" /etc/passwd)
+    local ent=$(grep "^$user:.*:/home/.*:\(/usr\)\?/bin/.*sh$" /etc/passwd)
     local uid=$(echo $ent | cut -d: -f3)
     [ -z "$uid" ] && return 1
     [ $uid -lt 1000 ] && return 1

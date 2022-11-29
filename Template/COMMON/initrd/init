@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x08"
-           VERSION_DATE="Fri, 04 Jun 2021 11:43:21 +0000"
+                VERSION="8.30.14-x10"
+           VERSION_DATE="Sun, 27 Nov 2022 22:25:17 +0000"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -1575,7 +1575,7 @@ load_all_modules() {
     debug_cmd lsmod
     debug_cmd lspci
     LOAD_ALL_MODULES=true
-    find $MOD_DIR/$subdir -name "*.ko" | sed -e 's=.*/==' -e 's/\.ko$//' \
+    find $MOD_DIR/$subdir -type f -name "*.ko*" | sed -nr "s=.*/==; s/\.ko(|\.[[:alpha:]]+)$//p" \
         | xargs modprobe -q -a -b 2>/dev/null
 }
 

@@ -18,6 +18,6 @@ depmod
 
 echo $load_first | xargs modprobe -a -q -b
 
-list=$(find /lib/modules/$(uname -r)  -name "*.ko" | sed -e 's=.*/==' -e 's/\.ko$//')
+list=$(find /lib/modules/$(uname -r) -type f -name "*.ko*" | sed -nr "s=.*/==; s/\.ko(|\.[[:alpha:]]+)$//p")
 
 echo $list | xargs modprobe -a -q -b

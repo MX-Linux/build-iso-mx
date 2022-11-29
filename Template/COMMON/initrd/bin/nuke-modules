@@ -154,10 +154,10 @@ find_modules() {
     test -d "$from_dir" || return
 
     if [ -z "$find_expr" ]; then
-        find "$from_dir/"  -type f -name "*.ko" -printf "%f\n"
+        find "$from_dir/"  -type f -name "*.ko*" -printf "%f\n"
     else
         find "$from_dir/"  -type f $find_expr  -printf "%f\n"
-    fi | sed -e "s/_/-/g" -e "s/\.ko$//" | sort
+    fi | sed -r -e "s/_/-/g" -e "s/\.ko(|\.[[:alpha:]]+)$//" | sort
 }
 
 #------------------------------------------------------------------------------
@@ -193,7 +193,8 @@ move_modules() {
     local file  name  dest  found
     while read file; do
         test -f "$file" || continue
-        name=$(basename "$file" '.ko')
+        name=$(basename "$file")
+        name=${name%.ko*}
         found="$found${found:+ }$name"
         dest=$to_dir/${file#from_dir/}
         cmd mkdir -p $(dirname "$dest")
@@ -215,7 +216,7 @@ find_expr() {
     local find_expr
     # Convert - and _ to a regular expression and build find arguments
     for module in $(echo $modules | sed "s/[_-]/[_-]/g"); do
-        find_expr="$find_expr${find_expr:+ -o} -name $module.ko"
+        find_expr="$find_expr${find_expr:+ -o} -name $module.ko*"
     done
     echo $find_expr
 }
@@ -290,7 +291,8 @@ hw_kms_modules() {
     local kms_modules_regex=$(kms_modules_regex)
     find /sys/devices -name modalias -print0 | xargs -0 sort -u \
         | tr '\n' '\0' | xargs -0 modprobe -a -D -q 2>/dev/null | sort -u \
-        | sed -n -r "s/^insmod [^ ]*\/($kms_modules_regex)\.ko.*/\1/p"
+        | sed -n -r "s/^insmod [^ ]*\/($kms_modules_regex)\.ko(|\.[[:alpha:]]+)[[:space:]]*$/\1/p"
+
 }
 
 #------------------------------------------------------------------------------
@@ -304,10 +306,10 @@ kms_modules_regex() {
 # Create a list of all modules that depend on drm.ko
 #------------------------------------------------------------------------------
 all_kms_modules() {
-    grep 'drm\.ko' /lib/modules/$(uname -r)/modules.dep \
-        | sed -e "s/:.*//"  \
+    grep -E "drm\.ko(|\.[[:alpha:]]+)" /lib/modules/$(uname -r)/modules.dep \
+        | sed -r -e "s/:.*//"  \
         -e "s|.*/||"        \
-        -e "s/\.ko$//"      \
+        -e "s/\.ko(|\.[[:alpha:]]+)$//"
         | grep -v -E "^(drm|drm_kms_helper|ttm)$"   \
         | sort -u
 }
