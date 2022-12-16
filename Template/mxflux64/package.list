@@ -216,6 +216,7 @@ mx-installer
 mx-live-usb-maker
 mx-menu-editor
 mx-network-assistant
+mx-rofi-manager
 mx-select-sound
 mx-tour
 mx-usb-unmounter
