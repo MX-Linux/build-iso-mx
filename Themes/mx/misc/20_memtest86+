@@ -1,8 +1,7 @@
 #!/bin/sh
 
 #tag for mx-system update
-#mx-system 20.05.01
-#!/bin/sh
+#mx-system 20.11.02+4
 
 set -e
 
@@ -25,9 +24,9 @@ esac
 
 prepare_boot_cache="$(prepare_grub_to_access_device ${GRUB_DEVICE_BOOT} | sed -e "s/^/\t/")"
 
-efi_vars_dir=/sys/firmware/efi/vars
+efi_dir=/sys/firmware/efi
 
-if [ ! -e "$efi_vars_dir" ] && [ -e /boot/memtest86+.bin ]; then
+if [ ! -e "$efi_dir" ] && [ -e /boot/memtest86+.bin ]; then
   MEMTESTPATH=$( make_system_path_relative_to_its_root "/boot/memtest86+.bin" )
   echo "Found memtest86+ image: $MEMTESTPATH" >&2
   cat << 'EOF'
@@ -43,7 +42,7 @@ fi
 EOF
 fi
 
-if [ -e "$efi_vars_dir" ] && [ -e /boot/uefi-mt/mtest-64.efi ]; then
+if [ -e "$efi_dir" ] && [ -e /boot/uefi-mt/mtest-64.efi ]; then
   MEMTESTPATH=$( make_system_path_relative_to_its_root "/boot/uefi-mt/mtest-64.efi" )
   echo "Found mtest-64.efi image: $MEMTESTPATH" >&2
   cat << 'EOF'
