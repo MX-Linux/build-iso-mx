@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="21.2.1_fluxbox"
+DISTRO_VERSION="21.3_fluxbox"
 
 # DE particular items
 

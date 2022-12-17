@@ -8,13 +8,13 @@
 #----------------------------------------------------------------------
 
 
-DISTRO_VERSION="21.2.1_ahs"
+DISTRO_VERSION="21.3_ahs"
 
 # kernel
 # ahs
-K_REVISION="4mx"
+K_REVISION="6mx"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="5.18.0"
+K_VERSION="6.0.0"
 UNSIGNED="-unsigned"
 
 ENABLE_LOCALES=Default
