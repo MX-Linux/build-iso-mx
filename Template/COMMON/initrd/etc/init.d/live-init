@@ -386,9 +386,8 @@ create_fstab() {
 
     case $distro in
         antiX) automount_and_fstab "$@" $swap_opts            ;;
-            *) add_fstab_swap $swap_opts                      ;;
-    # MX|MX-*) add_fstab_swap $swap_opts                      ;;
-    #       *) error 'Unknown distro %s' "$(pquote $distro)"  ;;
+      MX|MX-*) add_fstab_swap $swap_opts                      ;;
+            *) error 'Unknown distro %s' "$(pquote $distro)"  ;;
     esac
 }
 
@@ -555,7 +554,7 @@ localize_skel() {
 #------------------------------------------------------------------------------
 set_keyboard() {
     local kb_file=/etc/default/keyboard
-    local default_xkb_opts="grp:rctrl_rshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+    local default_xkb_opts="grp:lalt_lshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
     first_write $kb_file || [ "$DO_XKBD" ] || return
 
     XKBLAYOUT=${CMD_KBD:-$XKBLAYOUT}
@@ -1173,7 +1172,7 @@ create_home() {
     echo_live "$_Populating_X_directory_" $(pquote $home)
     mkdir -p $home
     cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found"
-
+    
     local uid_gid=$(getent passwd $user | cut -d: -f3,4)
     chown -R $uid_gid $home
 }
