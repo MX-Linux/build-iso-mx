@@ -174,7 +174,7 @@ do_start() {
 
     # Always create keyboard file in non-persistent system even with no X
     # Unless NO_LOAD_KEYS
-    [ -z "$NO_LOAD_KEYS" ] && set_keyboard
+    [ -z "$NO_LOAD_KEYS" ] && set_keyboard "$DISTRO"
 
     if [ -e /live/config/virtualbox -a -z "$VBOX_DECOR" ]; then
         echo_live "$_Disabling_splash_fbcondecor_inside_of_Virtual_Box_"
@@ -553,8 +553,18 @@ localize_skel() {
 # Set default X keyboard settings based on language or cheats
 #------------------------------------------------------------------------------
 set_keyboard() {
+    local distro=$1
     local kb_file=/etc/default/keyboard
-    local default_xkb_opts="grp:lalt_lshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+
+    local xkb_opts_antiX="grp:lalt_lshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+    local    xkb_opts_MX="grp:rctrl_rshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+
+    local default_xkb_opts="$xkb_opts_antiX"
+    case "$distro" in
+        antiX) default_xkb_opts="$xkb_opts_antiX" ;;
+      MX|MX-*) default_xkb_opts="$xkb_opts_MX"    ;;
+    esac
+
     first_write $kb_file || [ "$DO_XKBD" ] || return
 
     XKBLAYOUT=${CMD_KBD:-$XKBLAYOUT}
