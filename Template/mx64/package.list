@@ -49,6 +49,7 @@ conky-manager
 dconf-cli
 dconf-editor
 #dconf-tools
+deb-installer
 desktop-defaults-mx-xfce
 dh-python
 #diffuse
@@ -83,7 +84,7 @@ gconf-service
 gconf2
 gconf2-common
 gcr
-gdebi
+#gdebi
 #gdebi-core
 geany
 #geary

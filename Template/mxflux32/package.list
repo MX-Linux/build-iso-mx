@@ -32,9 +32,7 @@ dconf-editor
 deadbeef
 debconf-i18n
 debianutils
-#desktop-defaults-mx-xfce
-#desktop-defaults-mx-xfce-desktop
-#desktop-defaults-mx-xfce-system
+deb-installer
 dh-python
 diffutils
 dmidecode
@@ -56,7 +54,7 @@ gcc-10-base
 gconf-service
 gconf2-common
 gcr
-gdebi
+#gdebi
 geany
 gkrellm
 gnome-accessibility-themes
