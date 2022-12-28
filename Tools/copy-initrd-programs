@@ -134,7 +134,7 @@ main() {
         local found=
         for path in $PATH_LIST; do
             abs_prog=$path/$prog
-            test -x ${FROM_DIR%/}/$abs_prog || continue
+            test -x "${FROM_DIR%/}"/$abs_prog || continue
             found=true
             abs_prog_list="$abs_prog_list $abs_prog"
             break
@@ -188,9 +188,22 @@ main() {
         fi
 
         #echo -e "$libs"
+        local lib
+        # luks2 handling - needs libgcc_s.so.*
+        if [ "${abs_prog##*/}" = "cryptsetup" ]; then
+            local extra libdir libgcc libname
+            for lib in $libs; do
+                libdir=${lib%/*};
+                libname=${lib##*/}; libname=${libname%%.*};
+                [ -n "${libname##libcryptsetup*}" ] && continue
+                libgcc="libgcc_s.so.*"
+            done
+            [ -n "${libgcc}" ] && extra=( $(cd "${FROM_DIR:-.}"; find "${FROM_DIR:+.}"${libdir} -type f -name "${libgcc}") )
+            echo libs+=" ${extra[*]#.}"
+            libs+=" ${extra[*]}"
+        fi
 
         # For each library, copy the library and the symlink to the lib directory
-        local lib
         for lib in $libs; do
             copy_symlink "$FROM_DIR" "$lib" "$lib_dir"
         done
@@ -199,13 +212,11 @@ main() {
         ld_linux=$(echo "$raw_libs" | sed -nr "s@^\s*(/lib[^ ]*/ld-linux[^ ]*) .*@\1@p")
         [ -z "$ld_linux" ] && continue
 
-        #echo $ld_linux
-
-        local ld_dir=$TO_DIR$(dirname "$ld_linux")
+        local ld_dir="$TO_DIR"$(dirname "$ld_linux")
         echo "ld_linux: $ld_linux"
         if [ "${ld_dir##*/}" = lib64 ]; then
             my_mkdir "$ld_dir"
-            pretend cp -a $FROM_DIR$ld_linux $ld_dir
+            pretend cp -a "$FROM_DIR"$ld_linux $ld_dir
 
             ld_dir=${ld_dir%/lib64}$X86_64_DIR
         fi
@@ -225,26 +236,26 @@ copy_symlink() {
 
     # This works for relative symlinks and absolute symlinks that are also
     # exist on the host
-    local real_file=$($SUDO $LINUX_ARG chroot $from_dir readlink -f $symlink)
+    local real_file=$($SUDO $LINUX_ARG chroot "$from_dir" readlink -f $symlink)
 
     # echo -e "    symlink: $symlink\n  real_file: $real_file"
 
     # If it was not really a symlink then just copy and return
     if [ -z "$real_file" -o "$real_file" = "$symlink" ]; then
-        local dest_file=$dest_dir/$(basename $symlink)
-        test -e $dest_file || pretend cp "$from_dir$symlink" "$dest_file" \
+        local dest_file="$dest_dir"/$(basename $symlink)
+        test -e "$dest_file" || pretend cp "$from_dir$symlink" "$dest_file" \
             || fatal "Failed to copy:\n  %s -->\n  %s" "$from_dir$symlink" "$dest_file"
         return
     fi
 
     # Otherwise, copy the file and then make a relative symlink to it
-    local dest_file=$dest_dir/$(basename $real_file)
-    test -e $dest_file || pretend cp -a "$from_dir$real_file" "$dest_file" \
+    local dest_file="$dest_dir"/$(basename $real_file)
+    test -e "$dest_file" || pretend cp -a "$from_dir$real_file" "$dest_file" \
         || fatal "Failed to copy:\n  %s -->\n  %s" "$from_dir$real_file" "$dest_file"
 
     local sym_targ=$(basename $real_file)
-    local sym_sorc=$dest_dir/$(basename $symlink)
-    test -e "$sym_sorc" || pretend ln -s $sym_targ $sym_sorc \
+    local sym_sorc="$dest_dir"/$(basename $symlink)
+    test -e "$sym_sorc" || pretend ln -s $sym_targ "$sym_sorc" \
         || fatal "Failed to create symlink at:\n  %s" "$sym_sorc"
 }
 
@@ -256,7 +267,7 @@ get_linux_arg() {
     local prog=$1
 
     local need_64 new_arch=linux32
-    if file $prog | grep -q x86.64; then
+    if file "$prog" | grep -q x86.64; then
         need_64=true
         new_arch=linux64
     fi
@@ -279,7 +290,7 @@ do_clean() {
     local restore=""
     for prog in $prog_list; do
         local busybox="$bin_dir"/busybox
-        local full=$bin_dir/$prog
+        local full="$bin_dir/$prog"
         test -e "$full" && pretend rm -f "$full"
         if [ -x "$busybox"  ] && "$busybox" --list | grep -q "^$prog$"; then
                 restore+=" $prog"
@@ -297,19 +308,19 @@ do_clean() {
     # restore busybox links
     local link
     for link in $restore; do
-        local full=$bin_dir/$link
+        local full="$bin_dir/$link"
         if [ -x "$busybox"  ] && "$busybox" --list | grep -q "^$link$"; then
             pretend ln -nsf busybox "$bin_dir"/$link
         fi
     done
 
     local lib
-    for lib in $to_dir/lib*/{lib,ld}*.so*  $to_dir/$X86_64_DIR/ld-*.so*; do
+    for lib in "$to_dir"/lib*/{lib,ld}*.so*  "$to_dir"/$X86_64_DIR/ld-*.so*; do
         [ -e "$lib" -o -L "$lib" ] && pretend rm -f "$lib"
     done
 
     local dir
-    for dir in $to_dir/lib*/ $bin_dir $to_dir$X86_64_DIR; do
+    for dir in "$to_dir"/lib*/ $bin_dir "$to_dir"$X86_64_DIR; do
         test -d "$dir" || continue
         [ -z "$(ls -A "$dir" 2>/dev/null)" ] && pretend rmdir "$dir"
     done
