@@ -7,8 +7,8 @@
 
 ME=${0##*/}
 
-VERSION="2.00.09"
-VERSION_DATE="Sat, 26 Jun 2021 17:17:12 +0000"
+VERSION="2.00.11"
+VERSION_DATE="Wed, 28 Dec 2022 22:12:28 +0000"
 
 GFX_SUFFIX=".def"
 
@@ -28,8 +28,28 @@ WORK_DIR=/live/temp/$ME
 main() {
     local top_dir=${1%/boot}  gfx_cmd=$2
     local GFX_MENU_CNT  DO_MENUS  DO_CUSTOM  DO_RESET
+
     # Allow environment over-ride
     : ${CMD_LINE:=$(cat /proc/cmdline)}
+
+    local PROC_CMDLINE=$CMD_LINE
+    # kernel built-in boot parameter
+    local CONF_CMDLINE=$(grep ^CONFIG_CMDLINE= /boot/config-$(uname -r) 2>/dev/null | cut -d\" -f2 | tail -1)
+    if [ -n "$CONF_CMDLINE" ]; then
+        vmsg 6 "Boot parameters built into the kernel:\n %s" "$(pq $CONF_CMDLINE)"
+    fi
+
+    CMD_LINE=""
+    local conf param x
+    for param in $PROC_CMDLINE; do
+        x=x
+        for conf in $CONF_CMDLINE; do
+            [ "$conf" = "$param" ] && x="" && break
+        done
+        [ -n "$x" ] &&  CMD_LINE="$CMD_LINE $param"
+    done
+
+    vmsg 6 "Current bootcodes:\n %s" "$(pq $CMD_LINE)"
 
     case $VERBOSE in
              [0-9]) ;;
@@ -568,7 +588,6 @@ extra_cmdline_params() {
                          bp=*) continue ;;
             gfxsave|gfxsave=*) continue ;;
           bootsave|bootsave=*) continue ;;
-                     grubsave) continue ;;
                  BOOT_IMAGE=*) continue ;;
         savestate|nosavestate) continue ;;
               nostore|dostore) continue ;;
@@ -582,6 +601,12 @@ extra_cmdline_params() {
                  mk_swap_file) continue ;;
                mk_swap_file=*) continue ;;
                       vcard=*) continue ;;
+        esac
+        # paramters used by live grub-menu
+        case $param in
+                     grubsave) continue ;;
+                     kernel=*) continue ;;
+                      extra=*) continue ;;
         esac
         if [ -z "${param%%tz=*}" ] && [ -n "${param#tz=}" ] ; then
            tz="${param#tz=}"

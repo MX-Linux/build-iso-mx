@@ -1,6 +1,18 @@
 #!/bin/sh
 
-for param in $(cat /proc/cmdline); do
+PROC_CMDLINE=$(cat /proc/cmdline)
+CONF_CMDLINE=$(grep ^CONFIG_CMDLINE= /boot/config-$(uname -r) 2>/dev/null | cut -d\" -f2 | tail -1)
+
+CMD_LINE=""
+for param in $PROC_CMDLINE; do
+    x=x
+    for conf in $CONF_CMDLINE; do
+        [ "$conf" = "$param" ] && x="" && break
+    done
+    [ -n "$x" ] &&  CMD_LINE="$CMD_LINE $param"
+done
+
+for param in $CMD_LINE; do
     case $param in
 
                           menus)  ;;
@@ -65,15 +77,14 @@ for param in $(cat /proc/cmdline); do
             fancyprompt|fprompt)  ;;
                autologin|alogin)  ;;
 
-                          toram)  ;;
+                  toram|toram=*)  ;;
 
                      noremaster)  ;;
                        rollback)  ;;
                          lang=*)  ;;
 
                         noclear)  ;;
-                      gfxsave=*)  ;;
-                       grubsave)  ;;
+              gfxsave|gfxsave=*)  ;;
 
                         checkfs)  ;;
                       nocheckfs)  ;;
@@ -172,6 +183,12 @@ for param in $(cat /proc/cmdline); do
 
         # Sometimes added with grub loop mounts
             *root=*) ;;
+
+        # Added by live-Grub menu
+        grubsave)  ;;
+        kernel=*)  ;;
+         extra=*)  ;;
+
         *) printf "$param "
     esac
 done

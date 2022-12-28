@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x10"
-           VERSION_DATE="Sun, 27 Nov 2022 22:25:17 +0000"
+                VERSION="8.30.14-x11"
+           VERSION_DATE="Wed, 28 Dec 2022 22:12:28 +0000"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -5759,7 +5759,14 @@ _persist_makefs() {
 #------------------------------------------------------------------------------
 makefs() {
     local file=$1  fstype=$2  size=$3  part_fstype=$4  dir=$(dirname $file)
-    mkdir -p $dir                                                             || return 1
+    local base_file=${file##*/}
+    base_file=${base_file%%.*}
+    local fs_label=""
+    case $fstype in
+        ext*) fs_label="-L $base_file" ;;
+    esac
+
+    mkdir -p $dir || return 1
     local fallocate=$(ld_path_which fallocate)
     [ "$fallocate" ] || part_fstype=other
 
@@ -5768,7 +5775,7 @@ makefs() {
                  *) dd if=/dev/zero of=$file bs=1M count=0 seek=$size 1>> $MY_LOG 2>>$MY_LOG || return 2 ;;
     esac
     sync
-    ld_path /sbin/mkfs.$fstype -q -F $file 1>> $MY_LOG 2>> $MY_LOG || return 3
+    ld_path /sbin/mkfs.$fstype -q -F $fs_label $file 1>> $MY_LOG 2>> $MY_LOG || return 3
     return 0
 }
 
