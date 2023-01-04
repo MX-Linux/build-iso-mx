@@ -382,7 +382,7 @@ live_param_filter() {
         kernel=*);;
 
 
-        *) printf "$param " ;;
+        *) printf "%s " "$param" ;;
         esac
     done
 

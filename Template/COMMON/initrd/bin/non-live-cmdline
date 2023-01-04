@@ -189,6 +189,6 @@ for param in $CMD_LINE; do
         kernel=*)  ;;
          extra=*)  ;;
 
-        *) printf "$param "
+        *) printf "%s " "$param"
     esac
 done

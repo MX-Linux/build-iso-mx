@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x11"
-           VERSION_DATE="Wed, 28 Dec 2022 22:12:28 +0000"
+                VERSION="8.30.14-x12"
+           VERSION_DATE="Tue, 03 Jan 2023 10:58:55 -0500"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -1385,7 +1385,7 @@ show_bootcodes() {
     local unknown=$1
 
     vmsg 5 "%s:"  "$_Current_boot_codes_"
-    vmsg 5 "    $white $(cat /proc/cmdline)"
+    vmsg 5 "    %s" "$white $(cat /proc/cmdline)"
 
     [ -n "$unknown"  -a -n "$CHECK_BOOTCODES" ] || return
 
@@ -1394,7 +1394,7 @@ show_bootcodes() {
     vmsg 4 "(%s)"  "$_dont_take_this_too_seriously_"
     local code
     for code in $unknown; do
-        vmsg 4 "$hi_co    $code"
+        vmsg 4 "%s" "$hi_co    $code"
     done
     vmsg 4
 }
