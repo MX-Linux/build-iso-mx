@@ -36,9 +36,14 @@ TEMPLATE_DIR=/usr/local/share/live-files
 DEF_TZ="America/New_York"
 DEF_REPO="us"
 
+DEF_SHELL="/usr/bin/bash"
+DEF_BIN=$(sed -n '/^valid_user()/,/^}/{/^\s*local ent=/{s=.*:/bin/.*=/bin=p;q}}' /live/etc/init.d/live-init 2>/dev/null)
+[ x"$DEF_BIN" = x"/bin" ] && DEF_SHELL="/bin/bash"
+
 PRETEND=
 
-PW_FILES="/etc/passwd /etc/shadow /etc/gshadow /etc/group"
+SUBID_FILES="/etc/subuid /etc/subgid"
+PW_FILES="/etc/passwd /etc/shadow /etc/gshadow /etc/group $SUBID_FILES"
 MUNGE_FILES="/etc/slim.conf /etc/lightdm/lightdm.conf"
 BIND_FILES="$PW_FILES"
 
@@ -444,7 +449,8 @@ do_empty() {
 
 do_repo() {
     local conf_file=$1  work_dir=$2  country=$3
-
+	local verbose="--verbose"
+	[ "$VERBOSE" ] || verbose="--quiet"
     read_conf_file $conf_file
 
     real_dir="/etc/apt/sources.list.d"
@@ -452,7 +458,7 @@ do_repo() {
     copy_dir=$repo_dir$real_dir
     pretend mkdir -p $copy_dir
     pretend cp $real_dir/*.list $copy_dir
-    pretend localize-repo --dir=$copy_dir $country
+    pretend localize-repo $verbose --dir=$copy_dir $country
     bind_mount_template "$repo_dir"  "$BIND_ROOT" "$REAL_ROOT"
 }
 
@@ -759,36 +765,38 @@ munge_files() {
     local bind_from=$work_dir/bind
 
     local def_user=${user_pw%%:*}
+    local def_group=1000
 
     local empty_dir=$work_dir/empty
     mkdir -p $empty_dir
 
     # create lists of pw_files and grp_files that actually exist
-    local file pw_files grp_files
+    local file pw_files grp_files passwd_file group_file subuid_file subgid_file
     for file in $PW_FILES; do
         test -e $bind_root$file || continue
         pw_files="$pw_files $bind_from$file"
         case $file in
-            */group|*/gshadow) grp_files="$grp_files $bind_from$file";;
+            */gshadow) grp_files="$grp_files $bind_from$file";;
+             */passwd) passwd_file="$bind_from$file";;
+              */group) group_file="$bind_from$file"; grp_files="$grp_files $group_file";;
+             */subuid) subuid_file="$bind_from$file";;
+             */subgid) subgid_file="$bind_from$file";;
         esac
     done
 
-    # Ensure we have a user with uid=1000 in the real system
-    local added_user
-    local user_1000=$(cut -d: -f1,3 /etc/passwd | grep :1000$ | cut -d: -f1)
-    if [ -z "$user_1000" ]; then
+    # we add a new user temporarily
+    local quiet="--quiet"
+    [ "$VERBOSE" ] && quiet=""
 
-        # Don't assume there is no demo user but still try it first
-        user_1000=$def_user
-        while grep -q "^$user_1000:" /etc/passwd; do
-            user_1000=a$(dd if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -c 1-9)
-        done
+    local comment_opt=$(LC_ALL=C adduser --help 2>/dev/null | grep -m1 -o -- --comment | head -1)
+    [ x"$comment_opt" != x"--comment" ] && comment_opt="--gecos"
 
-        adduser --disabled-login --uid=1000 --no-create-home --gecos $def_user $user_1000
-        added_user=true
-    fi
+    local added_user="live_temp_user"$(dd if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -c 1-12)
+    pretend adduser $quiet --disabled-login --shell "${DEF_SHELL:-/usr/bin/bash}" --no-create-home  $comment_opt $def_user $added_user
+    local added_group=$(id -u $added_user 2>/dev/null)
 
-    # Copy in files to the bind_from *after* we've added user_1000 (if needed)
+
+    # Copy in files to the bind_from *after* we've added added_user (if needed)
     # Use files from template_dir first if they are available.
     local live_files
     for file in $BIND_FILES; do
@@ -806,23 +814,39 @@ munge_files() {
 
     # Remove the added user from the originals (but it is still in the copies
     # under bind_from/)
-    [ "$added_user" ] && deluser $user_1000
+    pretend deluser $added_user
 
     # Modify files (under bind_from/)
 
     # Remove all other normal users from the passwd and group files
     # Normal means having a home dir under /home and a login shell that ends in "sh"
     local other_users=$(cut /etc/passwd -d: -f1,6,7 | grep ":/home/.*:.*sh$" | cut -d: -f1 \
-        | grep -v "^$user_1000$")
+        | grep -v "^$added_user$")
 
     local other_user_regex=$(echo $other_users | tr " " '|')
     pretend sed -i -r "/^($other_user_regex):/d" $pw_files
-    pretend sed -i -r -e "s/:($other_user_regex)(,|$)/:/" -e "s/,($other_user_regex)(,|$)/\2/" $grp_files
+    pretend perl -i -p -e "s/,($other_user_regex)(?=(,|$))//g; s/:($other_user_regex)(,|$)/:/;" $grp_files
 
-    # Replace user_1000 with def_user (demo) if needed
-    if [ $user_1000 != $def_user ]; then
-        pretend sed -i -r "s/^$user_1000:/$def_user:/" $pw_files
-        pretend sed -i -r -e "s/:$user_1000(,|$)/:$def_user/" -e "s/,$user_1000(,|$)/,$def_user\1/" $grp_files
+    # Replace added_user with def_user (demo)
+    pretend sed -i -r "s/^$added_user:/$def_user:/" $pw_files
+    pretend perl -i -p -e "s/,$added_user(?=(,|$))/,$def_user/g; s/:$added_user(,|$)/:$def_user\1/;" $grp_files
+
+    # Replace added_group with def_group (1000)
+    pretend sed -i -r -e "s/^($def_user:[^:]*:)$added_group:/\1$def_group:/; s/(^$def_user:[^:]*:$def_group:)$added_group:/\1$def_group:/;" $passwd_file
+    pretend sed -i -r -e "s/^($def_user:[^:]*:)$added_group:/\1$def_group:/;" $group_file
+
+    # adjust subuid and subgid if only one entry for def_user (demo) exist
+    # get defaults
+    local sub_uid_min=$(sed -n -r 's/^\s*SUB_UID_MIN=([0-9]+).*/\1/p' /etc/login.defs 2>/dev/null)
+    local sub_gid_min=$(sed -n -r 's/^\s*SUB_GID_MIN=([0-9]+).*/\1/p' /etc/login.defs 2>/dev/null)
+    # set defaults
+    : ${sub_uid_min:=100000}
+    : ${sub_gid_min:=100000}
+    if [ -f $subuid_file ] && [ $(wc -l < $subuid_file) = 1 ]; then
+       pretend sed -i -r "s/^$def_user:[^:]+:/$def_user:$sub_uid_min:/" $subuid_file
+    fi
+    if [ -f $subgid_file ] && [ $(wc -l < $subgid_file) = 1 ]; then
+       pretend sed -i -r "s/^$def_user:[^:]+:/$def_user:$sub_gid_min:/" $subgid_file
     fi
 
     update_home $def_user /home/$def_user $bind_from
@@ -834,9 +858,14 @@ munge_files() {
     for file in $BIND_FILES; do
         local from=$bind_from$file
         local to=$bind_root$file
+        local bak=${to}-
         test -e $from || continue
+        test -e $to || continue
         is_mounted $to && error "File $to is already mounted"
         pretend mount --bind $from $to
+        test -e $bak || continue
+        is_mounted $bak && error "File $bak is already mounted"
+        pretend mount --bind $from $bak
     done
 }
 
