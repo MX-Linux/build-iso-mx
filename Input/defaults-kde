@@ -9,6 +9,13 @@
 
 DISTRO_VERSION="21.3_KDE"
 
+# kernel
+# ahs
+K_REVISION="6mx"
+K_TEMPLATE="%V%G-%R-%A"
+K_VERSION="6.0.0"
+UNSIGNED="-unsigned"
+
 ISO_FLAV="mxkde"
 THEME="mxkde"
 ARCH="amd64"
