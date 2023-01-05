@@ -22,7 +22,7 @@ DISTRO_VERSION="21.3"
 #DISTRO_VERSION="21.2_fluxbox"
 
 DISTRO_NAME="MX"
-RELEASE_DATE="January 18, 2023"
+RELEASE_DATE="January 15, 2023"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bullseye"
