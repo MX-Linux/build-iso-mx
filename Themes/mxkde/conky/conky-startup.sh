@@ -9,5 +9,5 @@ if [ ! -e "/home/$USER/.cache/fontconfig" ]; then
 fi
 sleep 20
 killall conky
-cd "/home/$USER/.conky/MX-CowonBlue"
-conky -c "$HOME/.conky/MX-CowonBlue/MX-Cowon_blue_roboto" &
+cd "/home/$USER/.conky/MX-CowonTangram"
+conky -c "$HOME/.conky/MX-CowonTangram/MX-Cowon_Tangram" &
