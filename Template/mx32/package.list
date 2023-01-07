@@ -198,6 +198,7 @@ lxmenu-data
 manpages-dev
 matcha-themes
 #mediterranean-themes
+menulibre
 mesa-vulkan-drivers
 #mirage
 mugshot
@@ -216,7 +217,6 @@ mx-docs
 #mx-fluxbox
 mx-greybird-themes
 mx-installer
-mx-menu-editor
 mx-select-sound
 mx-sound-theme-borealis
 mx-sound-theme-fresh-and-clean

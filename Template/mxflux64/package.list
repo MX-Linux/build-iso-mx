@@ -194,6 +194,7 @@ lsb-base
 #luckybackup-data
 lxappearance
 matcha-themes
+menulibre
 mesa-vulkan-drivers
 mount
 mugshot
@@ -212,7 +213,6 @@ mx-idesktool
 mx-idevice-mounter
 mx-installer
 mx-live-usb-maker
-mx-menu-editor
 mx-network-assistant
 mx-rofi-manager
 mx-select-sound

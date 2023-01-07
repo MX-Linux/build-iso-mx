@@ -197,6 +197,7 @@ luckybackup-data
 lxmenu-data
 manpages-dev
 matcha-themes
+menulibre
 #mediterranean-themes
 mesa-vulkan-drivers
 #mirage
@@ -216,7 +217,6 @@ mx-docs
 #mx-fluxbox
 mx-greybird-themes
 mx-installer
-mx-menu-editor
 mx-select-sound
 mx-sound-theme-borealis
 mx-sound-theme-fresh-and-clean
