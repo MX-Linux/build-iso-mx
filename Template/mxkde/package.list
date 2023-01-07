@@ -1,3 +1,4 @@
+#ttf-mscorefonts-installer
 advert-block-antix
 akonadi-contacts-data
 alsa-topology-conf
@@ -168,6 +169,7 @@ libreoffice-writer
 lo-main-helper
 manpages-dev
 media-player-info
+menulibre
 mesa-vulkan-drivers
 milou
 mx-apps-kde
@@ -286,7 +288,6 @@ sound-theme-freedesktop
 sox
 systemsettings
 thunderbird
-#ttf-mscorefonts-installer
 unar
 uno-libs-private
 ure
