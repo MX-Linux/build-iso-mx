@@ -856,10 +856,15 @@ do_stage_4() {
 
     if ! is_antiX; then
         local early_deb
-        for early_deb in $(ls /*.deb 2>/dev/null); do
-            say "Install deb package $(pq $early_deb)"
+        for early_deb in $(ls /*${ARCH}.deb 2>/dev/null); do
+        	say "Install arch deb package $(pq $early_deb)"
             apt-get install $early_deb && rm $early_deb
         done
+        for early_deb in $(ls /*all.deb 2>/dev/null); do
+            say "Install all deb package $(pq $early_deb)"
+            apt-get install $early_deb && rm $early_deb
+        done
+        rm *.deb
     fi
     
     # for 64 bit set multiarch
