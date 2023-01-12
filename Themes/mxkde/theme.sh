@@ -30,7 +30,7 @@ copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file desktop.data          /usr/local/share/boot-menus/
 copy_file desktop.menu          /usr/local/share/boot-menus/
 copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
-copy_file pppoeconf.desktop     /usr/share/applications/
+#copy_file pppoeconf.desktop     /usr/share/applications/
 #copy_file daemon.conf 		/etc/pulse/
 #copy_file 98qtconfig /etc/X11/Xsession.d/
 copy_file yad-icon-browser.desktop /etc/skel/.local/share/applications/ --create
