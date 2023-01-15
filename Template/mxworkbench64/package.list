@@ -34,6 +34,7 @@ cmospwd
 coreutils
 cpuid
 cpuidtool
+cputool
 custom-toolbox
 dbench
 dc3dd
@@ -156,6 +157,7 @@ lynx
 lz4
 meld
 memtester
+menulibre
 mesa-vulkan-drivers
 moreutils
 mount
@@ -163,7 +165,6 @@ mpt-status
 mx-comfort-themes
 mx-idevice-mounter
 mx-live-usb-maker
-mx-menu-editor
 mx-network-assistant
 mx-usb-unmounter
 nano
