@@ -88,6 +88,7 @@ fwupd
 galculator
 gamin
 gconf-service
+gconf2
 gconf2-common
 gcr
 gdbm-l10n
@@ -107,6 +108,7 @@ gparted
 grep
 grsync
 gstreamer1.0-pulseaudio
+gthumb
 gtk2-engines-murrine
 gtkdialog
 guymager
@@ -233,6 +235,7 @@ system-config-printer-udev
 tcpdump
 thunar
 thunar-archive-plugin
+thunar-shares-plugin
 thunar-data
 thunar-gtkhash
 thunar-volman
@@ -302,4 +305,3 @@ zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
 zsh-theme-powerlevel10k
-zstd
