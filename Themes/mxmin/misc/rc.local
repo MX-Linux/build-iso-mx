@@ -36,10 +36,10 @@ if [ -e "/etc/live/config/systemd" ]; then
 fi
 
 # Detect and set up correct broadcom
-/usr/local/bin/BroadcomStartup
+[ -e /usr/local/bin/BroadcomStartup ] && /usr/local/bin/BroadcomStartup
 
 # Set up 12 hour clock format for some countries eg US
-/usr/local/bin/clock12or24
+[ -e /usr/local/bin/clock12or24 ] && /usr/local/bin/clock12or24
 
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
