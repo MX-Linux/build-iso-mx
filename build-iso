@@ -661,8 +661,10 @@ do_stage_2() {
 
         local args="--arch=$ARCH"
         local exclude_list=$(gather_join exclude-debootstrap)
+        local include_list=$(gather_join include-debootstrap)
         local keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
         [[ -n $exclude_list ]] && args="$args --exclude=$exclude_list"
+        [[ -n $include_list ]] && args="$args --include=$include_list"
         [[ -r $keyring ]] && args="$args --keyring=$keyring"
         local url="$(eval echo $MIRROR_URL_TEMPLATE)"
 
