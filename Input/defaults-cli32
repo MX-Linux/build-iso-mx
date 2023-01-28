@@ -7,23 +7,21 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.3_minimal"
+DISTRO_VERSION="21.3_CLI"
 
 ARCH="i386"
-ISO_FLAV="mxmin32"
-THEME="mxmin"
+ISO_FLAV="mxcli32"
+THEME="mxcli"
 
 ENABLE_LOCALES="single"
 
-# Standard 32 bit
+# standard 32 bit
 K_REVISION="20"
 K_TEMPLATE="%V%G-%R-686-pae"
 K_VERSION="5.10.0"
 UNSIGNED=""
 
-# DE particular items
-X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
-CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
-
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -b 262144"
+
+MX_LIVE_BOOT_OPTIONS="quiet splasht= nosplash"

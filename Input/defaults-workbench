@@ -7,7 +7,7 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.2.1_Workbench"
+DISTRO_VERSION="21.3_Workbench"
 
 ARCH="amd64"
 ISO_FLAV="mxworkbench64"
@@ -15,7 +15,7 @@ THEME="mx-workbench"
 
 ENABLE_LOCALES="single"
 
-#DE particular items
+# DE particular items
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 

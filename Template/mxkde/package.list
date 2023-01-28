@@ -169,7 +169,6 @@ libreoffice-writer
 lo-main-helper
 manpages-dev
 media-player-info
-menulibre
 mesa-vulkan-drivers
 milou
 mx-apps-kde
@@ -184,7 +183,6 @@ mx-network-assistant
 mx-select-sound
 mx-sound-theme-borealis
 mx-sound-theme-fresh-and-clean
-mx-system-sounds
 mx-tour
 mx-viewer
 mx-welcome
