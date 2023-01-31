@@ -2652,7 +2652,7 @@ write_initrd_release() {
     [[ ${#dir} -eq 0 ]] && fatal "Empty directory passed to write_initrd_version()"
 
     local DISTRO_BASE="antiX"
-    is_antix || DISTRO_BASE="MX"
+    is_antiX || DISTRO_BASE="MX"
 
     local file1=$dir/etc/$name  file2=$dir/etc/live/version/$name
     $sudo mkdir -p $(dirname $file1) $(dirname $file2)
