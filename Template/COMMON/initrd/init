@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x12"
-           VERSION_DATE="Tue, 03 Jan 2023 10:58:55 -0500"
+                VERSION="8.30.14-x13"
+           VERSION_DATE="Mon, 30 Jan 2023 20:35:06 -0500"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -227,6 +227,7 @@ main_wrapper() {
     read_distro_release /etc/initrd-release
     : ${DISTRO_BUG_REPORT_URL:=$BUG_REPORT_URL}
     : ${DISTRO_NAME:=antiX}
+    : ${DISTRO_BASE:=$DISTRO_NAME}
     : ${DISTRO_PRETTY_NAME:=antiX-17 (generic)}
 
     custom_code 0 'before reading boot codes'
@@ -711,11 +712,20 @@ make_nodes() {
 #------------------------------------------------------------------------------
 # For every VAR="value"  in the file make a DISTRO_VAR variable that contains
 # that value
+#
+# additonally set DISTRO_BASE (either antiX or MX)
 #------------------------------------------------------------------------------
 read_distro_release() {
     local file=$1
     #sed -r -n 's/^\s*([A-Z0-9_]+=)/DISTRO_\1/p' $file >> $MY_LOG
     eval $(sed -r -n 's/^\s*([A-Z0-9_]+=)/DISTRO_\1/p' $file)
+
+    if [ -z "$DISTRO_BASE" -a -n "$DISTRO_NAME" ] ; then
+       [ -z "${DISTRO_NAME##*antiX*}" ] && DISTRO_BASE="antiX"
+       [ -z "${DISTRO_NAME##*MX*}"    ] && DISTRO_BASE="MX"
+    fi
+    [ -z "$DISTRO_BASE" ] && DISTRO_BASE="$DISTRO_NAME"
+
 }
 
 #------------------------------------------------------------------------------
@@ -3348,9 +3358,16 @@ should_break_at() {
 #------------------------------------------------------------------------------
 custom_code() {
     local file=$1  desc=$2
+    local base=${DISTRO_BASE:=$DISTRO_NAME}
+    local distro=${DISTRO_NAME}
 
-    [ "${#file}" -eq 1 ] && file=$CUSTOM_DIR/$DISTRO_NAME/$file.sh
-
+    if [ "${#file}" -eq 1 ]; then
+        if [ -r $CUSTOM_DIR/$base/$file.sh ]; then
+           file=$CUSTOM_DIR/$base/$file.sh
+        else
+           file=$CUSTOM_DIR/$distro/$file.sh
+        fi
+    fi
     [ -r $file ] || return
 
     if $LIVE_BIN/sh -n $file; then
@@ -6473,6 +6490,7 @@ DID_REMASTER="$DID_REMASTER"
 DID_ROLLBACK="$DID_ROLLBACK"
 DID_TORAM="$DID_TORAM"
 DISTRO="$DISTRO_NAME"
+DISTRO_BASE="$DISTRO_BASE"
 DISTRO_CODENAME="$DISTRO_CODENAME"
 DISTRO_VERSION="$DISTRO_VERSION"
 ENCRYPTED="$ENCRYPTED"
@@ -6527,6 +6545,7 @@ Initrd_Out
     [ "$ENCRYPTED"    ]                      && touch $dir/encrypted
 
     echo "$DISTRO_NAME"                             > $dir/distro
+    echo "$DISTRO_BASE"                             > $dir/distro-base
 
     [ "$DID_TORAM" ] && [ "$(stat -c %t $SQFILE_DEV)" = b ] \
         && echo "BOOT_DEV=$SQFILE_DEV" > $dir/toram-eject

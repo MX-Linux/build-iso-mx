@@ -2651,6 +2651,9 @@ write_initrd_release() {
     local dir=$1  sudo=$2  name=initrd-release
     [[ ${#dir} -eq 0 ]] && fatal "Empty directory passed to write_initrd_version()"
 
+    local DISTRO_BASE="antiX"
+    is_antix || DISTRO_BASE="MX"
+
     local file1=$dir/etc/$name  file2=$dir/etc/live/version/$name
     $sudo mkdir -p $(dirname $file1) $(dirname $file2)
 
@@ -2669,6 +2672,7 @@ ASCII_PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($ASCII_CODE_NAME)"
 ANSI_COLOR="0;34"
 HOME_URL="$HOME_URL"
 BUG_REPORT_URL="$BUG_REPORT_URL"
+BASE=$DISTRO_BASE
 Initrd_Version
 
     else
@@ -2682,6 +2686,7 @@ PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($CODE_NAME)"
 ANSI_COLOR="0;34"
 HOME_URL="$HOME_URL"
 BUG_REPORT_URL="$BUG_REPORT_URL"
+BASE=$DISTRO_BASE
 Initrd_Version
 
     fi
