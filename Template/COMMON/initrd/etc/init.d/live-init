@@ -138,6 +138,7 @@ do_start() {
     fi
 
     get_init_param DISTRO ""
+    get_init_param DISTRO_BASE ""
 
     # Try really hard to get the distro name
     if [ ${#DISTRO} = 0 ]; then
@@ -154,6 +155,12 @@ do_start() {
         DISTRO=${DISTRO%\"}
     fi
 
+    if [ -z "$DISTRO_BASE" ] && [ -n "$DISTRO" ] ; then
+       [ -z "${DISTRO##*antiX*}" ] && DISTRO_BASE="antiX"
+       [ -z "${DISTRO##*MX*}"    ] && DISTRO_BASE="MX"
+    fi
+    [ -z "$DISTRO_BASE" ] && DISTRO_BASE="$DISTRO"
+
     write_issue_file "$DISTRO" "$FORCE_ISSUE"
 
     which X &>/dev/null && HAVE_X=true
@@ -161,7 +168,7 @@ do_start() {
     local user_automount
     [ -n "$HAVE_X" -a -e $AUTOMOUNT_CMD -a -z "$CMD_FSTAB" ] && user_automount=true
 
-    create_fstab "$DISTRO" "$user_automount"  "$CMD_FSTAB" "$CMD_MOUNT"
+    create_fstab "${DISTRO_BASE:=$DISTRO}" "$user_automount"  "$CMD_FSTAB" "$CMD_MOUNT"
 
     #-jbb: for debugging
     unset COUNTRY WM_LANG KEYBOARDS KEYTABLE LANG MIRROR TZ XKBLAYOUT CONSOLE_FONT
@@ -174,7 +181,7 @@ do_start() {
 
     # Always create keyboard file in non-persistent system even with no X
     # Unless NO_LOAD_KEYS
-    [ -z "$NO_LOAD_KEYS" ] && set_keyboard "$DISTRO"
+    [ -z "$NO_LOAD_KEYS" ] && set_keyboard "${DISTRO_BASE:=$DISTRO}"
 
     if [ -e /live/config/virtualbox -a -z "$VBOX_DECOR" ]; then
         echo_live "$_Disabling_splash_fbcondecor_inside_of_Virtual_Box_"
@@ -318,7 +325,7 @@ do_start() {
 
     unset DEF_USER USER_HOME
 
-    if ! find_def_user $DISTRO; then
+    if ! find_def_user ${DISTRO_BASE:=$DISTRO}; then
         echo_live "$_No_default_user_found_on_the_system_"
         return
     fi
