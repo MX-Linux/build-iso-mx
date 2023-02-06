@@ -1,3 +1,5 @@
+***Note*** the master branch is under development.  If you want the last stable branch, use the "bullseye" branch.
+
 # build-iso-mx
 **antiX** build-iso system with settings for MX. This script is used to create variate ISO flavors.
 
