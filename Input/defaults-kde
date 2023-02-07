@@ -7,14 +7,14 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.3_KDE"
+DISTRO_VERSION="23_KDE"
 
 # kernel
 # ahs
-K_REVISION="6mx"
+K_REVISION="*"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="6.0.0"
-UNSIGNED="-unsigned"
+K_VERSION="6.1.0"
+#UNSIGNED="-unsigned"
 
 ISO_FLAV="mxkde"
 THEME="mxkde"
