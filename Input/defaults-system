@@ -37,7 +37,7 @@ DISTRO_NAME="MX"
 RELEASE_DATE="Future, 2023"
 
 # system defaults, these end up inside the squash file system mostly
-DEBIAN_RELEASE="bullseye"
+DEBIAN_RELEASE="bookworm"
 
 LIVE_USER="demo"
 NEW_HOSTNAME="mx1"
