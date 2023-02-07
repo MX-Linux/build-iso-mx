@@ -7,7 +7,7 @@ alsa-tools
 alsa-utils
 amd64-microcode
 anacron
-antix-archive-keyring
+#antix-archive-keyring
 antix-libs
 apt-transport-https
 apt-xapian-index
@@ -29,7 +29,7 @@ cabextract
 checkaptgpg
 chroot-rescue-mx
 cifs-utils
-cli-aptix
+#cli-aptix
 cli-installer-mx
 cli-shell-utils
 console-data
