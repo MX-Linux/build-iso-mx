@@ -74,7 +74,7 @@ flac
 foliate
 fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
-freeglut3
+#freeglut3
 #freshplayerplugin
 #fuseiso9660
 galculator
@@ -97,8 +97,8 @@ gnome-accessibility-themes
 #gnome-hearts
 gnome-keyring
 gnome-mahjongg
-gnome-mime-data
-gnome-ppp
+#gnome-mime-data
+#gnome-ppp
 #gnome-schedule
 gnome-themes-standard
 #gnome-themes-standard-data
@@ -153,7 +153,7 @@ libgcc-s1:i386
 #libgnome2-perl
 #libpam-elogind
 libpam-gnome-keyring
-libreoffice-avmedia-backend-gstreamer
+#libreoffice-avmedia-backend-gstreamer
 libreoffice-base
 libreoffice-base-core
 libreoffice-calc
@@ -195,7 +195,7 @@ luckybackup
 luckybackup-data
 lxmenu-data
 manpages-dev
-matcha-themes
+#matcha-themes
 #mediterranean-themes
 menulibre
 mesa-vulkan-drivers

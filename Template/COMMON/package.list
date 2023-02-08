@@ -36,7 +36,7 @@ console-data
 console-setup
 console-setup-linux
 cpufrequtils
-crda
+#crda
 cryptsetup
 cryptsetup-bin
 cryptsetup-initramfs
@@ -135,7 +135,7 @@ gstreamer1.0-alsa
 gstreamer1.0-libav
 gufw
 haveged
-hddtemp
+#hddtemp
 hdparm
 hexedit
 hplip
@@ -201,7 +201,7 @@ mx-goodies
 mx-gpg-keys
 mx-packageinstaller
 mx-packageinstaller-pkglist
-mx-pkexec
+#mx-pkexec
 mx-remaster
 mx-remastercc
 mx-repo-manager
@@ -244,7 +244,7 @@ pm-utils
 pmount
 policykit-1
 powermgmt-base
-pppoeconf
+#pppoeconf
 printer-driver-all
 procps
 psmisc
