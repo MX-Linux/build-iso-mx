@@ -257,7 +257,7 @@ pacpl
 papirus-mxblue
 #partimage
 pavucontrol
-pdfshuffler
+pdfarranger
 peg-e
 phonon-backend-gstreamer-common
 #pidgin
@@ -337,9 +337,9 @@ ure
 #uswsusp
 vcdimager
 #virtualbox-guest-dkms
-virtualbox-guest-utils
-virtualbox-guest-utils-modified-init
-virtualbox-guest-x11
+#virtualbox-guest-utils
+#virtualbox-guest-utils-modified-init
+#virtualbox-guest-x11
 vlc
 vlc-data
 #vlc-nox
