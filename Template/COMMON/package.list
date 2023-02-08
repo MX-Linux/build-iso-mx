@@ -146,6 +146,7 @@ hyphen-en-us
 info
 installation-report
 intel-microcode
+inxi
 iproute2
 iputils-ping
 iso-codes
@@ -270,7 +271,7 @@ sdparm
 sgml-data
 shared-mime-info
 smartmontools
-smxi-inxi-antix
+#smxi-inxi-antix
 spice-vdagent
 squashfs-tools
 sshfs
