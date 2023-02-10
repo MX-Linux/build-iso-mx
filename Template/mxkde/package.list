@@ -230,7 +230,7 @@ poppler-utils
 powerdevil
 powerdevil-data
 print-manager
-pulseaudio-module-bluetooth
+#pulseaudio-module-bluetooth
 pulseaudio-utils
 python3-gi-cairo
 python3-pycurl
