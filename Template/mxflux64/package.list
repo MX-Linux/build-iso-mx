@@ -50,8 +50,8 @@ fonts-vlgothic
 fonts-wqy-microhei
 formatusb
 galculator
-gcc-10-base
-gcc-10-base:i386
+gcc-12-base
+gcc-12-base:i386
 gconf-service
 gconf2-common
 gcr

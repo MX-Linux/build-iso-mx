@@ -82,7 +82,7 @@ fonts-wqy-microhei #Chinese
 #fuseiso9660
 galculator
 #galternatives
-gcc-10-base
+gcc-12-base
 gconf-service
 gconf2
 gconf2-common

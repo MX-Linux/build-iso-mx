@@ -50,7 +50,7 @@ fonts-vlgothic
 fonts-wqy-microhei
 formatusb
 galculator
-gcc-10-base
+gcc-12-base
 gconf-service
 gconf2-common
 gcr

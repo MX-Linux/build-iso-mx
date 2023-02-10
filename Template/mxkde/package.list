@@ -51,7 +51,7 @@ fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
 formatusb
 frameworkintegration
-gcc-10-base:i386
+gcc-12-base:i386
 gdb-minimal
 gimp
 gimp-data
