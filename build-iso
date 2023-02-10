@@ -2585,8 +2585,8 @@ copy_second_kernel() {
     ! test -x "$version_prog" && error "Could not find program $version_prog" && return 1
     ! test -x "$lmk"          && error "Could not find program $lmk"          && return 1
 
-    local version_0=$($version_prog -nr $vmlinuz  | cut -d" " -f1)
-    local version_1=$($version_prog -nr $from_dir | cut -d" " -f1 | grep -v "^$version_0$")
+    local version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
+    local version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | grep -v "^$version_0$")
 
     case $(echo -n "$version_1" | grep . | wc -l) in
         0) return ;;
