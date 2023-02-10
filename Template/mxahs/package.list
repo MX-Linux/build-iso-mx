@@ -278,7 +278,7 @@ poppler-utils
 #printer-driver-fujixerox
 #printer-driver-indexbraille
 projectm-data
-pulseaudio-module-bluetooth
+#pulseaudio-module-bluetooth
 #pulseaudio-module-x11
 pulseaudio-utils
 #qdbus

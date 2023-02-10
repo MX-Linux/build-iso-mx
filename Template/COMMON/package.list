@@ -250,7 +250,7 @@ printer-driver-all
 procps
 psmisc
 psutils
-pulseaudio
+pipewire-setup-mx
 pv
 python3-bluez
 python3-smbc
