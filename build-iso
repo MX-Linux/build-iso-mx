@@ -227,7 +227,7 @@ main() {
     [[ -n $reset_mode ]] && : ${start_from:=0}
     [[ -n $iso_only   ]] && SKIP_STAGE="$SKIP_STAGE${SKIP_STAGE:+,}$ISO_SKIP_STAGE"
 
-    local e=$(printf "\e") 
+    local e=$(printf "\e")
     case $color_mode in
      high|hi|"") color_mode="high" ;;
          low|lo) color_mode="low"  ;;
@@ -830,8 +830,9 @@ do_stage_4() {
         debconf-set-selections $manual_selections_template
     fi
 
-    say "Create $(pq /etc/mtab)"
-    grep -v rootfs /proc/mounts > /etc/mtab
+    # Doesn't seem to be needed, it just shows an error that /proc/mounts = /etc/mtab
+    # say "Create $(pq /etc/mtab)"
+    # grep -v rootfs /proc/mounts > /etc/mtab
 
     echo $$ > $build_dir/MY-PID
 
@@ -859,7 +860,7 @@ do_stage_4() {
     if ! is_antiX; then
         local early_deb
         for early_deb in $(ls /*${ARCH}.deb 2>/dev/null); do
-        	say "Install arch deb package $(pq $early_deb)"
+                say "Install arch deb package $(pq $early_deb)"
             apt-get install $early_deb && rm $early_deb
         done
         for early_deb in $(ls /*all.deb 2>/dev/null); do
@@ -868,7 +869,7 @@ do_stage_4() {
         done
         [ -n "$(ls *.deb 2>/dev/null)" ] && rm *.deb
     fi
-    
+
     # for 64 bit set multiarch
     if [[ $ARCH = "amd64" ]] ; then
         say "Adding multiarch support"
@@ -1253,7 +1254,7 @@ do_stage_4() {
            *)
              say "Set debconf frontend: Gnome"
              debconf-set-selections < <(printf "debconf\tdebconf/frontend\tselect\tGnome\n")
-             ;; 
+             ;;
         esac
     fi
     #-----------------------------------------------------------------
@@ -1743,7 +1744,7 @@ do_stage_7() {
     local output="/tmp/mksquash_output"
     local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE | tee $output
-    local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1) 
+    local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm "$output"
     local size=$(du_size $linuxfs_file)
@@ -4011,7 +4012,7 @@ is_distro_flav() {
     fi
     #
     return 0
-	
+
     #case $flav in
     #     mx32|mx64|mxahs|mxkde|mxbase64|mxbase32|mxflux32|mxflux64|mxworkbench32|mxworkbench64) return 0 ;;
     #esac
