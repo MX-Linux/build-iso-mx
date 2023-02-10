@@ -866,7 +866,7 @@ do_stage_4() {
             say "Install all deb package $(pq $early_deb)"
             apt-get install $early_deb && rm $early_deb
         done
-        rm *.deb
+        [ -n "$(ls *.deb 2>/dev/null)" ] && rm *.deb
     fi
     
     # for 64 bit set multiarch
