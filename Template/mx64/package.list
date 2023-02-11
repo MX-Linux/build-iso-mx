@@ -35,7 +35,7 @@ cdparanoia
 #cgmanager
 #chromium-bsu
 #chromium-bsu-data
-clementine
+#clementine
 colord
 colord-data
 command-not-found
@@ -306,6 +306,7 @@ sound-theme-freedesktop
 sox
 #spamassassin
 ssh-askpass-gnome
+strawberry
 swell-foop
 synaptic
 system-config-printer
