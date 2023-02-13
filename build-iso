@@ -1181,27 +1181,29 @@ do_stage_4() {
 
     check_errors_strict
 
-    if [[ -n $default_desktop ]] && do_part 19 "!Update SLiM defaults"; then
+	if [ is_antiX ]; then
+    	if [[ -n $default_desktop ]] && do_part 19 "!Update SLiM defaults"; then
 
-        if ! test -x $make_xinitrc; then
-            mkdir -p $(dirname $make_xinitrc)    || my_exit
-            cp $tools/make-xinitrc $make_xinitrc || my_exit
-        fi
+        	if ! test -x $make_xinitrc; then
+            	mkdir -p $(dirname $make_xinitrc)    || my_exit
+            	cp $tools/make-xinitrc $make_xinitrc || my_exit
+        	fi
 
-        say "Found desktops $(pq $($make_xinitrc --list))"
+        	say "Found desktops $(pq $($make_xinitrc --list))"
 
-        say "Create .xinitrc in /etc/skel"
-        $make_xinitrc "$default_desktop" > /etc/skel/.xinitrc \
-            || error "Failed to create/update .xinitrc file"
+        	say "Create .xinitrc in /etc/skel"
+        	$make_xinitrc "$default_desktop" > /etc/skel/.xinitrc \
+            	|| error "Failed to create/update .xinitrc file"
 
-        if [[ -e /etc/slim.conf ]]; then
-            say "Update /etc/slim.conf"
-            $make_xinitrc --slim || error "Failed to update slim.conf"
-        fi
+        	if [[ -e /etc/slim.conf ]]; then
+            	say "Update /etc/slim.conf"
+            	$make_xinitrc --slim || error "Failed to update slim.conf"
+        	fi
 
-        end_part_strict
-    else
-        skip_part 19 "Update SLiM defaults"
+        	end_part_strict
+    	else
+        	skip_part 19 "Update SLiM defaults"
+    	fi
     fi
 
     if is_antiX; then
