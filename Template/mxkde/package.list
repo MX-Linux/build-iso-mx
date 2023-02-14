@@ -1,4 +1,9 @@
-#ttf-mscorefonts-installer
+# kde-servicemenu-rootactions
+# ksysguard
+# ksysguard-data
+# ksysguardd
+# libreoffice-avmedia-backend-gstreamer
+# pulseaudio-module-bluetooth
 advert-block-antix
 akonadi-contacts-data
 alsa-topology-conf
@@ -88,8 +93,7 @@ kde-config-screenlocker
 kde-config-sddm
 kde-servicemenu-checkhash-installdebs
 kde-servicemenu-extract-and-compress
-kde-servicemenu-kim4
-kde-servicemenu-rootactions
+kde-servicemenu-kim5
 kde-spectacle 
 kde-standard
 kde-style-breeze
@@ -127,9 +131,6 @@ kross
 kscreen
 ksshaskpass
 ksudoku
-ksysguard
-ksysguard-data
-ksysguardd
 ktexteditor-data
 ktexteditor-katepart
 ktorrent
@@ -150,7 +151,6 @@ libcanberra-pulse
 libffmpegthumbnailer4v5
 libgcc-s1:i386 
 libkf5baloowidgets-bin
-libreoffice-avmedia-backend-gstreamer
 libreoffice-base
 libreoffice-base-core
 libreoffice-calc
@@ -160,8 +160,8 @@ libreoffice-draw
 libreoffice-help-en-us
 libreoffice-impress
 libreoffice-java-common
-libreoffice-kde5
 libreoffice-math
+libreoffice-plasma
 libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 libreoffice-style-sifr
@@ -230,7 +230,6 @@ poppler-utils
 powerdevil
 powerdevil-data
 print-manager
-#pulseaudio-module-bluetooth
 pulseaudio-utils
 python3-gi-cairo
 python3-pycurl
@@ -280,7 +279,6 @@ sendemail
 signon-plugin-oauth2
 simple-scan
 smb4k
-software-properties-kde
 sonnet-plugins
 sound-theme-freedesktop
 sox
