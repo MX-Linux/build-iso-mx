@@ -1146,7 +1146,7 @@ do_stage_4() {
 
         # add conveinence group vboxsf even if virtualbox guest additions
         # aren not installed
-        ! is_antiX && ! grep -q vboxsf /etc/group && groupadd vboxsf
+        ! is_antiX && ! grep -q vboxsf /etc/group && groupadd --system vboxsf
 
         local group
         for group in $(gather user-groups); do
