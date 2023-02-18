@@ -89,7 +89,7 @@ firmware-bnx2
 firmware-bnx2x
 firmware-brcm80211
 firmware-intel-sound
-firmware-intelwimax
+#firmware-intelwimax
 firmware-iwlwifi
 firmware-libertas
 firmware-linux-free
