@@ -243,8 +243,8 @@ network-manager-openvpn-gnome
 #nomacs
 #nomacs-l10n
 #ntp
-numix-gtk-theme
-numix-icon-theme
+#numix-gtk-theme
+#numix-icon-theme
 #nvidia-detect
 open-vm-tools
 #openjdk-8-jre

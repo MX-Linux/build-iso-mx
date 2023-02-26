@@ -235,8 +235,8 @@ network-manager-openvpn-gnome
 nftables
 #nomacs
 #nomacs-l10n
-numix-gtk-theme
-numix-icon-theme
+#numix-gtk-theme
+#numix-icon-theme
 nvidia-detect
 open-vm-tools
 pacpl
