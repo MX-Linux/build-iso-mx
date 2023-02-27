@@ -1381,7 +1381,7 @@ do_stage_5() {
         fi
     fi
 
-    say "Write initrd-release file"
+    say "Write initrd_release file"
     write_initrd_release $sqfs_dir $SUDO
 
     say "Clean out log files and other files"
@@ -1647,7 +1647,7 @@ Bootloader_Data
         error "No $initrd_src/ or $initrd_src.gz found"
     fi
 
-    say "Write initrd-release file"
+    say "Write initrd_release file"
     write_initrd_release $initrd_dir
 
     is_antiX && initrd_encrypt="--encrypt"
@@ -2651,7 +2651,7 @@ Version-Info
 }
 
 write_initrd_release() {
-    local dir=$1  sudo=$2  name=initrd-release
+    local dir=$1  sudo=$2  name=initrd_release
     [[ ${#dir} -eq 0 ]] && fatal "Empty directory passed to write_initrd_version()"
 
     local DISTRO_BASE="antiX"
@@ -2680,7 +2680,7 @@ Initrd_Version
 
     else
 
-        cat << Initrd_Version | $sudo tee $dir/etc/initrd-release
+        cat << Initrd_Version | $sudo tee $dir/etc/initrd_release
 NAME="$DISTRO_NAME"
 VERSION="$DISTRO_VERSION ($CODE_NAME)"
 ID="$(echo $DISTRO_NAME | tr 'A-Z' 'a-z')"

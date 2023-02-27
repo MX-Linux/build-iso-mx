@@ -251,9 +251,9 @@ main() {
     shout "Starting %s at %s" "$(pqb $ME)" "$(pqb $(date))"
 
     # Read in the CONF_DISTRO from /usr/share/antiX/bootloader-data or from
-    # /etc/initrd-release
+    # /etc/initrd_release
     [[ -z $CONF_DISTRO ]] && get_conf_distro /usr/share/antiX/bootloader-data DISTRO_NAME
-    [[ -z $CONF_DISTRO ]] && get_conf_distro /etc/initrd-release              NAME
+    [[ -z $CONF_DISTRO ]] && get_conf_distro /etc/initrd_release              NAME
 
     : ${CONF_DISTRO:=$DEF_CONF_DISTRO}
 
@@ -405,7 +405,7 @@ main() {
 #==============================================================================
 
 #------------------------------------------------------------------------------
-# Try to guess the CONF_DISTRO based on the contents of /etc/initrd-release
+# Try to guess the CONF_DISTRO based on the contents of /etc/initrd_release
 # Perhaps switch to /usr/share/antiX/bootloader-data when that's availabe.
 #------------------------------------------------------------------------------
 get_conf_distro() {
