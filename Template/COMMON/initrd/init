@@ -26,8 +26,8 @@
 # that you don't want users to be able to adjust.
 
                      ME="initrd init"
-                VERSION="8.30.14-x13"
-           VERSION_DATE="Mon, 30 Jan 2023 20:35:06 -0500"
+                VERSION="8.30.14-x14"
+           VERSION_DATE="Mon, 27 Feb 2023 07:46:20 -0500"
               DEVELOPER="BitJam"
          BUG_REPORT_URL="liveboot@antixlinux.org"
 
@@ -224,7 +224,10 @@ main_wrapper() {
 
     make_nodes /dev
 
-    read_distro_release /etc/initrd-release
+    local initrd_release=/etc/initrd_release
+    [ -r $initrd_release ] || initrd_release=/etc/initrd-release
+
+    read_distro_release $initrd_release
     : ${DISTRO_BUG_REPORT_URL:=$BUG_REPORT_URL}
     : ${DISTRO_NAME:=antiX}
     : ${DISTRO_BASE:=$DISTRO_NAME}
@@ -4659,8 +4662,8 @@ prog_copy() {
     # Enable cursor
     printf "\e[?25h"
 
-    [ "$dirty_bytes" -ne 0 ] && echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
-    [ "$dirty_ratio" -ne 0 ] && echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
+    [ ${dirty_bytes:-0} -gt 0 ] 2>/dev/null && echo $dirty_bytes > /proc/sys/vm/dirty_bytes
+    [ ${dirty_ratio:-0} -gt 0 ] 2>/dev/null && echo $dirty_ratio > /proc/sys/vm/dirty_ratio
 
     # Use err_file as a semaphore from (...)& process
     if test -e $err_file; then
@@ -4738,8 +4741,8 @@ prog_dd() {
     # Enable cursor
     printf "\e[?25h"
 
-    echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
-    echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
+    [ ${dirty_bytes:-0} -gt 0 ] 2>/dev/null && echo $dirty_bytes > /proc/sys/vm/dirty_bytes
+    [ ${dirty_ratio:-0} -gt 0 ] 2>/dev/null && echo $dirty_ratio > /proc/sys/vm/dirty_ratio
 
     # Use err_file as a semaphore from (...)& process
     if test -e $err_file; then

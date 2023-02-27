@@ -365,7 +365,9 @@ verbose_progress() {
 # is cached.
 #------------------------------------------------------------------------------
 get_welcome_msg() {
-    read_distro_release /etc/initrd-release
+    local initrd_release=/etc/initrd_release
+    [ -r $initrd_release ] || initrd_release=/etc/initrd-release
+    read_distro_release $initrd_release
     : ${DISTRO_BUG_REPORT_URL:=$BUG_REPORT_URL}
     : ${DISTRO_NAME:=antiX}
     : ${DISTRO_PRETTY_NAME:=antiX-17 (generic)}
@@ -890,8 +892,8 @@ prog_dd() {
 
     sync ; sync
 
-    echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
-    echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
+    [ ${dirty_bytes:-0} -gt 0 ] 2>/dev/null && echo $dirty_bytes > /proc/sys/vm/dirty_bytes
+    [ ${dirty_ratio:-0} -gt 0 ] 2>/dev/null && echo $dirty_ratio > /proc/sys/vm/dirty_ratio
 
     log_it 'text_progress done'
 
@@ -950,8 +952,8 @@ prog_copy() {
 
     sync ; sync
 
-    echo $dirty_bytes >> /proc/sys/vm/dirty_bytes
-    echo $dirty_ratio >> /proc/sys/vm/dirty_ratio
+    [ ${dirty_bytes:-0} -gt 0 ] 2>/dev/null && echo $dirty_bytes > /proc/sys/vm/dirty_bytes
+    [ ${dirty_ratio:-0} -gt 0 ] 2>/dev/null && echo $dirty_ratio > /proc/sys/vm/dirty_ratio
 
     # Use err_file as a semaphore from (...)& process
     if test -e $err_file; then

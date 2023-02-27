@@ -150,9 +150,10 @@ do_start() {
         done
     fi
 
-    if [ ${#DISTRO} = 0 -a -r /etc/initrd-release ]; then
-        DISTRO="$(sed -n 's/^NAME="//' /etc/initrd-release)"
-        DISTRO=${DISTRO%\"}
+    local initrd_release=/etc/initrd_release
+    [ -r $initrd_release ] || initrd_release=/etc/initrd-release
+    if [ ${#DISTRO} = 0 -a -r $initrd_release ]; then
+        DISTRO=$(sed -n "/^NAME=/{s///; s/[\x22']//g; s/[[:space:]]*$//; p;q}" $initrd_release)
     fi
 
     if [ -z "$DISTRO_BASE" ] && [ -n "$DISTRO" ] ; then
@@ -597,7 +598,7 @@ XKBOPTIONS="${XKBOPTIONS:=$default_xkb_opts}"
 
 BACKSPACE="guess"
 Keyboard_Out
-    
+
     # feh: need re-set console keyboard for password prompt
     echo_live "CONSOLE KEYMAP: $(pquote $kb_file)"
     # suppress "ugly" warnings due to an old, known but never fixed German keysym issue
@@ -1189,7 +1190,7 @@ create_home() {
     echo_live "$_Populating_X_directory_" $(pquote $home)
     mkdir -p $home
     cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found"
-    
+
     local uid_gid=$(getent passwd $user | cut -d: -f3,4)
     chown -R $uid_gid $home
 }
