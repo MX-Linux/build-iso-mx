@@ -11,7 +11,7 @@ DISTRO_VERSION="23_KDE"
 
 # kernel
 # ahs
-K_REVISION="5"
+K_REVISION="6"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="6.1.0"
 #UNSIGNED="-unsigned"
