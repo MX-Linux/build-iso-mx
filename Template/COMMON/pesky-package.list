@@ -1,4 +1,6 @@
 firmware-ipw2x00 
 udev-modified-init
+plymouth-modified-init
+brightness-modified-init
 cups
 printer-driver-cups-pdf
