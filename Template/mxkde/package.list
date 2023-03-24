@@ -204,7 +204,7 @@ pdfarranger
 peg-e
 phonon-backend-gstreamer-common
 phonon4qt5
-phonon4qt5-backend-vlc
+phonon4qt5-backend-gstreamer
 pinentry-qt
 plasma-dataengines-addons
 plasma-desktop
