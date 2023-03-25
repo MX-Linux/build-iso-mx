@@ -22,8 +22,8 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VERSION="1.99.08"
-VERSION_DATE="May 13, 2022"
+VERSION="1.99.09"
+VERSION_DATE="March 24, 2023"
 
 ME=${0##*/}
 
@@ -301,7 +301,7 @@ main() {
         vexit "No tmpfs mounts were found"
     fi
 
-    [[ $script_dir = $build_dir ]] && no_log_errors=true
+    [[ "$script_dir" == "$build_dir" ]] && no_log_errors=true
 
     printf "\n$bold_co%63s$nc\n" "" | sed 's/ /-/g'  >> $log_file
     echo -e "$ME $ARGS"                              >> $log_file
@@ -369,7 +369,7 @@ main() {
         [[ -n $stats_mode   ]] && do_stats   && exit
         [[ -n $UPDATE_mode  ]] && update_add_remove_lists && exit
 
-        [[ $script_dir = $build_dir && $stage != $chroot_stage ]] \
+        [[ "$script_dir" == "$build_dir" && "$stage" != "$chroot_stage" ]] \
             && fatal "In chroot environment but stage is $(pqw $stage)"
 
         # Set window title (but only in normal modes)
@@ -548,7 +548,6 @@ Remaster_Blurb
            i386) HOST_ARCH=386 ;;
            i486) HOST_ARCH=386 ;;
            i686) HOST_ARCH=386 ;;
-           i686) HOST_ARCH=386 ;;
          x86_64) HOST_ARCH=x64 ;;
               *) error "Cannot detect Host ARCH"
     esac
@@ -556,8 +555,10 @@ Remaster_Blurb
     # Detect kernel if using wildcards
     # This won't work if host is running a different ARCH
     if [[ $K_NAME =~ \* ]]; then
-         [[ $ISO_ARCH == "$HOST_ARCH" ]] && search_for_k_name || error "Not running on the same ARCH as the build, \
+        if [[ $ISO_ARCH == "$HOST_ARCH" ]]; then
+            search_for_k_name || error "Not running on the same ARCH as the build, \
 might want to avoid using wildcards for kernels, otherwise you won't be able to start the build at different steps."
+        fi
     fi
 
     #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
@@ -808,7 +809,7 @@ do_stage_4() {
     _say_ "$num_co===============================================================$nc"
 
     #error-logchecking ASAP so we don't waste user's time
-    [[ $script_dir = $build_dir ]] || fatal "We do not appear to be in a chroot environment"
+    [[ "$script_dir" == "$build_dir" ]] || fatal "We do not appear to be in a chroot environment"
 
     [[ -n $K_NAME ]] || error "No K_NAME specified"
 
@@ -859,15 +860,19 @@ do_stage_4() {
 
     if ! is_antiX; then
         local early_deb
-        for early_deb in $(ls /*${ARCH}.deb 2>/dev/null); do
+        if ls /*${ARCH}.deb >/dev/null 2>&1; then
+            for early_deb in /*${ARCH}.deb; do
+                [[ -f $early_deb ]] || continue
                 say "Install arch deb package $(pq $early_deb)"
-            apt-get install $early_deb && rm $early_deb
-        done
-        for early_deb in $(ls /*all.deb 2>/dev/null); do
-            say "Install all deb package $(pq $early_deb)"
-            apt-get install $early_deb && rm $early_deb
-        done
-        [ -n "$(ls *.deb 2>/dev/null)" ] && rm *.deb
+                apt-get install "$early_deb"; rm "$early_deb"
+            done
+        fi
+        if ls /*all.deb >/dev/null 2>&1; then
+            for early_deb in /*all.deb; do
+                say "Install all deb package $(pq $early_deb)"
+                apt-get install $early_deb; rm $early_deb
+            done
+        fi
     fi
 
     # for 64 bit set multiarch
@@ -904,13 +909,13 @@ do_stage_4() {
         [Dd]efault) say "Will build $(pq default) default locales" ;;
 
          [Ss]ingle) say "Will build $(pq "$LOCALE") locale"
-                    local locale_re=$(echo "$LOCALE" | sed 's/\./\\./g')
+                    local locale_re=${LOCALE//./\.}
                     sed -i -r -e "s/^([a-z])/# \1/" -e "s/^#\s+($locale_re)/\1/" /etc/locale.gen;;
 
                  *) error "Bad ENABLE_LOCALES: $ENABLE_LOCALES"
         esac
 
-        local cnt=$(grep ^[a-zA-Z] /etc/locale.gen | wc -l)
+        local cnt=$(grep -c '^[a-zA-Z]' /etc/locale.gen)
         psay $cnt "There %are now $(pqn %n) locale%s to generate"
         end_part_lax
     fi
@@ -1181,29 +1186,29 @@ do_stage_4() {
 
     check_errors_strict
 
-	if [ is_antiX ]; then
-    	if [[ -n $default_desktop ]] && do_part 19 "!Update SLiM defaults"; then
+    if is_antiX; then
+        if [[ -n $default_desktop ]] && do_part 19 "!Update SLiM defaults"; then
 
-        	if ! test -x $make_xinitrc; then
-            	mkdir -p $(dirname $make_xinitrc)    || my_exit
-            	cp $tools/make-xinitrc $make_xinitrc || my_exit
-        	fi
+            if ! test -x $make_xinitrc; then
+                mkdir -p $(dirname $make_xinitrc)    || my_exit
+                cp $tools/make-xinitrc $make_xinitrc || my_exit
+            fi
 
-        	say "Found desktops $(pq $($make_xinitrc --list))"
+            say "Found desktops $(pq $($make_xinitrc --list))"
 
-        	say "Create .xinitrc in /etc/skel"
-        	$make_xinitrc "$default_desktop" > /etc/skel/.xinitrc \
-            	|| error "Failed to create/update .xinitrc file"
+            say "Create .xinitrc in /etc/skel"
+                $make_xinitrc "$default_desktop" > /etc/skel/.xinitrc \
+                || error "Failed to create/update .xinitrc file"
 
-        	if [[ -e /etc/slim.conf ]]; then
-            	say "Update /etc/slim.conf"
-            	$make_xinitrc --slim || error "Failed to update slim.conf"
-        	fi
+            if [[ -e /etc/slim.conf ]]; then
+                say "Update /etc/slim.conf"
+                $make_xinitrc --slim || error "Failed to update slim.conf"
+            fi
 
-        	end_part_strict
-    	else
-        	skip_part 19 "Update SLiM defaults"
-    	fi
+            end_part_strict
+        else
+            skip_part 19 "Update SLiM defaults"
+        fi
     fi
 
     if is_antiX; then
@@ -1423,7 +1428,7 @@ do_stage_5() {
         if [[ $FLAV = "core" ]] && is_antiX; then
             local if_file=$sqfs_dir/etc/network/interfaces
             if ! grep -q eth0 $if_file; then
-                say "Adding eth0 entry to $(pq ${if_file#$sqfs_dir})"
+                say "Adding eth0 entry to $(pq ${if_file#"$sqfs_dir"})"
                 cat <<Eth0_entry | $SUDO tee -a $if_file >/dev/null
 
 # The primary network interface
@@ -1934,7 +1939,7 @@ leave_stage() {
 
 mount_tmpfs() {
     local dir=${1:-$sqfs_dir}
-    local needed=$((($TMPFS_SIZE * $(gather_cnt package))/ 10 ))
+    local needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
     local name=$(basename $dir)
 
     [[ -n $dir ]] || fatal "Can't mount_tmpfs() without a directory specified"
@@ -2004,7 +2009,7 @@ find_all_tmpfs() {
         mountpoint -q $dir   || continue
         type=$(df -Tm $dir | awk '{type=$2} END {print type}')
         [[ $type = tmpfs ]]  || continue
-        name=${dir#$remaster_dir/work/}
+        name=${dir#"$remaster_dir"/work/}
         echo ${name%/squashfs}
     done
 }
@@ -2099,10 +2104,10 @@ _check_errors_() {
     while true; do
 
         if [[ -n $regex ]]; then
-            errors=$(tail -n +$ERROR_OFFSET $err_file | egrep $flag "($regex)" | egrep -v "^\s*$")
+            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -E $flag "($regex)" | grep -Ev "^\s*$")
 
         elif [[ $type = STRICT ]]; then
-            errors=$(tail -n +$ERROR_OFFSET $err_file | egrep -v $flag "^\s*$")
+            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -Ev $flag "^\s*$")
         fi
 
         [[ -z $errors ]] && check_errors_reset && return
@@ -2254,7 +2259,7 @@ end_part_strict() {
 }
 
 show_tmpfs_and_mem() {
-    [[ -n $do_fast && $stage = $chroot_stage ]] || return
+    [[ -n $do_fast && "$stage" == "$chroot_stage" ]] || return
     local  used=$(df -m / 2>/dev/null | awk '{used=$3}  END {print used}')
     local total=$(df -m / 2>/dev/null | awk '{total=$2} END {print total}')
     say_fmt "tmpfs used"   $used
@@ -2297,7 +2302,7 @@ list_newer_procs() {
 }
 
 my_ps() {
-    local pids=$(echo $1 | sed 's/\s\+/,/g')
+    local pids=${1//[[:space:]]/,}
     [[ -n $pids ]] || return
     ps -o "$PS_FORMAT" -p ${pids#,} | sed -e "1 s/^/$text_co/" -e "1 s/$/$nc/"
 }
@@ -2484,7 +2489,7 @@ collect_live_files() {
     local file dest
     for file in $list; do
         test -e $file || continue
-        dest_file=${file#$sqfs_dir}
+        dest_file=${file#"$sqfs_dir"}
         dest=$dest_dir$dest_file
         $SUDO mkdir -p $(dirname $dest)
         $SUDO cp -a $file $dest
@@ -2591,7 +2596,7 @@ copy_second_kernel() {
     local version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
     local version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | grep -v "^$version_0$")
 
-    case $(echo -n "$version_1" | grep . | wc -l) in
+    case $(echo -n "$version_1" | grep -c .) in
         0) return ;;
         1)        ;;
         2) echo "$version_1"
@@ -2662,13 +2667,13 @@ write_initrd_release() {
 
     : ${ASCII_CODE_NAME:=$(echo $CODE_NAME | utf8_to_ascii)}
 
-    if [[ $ASCII_CODE_NAME != $CODE_NAME ]]; then
+    if [[ $ASCII_CODE_NAME != "$CODE_NAME" ]]; then
 
         cat << Initrd_Version | $sudo tee $file1
 NAME="$DISTRO_NAME"
 VERSION="$DISTRO_VERSION ($CODE_NAME)"
 ASCII_VERSION="$DISTRO_VERSION ($ASCII_CODE_NAME)"
-ID="$(echo $DISTRO_NAME | tr 'A-Z' 'a-z')"
+ID="$(echo $DISTRO_NAME | tr '[:upper:]' '[:lower:]')"
 VERSION_ID="$(echo $DISTRO_VERSION | sed -r 's/^([0-9._-]+).*/\1/')"
 PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($CODE_NAME)"
 ASCII_PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($ASCII_CODE_NAME)"
@@ -2683,7 +2688,7 @@ Initrd_Version
         cat << Initrd_Version | $sudo tee $dir/etc/initrd_release
 NAME="$DISTRO_NAME"
 VERSION="$DISTRO_VERSION ($CODE_NAME)"
-ID="$(echo $DISTRO_NAME | tr 'A-Z' 'a-z')"
+ID="$(echo $DISTRO_NAME | tr '[:upper:]' '[:lower:]')"
 VERSION_ID="$(echo $DISTRO_VERSION | sed -r 's/^([0-9._-]+).*/\1/')"
 PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($CODE_NAME)"
 ANSI_COLOR="0;34"
@@ -2723,7 +2728,7 @@ busybox_depmod() {
     touch $proc_dir/modules
 
     fake_dir=$mod_dir/$(uname -r)
-    if [[ $fake_dir != $k_dir ]]; then
+    if [[ $fake_dir != "$k_dir" ]]; then
         ln -s $kernel $fake_dir || error "Error creating $fake_dir symlink"
         to_delete="$fake_dir $to_delete"
     fi
@@ -2921,10 +2926,10 @@ copy_theme_dir() {
 #------------------------------------------------------------------------------
 umount_chroot() {
     for mp in $(mount | cut -d" " -f3 | grep "^$remaster_dir/work/.*/squashfs/"); do
-        local name=${err_co}chroot:$bold_co${mp##$remaster_dir/*/squashfs}
+        local name=${err_co}chroot:$bold_co${mp##"$remaster_dir"/*/squashfs}
 
         # Don't umount the tmpfs
-        [[ $mp = $sqfs_dir ]] && continue
+        [[ $mp == "$sqfs_dir" ]] && continue
 
         $SUDO umount -l $mp 2>/dev/null
 
@@ -3038,7 +3043,7 @@ str_len() {
 
 short_dir() {
     local dir=$1  pre=${2:-$script_dir}
-    echo $dir | sed "s=^$pre/=="
+    echo "${dir#"$pre"/}"
 }
 
 
@@ -3132,15 +3137,10 @@ _cache_() {
         say "Found cache $(pq $name$ext)"
         YES_no "restore from this cache" || return 1
 
-        if [[ -d $dir && -n $(ls -A $dir) ]]; then
+        if [[ -d "$dir" && $(find "$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) ]]; then
             say "Clear out existing files"
-
-            local d
-            for d in $(ls -A $dir); do
-                $SUDO rm -rf $dir/$d
-            done
+            find "$dir" -mindepth 1 -delete
         fi
-
         mkdir -p $dir
 
         say "Restore $(pq $type $subtype) from cache"
@@ -3244,8 +3244,8 @@ cmd() {
 plural() {
     local n=$1 str=$2
     case $n in
-        1) local s=  ies=y   are=is   were=was  es=;;
-        *) local s=s ies=ies are=are  were=were es=es;;
+        1) local s='' ies=y   are=is   were=was  es=;;
+        *) local s=s  ies=ies are=are  were=were es=es;;
     esac
     echo "$str" | sed -e "s/%s\>/$s/g" -e "s/%ies\>/$ies/g" \
         -e "s/%are\>/$are/g" -e "s/%n\>/$n/g" -e "s/%were\>/$were/g" \
@@ -3349,12 +3349,13 @@ expand_parts() {
 }
 
 expand_range() {
-    echo $(_expand_range_ $1) | sed 's/ /,/g'
+    local range="$(_expand_range_ "$1")"
+    echo "${range// /,}"
 }
 
 _expand_range_() {
-    for p in $(echo $1 | sed 's/,/ /g'); do
-        if ! echo $p | egrep -q "^[0-9]+-[0-9]+$"; then
+    for p in ${1//,/ }; do
+        if ! echo $p | grep -Eq "^[0-9]+-[0-9]+$"; then
             echo "$p"
             continue
         fi
@@ -3446,15 +3447,18 @@ update_default() {
         read value
         echo
         : ${value:=$orig_val}
-        echo "$value" | grep -q '["\\$]' && warn "Removing [\"\\\$] characters"
-        value=$(echo "$value" | sed 's/["\$]//g')
+        if echo "$value" | grep -q '["\\$]'; then
+            warn "Removing [\"\\\$] characters"
+            # Remove all occurrences of " \ $
+            value=${value//['"\$']/}
+        fi
         if [[ -z $value ]]; then
             echo "Empty values are not allowed without an existing default."
             continue
         fi
         YES_no "Is \"$(pq "$value")\" correct" && break
     done
-    [[ $value != $orig_val ]] && update_default_file $var "$value"
+    [[ $value != "$orig_val" ]] && update_default_file $var "$value"
 }
 
 
@@ -3622,7 +3626,7 @@ do_stats() {
 
     local regex="core|base|full"
     ! is_antiX && regex="$regex|mx32|mx64|mxahs|mxkd"
-    for FLAV in $(flavour_list | egrep -v "^($regex)$"); do
+    for FLAV in $(flavour_list | grep -Ev "^($regex)$"); do
         for ISO_RESPIN_OF in core full; do
             yell "\n$FLAV/$ISO_RESPIN_OF$high_co:"
             do_one_stat
@@ -3645,7 +3649,7 @@ do_one_stat() {
     else
         gather_say package            "    $(pqn %3d) antiX                package%s"
     fi
-    local needed=$((($TMPFS_SIZE * $(gather_cnt package))/ 10 ))
+    local needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
     say "$(printf "size of tmps: $(pqn %6d) meg\n" $needed)"
 }
 
@@ -3702,7 +3706,7 @@ on_exit() {
 
     test -n $DID_WINDOW_TITLE &&  echo -ne "\e]0;\a"
 
-    et=$((-$MAIN_T + $(date +%s)))
+    et=$((-MAIN_T + $(date +%s)))
     if test $et -ge 30; then
     #if [[ -n $STAGE_1_T && -n $STAGE_6_T ]]; then
         _end_timer_ MAIN_T "$ME $ARCH $FLAV"
@@ -3768,7 +3772,7 @@ _gather_() {
 
     for dir in $(flav_dirs); do
         test -r $dir/$file || continue
-        cat $dir/$file | grep -v "^\s*#" | sed 's/\s*#.*//' | grep [a-zA-Z0-9]
+        sed '/^\s*#/d; s/\s*#.*//' $dir/$file | grep '[a-zA-Z0-9]'
     done
 }
 
@@ -3804,7 +3808,9 @@ flav_dirs() {
     echo " " $dir/*-AND-$respin-AND-* $dir/$flav
 }
 
-flavour_list() { ls $template | grep  "^[a-z0-9_]\+$" ;}
+flavour_list() {
+    find "$template" -maxdepth 1 -type d -name '[a-z0-9_]*' -printf '%f\n'
+}
 
 #------------------------------------------------------------------------------
 # compile_pkg_list package-list exclude-list
@@ -3882,9 +3888,9 @@ copy_template_dir() {
 only_overwrite() {
     local from_dir=$1  dest_dir=$2  from  dest
     while read from; do
-        dest=$dest_dir${from#$from_dir}
+        dest=$dest_dir${from#"$from_dir"}
         test -f $dest || continue
-        echo "  --> ${dest#$dest_dir}"
+        echo "  --> ${dest#"$dest_dir"}"
         $sudo cp -d $from $dest
     done<<Only_Overwrite
 $(find $from_dir -type f -o -type l)
@@ -3895,7 +3901,7 @@ update_add_remove_lists() {
     local flav dir fname file pkgs
     local date=$(date +"%e %B, %Y")
 
-    for flav in $(ls $template); do
+    for flav in $(flavour_list); do
         dir=$template/$flav
         [[ -d $dir ]] || continue
         for fname in remove.list add.list; do
@@ -3941,7 +3947,7 @@ update_remove_list() {
             short=$tflav/$tname.list
             [[ -e $tfile ]] || continue
             for p in $pkgs; do
-                preg=$(echo $p | sed 's/\+/\\+/g')
+                preg=${p//+/\\+}
                 regex="^\s*$preg\s*\\(#\|$\)"
                 grep -q "$regex" $tfile || continue
                 if YES_no "Remove package $(pq $p) from $short"; then
@@ -4057,10 +4063,10 @@ update_list_names() {
     YES_no_loud "Rename these files?" || vexit "Must update to continue"
 
     for old in $list; do
-        new=$(echo $old | sed 's/-list$/.list/')
-        [[ -n $new ]] || next
+        new=${old/-list/.list}
+        [[ -n $new ]] || continue
         echo "Renaming $old"
-        mv $old $new
+        mv "$old" "$new"
     done
 }
 
