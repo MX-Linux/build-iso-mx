@@ -4,3 +4,4 @@ plymouth-modified-init
 brightness-modified-init
 cups
 printer-driver-cups-pdf
+grub-files-mx
