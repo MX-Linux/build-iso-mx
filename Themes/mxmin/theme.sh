@@ -7,9 +7,6 @@ start_theme "$@"
 copy_file icons.screen.latest.rc /etc/skel/.config/xfce4/desktop/
 copy_file grub                   /etc/default/
 copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
-copy_file 10_linux              /etc/grub.d/
-copy_file 30_os-prober			/etc/grub.d/
-copy_file 30_uefi-firmware		/etc/grub.d/
 copy_dir desktop-base/          /usr/share/desktop-base/          --create
 copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
