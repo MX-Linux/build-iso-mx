@@ -1178,7 +1178,7 @@ valid_user() {
 # Create the user's home directory and populate it from /etc/skel IF NEEDED!
 #------------------------------------------------------------------------------
 create_home() {
-    local user=$1 home=$2
+    local user=$1 home=$2 permission
 
     if [ "$(ls -A $home 2>/dev/null)" ]; then
         return
@@ -1189,10 +1189,18 @@ create_home() {
 
     echo_live "$_Populating_X_directory_" $(pquote $home)
     mkdir -p $home
-    cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found"
+    cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found
 
     local uid_gid=$(getent passwd $user | cut -d: -f3,4)
     chown -R $uid_gid $home
+    #set permissions to adduser defaults, or 0700 if adduser not defined
+    #get permissions from adduser.conf
+    permission=$(grep ^DIR_MODE /etc/adduser.conf 2>/dev/null |cut -d= -f2)
+    if [ -z $permission ]; then
+    	permission="0700"
+    fi
+    chmod "$permission" $home
+
 }
 
 #------------------------------------------------------------------------------
