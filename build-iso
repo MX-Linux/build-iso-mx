@@ -15,11 +15,11 @@
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 # details.
 #
 # You should have received a copy of the GNU General Public License along with
-# this program.  If not, see <http://www.gnu.org/licenses/>.
+# this program. If not, see <http://www.gnu.org/licenses/>.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 VERSION="1.99.09"
@@ -42,7 +42,7 @@ Options:
     -a --auto           Don't prompt before entering each stage
     -A --AUTO           ... and also clear out most files when done.
     -c --chroot         Enter the chroot environment if it is available
-    -C --COLOR=         Color mode: high|low|off.  Default is high.
+    -C --COLOR=         Color mode: high|low|off. Default is high.
     -d --delete         Delete squashfs dir and stage-?.out files when done
                         without prompting
     -D --DELETE         Also delete entire work directory without prompting
@@ -50,7 +50,7 @@ Options:
     -f --fast           Mount chroot directory as tmpfs for speed
     -F --FAST-UMOUNT    List and optionally umount all our tmpfs mounts
     -h --help           Show this help
-    -i --iso-only       Only build an iso.  Don't create a squashfs file
+    -i --iso-only       Only build an iso. Don't create a squashfs file
     -I --INTERACTIVE    Let Debian ask config questions inside the chroot
     -j --jbb            Suppress voluminous output
        --lz4            Override default compression scheme with lz4
@@ -218,7 +218,7 @@ main() {
         arg=$1; shift
         case $arg in
             [0-8])  start_from=$arg ;;
-                *)  fatal "Bad stage argument: $arg.  Must be [0-8]."
+                *)  fatal "Bad stage argument: $arg. Must be [0-8]."
         esac
     fi
 
@@ -325,7 +325,7 @@ main() {
     # Clear out the did-stage file
     : > $did_stage_file
     # We only advance to the next stage if the previous stages all completed and wrote
-    # stage-N.out output files.  These files are also used for passing information on
+    # stage-N.out output files. These files are also used for passing information on
     # from one stage to the next.
     while true; do
 
@@ -397,14 +397,14 @@ main() {
 
             [[ -e $exit_file ]] && exit $(cat $exit_file)
 
-            # The tee and sed only apply to stdrr.  Stdout goes right through.
+            # The tee and sed only apply to stdrr. Stdout goes right through.
             # This highlights stderr output and stores it in a file which we
             # periodically scan with the check_errors_* routines
             main_case  7>&1 1>&2 2>&7 \
                 | tee -a $err_file | sed -e "s/^/$red/" -e "s/$/$nc/"
 
             # The redirects above cause main_case() to launch in a subshell which
-            # breaks the "exit" command.  This fixes it by using my_exit() which
+            # breaks the "exit" command. This fixes it by using my_exit() which
             # writes $exit_file before exiting
             [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
 
@@ -466,8 +466,8 @@ do_stage_0() {
     if ! [[ -d $remaster_dir ]]; then
         cat << Remaster_Blurb
 
-The "Remaster" directory does not exist.  This is where *.iso files,
-cache files, and intermediate storage will reside.  Think gigabytes.
+The "Remaster" directory does not exist. This is where *.iso files,
+cache files, and intermediate storage will reside. Think gigabytes.
 
 If you want it to be on a different device then exit now and create
 a symlink called "Remaster".
@@ -536,7 +536,7 @@ Remaster_Blurb
     case $ARCH in
          i386) K_ARCH=$distro_k_arch   ; ISO_ARCH=386  ;;
         amd64) K_ARCH=amd64            ; ISO_ARCH=x64  ;;
-            *) error "Invalid ARCH $(pqw $ARCH).  Expected $(pqw i386) or $(pqw amd64)". ;;
+            *) error "Invalid ARCH $(pqw $ARCH). Expected $(pqw i386) or $(pqw amd64)". ;;
     esac
 
     K_NAME=$(echo $K_TEMPLATE | sed \
@@ -702,7 +702,7 @@ do_stage_2() {
 
 #------------------------------------------------------------------------------
 # Stage 3 prepares for running the chroot command for either a Bash shell or
-# for running stage 4 in the chroot.  Much of this functionality is repeated
+# for running stage 4 in the chroot. Much of this functionality is repeated
 # when the --chroot option is used so we put most of the work in prep_chroot().
 #------------------------------------------------------------------------------
 do_stage_3() {
@@ -741,7 +741,7 @@ do_stage_3() {
     fi
     HOST_HOSTNAME=$(hostname)
 
-    local  args
+    local args
     local next_output_file=$sqfs_output_dir/stage-$((stage + 1)).out
 
     [[ -n $interactive     ]] && args="--interactive"
@@ -802,7 +802,7 @@ do_stage_3() {
 
 #-----------------------------------------------------------------------------
 # Stage 4 is the heart of the program. It runs inside the chroot and does most
-# of the tasks needed to convert a debootstrap system into antiX.  Each part
+# of the tasks needed to convert a debootstrap system into antiX. Each part
 # inside here can be controled with the ASK_PART, SKIP_PART, etc environment
 # variables.
 #------------------------------------------------------------------------------
@@ -816,7 +816,7 @@ do_stage_4() {
     [[ -n $K_NAME ]] || error "No K_NAME specified"
 
     if ! [[ -r $manual_selections_template ]]; then
-        say "No $(pq $manual_selections) file found.  Forcing $(pq interactive) mode"
+        say "No $(pq $manual_selections) file found. Forcing $(pq interactive) mode"
         interactive=true
     fi
 
@@ -1675,7 +1675,7 @@ Bootloader_Data
 
         rm -rf $initrd_dir/lib/modules/
 
-        # Note: please use built-in list so we are all in sync.  Thanks!     #anticap
+        # Note: please use built-in list so we are all in sync. Thanks!     #anticap
         $tools/copy-initrd-modules $initrd_encrypt --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
 
         #anticap#$tools/copy-initrd-programs --to $initrd_dir --clean
@@ -2015,7 +2015,7 @@ umount_tmpfs() {
     $SUDO rm -rf $(dirname $dir)/squashfs/*
     $SUDO umount $dir
     mountpoint -q $dir || return
-    warn "name did not simply umount.  Trying -l (lazy option)"
+    warn "name did not simply umount. Trying -l (lazy option)"
     $SUDO umount -l $dir
     mountpoint -q $dir || error "Could not umount $name"
 
@@ -2088,7 +2088,7 @@ kill_chroot_procs() {
 #==============================================================================
 # Error detection on STDERR output
 #
-# All the stderr output ends up in $err_file.  We periodically check this file
+# All the stderr output ends up in $err_file. We periodically check this file
 # for new errors.
 #
 # check_errors_reset()
@@ -2198,13 +2198,13 @@ Join_Lines
 # Time this parts and report how long each one took.
 #
 # Each *_PART variable can contain a comma separated list of part numbers.
-# Return true if this part is supposed to run.  Returns false otherwise.
+# Return true if this part is supposed to run. Returns false otherwise.
 # This is totally controled by the *_PART variables.
 #
-# For example, to only run part 4, set RUN_PART=4 SKIP_PART=a  then part 4
+# For example, to only run part 4, set RUN_PART=4 SKIP_PART=a then part 4
 # will run all all other parts will be skipped.
 #
-# Note that DID_PART is not yet implemented elsewhere.  It could be used to
+# Note that DID_PART is not yet implemented elsewhere. It could be used to
 # make sure each part only runs once.
 #------------------------------------------------------------------------------
 do_part() {
@@ -2268,8 +2268,8 @@ skip_part() {
 
 #------------------------------------------------------------------------------
 # end_part
-# Report timing information about the last part that was run.  Only acts the
-# first time it is called after a do_part() call returns true.  Is disabled if
+# Report timing information about the last part that was run. Only acts the
+# first time it is called after a do_part() call returns true. Is disabled if
 # the previous part title begins with "!" so we don't have to time everything
 # that is controlled by do_part().
 #------------------------------------------------------------------------------
@@ -2366,7 +2366,7 @@ is_zombie_or_kthread() {
 # search_for_k_name
 # Assume K_NAME contains the name of a kernel image with "*" as a wildcard.
 # Use "apt-cache search" to find all kernel images that match the pattern and
-# choose the last one (which should be the highest version).  Set K_NAME to
+# choose the last one (which should be the highest version). Set K_NAME to
 # the specfic kernel we found.
 #------------------------------------------------------------------------------
 search_for_k_name() {
@@ -2376,7 +2376,7 @@ search_for_k_name() {
     local name
     name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
     if [[ -z $name ]]; then
-        warn "No kernel matching $(pqw $K_NAME) found.  Possible kernels:"
+        warn "No kernel matching $(pqw $K_NAME) found. Possible kernels:"
         apt-cache search linux-image-.\*-antix | cut -d" " -f1
         my_exit
     fi
@@ -2800,7 +2800,7 @@ do_chroot() {
 #------------------------------------------------------------------------------
 # mount_deb_cache
 # Bind mount the .deb cache directory outside the chroot so we can reuse all
-# .debs that have been downloaded.  This is MUCH more efficent than simply
+# .debs that have been downloaded. This is MUCH more efficent than simply
 # deleting them.
 #------------------------------------------------------------------------------
 mount_deb_cache() {
@@ -2823,9 +2823,9 @@ bind_mount() {
 
 #------------------------------------------------------------------------------
 # prep_chroot
-# Mount /proc /sys and /var/cache/apt/archives in the chroot.  Offer to also
-# mount /dev if it appears to be empty.  Create and populate the /Build dir
-# in the chroot if it does not already exist.  Otherwise don't touch it.
+# Mount /proc /sys and /var/cache/apt/archives in the chroot. Offer to also
+# mount /dev if it appears to be empty. Create and populate the /Build dir
+# in the chroot if it does not already exist. Otherwise don't touch it.
 #------------------------------------------------------------------------------
 prep_chroot() {
     check_sqfs_dir
@@ -2861,7 +2861,7 @@ prep_chroot() {
 
 #------------------------------------------------------------------------------
 # make_build_dir
-# Create a Build/ subdirectory in the work directory.  Populate it with all
+# Create a Build/ subdirectory in the work directory. Populate it with all
 # the programs and data needed to run ourselves in the chroot environment then
 # move the entire directory into the chroot.
 # Populate it with;
@@ -2960,8 +2960,8 @@ copy_theme_dir() {
 #------------------------------------------------------------------------------
 # umount_chroot
 # Umount all fileystems mounted under any work/squashfs directory under the
-# true Remaster directory.  For each such mountpoint we try umounting it up to
-# four times before giving up.  If any such mountpoint is still a mountpoint
+# true Remaster directory. For each such mountpoint we try umounting it up to
+# four times before giving up. If any such mountpoint is still a mountpoint
 # after four attempts to umount it then we error out at the end of the routine.
 #------------------------------------------------------------------------------
 umount_chroot() {
@@ -2991,7 +2991,7 @@ umount_chroot() {
 
 #------------------------------------------------------------------------------
 # We do this outside of the chroot so we know for sure it is set correctly
-# before running mksquashfs.  We want it to always be local when running in
+# before running mksquashfs. We want it to always be local when running in
 # the chroot and always be the real MIRROR when running mksquashfs.
 #------------------------------------------------------------------------------
 set_chroot_mirror() {
@@ -3046,7 +3046,7 @@ check_sqfs_dir() {
 #------------------------------------------------------------------------------
 # has_word var_name part
 # See if the word "part" is incuded in the comma separated list of words in the
-# variable called "name".  Also return true if the words "a" or "all" are in
+# variable called "name". Also return true if the words "a" or "all" are in
 # the string.
 #------------------------------------------------------------------------------
 has_word() {
@@ -3127,7 +3127,7 @@ elapsed() {
 # create_cache  type subtype dir
 # restore_cache type subtype dir
 #
-# Each cache is identified by "type-subtype".  The purpose of this split is to
+# Each cache is identified by "type-subtype". The purpose of this split is to
 # allow the user to turn caching on and off by type although right now the
 # only type is "debootstrap".
 #
@@ -3284,7 +3284,7 @@ cmd() {
 }
 #------------------------------------------------------------------------------
 # plural cnt string
-# Do simple substition on <string> to match the <cnt>.  May need more entries
+# Do simple substition on <string> to match the <cnt>. May need more entries
 # but the current set suffices for now.
 #------------------------------------------------------------------------------
 plural() {
@@ -3299,8 +3299,8 @@ plural() {
 }
 
 #------------------------------------------------------------------------------
-# A collection of routines to ask Yes/No questions.  The default is in upper
-# case.  The *_loud versions ignore quiet_mode.
+# A collection of routines to ask Yes/No questions. The default is in upper
+# case. The *_loud versions ignore quiet_mode.
 #------------------------------------------------------------------------------
 YES_no()      { _yes_no_  0  0  "(Y/n)"  "$1"; }
 yes_NO()      { _yes_no_  1  1  "(y/N)"  "$1"; }
@@ -3311,8 +3311,8 @@ yes_NO_loud() { _yes_no_ -1  1 "((y/N))" "$1"; }
 #------------------------------------------------------------------------------
 # _yes_no_ quiet_ret default_ret yn_prompt prompt
 # Immediately return quiet_ret if it is greater or equal to zero and we are in
-# quiet_mode.  Return default_ret if the empty string is given and default_ret
-# is greater than or equal to zero.  Otherwise return true on yes and false on
+# quiet_mode. Return default_ret if the empty string is given and default_ret
+# is greater than or equal to zero. Otherwise return true on yes and false on
 # no.
 #------------------------------------------------------------------------------
 _yes_no_() {
@@ -3349,7 +3349,7 @@ Extract_Stages
     cat << Stages_Blurb
 
 There is limited control over running stages with the following environment
-variables.  Each variable can be set to a comma delimited list of stages
+variables. Each variable can be set to a comma delimited list of stages
 it applies to. Put "a" or "all" in a list to have it apply to all stages.
 
 ${text_co}  ASK_STAGE$nc Ask before running stage
@@ -3370,7 +3370,7 @@ Extract_Parts
     cat << Parts_Blurb
 
 The running of each part can be controled by the following environment
-variables.  Each variable can be set to a comma delimited list of parts
+variables. Each variable can be set to a comma delimited list of parts
 it applies to. Put "a" or "all" in a list to have it apply to all parts.
 Ranges are allowed such as in SKIP_PART=1-7,9,11
 
@@ -3418,8 +3418,8 @@ _expand_range_() {
 #==============================================================================
 #------------------------------------------------------------------------------
 # choose prompt var_name choice-1 choice-2 ...
-# Multiple choice.  If the variable is already defined (usually in the DEFAULTS
-# file) then we do nothing.  If the variable is in the DEFAULTS file then offer
+# Multiple choice. If the variable is already defined (usually in the DEFAULTS
+# file) then we do nothing. If the variable is in the DEFAULTS file then offer
 # to update the default in DEFAULTS.
 #------------------------------------------------------------------------------
 choose() {
@@ -3577,10 +3577,10 @@ check_theme_dir() {
 #==============================================================================
 #------------------------------------------------------------------------------
 # clear_outputs [stop_stage]
-# Clear all the output files.  If there is a work directory available, move
-# them there, otherwise, erase them.  Prompt before doing either.  If we are
+# Clear all the output files. If there is a work directory available, move
+# them there, otherwise, erase them. Prompt before doing either. If we are
 # in pretend_mode then say what would happen without doing anything.
-# If stop_stage is provided then we stop after clearing that stage.  Since
+# If stop_stage is provided then we stop after clearing that stage. Since
 # we work in reverse order, this implements a "redo" feature.
 #
 # Return failure only if user says no to clearing files.
@@ -3635,8 +3635,8 @@ my_exit() {
 
 #------------------------------------------------------------------------------
 # do_pretend
-# Report what the next stage to work on would be.  Also display the name of
-# the stage and the global variables (if appropriate).  BUG: there are cases
+# Report what the next stage to work on would be. Also display the name of
+# the stage and the global variables (if appropriate). BUG: there are cases
 # where the globals aren't 100% accurate if redo_mode or start_from are used.
 #------------------------------------------------------------------------------
 do_pretend() {
@@ -3743,7 +3743,7 @@ pretty_output() {
 #==============================================================================
 #------------------------------------------------------------------------------
 # on_exit
-# Used in a trap.  Make sure we umount the chroot bind mounts and clear the
+# Used in a trap. Make sure we umount the chroot bind mounts and clear the
 # window title if it was set.
 #------------------------------------------------------------------------------
 on_exit() {
@@ -3772,7 +3772,7 @@ on_exit() {
 
 #------------------------------------------------------------------------------
 # clear_pids
-# Kill all our background processes.  Currently there is only one.
+# Kill all our background processes. Currently there is only one.
 #------------------------------------------------------------------------------
 clear_pids() {
     for name in TAIL_PID_1 TAIL_PID_2; do
@@ -3809,9 +3809,9 @@ require_programs() {
 #------------------------------------------------------------------------------
 # gather $file-name
 # Collect all the lines in files in the Template from "all", from the specific
-# flavour and from any -AND- directory contain $FLAV.  Sort them and make sure
-# they are all unique.  Primarily used for creating a package.list.  Commented
-# lines and lines without a letter or digit are ignored.  Trailing comments are
+# flavour and from any -AND- directory contain $FLAV. Sort them and make sure
+# they are all unique. Primarily used for creating a package.list. Commented
+# lines and lines without a letter or digit are ignored. Trailing comments are
 # also ignored.
 #------------------------------------------------------------------------------
 
@@ -3881,8 +3881,8 @@ compile_pkg_list() {
 # get_template_file [-e] file-name var-name
 #
 # Fill the variable var-name with the full path to a file in the Template named
-# file-name.  The priority is first from $FLAV/ then $RESPIN_INHERIT/ and then
-# COMMON/.   If -e is given then we error out if the file was not found,
+# file-name. The priority is first from $FLAV/ then $RESPIN_INHERIT/ and then
+# COMMON/. If -e is given then we error out if the file was not found,
 # otherwise we leave the variable untouched.
 #------------------------------------------------------------------------------
 get_template_file() {
