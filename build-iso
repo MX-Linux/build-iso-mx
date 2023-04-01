@@ -33,7 +33,7 @@ ISO_SKIP_STAGE="2-5,7"
 unset ARCH
 
 usage() {
-    cat <<Usage
+    cat << Usage
 Usage: $ME [options] [N]
 
 Build an antiX liveCD/USB iso from scratch using debootstrap.
@@ -464,7 +464,7 @@ do_stage_0() {
 
     # Give user a chance to set up directories the way they want
     if ! [[ -d $remaster_dir ]]; then
-        cat <<Remaster_Blurb
+        cat << Remaster_Blurb
 
 The "Remaster" directory does not exist.  This is where *.iso files,
 cache files, and intermediate storage will reside.  Think gigabytes.
@@ -586,7 +586,7 @@ might want to avoid using wildcards for kernels, otherwise you won't be able to 
         YES_no "Continue anyway" || my_exit 0
     fi
 
-    cat <<Output > $output_file
+    cat << Output > $output_file
 ARCH="$ARCH"
 DEBIAN_RELEASE="$DEBIAN_RELEASE"
 FLAV="$FLAV"
@@ -602,7 +602,7 @@ ISO_RESPIN_OF="$ISO_RESPIN_OF"
 Output
 
     say "Ready to begin creation of $(pq $iso_file)"
-    pretty_output $((stage + 1))  >> $log_file
+    pretty_output $((stage + 1)) >> $log_file
 
     [[ -e $first_time_file ]] && rm -f $first_time_file
 
@@ -1441,7 +1441,7 @@ do_stage_5() {
             local if_file=$sqfs_dir/etc/network/interfaces
             if ! grep -q eth0 $if_file; then
                 say "Adding eth0 entry to $(pq ${if_file#"$sqfs_dir"})"
-                cat <<Eth0_entry | $SUDO tee -a $if_file >/dev/null
+                cat << Eth0_entry | $SUDO tee -a $if_file >/dev/null
 
 # The primary network interface
 allow-hotplug eth0
@@ -1561,7 +1561,7 @@ do_stage_6() {
     say "Fill in bootloader template files"
     local bootloader_data=$output_dir/bootloader-data
     eval local boot_options=\$${DISTRO_NAME}_LIVE_BOOT_OPTIONS
-    cat <<Bootloader_Data > $bootloader_data
+    cat << Bootloader_Data > $bootloader_data
       DISTRO_NAME="$DISTRO_NAME"
    DISTRO_VERSION="$DISTRO_VERSION"
  FULL_DISTRO_NAME="$full_distro_name"
@@ -2181,7 +2181,7 @@ join_lines() {
     while read line; do
         echo -n "$sep$line"
         sep=${2:-,}
-    done <<Join_Lines
+    done << Join_Lines
 $(grep "[^\s]" $file)
 Join_Lines
 
@@ -2670,7 +2670,7 @@ write_version_files() {
     fi
     local linuxfs_version_file=$prefix/etc/live/version/linuxfs.ver
     mkdir -p $(dirname $linuxfs_version_file)
-    cat > $linuxfs_version_file <<Linuxfs_Version
+    cat > $linuxfs_version_file << Linuxfs_Version
 === $rstring
 
 title: $title
@@ -2682,7 +2682,7 @@ Linuxfs_Version
 }
 
 write_version_info() {
-    cat <<Version-Info
+    cat << Version-Info
 Distro name:$DISTRO_NAME
 Version:$DISTRO_VERSION
 antiX flavour:$ISO_FLAV
@@ -2915,7 +2915,7 @@ make_build_dir() {
     [[ -n $THEME ]] && copy_theme_dir $b_dir
 
     # Let chroot user over-ride values set by host system
-    cat <<Env_In > $b_dir/ENV_IN
+    cat << Env_In > $b_dir/ENV_IN
 : \${ASK_PART:=$ASK_PART}
 : \${EXIT_PART:=$EXIT_PART}
 : \${RUN_PART:=$RUN_PART}
@@ -2926,7 +2926,7 @@ Env_In
 
     local lt_blue="\e[1;34m" lt_green="\e[1;32m" lt_red="\e1;31m" nc="\e[0m"
 
-    cat <<Bashrc > $b_dir/bashrc
+    cat << Bashrc > $b_dir/bashrc
 source ~/.bashrc
 alias ls="ls --color=auto -F"
 alias ll="ls --color=auto -lhF"
@@ -2934,7 +2934,7 @@ alias la="ls --color=auto -FA"
 PS1="${lt_blue}chroot${lt_green}>$nc "
 Bashrc
 
-    cat <<Bashrc2 > $b_dir/bashrc2
+    cat << Bashrc2 > $b_dir/bashrc2
 source /Build/bashrc
 PS1="${lt_blue}breakpoint${lt_green}>$nc "
 Bashrc2
@@ -3342,11 +3342,11 @@ show_stages() {
     echo -e "${bold_co}The stages of processsing:$nc\n"
     while read num title; do
         printf " $bold_co%2d$nc. $text_co%s$nc\n" "$num" "$title"
-    done <<Extract_Stages
+    done << Extract_Stages
 $(sed -r -n "s/^\s*enter_stage\s*([0-9]+)\s*\"[!]?([^\"]+)\".*/\1 \2/p" $0)
 Extract_Stages
 
-    cat <<Stages_Blurb
+    cat << Stages_Blurb
 
 There is limited control over running stages with the following environment
 variables.  Each variable can be set to a comma delimited list of stages
@@ -3363,11 +3363,11 @@ show_parts() {
     echo -e "${bold_co}The parts within stage-4:$nc\n"
     while read num title; do
         printf " $bold_co%2d$nc. $text_co%s$nc\n" "$num" "$title"
-    done <<Extract_Parts
+    done << Extract_Parts
 $(sed -r -n 's=^\s.*do_part\s+([0-9]+)\s+"[!]?([^"]+)".*=\1 \2=p' $0)
 Extract_Parts
 
-    cat <<Parts_Blurb
+    cat << Parts_Blurb
 
 The running of each part can be controled by the following environment
 variables.  Each variable can be set to a comma delimited list of parts
