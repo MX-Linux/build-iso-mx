@@ -1887,7 +1887,7 @@ do_stage_9() {
 
     elif [[ -n $delete_mode ]]; then
         say "Delete squashfs directory $(pq $rel_work_dir/squashfs)"
-        $SUDO rm -rf $squashfs_dir
+        $SUDO rm -rf $sqfs_dir
         rm -f $script_dir/squashfs
 
         if yes_NO "Delete everything else in $(pq $rel_work_dir)"; then
@@ -1900,7 +1900,7 @@ do_stage_9() {
         [[ -n $links ]] && rm $links
 
     elif yes_NO "Delete squashfs directory $(pq $rel_work_dir/squashfs)"; then
-        $SUDO rm -rf $squashfs_dir
+        $SUDO rm -rf $sqfs_dir
         rm -f $script_dir/sqfs
     fi
 
