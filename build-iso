@@ -99,12 +99,14 @@ main() {
     local no_log_errors no_check_errors disable_errors do_fast check_tmpfs
     local save_mode jbb_mode
 
-    local script_dir=$(dirname $(readlink -f $0))
+    local script_dir
+    script_dir=$(dirname $(readlink -f $0))
     local template=$script_dir/Template
     local tools=$script_dir/Tools
     local output_dir=$script_dir/Output
     local input_dir=$script_dir/Input
-    local remaster_dir=$(readlink -f $script_dir/Remaster)
+    local remaster_dir
+    remaster_dir=$(readlink -f $script_dir/Remaster)
     local iso_file_dir=$remaster_dir/iso-files
     local deb_cache_dir=$remaster_dir/deb-cache/archives
     local manual_selections=manual-selections
@@ -137,7 +139,9 @@ main() {
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
     # Need the leading space to prevent echo from swallowing -e or -E
-    local arg val ARGS=$(echo " $*")
+    local arg val ARGS
+    ARGS=$(echo " $*")
+
     while [[ $# -gt 0 && $1 =~ ^- ]]; do
         arg=${1#-}; shift
 
@@ -227,7 +231,8 @@ main() {
     [[ -n $reset_mode ]] && : ${start_from:=0}
     [[ -n $iso_only   ]] && SKIP_STAGE="$SKIP_STAGE${SKIP_STAGE:+,}$ISO_SKIP_STAGE"
 
-    local e=$(printf "\e")
+    local e
+    e=$(printf "\e")
     case $color_mode in
      high|hi|"") color_mode="high" ;;
          low|lo) color_mode="low"  ;;
@@ -242,7 +247,8 @@ main() {
     local  high_co
 
     if [[ $color_mode != "off" ]]; then
-        local  e=$(printf "\e")
+        local e
+        e=$(printf "\e")
           black="$e[0;30m";     blue="$e[0;34m";      green="$e[0;32m";
            cyan="$e[0;36m";      red="$e[0;31m";     purple="$e[0;35m";
           brown="$e[0;33m";  lt_gray="$e[0;37m";    dk_gray="$e[1;30m";
@@ -660,14 +666,15 @@ do_stage_2() {
 
         gather_say exclude "Exclude $(pqn %n) package%s"
 
-        local args="--arch=$ARCH"
-        local exclude_list=$(gather_join exclude-debootstrap)
-        local include_list=$(gather_join include-debootstrap)
-        local keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
+        local args exclude_list include_list keyring url
+        args="--arch=$ARCH"
+        exclude_list=$(gather_join exclude-debootstrap)
+        include_list=$(gather_join include-debootstrap)
+        keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
         [[ -n $exclude_list ]] && args="$args --exclude=$exclude_list"
         [[ -n $include_list ]] && args="$args --include=$include_list"
         [[ -r $keyring ]] && args="$args --keyring=$keyring"
-        local url="$(eval echo $MIRROR_URL_TEMPLATE)"
+        url="$(eval echo $MIRROR_URL_TEMPLATE)"
 
         check_errors_strict
         start_timer
@@ -847,7 +854,8 @@ do_stage_4() {
 
     if [[ -s $partial_file ]]  \
         && do_part 0 "!Read PARTIAL file to skip parts done"; then
-        local add_skip=$(join_lines $partial_file ",")
+        local add_skip
+        add_skip=$(join_lines $partial_file ",")
         say "have already processed these parts: $(pq $add_skip)"
         if YES_no "Skip these parts this time"; then
             SKIP_PART="$SKIP_PART${SKIP_PART:+,}$add_skip"
@@ -915,7 +923,8 @@ do_stage_4() {
                  *) error "Bad ENABLE_LOCALES: $ENABLE_LOCALES"
         esac
 
-        local cnt=$(grep -c '^[a-zA-Z]' /etc/locale.gen)
+        local cnt
+        cnt=$(grep -c '^[a-zA-Z]' /etc/locale.gen)
         psay $cnt "There %are now $(pqn %n) locale%s to generate"
         end_part_lax
     fi
@@ -972,8 +981,9 @@ do_stage_4() {
         end_part_lax
     fi
 
-    local debs=$(ls $build_dir/Deb/*.deb 2>/dev/null)
-    local cnt=$(echo "$debs" | wc -w)
+    local debs cnt
+    debs=$(ls $build_dir/Deb/*.deb 2>/dev/null)
+    cnt=$(echo "$debs" | wc -w)
     if [[ $cnt -gt 0 ]] \
         && do_part 10 "Install latest antiX debs"; then
         psay $cnt "Install $(pqn %n) .deb package%s"
@@ -1080,7 +1090,8 @@ do_stage_4() {
     if [[ -n $interactive ]] &&  do_part 16 "Manual configuration"; then
 
         say "Manual configuration"
-        local save_cnt=$(gather_cnt save-selections)
+        local save_cnt
+        save_cnt=$(gather_cnt save-selections)
         psay $save_cnt "Save selections from $(pqn %n) package%s"
         local package package_re
         for package in $(gather save-selections); do
@@ -1088,7 +1099,8 @@ do_stage_4() {
             package_re=$package_re^$package
         done
 
-        local reconfig_cnt=$(gather_cnt reconfigure)
+        local reconfig_cnt
+        reconfig_cnt=$(gather_cnt reconfigure)
         psay $reconfig_cnt "Reconfigure $(pqn %n) package%s"
 
         if [[ $reconfig_cnt -gt 0 ]] && YES_no "Are you ready"; then
@@ -1111,8 +1123,9 @@ do_stage_4() {
     else
         skip_part 16 "Manual configuration"
         _say_
-        local reconfigure=$(cut -f1 $manual_selections_template | cut -d: -f1 | sort -u)
-        local cnt=$(echo "$reconfigure" | wc -w)
+        local reconfigure cnt
+        reconfigure=$(cut -f1 $manual_selections_template | cut -d: -f1 | sort -u)
+        cnt=$(echo "$reconfigure" | wc -w)
         psay $cnt "Automatic reconfiguration of $(pqn %n) package%s"
         for package in $reconfigure; do
             dpkg-reconfigure -f noninteractive $package
@@ -1139,11 +1152,13 @@ do_stage_4() {
             hostname -F /etc/hostname
         fi
 
-        local user=${LIVE_USER:-demo}
+        local user
+        user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
             say "Set up live user account $(pq $user)"
             grep -q "^$user:" /etc/group || groupadd $user
-            local user_pw=$(mkpasswd -m sha-512 $user)
+            local user_pw
+            user_pw=$(mkpasswd -m sha-512 $user)
             useradd -s ${ISO_SHELL:="/bin/bash"} -g $user -d /home/$user -p $user_pw $user
         fi
 
@@ -1159,7 +1174,8 @@ do_stage_4() {
         done
 
         say "Set root password"
-        local root_pw=$(mkpasswd -m sha-512 root)
+        local root_pw
+        root_pw=$(mkpasswd -m sha-512 root)
         usermod -p $root_pw root
 
         end_part_strict
@@ -1309,8 +1325,9 @@ apply_theme() {
     local theme=${1:-$THEME}
     [[ $theme = none ]] && return
 
-    local t_dir=$theme_dir/$THEME
-    local short_t=$(short_dir $t_dir)
+    local t_dir short_t script
+    t_dir=$theme_dir/$THEME
+    short_t=$(short_dir $t_dir)
     [[ ! -d $t_dir ]] \
         && error "Theme directory $(pq short_t) does not exist" && return
 
@@ -1455,7 +1472,8 @@ Eth0_entry
 
     local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
     local bc_fw_txt=${bc_fw_bin%.bin}.txt
-    local bc_fw_name=$(basename $bc_fw_bin)
+    local bc_fw_name
+    bc_fw_name=$(basename $bc_fw_bin)
 
     if test -e $bc_fw_bin && ! test -e $bc_fw_txt; then
         say "Linking to $(pq $bc_fw_name)"
@@ -1749,12 +1767,14 @@ do_stage_7() {
 #also capture uncompressed filesystem output into a variable and place that in a file in the SQFILE_DIR location
 
     local output="/tmp/mksquash_output"
-    local UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
+    local UNCOMPRESSEDSIZE_FILE UNCOMPRESSEDSIZE
+    UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE | tee $output
-    local UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
+    UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm "$output"
-    local size=$(du_size $linuxfs_file)
+    local size
+    size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
 
@@ -1782,8 +1802,9 @@ do_stage_8() {
 
     start_timer
 
-    local file_dir="$full_iso_file $iso_dir"
-    local chown_opts="-uid 0 -gid 0"
+    local file_dir chown_opts
+    file_dir="$full_iso_file $iso_dir"
+    chown_opts="-uid 0 -gid 0"
     say "Using $(pq $(basename $MAKE_ISO)) to make iso file"
     if [[ -z ${MAKE_ISO%%*xorriso} ]]; then
         $SUDO chown -R root:root $iso_dir
@@ -1859,7 +1880,8 @@ do_stage_9() {
     umount_tmpfs
     clear_outputs
 
-    local rel_work_dir=Remaster/work/$(basename $work_dir)
+    local rel_work_dir
+    rel_work_dir=Remaster/work/$(basename $work_dir)
     if [[ -n $delete_all ]]; then
         say "Delete entire work directory $(pq $rel_work_dir)"
         $SUDO rm -rf $work_dir
@@ -1938,9 +1960,10 @@ leave_stage() {
 #==============================================================================
 
 mount_tmpfs() {
-    local dir=${1:-$sqfs_dir}
-    local needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
-    local name=$(basename $dir)
+    local dir needed name
+    dir=${1:-$sqfs_dir}
+    needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
+    name=$(basename $dir)
 
     [[ -n $dir ]] || fatal "Can't mount_tmpfs() without a directory specified"
 
@@ -1979,8 +2002,9 @@ mount_tmpfs() {
 }
 
 umount_tmpfs() {
-    local dir=${1:-$sqfs_dir}
-    local name=$(basename $dir)
+    local dir name
+    dir=${1:-$sqfs_dir}
+    name=$(basename $dir)
 
     [[ -n $dir ]] || fatal "Can't umount_tmpfs() without a directory specified"
 
@@ -2015,10 +2039,10 @@ find_all_tmpfs() {
 }
 
 check_all_tmpfs() {
-    local name dir used size
-    local all_tmpfs=$(find_all_tmpfs)
+    local name dir used size all_tmpfs cnt
+    all_tmpfs=$(find_all_tmpfs)
     [[ -n $all_tmpfs ]] || return 1
-    local cnt=$(echo "$all_tmpfs" | wc -w)
+    cnt=$(echo "$all_tmpfs" | wc -w)
     psay $cnt "Found $(pqn %n) tmpfs mount point%s"
 
     for name in $all_tmpfs; do
@@ -2043,19 +2067,22 @@ check_all_tmpfs() {
 
 display_tmpfs() {
     local name=$1
-    local fmt="    $high_co%-35s $(pqn %6s)/$(pqn %s) meg$nc\n"
-    local dir=$remaster_dir/work/$name/squashfs
-    local sizes=$(df -m $dir | awk '{size=$2; used=$3} END {print used " " size}')
+    local fmt dir sizes
+    fmt="    $high_co%-35s $(pqn %6s)/$(pqn %s) meg$nc\n"
+    dir=$remaster_dir/work/$name/squashfs
+    sizes=$(df -m $dir | awk '{size=$2; used=$3} END {print used " " size}')
     printf "$fmt" "$name" $sizes
 }
 
 kill_chroot_procs() {
-    local pids=$($SUDO lsof | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
+    local pids
+    pids=$($SUDO lsof | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
     if [[ -z $pids ]]; then
         say "No remaining chroot processes found"
         return
     fi
-    local cnt=$(echo "$pids" | wc -l)
+    local cnt
+    cnt=$(echo "$pids" | wc -l)
     psay $cnt "Found $(pqn %n) chroot process%es still running"
     _say_ "$(my_ps "$pids")"
 
@@ -2084,7 +2111,8 @@ kill_chroot_procs() {
 
 check_errors_reset() {
     [[ -e $err_file ]] || touch $err_file
-    local offset=$(cat $err_file 2>/dev/null | wc -l)
+    local offset
+    offset=$(cat $err_file 2>/dev/null | wc -l)
     : ${offset:=0}
     ERROR_OFFSET=$((offset + 1))
     #_say_ "check_errors_reset"
@@ -2112,7 +2140,8 @@ _check_errors_() {
 
         [[ -z $errors ]] && check_errors_reset && return
 
-        local cnt=$(echo "$errors" | wc -l)
+        local cnt
+        cnt=$(echo "$errors" | wc -l)
         if [[ -n $no_check_errors ]]; then
             say "$(plural $cnt "Skipping $(pqn %n) $type error%s")"
             return
@@ -2190,7 +2219,8 @@ do_part() {
     LAST_PART=$part
     _do_part_ || return 1
 
-    local pnum="$(printf "%2d" $part)"
+    local pnum
+    pnum="$(printf "%2d" $part)"
 
     _say_
     _say_ "${bold_co}Part $num_co$pnum$text_co: $ptitle$nc @ $(date +"%F %T %Z")"
@@ -2235,8 +2265,8 @@ _do_part_() {
 }
 
 skip_part() {
-    local part=$1
-    local pnum="$(printf "%2d" $part)"
+    local part=$1 pnum
+    pnum="$(printf "%2d" $part)"
     _say_
     _say_ "Part $pnum: $2 -- skipped --"
 }
@@ -2260,15 +2290,17 @@ end_part_strict() {
 
 show_tmpfs_and_mem() {
     [[ -n $do_fast && "$stage" == "$chroot_stage" ]] || return
-    local  used=$(df -m / 2>/dev/null | awk '{used=$3}  END {print used}')
-    local total=$(df -m / 2>/dev/null | awk '{total=$2} END {print total}')
+    local used total
+    used=$(df -m / 2>/dev/null | awk '{used=$3}  END {print used}')
+    total=$(df -m / 2>/dev/null | awk '{total=$2} END {print total}')
     say_fmt "tmpfs used"   $used
     say_fmt "tmpfs total"  $total
     display_cache_free_swap
 }
 
 _end_part_() {
-    local title="$(echo "$LAST_TITLE" | strip_color)"
+    local title
+    title="$(echo "$LAST_TITLE" | strip_color)"
 
     LAST_TITLE=
     if [[ ! $title =~ ^! ]]; then
@@ -2329,7 +2361,8 @@ display_cache_free_swap() {
 }
 
 is_zombie_or_kthread() {
-    local len=$(wc -c /proc/$pid/cmdline 2>/dev/null) || return 0
+    local len
+    len=$(wc -c /proc/$pid/cmdline 2>/dev/null) || return 0
     [[ -z $len ]]                                     && return 0
     [[ "${len%% *}" = 0 ]]
 }
@@ -2342,9 +2375,11 @@ is_zombie_or_kthread() {
 # the specfic kernel we found.
 #------------------------------------------------------------------------------
 search_for_k_name() {
-    local search_name=$(echo $K_NAME | sed -e "s/\./\\./g" -e "s/\*/[0-9]+/g")
+    local search_name
+    search_name=$(echo $K_NAME | sed -e "s/\./\\./g" -e "s/\*/[0-9]+/g")
     say "Search for kernel matching regex $(pq $K_NAME)"
-    local name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
+    local name
+    name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
     if [[ -z $name ]]; then
         warn "No kernel matching $(pqw $K_NAME) found.  Possible kernels:"
         apt-cache search linux-image-.\*-antix | cut -d" " -f1
@@ -2367,15 +2402,16 @@ check_kernel_gcc() {
     [[ ! -r $vmlinuz ]] \
         && error "Could not find kernel file: $(pqw $kernel)" && return
 
-    local kgcc=gcc-$(vmlinuz_gcc_version $vmlinuz)
+    local kgcc
+    kgcc=gcc-$(vmlinuz_gcc_version $vmlinuz)
 
     [[ $kgcc = gcc- ]] \
         && error "Could not find gcc version for $(pqw $kernel)" && return
 
     say "Kernel $(pq $K_NAME) was compiled with $(pq $kgcc)"
 
-    local kalt=$(echo $kgcc | sed -n -r 's/([0-9]+\.[0-9]+)\.[0-9]+$/\1/p')
-    local gcc
+    local kalt gcc
+    kalt=$(echo $kgcc | sed -n -r 's/([0-9]+\.[0-9]+)\.[0-9]+$/\1/p')
 
     for gcc in $kgcc $kalt; do
         [[  -e $sqfs_dir/usr/bin/$gcc ]] || continue
@@ -2399,13 +2435,14 @@ customize_firefox() {
 }
 
 apt_get_packages() {
-    local file=$1  label=$2
+    local file=$1 label=$2
     shift 2
-    local pkg_list=$(compile_pkg_list $file exclude-chroot)
-    local cnt=$(echo "$pkg_list" | wc -w)
+    local pkg_list cnt msg
+    pkg_list=$(compile_pkg_list $file exclude-chroot)
+    cnt=$(echo "$pkg_list" | wc -w)
     [[ $cnt -eq 0 ]] && return
 
-    local msg=$(plural $cnt "apt-get ${@:$#} $(pqn %n) $label package%s.")
+    msg=$(plural $cnt "apt-get ${@:$#} $(pqn %n) $label package%s.")
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
 
@@ -2420,9 +2457,9 @@ install_packages() {
 }
 
 check_missing() {
-    local pkg missing file=$1  label=$2
-    local pkg_list=$(compile_pkg_list $file exclude-chroot)
-    local cnt=$(echo "$pkg_list" | wc -w)
+    local pkg missing file=$1 label=$2 pkg_list cnt
+    pkg_list=$(compile_pkg_list $file exclude-chroot)
+    cnt=$(echo "$pkg_list" | wc -w)
     [[ $cnt -eq 0 ]] && return
 
     local installed=/Build/installed-$label
@@ -2440,7 +2477,8 @@ check_missing() {
     dpkg --get-selections  >  $installed.raw
     echo -e "$missing"     >  /Build/missing-$label.list
 
-    local mcnt=$(printf "$missing" | wc -w)
+    local mcnt
+    mcnt=$(printf "$missing" | wc -w)
     _say_ "$high_co------------------------------------------------$nc"
     say_in $high_co "$missing"
     #_say_ "$(printf "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
@@ -2477,7 +2515,8 @@ collect_live_files() {
     local list_file=$1 dest_dir=$sqfs_dir$2
     test -r $list_file || return
     echo "Collecting Live-files"
-    local list=$(cat $list_file | grep -v "^\s*#\s*" | sed 's/\s*#.*//' \
+    local list
+    list=$(cat $list_file | grep -v "^\s*#\s*" | sed 's/\s*#.*//' \
         | grep "^/" | sed "s=^=$sqfs_dir=")
     #echo "$list"
 
@@ -2501,13 +2540,13 @@ collect_live_files() {
 #==============================================================================
 
 has_option() {
-    local prog=$1  opt=$2
+    local prog=$1 opt=$2
     $prog --help 2>&1 | grep -q -- "$opt\s"
     return $?
 }
 
 make_uefi_iso() {
-    local prog=$1  uefi=$2  file=$3  dir=$4
+    local prog=$1 uefi=$2  file=$3 dir=$4
     local cmd="$prog -l -V antiXlive -R -J -pad -no-emul-boot
     -boot-load-size 4  -boot-info-table -b boot/isolinux/isolinux.bin
     -eltorito-alt-boot $uefi boot/grub/efi.img -no-emul-boot
@@ -2519,7 +2558,7 @@ make_uefi_iso() {
 }
 
 make_xorriso_iso() {
-    local prog=$1 file=$2  dir=$3
+    local prog=$1 file=$2 dir=$3
     local label="$DISTRO_NAME-Live"
     local opts_1="-hfsplus on -as mkisofs -quiet -l"
 
@@ -2561,7 +2600,8 @@ prep_dir() {
 update_gfxboot_menu() {
     local menu_file=$1 conf_file=$2
     shift 2
-    local subdir=$(basename $(dirname $conf_file))
+    local subdir
+    subdir=$(basename $(dirname $conf_file))
     local menu_string="Function key menu"
     # Insert Function key menu into gfxboot.cfg
     [[ -e $menu_file && -e $conf_file ]] || return
@@ -2593,8 +2633,9 @@ copy_second_kernel() {
     ! test -x "$version_prog" && error "Could not find program $version_prog" && return 1
     ! test -x "$lmk"          && error "Could not find program $lmk"          && return 1
 
-    local version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
-    local version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | grep -v "^$version_0$")
+    local version_0 version_1
+    version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
+    version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | grep -v "^$version_0$")
 
     case $(echo -n "$version_1" | grep -c .) in
         0) return ;;
@@ -2605,7 +2646,8 @@ copy_second_kernel() {
     esac
 
     say "Found 2nd kernel $version_1"
-    local k1=$($version_prog -n $from_dir | grep " $version_1 " | cut -d" " -f1)
+    local k1
+    k1=$($version_prog -n $from_dir | grep " $version_1 " | cut -d" " -f1)
     say "copy $k1 $vmlinuz_1"
     cp $k1 $vmlinuz_1
     (cd $to_dir && md5sum $k1_name > $k1_name.md5)
@@ -2622,7 +2664,8 @@ write_version_files() {
 
     echo "$fancy_name" > $prefix/etc/antix-version
 
-    local rstring=$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
+    local rstring
+    rstring=$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
     local kernels=$K_NAME
     [[ -n $K_NAME2 ]] && kernels="$kernels $K_NAME2"
     local title=$LINUXFS_TITLE
@@ -2843,7 +2886,8 @@ make_build_dir() {
     mkdir $b_dir
 
     mkdir -p $b_dir/Deb
-    local deb_files=$(gather_deb)
+    local deb_files
+    deb_files=$(gather_deb)
     [[ -n $deb_files ]] && cp --target-directory=$b_dir/Deb $deb_files
 
     cp -r $0 Input $tools $regex_files $b_dir
@@ -2911,7 +2955,8 @@ copy_theme_dir() {
         error "Theme directory $(pqw $(short_dir $t_dir)) does not exist"
         return
     fi
-    local b_theme_dir=$b_dir/$(basename $theme_dir)
+    local b_theme_dir
+    b_theme_dir=$b_dir/$(basename $theme_dir)
     mkdir -p $b_theme_dir/$THEME
     cp -a $t_dir/* $b_theme_dir/$THEME/
     cp -a $theme_dir/*.sh $b_theme_dir/
@@ -2984,8 +3029,9 @@ convenience_link() {
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 report_size() {
-    local name=$(basename $1)
-    local size=$(du_size $1)
+    local name size
+    name=$(basename $1)
+    size=$(du_size $1)
     say "size of $name dir: $(pqn $size)"
 }
 
@@ -3037,7 +3083,8 @@ cprint_right() {
 }
 
 str_len() {
-    local msg_nc=$(echo "$*" | sed -r -e 's/\x1b\[[0-9;]+[mK]//g' -e 's/./x/g')
+    local msg_nc
+    msg_nc=$(echo "$*" | sed -r -e 's/\x1b\[[0-9;]+[mK]//g' -e 's/./x/g')
     echo ${#msg_nc}
 }
 
@@ -3060,7 +3107,8 @@ end_timer() {
 }
 
 _end_timer_() {
-    local name=$1 title=$(cprint_left 36 "$2")
+    local name=$1 title
+    title=$(cprint_left 36 "$2")
     eval local start_t=\$$name
     _say_ "${time_co}time for $text_co$title$nc $(pqn "$(elapsed $start_t)")$nc"
 }
@@ -3120,10 +3168,12 @@ _cache_() {
         return $?
     fi
 
-    local short=$(short_dir $cache_dir)
+    local short
+    short=$(short_dir $cache_dir)
     if [[ -n $CACHE_EXPIRE && $CACHE_EXPIRE -gt 0 ]]; then
         #vsay "Find $(pqn $ext) files to expire in $(pq $short)"
-        local expire=$(find $cache_dir -name "*$ext" -ctime +$CACHE_EXPIRE)
+        local expire
+        expire=$(find $cache_dir -name "*$ext" -ctime +$CACHE_EXPIRE)
         for e in $expire; do
             say "Expire:$bold_co $(basename $e $ext)$nc"
         done
@@ -3201,7 +3251,8 @@ pqnw()   { echo  "$num_co$*$bold_co"  ;}
 
 say_fmt() {
     local lab=$1 val=$2
-    local fmt="%15s:$(pqn %5s) meg\n"
+    local fmt
+    fmt="%15s:$(pqn %5s) meg\n"
     say "$(printf "$fmt" "$lab" "$val")"
 }
 
@@ -3349,7 +3400,8 @@ expand_parts() {
 }
 
 expand_range() {
-    local range="$(_expand_range_ "$1")"
+    local range
+    range="$(_expand_range_ "$1")"
     echo "${range// /,}"
 }
 
@@ -3359,8 +3411,9 @@ _expand_range_() {
             echo "$p"
             continue
         fi
-        local first=$(echo $p | cut -d- -f1)
-        local  last=$(echo $p | cut -d- -f2)
+        local first last
+        first=$(echo $p | cut -d- -f1)
+        last=$(echo $p | cut -d- -f2)
         seq $first $last
     done
 }
@@ -3547,7 +3600,8 @@ clear_outputs() {
         names="$names$name\n"
         files="$files $file"
     done
-    local col_names=$(echo -e "$names" | sort | column -c 78 | expand \
+    local col_names
+    col_names=$(echo -e "$names" | sort | column -c 78 | expand \
         | sed -e "s/^/$high_co/" -e "s/$/$nc/")
 
     [[ -n $files ]] || return 0
@@ -3596,7 +3650,8 @@ do_pretend() {
 
     echo "$ME would next do stage: $bold_co$stage$nc"
 
-    local stage_info=$(grep -m 1 "^\s\+enter_stage\s\+$stage" $0\
+    local stage_info
+    stage_info=$(grep -m 1 "^\s\+enter_stage\s\+$stage" $0\
         | sed -r "s/^\s*enter_stage\s*$stage\s*\"[!]?([^\"]+)\".*/    \1/")
 
     [[ -n $stage_info ]] && echo -e "$text_co$stage_info$nc"
@@ -3784,8 +3839,8 @@ gather_any() {
 }
 
 gather_say() {
-    local file=$1  msg=$2
-    local cnt=$(gather_cnt $file)
+    local file=$1 msg=$2 cnt
+    cnt=$(gather_cnt $file)
     psay $cnt "$msg"
 }
 
@@ -3818,11 +3873,11 @@ flavour_list() {
 # Take package-list and remove exclude-list from it
 #------------------------------------------------------------------------------
 compile_pkg_list() {
-    local pkg_list=$(gather $1)
-    local exclude_list=$(gather $2)
-    local result
+    local pkg_list exclude_list result
+    pkg_list=$(gather $1)
+    exclude_list=$(gather $2)
     for i in $pkg_list ; do
-      [[ ! $exclude_list =~ .*$i.* ]] && result="$result $i"
+        [[ ! $exclude_list =~ .*$i.* ]] && result="$result $i"
     done
     echo $result
 }
@@ -3898,8 +3953,8 @@ Only_Overwrite
 }
 
 update_add_remove_lists() {
-    local flav dir fname file pkgs
-    local date=$(date +"%e %B, %Y")
+    local flav dir fname file pkgs date
+    date=$(date +"%e %B, %Y")
 
     for flav in $(flavour_list); do
         dir=$template/$flav
@@ -3960,12 +4015,13 @@ update_remove_list() {
 }
 
 update_add_list() {
-    local p targ_dirs  file=$1  flav=$2  pkgs=$3
-    local tfile=$(dirname $file)/package.list
-    local comment="#-- ADD ($date)"
-    local short=$flav/package.list
+    local p targ_dirs  file=$1  flav=$2  pkgs=$3 tfile comment short
+    tfile=$(dirname $file)/package.list
+    comment="#-- ADD ($date)"
+    short=$flav/package.list
     for p in $pkgs; do
-        local line=$(printf "%-30s $comment" $p)
+        local line
+        line=$(printf "%-30s $comment" $p)
         if YES_no "Add package $(pq $p) to $short"; then
             echo "$line"
             echo "$line" >> $tfile
@@ -3974,17 +4030,23 @@ update_add_list() {
 }
 
 md5sum_file() {
-    local dir=$(dirname $1) file=$(basename $1)
+    local dir file
+    dir=$(dirname $1)
+    file=$(basename $1)
     (cd $dir && md5sum $file > $file.md5)
 }
 
 sha256sum_file() {
-    local dir=$(dirname $1) file=$(basename $1)
+    local dir file
+    dir=$(dirname $1)
+    file=$(basename $1)
     (cd $dir && sha256sum $file > $file.sha256)
 }
 
 zsyncmake_file() {
-    local dir=$(dirname $1) file=$(basename $1)
+    local dir file
+    dir=$(dirname $1)
+    file=$(basename $1)
     (cd $dir && zsyncmake -e $file)
 }
 
@@ -3994,10 +4056,12 @@ zsyncmake_file() {
 make_real() {
     local file=$1
     test -L $file || return
-    local dest=$(readlink -f $file)
+    local dest
+    dest=$(readlink -f $file)
     test -f "$dest" || return
     say "Convert symlink $file to a real file"
-    local tmp=$(mktemp $file.XXXXXXXX)
+    local tmp
+    tmp=$(mktemp $file.XXXXXXXX)
     cp $dest $tmp
     mv $tmp $file
 }
@@ -4056,7 +4120,8 @@ update_template_file() {
 }
 
 update_list_names() {
-    local list=$(find Template -name "*-list")
+    local list
+    list=$(find Template -name "*-list")
     [[ -n $list ]] || return;
     echo "Rename *-list file names to *.list"
 
