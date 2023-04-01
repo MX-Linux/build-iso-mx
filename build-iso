@@ -42,7 +42,7 @@ Options:
     -a --auto           Don't prompt before entering each stage
     -A --AUTO           ... and also clear out most files when done.
     -c --chroot         Enter the chroot environment if it is available
-    -C --color=         Color mode: high|low|off.  Default is high.
+    -C --COLOR=         Color mode: high|low|off.  Default is high.
     -d --delete         Delete squashfs dir and stage-?.out files when done
                         without prompting
     -D --DELETE         Also delete entire work directory without prompting
@@ -138,9 +138,8 @@ main() {
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
-    # Need the leading space to prevent echo from swallowing -e or -E
     local arg val ARGS
-    ARGS=$(echo " $*")
+    ARGS="$*"
 
     while [[ $# -gt 0 && $1 =~ ^- ]]; do
         arg=${1#-}; shift
@@ -178,7 +177,7 @@ main() {
             -AUTO|A)      auto_mode=true ; full_auto=true ; apt_yes="-y" ;;
           -chroot|c)    chroot_mode=true                        ;;
        -color=*|C=*)     color_mode=$val                        ;;
-           -color|C)     color_mode=$val                        ;;
+           -COLOR|C)     color_mode=$val                        ;;
           -delete|d)    delete_mode=true                        ;;
           -DELETE|D)    delete_mode=true ; delete_all=true      ;;
        -error-ask|e)     ask_errors=true                        ;;
@@ -748,7 +747,7 @@ do_stage_3() {
     [[ -n $interactive     ]] && args="--interactive"
     [[ -n $auto_mode       ]] && args="$args --auto"
     [[ -n $quiet_mode      ]] && args="$args --quiet"
-    [[ -n $ask_errors      ]] && args="$args --ASK-ERROR"
+    [[ -n $ask_errors      ]] && args="$args --error-ask"
     [[ -n $verbose_mode    ]] && args="$args --VERBOSE"
     [[ $color_mode != high ]] && args="$args --COLOR=$color_mode"
     [[ -n $disable_errors  ]] && args="$args --no-error-check"
