@@ -307,11 +307,13 @@ main() {
 
     [[ "$script_dir" == "$build_dir" ]] && no_log_errors=true
 
-    printf "\n$bold_co%63s$nc\n" "" | sed 's/ /-/g'  >> $log_file
-    echo -e "$ME $ARGS"                              >> $log_file
-    echo -e "  version: $VERSION ($VERSION_DATE)"    >> $log_file
-    echo -e "  started: $(date)"                     >> $log_file
-    echo -e "directory: $script_dir\n"               >> $log_file
+    {
+        printf "\n$bold_co%63s$nc\n" "" | sed 's/ /-/g'
+        echo -e "$ME $ARGS"
+        echo -e "  version: $VERSION ($VERSION_DATE)"
+        echo -e "  started: $(date)"
+        echo -e "directory: $script_dir\n"
+    } >> $log_file
 
     # Always start out with a clean slate
     rm -f $exit_file $sign_off_file
