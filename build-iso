@@ -231,8 +231,6 @@ main() {
     [[ -n $reset_mode ]] && : ${start_from:=0}
     [[ -n $iso_only   ]] && SKIP_STAGE="$SKIP_STAGE${SKIP_STAGE:+,}$ISO_SKIP_STAGE"
 
-    local e
-    e=$(printf "\e")
     case $color_mode in
      high|hi|"") color_mode="high" ;;
          low|lo) color_mode="low"  ;;
@@ -791,7 +789,7 @@ do_stage_3() {
     fi
 
     local missing
-    for missing  in $sqfs_dir$build_dir/missing*; do
+    for missing in "$sqfs_dir$build_dir"/missing*; do
         [[ -r $missing ]] && cp $missing $work_dir
     done
 
@@ -1462,7 +1460,7 @@ Eth0_entry
         $SUDO rm $cached*
     fi
 
-    local exclude_files=$sqfs_dir/usr/local/share/excludes/*.list
+    local exclude_files="$sqfs_dir/usr/local/share/excludes/*.list"
     local efile ofile
     for efile in $exclude_files; do
         ofile=${efile%.list}.orig
@@ -2028,7 +2026,7 @@ umount_tmpfs() {
 
 find_all_tmpfs() {
     local dir type name
-    for dir in $remaster_dir/work/*/squashfs; do
+    for dir in "$remaster_dir"/work/*/squashfs; do
         [[ -d $dir ]]          || continue
         mountpoint -q $dir   || continue
         type=$(df -Tm $dir | awk '{type=$2} END {print type}')
@@ -2502,7 +2500,7 @@ gather_deb() {
     local dir f name deb_dir=$script_dir/Deb
     local flav=$ISO_RESPIN_OF
     for dir in $(flav_dirs $deb_dir); do
-        for f in $dir/*.deb; do
+        for f in "$dir"/*.deb; do
             test -f $f || continue
             basename $f | grep -q -- $filt_arch && continue
             basename $f | grep -q -- $filt_flav && continue
@@ -3185,7 +3183,7 @@ _cache_() {
     restore)
         test -e $file || return 1
         say "Found cache $(pq $name$ext)"
-        YES_no "restore from this cache" || return 1
+        YES_no "Restore from this cache" || return 1
 
         if [[ -d "$dir" && $(find "$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) ]]; then
             say "Clear out existing files"
@@ -3560,7 +3558,7 @@ pick_prog() {
 
 select_theme() {
     local themes dir
-    for dir in $theme_dir/*; do
+    for dir in "$theme_dir"/*; do
         [[ -d $dir ]] && themes="$themes $(basename $dir)"
     done
 
