@@ -104,10 +104,10 @@ gnome-accessibility-themes
 gnome-disk-utility
 gnome-mime-data
 gnome-themes-standard
-gnupg-agent
 gpa
 gpart
 gparted
+gpg-agent
 grep
 grsync
 gstreamer1.0-pulseaudio
