@@ -46,6 +46,7 @@ dconf-editor
 ddcutil
 ddrescueview
 ddrutility
+deb-installer
 debconf-i18n
 debianutils
 desktop-defaults-mx-xfce
@@ -96,7 +97,6 @@ gconf2
 gconf2-common
 gcr
 gdbm-l10n
-gdebi
 geany
 gftp-gtk
 ghex
