@@ -33,6 +33,7 @@ clamtk
 clonezilla
 cmospwd
 coreutils
+cpu-x
 cpuid
 cpuidtool
 cpupower-gui
@@ -62,6 +63,7 @@ dmraid
 dnsutils
 dpt-i2o-raidutils
 dstat
+duf
 dump
 dvtm
 e2fsprogs
