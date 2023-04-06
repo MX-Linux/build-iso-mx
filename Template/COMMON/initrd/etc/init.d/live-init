@@ -1189,7 +1189,7 @@ create_home() {
 
     echo_live "$_Populating_X_directory_" $(pquote $home)
     mkdir -p $home
-    cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found
+    cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found"
 
     local uid_gid=$(getent passwd $user | cut -d: -f3,4)
     chown -R $uid_gid $home
