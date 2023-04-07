@@ -32,7 +32,6 @@ breeze-icon-theme
 ca-certificates-java
 catdoc
 cdparanoia
-clementine
 colord
 colord-data
 command-not-found
@@ -282,6 +281,7 @@ smb4k
 sonnet-plugins
 sound-theme-freedesktop
 sox
+strawberry
 systemsettings
 thunderbird
 unar
