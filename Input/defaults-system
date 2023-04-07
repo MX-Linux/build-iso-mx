@@ -29,8 +29,8 @@
 # this is basic version info. used to make mx-version among other things
 BUG_REPORT_URL="https://mxlinux.org"
 HOME_URL="https://mxlinux.org"
-CODE_NAME="Next"
-ASCII_CODE_NAME="Next"
+CODE_NAME="Libretto"
+ASCII_CODE_NAME="Libretto"
 
 DISTRO_VERSION="23"
 DISTRO_NAME="MX"
