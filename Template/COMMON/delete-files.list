@@ -84,6 +84,7 @@ var/cache/flashplugin-nonfree/flashplayer*
 var/cache/flashplugin-nonfree/install*
 var/cache/man/* 
 var/lib/apt/lists/*
+var/lib/apt/periodic/update-stamp
 var/lib/dbus/machine-id
 var/lib/dhcp/*
 var/lib/dpkg/*-old 
