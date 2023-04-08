@@ -7,7 +7,6 @@ start_theme "$@"
 rm -R /etc/skel/.conky
 mkdir -p /etc/skel/.local/share/applications/
 copy_file grub                  /etc/default/
-copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
 copy_dir desktop-base/               /usr/share/desktop-base/          --create
 copy_dir conky/               /etc/skel/.conky/          --create
 copy_dir extra/               /usr/share/fonts/extra       --create
