@@ -2790,9 +2790,9 @@ do_chroot() {
     [[ $stage -ge 1 ]] || fatal "Not ready to do chroot"
 
     prep_chroot
-    say "${text_co}Enter chroot for $(pq $full_distro_name)$nc"
+    say "Enter chroot for $(pq $full_distro_name)"
     $SUDO chroot $sqfs_dir /bin/bash --rcfile /Build/bashrc
-    say "${text_co}Leave chroot$nc"
+    say "Leave chroot"
     umount_chroot
     return 0
 }
