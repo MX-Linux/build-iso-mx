@@ -53,7 +53,6 @@ Options:
     -i --iso-only       Only build an iso. Don't create a squashfs file
     -I --INTERACTIVE    Let Debian ask config questions inside the chroot
     -j --jbb            Suppress voluminous output
-       --lz4            Override default compression scheme with lz4
     -m --manual         Enter chroot if the automatic chroot stage fails
     -n --no-error-check Don't do error checking on stderr output
     -N --NO-ERROR-LOG   Also, don't log or highlight errors on stderr
@@ -64,12 +63,15 @@ Options:
     -S --SAVE           Save the squashfs directory in the cache
     -u --update         Skip most parts in chroot stage preceding add and remove
     -U --UPDATE         Merge add.list and remove.list into the other lists
-       --user-default   specify a defaults file, must be present in Input folder
     -V --VERBOSE        Print even more than we already do
     -v --version        Print version info and exit
-       --zstd           Override default compression scheme with zstd
+    -y --assume-yes     Automatic yes to apt-get prompts; assume "yes" as answer
+                        to all prompts
+    --lz4               Override default compression scheme with lz4
     --show-stages       Show the stages of processing
     --show-parts        Show parts of stage-$chroot_stage and how to control them
+    --user-default      Specify a defaults file, must be present in Input folder
+    --zstd              Override default compression scheme with zstd
     -0 -- -8            Start over from stage N.
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
@@ -202,6 +204,7 @@ main() {
           -UPDATE|U)    UPDATE_mode=true                        ;;
       -user-default) user_default_file=true                     ;;
          -VERBOSE|V)   verbose_mode=true                        ;;
+      -assume-yes|y)     assume_yes=true                        ;;
               -zstd)  zstd_override=true                        ;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
@@ -948,9 +951,11 @@ do_stage_4() {
 
     if gather_any pesky-package \
         && do_part 7 "Install pesky packages"; then
+        local yes
+        [[ -n assume_yes ]] && yes="--yes"
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
         for package in $(compile_pkg_list pesky-package exclude-chroot); do
-            DEBIAN_FRONTEND=dialog apt-get install $package
+            DEBIAN_FRONTEND=dialog apt-get install $yes $package
         done
         end_part_lax
     else
@@ -2441,6 +2446,7 @@ apt_get_packages() {
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
 
+    [[ -n assume_yes ]] && APT_GET_OPTS="$APT_GET_OPTS --yes"
     echo "$pkg_list" | xargs apt-get $APT_GET_OPTS "$@"
 }
 
