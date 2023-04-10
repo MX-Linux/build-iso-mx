@@ -950,7 +950,7 @@ do_stage_4() {
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
         for package in $(compile_pkg_list pesky-package exclude-chroot); do
-            DEBIAN_FRONTEND=dialog apt-get install $package
+            DEBIAN_FRONTEND=dialog apt-get install $apt_yes $package
         done
         end_part_lax
     else
