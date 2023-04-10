@@ -53,7 +53,6 @@ Options:
     -i --iso-only       Only build an iso. Don't create a squashfs file
     -I --INTERACTIVE    Let Debian ask config questions inside the chroot
     -j --jbb            Suppress voluminous output
-       --lz4            Override default compression scheme with lz4
     -m --manual         Enter chroot if the automatic chroot stage fails
     -n --no-error-check Don't do error checking on stderr output
     -N --NO-ERROR-LOG   Also, don't log or highlight errors on stderr
@@ -64,10 +63,11 @@ Options:
     -S --SAVE           Save the squashfs directory in the cache
     -u --update         Skip most parts in chroot stage preceding add and remove
     -U --UPDATE         Merge add.list and remove.list into the other lists
-       --user-default   specify a defaults file, must be present in Input folder
     -V --VERBOSE        Print even more than we already do
     -v --version        Print version info and exit
-       --zstd           Override default compression scheme with zstd
+    --lz4               Override default compression scheme with lz4
+    --user-default      Specify a defaults file, must be present in Input folder
+    --zstd              Override default compression scheme with zstd
     --show-stages       Show the stages of processing
     --show-parts        Show parts of stage-$chroot_stage and how to control them
     -0 -- -8            Start over from stage N.
@@ -187,7 +187,6 @@ main() {
         -iso-only|i)       iso_only=true                        ;;
      -INTERACTIVE|I)    interactive=true                        ;;
              -jbb|j)       jbb_mode=true                        ;;
-               -lz4)   lz4_override=true                        ;;
           -manual|m)    manual_mode=true                        ;;
   -no-error-check|n) disable_errors=true                        ;;
     -NO-ERROR-LOG|N)  no_log_errors=true ; disable_errors=true  ;;
@@ -202,6 +201,7 @@ main() {
           -UPDATE|U)    UPDATE_mode=true                        ;;
       -user-default) user_default_file=true                     ;;
          -VERBOSE|V)   verbose_mode=true                        ;;
+               -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
