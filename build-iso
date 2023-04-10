@@ -659,12 +659,12 @@ do_stage_2() {
         umount_chroot
         mount_deb_cache
 
-        gather_say exclude "Exclude $(pqn %n) package%s"
-
-        local args exclude_list include_list keyring url
+        local args cnt exclude_list include_list keyring url
         args="--arch=$ARCH"
         exclude_list=$(gather_join exclude-debootstrap)
         include_list=$(gather_join include-debootstrap)
+        cnt=$(echo "$exclude_list" | tr ',' '\n' | wc -l)
+        psay $cnt "Exclude $(pqn %n) package%s"
         keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
         [[ -n $exclude_list ]] && args="$args --exclude=$exclude_list"
         [[ -n $include_list ]] && args="$args --include=$include_list"
