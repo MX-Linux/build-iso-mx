@@ -258,6 +258,7 @@ qpdfview-djvu-plugin
 qpdfview-ps-plugin
 qpdfview-translations
 qt5-style-plugins
+qt6-gtk-platformtheme
 readline-common
 rofi
 rofi-calc
