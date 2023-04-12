@@ -1,3 +1,5 @@
+#!/bin/bash
+
 PREFIX=$1
 if [[ $PREFIX ]]
 then
