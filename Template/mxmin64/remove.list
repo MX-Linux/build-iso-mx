@@ -4,8 +4,8 @@ alsa-tools
 alsa-utils
 apt-utils
 apt-xapian-index
-bluez-tools
 blt
+bluez-tools
 build-essential
 cabextract
 cifs-utils
@@ -78,6 +78,7 @@ most
 mpg123
 mtools
 mtr
+nala
 ncal
 netcat-traditional
 nfs-kernel-server
