@@ -1,3 +1,11 @@
+#antix-archive-keyring
+#cli-aptix
+#crda
+#firmware-intelwimax
+#hddtemp
+#mx-pkexec
+#pppoeconf
+#smxi-inxi-antix
 accountsservice
 acl
 acpi
@@ -7,7 +15,6 @@ alsa-tools
 alsa-utils
 amd64-microcode
 anacron
-#antix-archive-keyring
 antix-libs
 apt-transport-https
 apt-xapian-index
@@ -29,14 +36,12 @@ cabextract
 checkaptgpg
 chroot-rescue-mx
 cifs-utils
-#cli-aptix
 cli-installer-mx
 cli-shell-utils
 console-data
 console-setup
 console-setup-linux
 cpufrequtils
-#crda
 cryptsetup
 cryptsetup-bin
 cryptsetup-initramfs
@@ -89,7 +94,6 @@ firmware-bnx2
 firmware-bnx2x
 firmware-brcm80211
 firmware-intel-sound
-#firmware-intelwimax
 firmware-iwlwifi
 firmware-libertas
 firmware-linux-free
@@ -134,7 +138,6 @@ gstreamer1.0-alsa
 gstreamer1.0-libav
 gufw
 haveged
-#hddtemp
 hdparm
 hexedit
 hplip
@@ -201,7 +204,6 @@ mx-goodies
 mx-gpg-keys
 mx-packageinstaller
 mx-packageinstaller-pkglist
-#mx-pkexec
 mx-remaster
 mx-remastercc
 mx-repo-manager
@@ -211,6 +213,7 @@ mx-tools
 mx-tweak
 mx-tweak-data
 mx-user
+nala
 ncurses-term
 neofetch
 netcat-traditional
@@ -240,16 +243,15 @@ passwd
 patch
 pciutils
 pcmciautils
+pipewire-setup-mx
 pm-utils
 pmount
 policykit-1
 powermgmt-base
-#pppoeconf
 printer-driver-all
 procps
 psmisc
 psutils
-pipewire-setup-mx
 pv
 python3-bluez
 python3-smbc
@@ -271,7 +273,6 @@ sdparm
 sgml-data
 shared-mime-info
 smartmontools
-#smxi-inxi-antix
 spice-vdagent
 squashfs-tools
 sshfs
@@ -304,10 +305,10 @@ unrar
 unzip
 update-inetd
 upower
-user-installed-packages
 usb-modeswitch
 usbmuxd
 usbutils
+user-installed-packages
 va-driver-all
 vainfo
 vbetool
