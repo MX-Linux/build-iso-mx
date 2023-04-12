@@ -126,6 +126,7 @@ konsole
 konsole-kpart
 kpackagetool5
 krdc
+krename
 kross
 kscreen
 ksshaskpass
@@ -187,6 +188,7 @@ mx-viewer
 mx-welcome
 mx23-artwork
 mythes-en-us
+nala
 nvidia-detect
 okular-extra-backends
 open-vm-tools
@@ -265,6 +267,7 @@ qml-module-qtquick-privatewidgets
 qml-module-qtquick-templates2
 qml-module-qtquick-virtualkeyboard
 qml-module-qtquick-window2
+qml-module-qtquick-xmllistmodel
 qml-module-qtquick2
 qml-module-qtwebkit
 qt5-image-formats-plugins
