@@ -91,13 +91,16 @@ kde-config-mailtransport
 kde-config-screenlocker
 kde-config-sddm
 kde-servicemenu-checkhash-installdebs
+kde-servicemenu-checkhash-installdebs
 kde-servicemenu-extract-and-compress
 kde-servicemenu-kim5
+kde-servicemenu-rootactions
 kde-spectacle 
 kde-standard
 kde-style-breeze
 kde-style-oxygen-qt5
 kde-style-qtcurve-qt5
+kde-thumbnailer-epub
 kdeconnect
 kded5
 kdegraphics-thumbnailers
