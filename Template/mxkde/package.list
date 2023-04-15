@@ -206,10 +206,12 @@ phonon-backend-gstreamer-common
 phonon4qt5
 phonon4qt5-backend-gstreamer
 pinentry-qt
+plasma-browser-integration
 plasma-dataengines-addons
 plasma-desktop
 plasma-desktop-data
 plasma-discover
+plasma-firewall
 plasma-framework
 plasma-integration
 plasma-look-and-feel-theme-mx
@@ -285,6 +287,7 @@ sonnet-plugins
 sound-theme-freedesktop
 sox
 strawberry
+system-config-printer
 systemsettings
 thunderbird
 unar
