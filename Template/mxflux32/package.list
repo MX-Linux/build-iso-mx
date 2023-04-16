@@ -72,6 +72,9 @@ gvfs
 gvfs-backends
 gvfs-fuse
 hardinfo
+qt-heif-image-plugin
+heif-thumbnailer
+heif-gdk-pixbuf
 hicolor-icon-theme
 hunspell-en-gb
 hunspell-en-us

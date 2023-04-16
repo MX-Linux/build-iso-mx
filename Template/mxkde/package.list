@@ -65,6 +65,9 @@ gsfonts
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
 guvcview
+qt-heif-image-plugin
+heif-thumbnailer
+heif-gdk-pixbuf
 hicolor-icon-theme
 hunspell-en-gb
 hunspell-en-us

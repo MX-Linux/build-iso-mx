@@ -127,8 +127,9 @@ gvfs
 gvfs-backends
 gvfs-fuse
 hardinfo
-#hexchat
-#hibernate
+qt-heif-image-plugin
+heif-thumbnailer
+heif-gdk-pixbuf
 hicolor-icon-theme
 #host
 hunspell-en-gb

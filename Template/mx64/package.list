@@ -121,6 +121,9 @@ gtk2-engines
 gtkdialog
 #guvcview
 hardinfo
+qt-heif-image-plugin
+heif-thumbnailer
+heif-gdk-pixbuf
 gvfs
 gvfs-backends
 gvfs-fuse
