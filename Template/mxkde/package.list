@@ -80,6 +80,7 @@ java-common
 javascript-common
 job-scheduler
 k3b
+kaccounts-integration
 kaccounts-providers
 kactivities-bin
 kactivitymanagerd
