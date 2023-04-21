@@ -46,12 +46,12 @@ featherpad
 feh
 file-roller
 fluxbox
+fonts-font-awesome
 fonts-vlgothic
 fonts-wqy-microhei
 formatusb
 galculator
 gcc-12-base
-gcc-12-base:i386
 gconf-service
 gconf2-common
 gcr
@@ -63,7 +63,7 @@ gparted
 grep
 gsfonts
 gsimplecal
-gthumb
+#gthumb
 gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
@@ -154,7 +154,7 @@ libpam0g
 libpcre2-8-0
 libpcre3
 libpopt0
-#libprocps8
+libproc2-0
 libreadline8
 libseccomp2
 libselinux1
@@ -221,13 +221,14 @@ mx-rofi-manager
 mx-select-sound
 mx-tour
 mx-usb-unmounter
-mx-welcome
 mx-viewer
+mx-welcome
 #mx21-archive-keyring
 mx23-artwork
 mxfb-accessories
 mxfb-art
 mxfb-docs
+mxfb-goodies
 nano
 ncurses-base
 ncurses-bin
@@ -236,8 +237,8 @@ network-manager-gnome
 network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 nftables
-#nomacs
-#nomacs-l10n
+nomacs
+nomacs-l10n
 #numix-gtk-theme
 #numix-icon-theme
 nvidia-detect
@@ -271,6 +272,7 @@ sensible-utils
 # smbc
 # smbclient
 ssh-askpass-gnome
+strawberry
 synaptic
 system-config-printer
 system-config-printer-udev
