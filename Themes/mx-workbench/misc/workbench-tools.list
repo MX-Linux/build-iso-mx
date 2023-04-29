@@ -50,7 +50,7 @@ Category=Misc.
 geany 
 xfce4-terminal
 htop 
-iotop
+iotop root
 
 Category=Hardware Info
 hardinfo
