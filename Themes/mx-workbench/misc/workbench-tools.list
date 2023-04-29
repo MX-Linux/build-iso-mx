@@ -47,7 +47,6 @@ testdisk
 photorec
 
 Category=Misc.
-blockout2
 geany 
 xfce4-terminal
 htop 
@@ -60,7 +59,6 @@ Quick_System_Info
 Category=Network
 ceni 
 wireshark
-zenmap 
 linssid 
 remmina
 netwag
