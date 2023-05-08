@@ -117,7 +117,7 @@ gsfonts
 #gstreamer0.10-pulseaudio
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
-gthumb
+#gthumb
 gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
@@ -144,7 +144,7 @@ icedax
 iptraf-ng
 java-common
 lame
-lazpaint-qt5
+#lazpaint-qt5
 lbreakout2
 lbreakout2-data
 #leafpad
@@ -241,8 +241,8 @@ network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 #nictools-pci
 #nitroshare
-#nomacs
-#nomacs-l10n
+nomacs
+nomacs-l10n
 #ntp
 #numix-gtk-theme
 #numix-icon-theme
