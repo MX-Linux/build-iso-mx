@@ -1,4 +1,3 @@
-# kde-servicemenu-rootactions
 # ksysguard
 # ksysguard-data
 # ksysguardd
@@ -65,9 +64,8 @@ gsfonts
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
 guvcview
-qt-heif-image-plugin
-heif-thumbnailer
 heif-gdk-pixbuf
+heif-thumbnailer
 hicolor-icon-theme
 hunspell-en-gb
 hunspell-en-us
@@ -98,6 +96,7 @@ kde-servicemenu-checkhash-installdebs
 kde-servicemenu-checkhash-installdebs
 kde-servicemenu-extract-and-compress
 kde-servicemenu-kim5
+kde-servicemenu-rootactions
 kde-servicemenu-rootactions
 kde-spectacle 
 kde-standard
@@ -278,9 +277,12 @@ qml-module-qtquick-window2
 qml-module-qtquick-xmllistmodel
 qml-module-qtquick2
 qml-module-qtwebkit
+qt-heif-image-plugin
 qt5-image-formats-plugins
 qt5-style-kvantum
 qt5-style-plugins
+qt6-gtk-platformtheme
+qtct
 qtvirtualkeyboard-plugin
 rdesktop
 sddm
