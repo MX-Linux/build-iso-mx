@@ -68,7 +68,6 @@ exo-utils
 #fail2ban
 #fbreader
 #fbsplash-antix
-fbxkb
 featherpad
 feh
 file-roller
@@ -126,6 +125,7 @@ gtkdialog
 gvfs
 gvfs-backends
 gvfs-fuse
+gxkb
 hardinfo
 qt-heif-image-plugin
 heif-thumbnailer

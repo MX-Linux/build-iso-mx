@@ -65,7 +65,6 @@ exo-utils
 #fail2ban
 #fbreader
 #fbsplash-antix
-fbxkb
 featherpad
 feh
 file-roller
@@ -127,6 +126,7 @@ heif-gdk-pixbuf
 gvfs
 gvfs-backends
 gvfs-fuse
+gxkb
 #hexchat
 #hibernate
 hicolor-icon-theme
