@@ -31,8 +31,12 @@ GRUB_DISABLE_RECOVERY="true"
 # Uncomment to get a beep at grub start
 #GRUB_INIT_TUNE="480 440 1"
 
-GRUB_DISABLE_OS_PROBER=false
+#GRUB_DISABLE_OS_PROBER=false
 #export GRUB_MENU_PICTURE="/usr/share/backgrounds/MXLinux/grub/linen-gradientblu-grub.png"
 #export GRUB_MENU_PICTURE="/usr/share/backgrounds/MX18ALPHAWALL.png"
 
 GRUB_THEME="/boot/grub/themes/mx_linux/theme.txt"
+
+if [ -e /etc/default/grub.mx-defaults ]; then
+     .  /etc/default/grub.mx-defaults
+fi
