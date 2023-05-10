@@ -197,7 +197,7 @@ lsb-base
 #luckybackup-data
 lxappearance
 #matcha-themes
-menulibre
+#menulibre
 mesa-vulkan-drivers
 mount
 mugshot
@@ -267,6 +267,7 @@ readline-common
 rofi
 rofi-calc
 roxterm
+seahorse
 sendemail
 sensible-utils
 # smbc

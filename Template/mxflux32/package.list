@@ -95,6 +95,7 @@ libbpf1
 libbsd0
 libbz2-1.0
 libc-bin
+libc6
 libcap-ng0
 libcap2
 libcap2-bin
@@ -195,7 +196,7 @@ lsb-base
 #luckybackup-data
 lxappearance
 #matcha-themes
-menulibre
+#menulibre
 mesa-vulkan-drivers
 mount
 mugshot
@@ -265,6 +266,7 @@ readline-common
 rofi
 rofi-calc
 roxterm
+seahorse
 sendemail
 sensible-utils
 # smbc
