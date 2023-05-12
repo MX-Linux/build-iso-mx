@@ -281,8 +281,9 @@ qt-heif-image-plugin
 qt5-image-formats-plugins
 qt5-style-kvantum
 qt5-style-plugins
+qt5ct
 qt6-gtk-platformtheme
-qtct
+qt6ct
 qtvirtualkeyboard-plugin
 rdesktop
 sddm
