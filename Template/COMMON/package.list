@@ -202,6 +202,7 @@ mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
+mx-launcher-l10n 
 mx-packageinstaller
 mx-packageinstaller-pkglist
 mx-remaster
