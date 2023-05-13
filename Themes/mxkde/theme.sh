@@ -29,7 +29,6 @@ copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 #copy_file 98qtconfig /etc/X11/Xsession.d/
 copy_file yad-icon-browser.desktop /etc/skel/.local/share/applications/ --create
 copy_file plymouthd.conf /etc/plymouth/ --create
-copy_file libreoffice-theme.sh /etc/skel/.config/plasma-workspace/env/ --create
 
 ##alpha
 
