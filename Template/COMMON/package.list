@@ -6,6 +6,10 @@
 #mx-pkexec
 #pppoeconf
 #smxi-inxi-antix
+#xserver-xorg-input-evdev
+#xserver-xorg-input-kbd
+#xserver-xorg-input-mouse
+#xserver-xorg-input-synaptics
 accountsservice
 acl
 acpi
@@ -118,6 +122,7 @@ fonts-noto
 fonts-opensymbol
 fonts-uralic
 foomatic-db-compressed-ppds
+fprintd
 ftp
 fuse3
 gddrescue
@@ -165,6 +170,7 @@ libgtk3-perl
 libmtp-runtime
 libnss-mdns
 libnss-myhostname
+libpam-fprintd
 linux-base
 linux-libc-dev
 live-kernel-updater
@@ -335,11 +341,7 @@ xml-core
 xorg
 xorriso
 xserver-xorg-input-all
-#xserver-xorg-input-evdev
 xserver-xorg-input-joystick
-#xserver-xorg-input-kbd
-#xserver-xorg-input-mouse
-#xserver-xorg-input-synaptics
 xserver-xorg-input-wacom
 xserver-xorg-legacy
 xserver-xorg-video-all
