@@ -62,7 +62,6 @@ gparted
 grep
 gsfonts
 gsimplecal
-gthumb
 gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
@@ -233,8 +232,8 @@ network-manager-gnome
 network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 nftables
-#nomacs
-#nomacs-l10n
+nomacs
+nomacs-l10n
 #numix-gtk-theme
 #numix-icon-theme
 #nvidia-detect
