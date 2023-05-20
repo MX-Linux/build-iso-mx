@@ -68,7 +68,6 @@ exo-utils
 #fail2ban
 #fbreader
 #fbsplash-antix
-fbxkb
 featherpad
 feh
 file-roller
@@ -117,7 +116,7 @@ gsfonts
 #gstreamer0.10-pulseaudio
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
-gthumb
+#gthumb
 gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
@@ -126,6 +125,7 @@ gtkdialog
 gvfs
 gvfs-backends
 gvfs-fuse
+gxkb
 hardinfo
 qt-heif-image-plugin
 heif-thumbnailer
@@ -143,7 +143,7 @@ icedax
 iptraf-ng
 java-common
 lame
-lazpaint-qt5
+#lazpaint-qt5
 lbreakout2
 lbreakout2-data
 #leafpad
@@ -242,8 +242,8 @@ network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 #nictools-pci
 #nitroshare
-#nomacs
-#nomacs-l10n
+nomacs
+nomacs-l10n
 #ntp
 #numix-gtk-theme
 #numix-icon-theme
@@ -329,7 +329,7 @@ thunderbird
 timeshift
 #touchpad-indicator
 transmission-common
-transmission-gtk
+transmission-qt
 #ttf-freefont
 #ttf-mscorefonts-installer
 tumbler
@@ -342,9 +342,9 @@ ure
 #uswsusp
 vcdimager
 #virtualbox-guest-dkms
-#virtualbox-guest-utils
-#virtualbox-guest-utils-modified-init
-#virtualbox-guest-x11
+virtualbox-guest-utils
+virtualbox-guest-utils-modified-init
+virtualbox-guest-x11
 vlc
 vlc-data
 #vlc-nox

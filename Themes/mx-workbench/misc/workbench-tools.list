@@ -47,11 +47,10 @@ testdisk
 photorec
 
 Category=Misc.
-blockout2
 geany 
 xfce4-terminal
 htop 
-iotop
+iotop root
 
 Category=Hardware Info
 hardinfo
@@ -60,7 +59,6 @@ Quick_System_Info
 Category=Network
 ceni 
 wireshark
-zenmap 
 linssid 
 remmina
 netwag

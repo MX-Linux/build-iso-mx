@@ -24,6 +24,7 @@ copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 copy_file compton.desktop /etc/skel/.local/share/applications/
 copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 copy_file plymouthd.conf /etc/plymouth/ --create
+copy_file ufw.conf       /etc/ufw/ --create
 
 ##alpha
 
