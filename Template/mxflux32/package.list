@@ -46,6 +46,7 @@ featherpad
 feh
 file-roller
 fluxbox
+fonts-font-awesome
 fonts-vlgothic
 fonts-wqy-microhei
 formatusb
@@ -62,6 +63,7 @@ gparted
 grep
 gsfonts
 gsimplecal
+#gthumb
 gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
@@ -93,6 +95,7 @@ libbpf1
 libbsd0
 libbz2-1.0
 libc-bin
+libc6
 libcap-ng0
 libcap2
 libcap2-bin
@@ -150,7 +153,7 @@ libpam0g
 libpcre2-8-0
 libpcre3
 libpopt0
-#libprocps8
+libproc2-0
 libreadline8
 libseccomp2
 libselinux1
@@ -193,7 +196,7 @@ lsb-base
 #luckybackup-data
 #lxappearance
 #matcha-themes
-menulibre
+#menulibre
 mesa-vulkan-drivers
 mount
 mugshot
@@ -215,8 +218,8 @@ mx-live-usb-maker
 mx-network-assistant
 mx-rofi-manager
 mx-select-sound
-mx-usb-unmounter
 mx-tour
+mx-usb-unmounter
 mx-viewer
 mx-welcome
 #mx21-archive-keyring
@@ -224,6 +227,7 @@ mx23-artwork
 mxfb-accessories
 mxfb-art
 mxfb-docs
+mxfb-goodies
 nano
 ncurses-base
 ncurses-bin
@@ -262,11 +266,13 @@ readline-common
 rofi
 rofi-calc
 roxterm
+seahorse
 sendemail
 sensible-utils
 # smbc
 # smbclient
 ssh-askpass-gnome
+strawberry
 synaptic
 system-config-printer
 system-config-printer-udev
