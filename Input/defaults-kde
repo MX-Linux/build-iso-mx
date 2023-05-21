@@ -7,7 +7,7 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23_KDE"
+DISTRO_VERSION="23_KDE_beta1"
 
 # kernel
 # ahs
