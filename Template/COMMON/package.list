@@ -1,7 +1,4 @@
-#antix-archive-keyring
-#cli-aptix
-#crda
-#firmware-intelwimax
+avahi-sysvinit-compat
 #hddtemp
 #mx-pkexec
 #pppoeconf
