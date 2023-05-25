@@ -345,6 +345,7 @@ vcdimager
 #virtualbox-guest-utils-modified-init
 #virtualbox-guest-x11
 vlc
+vlc-l10n
 vlc-data
 #vlc-nox
 volumeicon-alsa

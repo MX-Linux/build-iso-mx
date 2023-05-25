@@ -347,6 +347,7 @@ virtualbox-guest-utils-modified-init
 virtualbox-guest-x11
 vlc
 vlc-data
+vlc-l10n
 #vlc-nox
 volumeicon-alsa
 webcamoid
