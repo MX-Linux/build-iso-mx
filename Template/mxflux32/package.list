@@ -271,7 +271,6 @@ sensible-utils
 # smbc
 # smbclient
 ssh-askpass-gnome
-strawberry
 synaptic
 system-config-printer
 system-config-printer-udev
