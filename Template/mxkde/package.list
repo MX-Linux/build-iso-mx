@@ -143,6 +143,7 @@ kwayland-data
 kwin-common
 kwin-data
 kwin-style-breeze
+kwin-wayland
 kwin-x11
 lame
 lazpaint-qt5
@@ -227,6 +228,7 @@ plasma-systemmonitor
 plasma-wallpapers-addons
 plasma-widgets-addons
 plasma-workspace
+plasma-workspace-wayland
 plymouth
 plymouth-themes
 plymouth-themes-mx
