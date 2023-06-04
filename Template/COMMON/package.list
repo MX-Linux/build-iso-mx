@@ -77,6 +77,8 @@ efibootmgr
 efivar
 eject
 elinks
+espeak
+espeak-data
 ethtool
 exfatprogs
 extlinux
@@ -238,6 +240,8 @@ openconnect
 openssh-client
 openssl
 openvpn
+orca
+orca-sops
 os-prober
 p7zip-full
 papirus-icon-theme
@@ -277,6 +281,7 @@ sdparm
 sgml-data
 shared-mime-info
 smartmontools
+speech-dispatcher-espeak
 spice-vdagent
 squashfs-tools
 sshfs
