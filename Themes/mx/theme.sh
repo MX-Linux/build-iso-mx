@@ -25,6 +25,7 @@ copy_file compton.desktop /etc/skel/.local/share/applications/
 copy_file compton-conf.desktop /etc/skel/.local/share/applications/
 copy_file plymouthd.conf /etc/plymouth/ --create
 copy_file ufw.conf       /etc/ufw/ --create
+copy_file magnus-autostart.desktop /etc/skel/.config/autostart
 
 ##alpha
 
