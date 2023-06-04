@@ -77,8 +77,8 @@ efibootmgr
 efivar
 eject
 elinks
-espeak
-espeak-data
+espeak-ng
+espeak-ng-data
 ethtool
 exfatprogs
 extlinux
