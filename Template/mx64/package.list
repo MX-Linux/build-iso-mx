@@ -182,7 +182,7 @@ libsox-fmt-all
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
 libvirglrenderer1
-light-locker
+#light-locker
 lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-mx23
@@ -388,7 +388,7 @@ xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
 #xfce4-quicklauncher-plugin
-#xfce4-screensaver
+xfce4-screensaver
 xfce4-screenshooter
 #xfce4-screenshooter-plugin
 xfce4-sensors-plugin
