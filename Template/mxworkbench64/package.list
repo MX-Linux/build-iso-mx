@@ -178,6 +178,7 @@ ncdu
 ncurses-base
 ncurses-bin
 netbase
+netdiscover
 netwag
 network-manager-gnome
 network-manager-openconnect-gnome
