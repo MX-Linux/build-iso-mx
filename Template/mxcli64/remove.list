@@ -145,6 +145,7 @@ mtr
 mx-boot-options
 mx-bootrepair
 mx-datetime
+mx-goodies
 mx-packageinstaller
 mx-packageinstaller-pkglist
 mx-remastercc
@@ -232,6 +233,7 @@ whiptail
 wmctrl
 wodim
 wvdial
+x11-common
 x11-utils
 x11-xserver-utils
 xauth
