@@ -83,6 +83,7 @@ fonts-uralic
 fonts-urw-base35
 foomatic-db-compressed-ppds
 ftp
+gcc-10-base:i386
 gddrescue
 ghostscript
 ghostscript-x
