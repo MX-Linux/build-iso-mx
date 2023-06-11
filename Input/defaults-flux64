@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="23_fluxbox_beta1"
+DISTRO_VERSION="23_fluxbox_beta2"
 
 # DE particular items
 
