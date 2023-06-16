@@ -165,6 +165,7 @@ laptop-detect
 less
 libblockdev-crypto2
 libelf-dev
+libgail-common
 libgtk3-perl
 libmtp-runtime
 libnss-mdns
