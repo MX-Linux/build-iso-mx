@@ -3,5 +3,5 @@ deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmwar
 #deb http://security.debian.org/debian-security bookworm-security main contrib non-free
 #deb-src http://deb.debian.org/debian bookworm main contrib non-free 
 
-#bullseye backports
+#debian backports
 #deb http://deb.debian.org/debian bookworm-backports main contrib non-free
