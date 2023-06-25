@@ -12,9 +12,9 @@ DISTRO_VERSION="23_ahs_beta2"
 
 # kernel
 # ahs
-K_REVISION="9"
+K_REVISION="1mx-ahs"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="6.1.0"
+K_VERSION="6.3.0"
 #UNSIGNED="-unsigned"
 
 ENABLE_LOCALES=Default
