@@ -154,7 +154,7 @@ ${font Noto Sans:size=14}${voffset -47}${color1}${time %d}${font Noto Sans:size=
 ${voffset 6}${font Noto Sans:size=11}\
 ${color2}Root ${goto 70}${color1}${fs_used_perc}% ${color2}${goto 170}Home ${alignr}${color1}${fs_used_perc /home}%
 ${color2}CPU  ${goto 70}${color1}${cpu cpu0}% ${color2}${goto 170}Mem  ${alignr}${color1}${memperc}%
-${color2}Swap ${goto 70}${color1}${swapperc}% ${color2}${goto 170}Temp ${alignr}${color1}${hwmon temp 1}°C
+#${color2}Swap ${goto 70}${color1}${swapperc}% ${color2}${goto 170}Temp ${alignr}${color1}${hwmon temp 1}°C
 ${color2}Uptime ${goto 70}${color1}${uptime_short} ${color2}${goto 170}\
 ${if_existing /sys/class/power_supply/BAT0/present/ 1}Batt ${alignr}${color1}${battery_percent BAT0}%${endif}\
 ${if_existing /sys/class/power_supply/BAT0}Batt ${alignr}${color1}${battery_percent BAT0}%${endif}\
