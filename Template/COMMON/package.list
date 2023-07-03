@@ -361,6 +361,6 @@ xserver-xorg-video-sisusb
 yad
 zip
 zram-tools
-zram-sysvinit-compat
+zramswap-sysvinit-compat
 zstd
 zsync
