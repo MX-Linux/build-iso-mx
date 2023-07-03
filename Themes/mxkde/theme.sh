@@ -30,6 +30,7 @@ copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 copy_file yad-icon-browser.desktop /etc/skel/.local/share/applications/ --create
 copy_file plymouthd.conf /etc/plymouth/ --create
 copy_file ufw.conf       /etc/ufw/ --create
+copy_file zramswap.service /etc/systemd/system/
 
 ##alpha
 

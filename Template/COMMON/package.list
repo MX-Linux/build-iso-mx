@@ -360,5 +360,6 @@ xserver-xorg-video-siliconmotion
 xserver-xorg-video-sisusb
 yad
 zip
+zram-tools
 zstd
 zsync
