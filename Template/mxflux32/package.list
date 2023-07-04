@@ -40,7 +40,7 @@ dpkg
 e2fsprogs
 #exfat-fuse
 exo-utils
-fbxkb
+#fbxkb
 fdisk
 featherpad
 feh
