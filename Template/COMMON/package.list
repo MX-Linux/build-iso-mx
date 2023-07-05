@@ -73,6 +73,7 @@ docbook-xml
 dosfstools
 dtrx
 dvd+rw-tools
+e2fsprogs-l10n
 efibootmgr
 efivar
 eject
@@ -166,6 +167,8 @@ less
 libblockdev-crypto2
 libelf-dev
 libgail-common
+libgphoto2-l10n
+libgpg-error-l10n
 libgtk3-perl
 libmtp-runtime
 libnss-mdns
@@ -190,6 +193,7 @@ mc
 mdadm
 memtest86+
 menu
+menu-l10n
 menu-xdg
 mesa-utils
 mime-support
@@ -264,6 +268,8 @@ psutils
 pv
 python3-bluez
 python3-smbc
+qt6-translations-l10n
+qttranslations5-l10n
 qt5-gtk-platformtheme
 read-edid
 rfkill
