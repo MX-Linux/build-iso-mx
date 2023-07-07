@@ -44,6 +44,7 @@ colord-data
 command-not-found
 compton
 compton-conf
+compton-conf-l10n
 conky-all
 conky-manager
 #consolekit
