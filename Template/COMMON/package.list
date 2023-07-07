@@ -174,6 +174,7 @@ libmtp-runtime
 libnss-mdns
 libnss-myhostname
 libpam-fprintd
+libparted-i18n
 linux-base
 linux-libc-dev
 live-kernel-updater
