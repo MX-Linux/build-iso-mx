@@ -1,0 +1,16 @@
+   1)  Par défaut
+   2)  checkmd5        Vérifier l'integrité du média live
+   3)  checkfs         Vérifier les systèmes de fichiers LiveUSB et persistants de type ext2/3/4
+   4)  toram           Copier vers la RAM le système compressé de fichiers
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        Fin du démarrage depuis un LiveUSB
+   8)  from=hd         Fin du démarrage depuis un disque dur
+   9)  hwclock=ask     Faire le système aider à déterminer le réglage de l'horloge
+  10)  hwclock=utc     L'horloge interne se sert de UTC (systèmes n'ayant que de Linux )
+  11)  hwclock=local   L'horloge interne se sert de l'heure locale (systèmes Windows)
+  12)  password        Changer de mots de passe avant de démarrer
+  13)  nostore         Désactiver la fonctionnalité du stockage LiveUSB (LiveUSB seulement)
+  14)  dostore         Activer la fonctionnalité du stockage LiveUSB (LiveUSB seulement)
+  15)  savestate       Conservez quelques fichiers à travers les redémarrages (LiveUSB uniquement)
+  16)  nosavestate     Ne conservez pas les fichiers à travers les redémarrages (LiveUSB uniquement)

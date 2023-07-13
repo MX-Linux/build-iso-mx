@@ -2,8 +2,8 @@
    2)  checkmd5        Zkontrolovat integritu LIVE média
    3)  checkfs         Zkontrolovat LiveUSB a persistentní systémy ext2/3/4
    4)  toram           Zkopírovat komprimovaný soubor souborového systému do RAM
-   5)  i915_invert     Invert video on some Intel graphics systems
-   6)  no_i915_invert  Disable Intel graphics invert
+   5)  i915_invert     Invertovat video na některých Intel grafických systémech
+   6)  no_i915_invert  Nepoužívat invert pro grafiky Intel
    7)  from=usb        Dokončit zavedení systému z LiveUSB
    8)  from=hd         Dokončit zavedení systému z pevného disku
    9)  hwclock=ask     Má systém pomoct určit nastavení hodin

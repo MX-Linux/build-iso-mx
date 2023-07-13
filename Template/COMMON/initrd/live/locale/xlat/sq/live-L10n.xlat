@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Po formësohet konsola për një hartë tastesh %s"
+_Localizing_console_and_timezone_="Po përkthehet konsola dhe zona kohore"
+_Recreate_symlink_X_="Rikrijo lidhje simbolike %s"
+_Setting_hostname_to_X_="Po vihet %s si strehëemër"
+_Setting_locale_to_X_="Po vihet %s si vendore"
+_Setting_timezone_and_localtime_to_X_="Po ujdiset zonë kohore dhe kohë vendore si %"
+_Unknown_time_zone_X_="Zonë kohore %s e panjohur"

@@ -1,0 +1,12 @@
+   1)  Parazgjedhje
+   2)  persist_all     Ruaj rrënjë në RAM, ruaj shtëpi në disk (ruaj rrënjë gjatë fikjes)
+   3)  persist_root    Ruaj rrënjë dhe shtëpi në RAM, mandej ruaji gjatë fikjes
+   4)  persist_static  Ruaj rrënjë dhe shtëpi në disk, me shtëpinë ndaras në disk
+   5)  p_static_root   Ruaj rrënjë dhe shtëpi tok në disk
+   6)  persist_home    Vetëm vazhdueshmëri për rrënjën
+   7)  frugal_persist  Të përkorë me rrënjë në RAM dhe shtëpi në disk
+   8)  frugal_root     Të përkorë me rrënjë dhe shtëpi në RAM, mandej të ruajtura gjatë fikjes
+   9)  frugal_static   Të përkorë me rrënjë në disk dhe shtëpi ndaras në disk
+  10)  f_static_root   Të përkorë me rrënjë dhe shtëpi tok në disk
+  11)  frugal_home     Të përkorë, vetëm vazhdueshmëri shtëpie
+  12)  frugal_only     Vetëm të Përkorë, pa vazhdueshmëri

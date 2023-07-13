@@ -1,0 +1,5 @@
+_Already_saved_X_seconds_ago_="Déjà enregistré il y a %s secondes"
+_Possibly_save_persistent_information_="Peut-etre enregistrer l'information persistante"
+_Save_new_autosave_selection_="Enregistrer la nouvelle sélection de l'enregistrement automatique"
+_Save_new_passwords_="Enregistrer de nouveaux mots de passe"
+_Wont_autosave_within_X_seconds_of_a_previous_save_="Sauvegarde automatique impossible moins de  %s secondes avant la précédente"
