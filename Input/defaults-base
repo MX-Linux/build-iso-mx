@@ -7,57 +7,9 @@
 # which has the highest
 #----------------------------------------------------------------------
 
+#most defaults set from defaults-system
 
-# this is basic version info.  used to make mx-version among other things
-
-BUG_REPORT_URL="https://mxlinux.org"
-HOME_URL="https://mxlinux.org"
-CODE_NAME="Wildflower"
-ASCII_CODE_NAME="Wildflower"
-
-#DISTRO_VERSION="21.1"
-DISTRO_VERSION="21.1_base"
-
-DISTRO_NAME="MX"
-ARCH="amd64"
-RELEASE_DATE="February 20,2021"
-
-
-# system defaults, these end up inside the squash file system mostly
-
-ISO_FLAV="mx64"
-THEME="mx"
-
-ENABLE_LOCALES="Default"
-DEBIAN_RELEASE="bullseye"
-MIRROR="us"
-LOCALE="en_US.UTF-8"
-TIME_ZONE="America/New_York"
-
-LIVE_USER="demo"
-NEW_HOSTNAME="mx1"
-
-
-# kernel
-
-# ahs
-#K_REVISION="4mx"
-#K_TEMPLATE="%V%G-%R-%A"
-#K_VERSION="5.16.0"
-#UNSIGNED="-unsigned"
-
-# standard 32 bit
-#K_REVISION="13"
-#K_TEMPLATE="%V%G-%R-%A-pae"
-#K_VERSION="5.10.0"
-#UNSIGNED=""
-
-# standard 64 bit
-K_REVISION="9"
-K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="5.10.0"
-UNSIGNED=""
-
+DISTRO_VERSION="23_Base_RC1"
 
 # DE particular items
 
@@ -73,21 +25,12 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 # xz use -comp xz -b 262144 #use for base
 # lz4 use -comp lz4 -Xhc
 # gzip leave empty #use for full
-#COMPRESSION_TYPE="xz"
-#COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -Xbcj x86"
 #COMPRESSION_TYPE="lz4"
 #COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
-COMPRESSION_TYPE="zstd"
-COMPRESSION_TYPE_CODE="-comp zstd -Xcompression-level 15 -b 262144"
 
-
-# seems to have no effect, isos get signed automatically
-
-SIGN_FILES="false"
-
-
-# default live boot options
-
-antiX_LIVE_BOOT_OPTIONS="quiet splash=v disable=lx"
-CORE_LIVE_BOOT_OPTIONS="quiet splash=v disable=lxd"
-MX_LIVE_BOOT_OPTIONS="quiet splasht nosplash"
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mx64
+ARCH=amd64
