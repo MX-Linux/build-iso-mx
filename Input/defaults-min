@@ -7,13 +7,13 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.3_minimal"
+DISTRO_VERSION="23_minimal"
 
 ARCH="amd64"
 ISO_FLAV="mxmin64"
 THEME="mxmin"
 
-ENABLE_LOCALES="single"
+ENABLE_LOCALES="default"
 
 # DE particular items
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
