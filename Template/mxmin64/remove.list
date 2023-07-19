@@ -10,7 +10,6 @@ build-essential
 cabextract
 cifs-utils
 cli-aptix
-cli-installer-antix
 cups
 cups-browsed
 cups-common
