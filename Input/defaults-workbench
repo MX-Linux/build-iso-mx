@@ -7,13 +7,13 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.3_Workbench"
+DISTRO_VERSION="23_Workbench"
 
 ARCH="amd64"
 ISO_FLAV="mxworkbench64"
 THEME="mx-workbench"
 
-ENABLE_LOCALES="single"
+ENABLE_LOCALES="default"
 
 # DE particular items
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
