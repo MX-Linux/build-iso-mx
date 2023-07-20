@@ -1,4 +1,4 @@
-avahi-sysvinit-compat
+# mx-datetime
 #hddtemp
 #mx-pkexec
 #pppoeconf
@@ -22,6 +22,7 @@ apt-xapian-index
 at-spi2-core
 atmel-firmware
 avahi-daemon
+avahi-sysvinit-compat
 bc
 bind9-host
 binutils
@@ -35,6 +36,7 @@ bzip2
 ca-certificates
 cabextract
 checkaptgpg
+chrony
 chroot-rescue-mx
 cifs-utils
 cli-installer-mx
@@ -167,8 +169,8 @@ less
 libblockdev-crypto2
 libelf-dev
 libgail-common
-libgphoto2-l10n
 libgpg-error-l10n
+libgphoto2-l10n
 libgtk3-perl
 libmtp-runtime
 libnss-mdns
@@ -209,7 +211,6 @@ mtools
 mtr
 mx-boot-options
 mx-bootrepair
-mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
@@ -239,7 +240,6 @@ nfs-common
 nfs-common-modified-init
 nfs-kernel-server
 ntfs-3g
-ntpsec
 nwipe
 obexfs
 openconnect
@@ -269,9 +269,9 @@ psutils
 pv
 python3-bluez
 python3-smbc
+qt5-gtk-platformtheme
 qt6-translations-l10n
 qttranslations5-l10n
-qt5-gtk-platformtheme
 read-edid
 rfkill
 rpcbind
