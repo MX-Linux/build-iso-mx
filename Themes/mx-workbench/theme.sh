@@ -24,8 +24,7 @@ copy_file zramswap.service 	/etc/systemd/system/
 # setup zsh and powerlevel10k
 copy_file .zshrc /etc/skel/
 copy_file .p10k.zsh /etc/skel/
-[ $ISO_ARCH = "x64" ] && copy_file gitstatusd-linux-x86_64 /etc/skel/.cache/gitstatus/ --create
-[ $ISO_ARCH = "386" ] && copy_file gitstatusd-linux-i686 /etc/skel/.cache/gitstatus/ --create
+copy_file gitstatusd-linux-x86_64 /etc/skel/.cache/gitstatus/ --create
 copy_file adduser.conf /etc/
 
 # copy custom Workbench stuff
