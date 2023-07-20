@@ -60,7 +60,6 @@ dislocker
 dmidecode
 dmraid
 dnsutils
-dpt-i2o-raidutils
 dstat
 duf
 dump
@@ -73,7 +72,6 @@ expect
 ext3grep
 ext4magic
 fatresize
-fbxkb
 fdisk
 feh
 file-roller
@@ -101,8 +99,6 @@ ghex
 git
 gnome-accessibility-themes
 gnome-disk-utility
-gnome-mime-data
-gnome-themes-standard
 gpa
 gpart
 gparted
@@ -202,7 +198,6 @@ policykit-1-gnome
 progress
 psensor
 pssh
-pulseaudio-module-bluetooth
 qla-tools
 qpdf
 qpdfview
@@ -214,10 +209,8 @@ reglookup
 reiser4progs
 remmina
 remmina-plugin-exec
-remmina-plugin-nx
 remmina-plugin-rdp
 remmina-plugin-secret
-remmina-plugin-spice
 remmina-plugin-vnc
 rename
 rkhunter
@@ -310,4 +303,4 @@ zfs-fuse
 zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
-zsh-theme-powerlevel10k
+# zsh-theme-powerlevel10k
