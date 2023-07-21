@@ -178,8 +178,8 @@ do_start() {
         [ -z "${disable_param##*[m]*}" ] &&             MEAN=true
         [ -z "${disable_param##*[n]*}" ] &&      DISABLE_NFS=true
         [ -z "${disable_param##*[n]*}" ] &&       NFS_REASON=n
-        [ -z "${disable_param##*[N]*}" ] &&    ENABLE_CHRONY=true
         [ -z "${disable_param##*[P]*}" ] &&       ENABLE_PAM=true
+        [ -z "${disable_param##*[T]*}" ] &&    ENABLE_CHRONY=true
         [ -z "${disable_param##*[v]*}" ] &&     DISABLE_VBOX=true
         [ -z "${disable_param##*[w]*}" ] &&             WICD=no
         [ -z "${disable_param##*[W]*}" ] &&             WICD=yes

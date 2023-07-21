@@ -243,11 +243,11 @@ after you boot with the "services" command.
     L                Enabled syslogd service
     m [mean]         disable "mean" services (see below)
     n                disable nfs service
-    N                Enable chrony service (disbabled by default)
     P                Enable pamd service (disabled by default)
     r [norepo]       don't localize repos based on timezone
     s [nosavestate]  don't save state on live-usb systems
     S [savestate]    DO save state on live-usb systems
+    T                Enable chrony service (disbabled by default)
     v                disable VirtualBox services
     V                Don't blacklist fb modules, nvidiafb, etc.
       [vboxdecor]    Enable fbcondecor in Virtual Box
