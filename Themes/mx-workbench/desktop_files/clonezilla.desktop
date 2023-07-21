@@ -3,7 +3,7 @@ Version=1.0
 Type=Application
 Name=clonezilla
 Comment=Bare metal backup and recovery of disk drives
-Exec=mx-pkexec "x-terminal-emulator -e clonezilla"
+Exec=pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY x-terminal-emulator -e clonezilla
 Icon=drive-harddisk
 Path=
 Terminal=false

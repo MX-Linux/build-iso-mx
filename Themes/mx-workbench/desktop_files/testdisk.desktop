@@ -3,7 +3,7 @@ Version=1.0
 Type=Application
 Name=testdisk
 Comment=Forensic tools for the partition and boot sectors of your disks.
-Exec=mx-pkexec "x-terminal-emulator -e testdisk"
+Exec=pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY x-terminal-emulator -e testdisk
 Icon=drive-harddisk
 Path=
 Terminal=false
