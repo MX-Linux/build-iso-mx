@@ -50,11 +50,11 @@ Category=Misc.
 geany 
 xfce4-terminal
 htop 
-iotop root
+iotop 
 
 Category=Hardware Info
 hardinfo
-Quick_System_Info
+Quick_System_Info user
 
 Category=Network
 ceni 
