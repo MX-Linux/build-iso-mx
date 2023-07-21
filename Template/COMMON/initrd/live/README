@@ -243,7 +243,7 @@ after you boot with the "services" command.
     L                Enabled syslogd service
     m [mean]         disable "mean" services (see below)
     n                disable nfs service
-    N                Enable ntpd service (disbabled by default)
+    N                Enable chrony service (disbabled by default)
     P                Enable pamd service (disabled by default)
     r [norepo]       don't localize repos based on timezone
     s [nosavestate]  don't save state on live-usb systems
@@ -277,14 +277,13 @@ Xtralean Services (x):
 
 Mean Services (m):
 
-    avahi-daemon               nfs-kernel-server
-    dnsmasq                    ntp
+    avahi-daemon               nfs-common
+    dnsmasq                    nfs-kernel-server
     ifplugd                    pppd-dns
     mountnfs-bootclean.sh      resolvconf
     mountnfs.sh                rpcbind
     network-manager            smbd
     networking                 ufw
-    nfs-common
 
 
 Personalization

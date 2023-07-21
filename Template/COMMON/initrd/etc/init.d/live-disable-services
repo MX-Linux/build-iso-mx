@@ -39,6 +39,7 @@ LEAN_SERVICES="
     bluetooth
     bootlogs
     #cherokee
+    chrony
     cpufrequtils
     cron
     cups
@@ -50,7 +51,6 @@ LEAN_SERVICES="
     lvm2
     mdadm
     nfs-common
-    ntpsec
     ofono
     rpcbind
     rsync
@@ -101,7 +101,6 @@ MEAN_SERVICES="
     networking
     nfs-common
     nfs-kernel-server
-    ntp
     pppd-dns
     resolvconf
     rpcbind
@@ -179,7 +178,7 @@ do_start() {
         [ -z "${disable_param##*[m]*}" ] &&             MEAN=true
         [ -z "${disable_param##*[n]*}" ] &&      DISABLE_NFS=true
         [ -z "${disable_param##*[n]*}" ] &&       NFS_REASON=n
-        [ -z "${disable_param##*[N]*}" ] &&      ENABLE_NTPD=true
+        [ -z "${disable_param##*[N]*}" ] &&    ENABLE_CHRONY=true
         [ -z "${disable_param##*[P]*}" ] &&       ENABLE_PAM=true
         [ -z "${disable_param##*[v]*}" ] &&     DISABLE_VBOX=true
         [ -z "${disable_param##*[w]*}" ] &&             WICD=no
@@ -216,7 +215,7 @@ do_start() {
     fi
 
     [ "$ENABLE_BOOTCLEAN" ] || disable_services 'checkroot-bootclean disable by default' 'checkroot-bootclean.sh'
-    [ "$ENABLE_NTPD"      ] || disable_services "ntpd disable by default" ntp
+    [ "$ENABLE_CHRONY"      ] || disable_services "chrony disable by default" chrony
     [ "$ENABLE_PAM"       ] || disable_pam_login
     [ "$ENABLE_PLYMOUTH"  ] || disable_services 'plymouth' plymouth
 
