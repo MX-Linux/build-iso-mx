@@ -22,6 +22,7 @@ colord
 colord-data
 compton
 compton-conf
+compton-conf-l10n
 conky-all
 conky-manager
 conky-toggle-mx
