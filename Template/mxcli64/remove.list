@@ -58,6 +58,8 @@ dvd+rw-tools
 elinks
 elinks-data
 emacsen-common
+espeak-ng
+espeak-ng-data
 ethtool
 exfatprogs
 extundelete
@@ -133,6 +135,7 @@ mc
 mc-data
 memtest86+
 menu
+menu-l10n
 menu-xdg
 mesa-utils
 mime-support
@@ -185,6 +188,8 @@ pv
 python3-bluez
 python3-smbc
 qt5-gtk-platformtheme
+qt6-translations-l10n
+qttranslations5-l10n
 read-edid
 reiserfsprogs
 rpl

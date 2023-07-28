@@ -1,4 +1,8 @@
 ceni
 iso-snapshot-cli
+iw
+keyboard-configuration
 linux-headers-amd64
 linux-image-amd64
+network-manager
+policykit-1
