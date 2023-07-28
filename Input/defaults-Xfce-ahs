@@ -8,14 +8,14 @@
 #----------------------------------------------------------------------
 
 
-DISTRO_VERSION="23_ahs_RC3"
+DISTRO_VERSION="23_ahs"
 
 # kernel
 # ahs
-K_REVISION="1mx-ahs"
+K_REVISION="2mx-ahs"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="6.3.0"
-#UNSIGNED="-unsigned"
+UNSIGNED="-unsigned"
 
 ENABLE_LOCALES=Default
 THEME=mx
