@@ -36,8 +36,10 @@ fbcat
 flake
 fonts-crosextra-caladea
 fonts-crosextra-carlito
+fonts-dejavu-core
 fonts-dejavu-extra
 fonts-droid-fallback
+fonts-freefont-ttf
 fonts-lyx
 fonts-opensymbol
 fonts-uralic
