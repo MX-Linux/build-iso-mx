@@ -5,11 +5,8 @@ alsa-utils
 apt-utils
 apt-xapian-index
 blt
-bluez-tools
-build-essential
 cabextract
 cifs-utils
-cli-aptix
 cups
 cups-browsed
 cups-common
@@ -31,11 +28,11 @@ dvd+rw-tools
 elinks
 elinks-data
 emacsen-common
+ethtool
 extundelete
 f2fs-tools
 fakeroot
 fbcat
-file
 flake
 fonts-crosextra-caladea
 fonts-crosextra-carlito
@@ -52,8 +49,6 @@ genisoimage
 gocr
 growisofs
 gsmartcontrol
-gtk2-engines-pixbuf
-gtkhash
 hexedit
 hplip-data
 htop
@@ -65,7 +60,6 @@ isomount
 iw
 jfsutils
 krb5-locales
-lp-solve
 lshw
 lxrandr
 mailcap
@@ -82,7 +76,6 @@ netcat-traditional
 nfs-kernel-server
 nwipe
 obexfs
-open-vm-tools
 openvpn
 p7zip
 p7zip-full
@@ -92,7 +85,6 @@ printer-driver-*
 psutils
 pv
 python3-bluez
-reiserfsprogs
 rpl
 samba
 samba-common
@@ -124,14 +116,10 @@ vrms
 wavpack
 whiptail
 wmctrl
-wodim
 wvdial
-xbitmaps
 xdelta3
 xfsprogs
-xml-core
 xserver-xorg-input-joystick
-xutils
 zip
 zlib1g-dev
 zsync
