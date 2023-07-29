@@ -129,7 +129,6 @@ lp-solve
 lshw
 lxrandr
 mailcap
-man-db
 mawk
 mc
 mc-data
@@ -202,6 +201,7 @@ sane-utils
 scrot
 sdparm
 sgml-data
+smartmontools
 spice-vdagent
 sshfs
 strace
