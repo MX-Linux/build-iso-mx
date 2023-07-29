@@ -20,17 +20,17 @@ restore=/live/etc/init.d/live-restore-services
 usb_save=/live/etc/init.d/live-usb-save
 [ -x $usb_save ] && $usb_save sys
 
-#make /etc/machine-id from /var/lib/dbus/machine-id if not present
+# Make /etc/machine-id from /var/lib/dbus/machine-id if not present
     if [ ! -e /etc/machine-id ]; then
     	if [ -e /var/lib/dbus/machine-id ]; then
     		cp /var/lib/dbus/machine-id /etc/machine-id
     	fi
     fi
 
-#make sure an apt cache archive partial folder exists for apt-notifier
+# Make sure an apt cache archive partial folder exists for apt-notifier
  [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
 
-#exit if systemd
+# Exit if systemd
 if [ -e "/etc/live/config/systemd" ]; then
     exit 0 
 fi
@@ -40,6 +40,9 @@ fi
 
 # Set up 12 hour clock format for some countries eg US
 [ -e /usr/local/bin/clock12or24 ] && /usr/local/bin/clock12or24
+
+# Get an IP address
+dhclient&
 
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
