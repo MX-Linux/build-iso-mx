@@ -16,9 +16,9 @@ THEME="mxcli"
 ENABLE_LOCALES="single"
 
 # standard 32 bit
-K_REVISION="20"
+K_REVISION="10"
 K_TEMPLATE="%V%G-%R-686-pae"
-K_VERSION="5.10.0"
+K_VERSION="6.1.0"
 UNSIGNED=""
 
 COMPRESSION_TYPE="xz"
