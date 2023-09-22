@@ -53,6 +53,7 @@ cups-bsd
 cups-filters-core-drivers
 curl
 dbus-x11
+dbus-user-session
 dc
 dconf-gsettings-backend
 dctrl-tools
