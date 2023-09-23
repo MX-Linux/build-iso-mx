@@ -168,6 +168,7 @@ krb5-locales
 laptop-detect
 less
 libblockdev-crypto2
+libcupsimage2
 libelf-dev
 libgail-common
 libgpg-error-l10n
