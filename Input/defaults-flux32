@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="23_fluxbox"
+DISTRO_VERSION="23.1_fluxbox"
 
 #32 bit version of fluxbox release, defaults from defaults-system
 
