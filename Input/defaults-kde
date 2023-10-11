@@ -7,11 +7,11 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23_KDE"
+DISTRO_VERSION="23.1_KDE"
 
 # kernel
 # ahs
-K_REVISION="10"
+K_REVISION="13"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="6.1.0"
 #UNSIGNED="-unsigned"
