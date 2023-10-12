@@ -12,7 +12,7 @@ DISTRO_VERSION="23.1_ahs"
 
 # kernel
 # ahs
-K_REVISION="1mx-ahs"
+K_REVISION="2mx-ahs"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="6.5.0"
 UNSIGNED="-unsigned"
