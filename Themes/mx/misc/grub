@@ -34,10 +34,8 @@ GRUB_DISABLE_RECOVERY="true"
 #run dpkg-reconfigure grub-pc to allow toggle of os-prober
 #GRUB_DISABLE_OS_PROBER=false
 
-#comment out the below line to allow the above GRUB_DISABLE_OS_PROBER to be toggled off manually
 if [ -e /etc/default/grub.mx-defaults ]; then
      .  /etc/default/grub.mx-defaults
 fi
-#comment out the above lines to allow the above GRUB_DISABLE_OS_PROBER to be toggled off manually
 
 GRUB_THEME="/boot/grub/themes/mx_linux/theme.txt"
