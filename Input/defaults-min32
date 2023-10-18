@@ -7,7 +7,7 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23_minimal"
+DISTRO_VERSION="23.1_minimal"
 
 ARCH="i386"
 ISO_FLAV="mxmin32"
@@ -16,7 +16,7 @@ THEME="mxmin"
 ENABLE_LOCALES="default"
 
 # Standard 32 bit
-K_REVISION="10"
+K_REVISION="13"
 K_TEMPLATE="%V%G-%R-686-pae"
 K_VERSION="6.1.0"
 UNSIGNED=""
