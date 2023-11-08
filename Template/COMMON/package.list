@@ -1,4 +1,4 @@
-# mx-datetime
+ mx-datetime
 #hddtemp
 #mx-pkexec
 #pppoeconf
@@ -52,8 +52,8 @@ cups-browsed
 cups-bsd
 cups-filters-core-drivers
 curl
-dbus-x11
 dbus-user-session
+dbus-x11
 dc
 dconf-gsettings-backend
 dctrl-tools
@@ -203,7 +203,6 @@ menu-l10n
 menu-xdg
 mesa-utils
 mime-support
-mlocate
 mobile-broadband-provider-info
 modemmanager
 module-assistant
@@ -261,6 +260,7 @@ patch
 pciutils
 pcmciautils
 pipewire-setup-mx
+plocate
 pm-utils
 pmount
 policykit-1
