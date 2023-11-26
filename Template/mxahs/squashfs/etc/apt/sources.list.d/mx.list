@@ -1,6 +1,6 @@
 # MX Community Main and Test Repos
-deb http://mxrepo.com/mx/repo/ bookworm main non-free
-#deb http://mxrepo.com/mx/testrepo/ bookworm test
+deb https://mxrepo.com/mx/repo/ bookworm main non-free
+#deb https://mxrepo.com/mx/testrepo/ bookworm test
 
 #ahs hardware stack repo
-deb http://mxrepo.com/mx/repo/ bookworm ahs
+deb https://mxrepo.com/mx/repo/ bookworm ahs
