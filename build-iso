@@ -71,6 +71,7 @@ Options:
     --show-stages       Show the stages of processing
     --show-parts        Show parts of stage-$chroot_stage and how to control them
     -0 -- -8            Start over from stage N.
+    --stop5				Stop process at Stage 5 (cleanup)
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -203,6 +204,7 @@ main() {
          -VERBOSE|V)   verbose_mode=true                        ;;
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
+             -stop5)         stop_5=true						;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -1344,6 +1346,10 @@ apply_theme() {
 # Stage 5
 #------------------------------------------------------------------------------
 do_stage_5() {
+ 	if [ $stop_5 ]; then
+ 		my_exit 0
+ 	fi
+ 	
     enter_stage 5 "Finalize and clean the chroot"
 
     check_sqfs_dir
