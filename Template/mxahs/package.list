@@ -189,11 +189,8 @@ lightdm-gtk-greeter
 lightdm-gtk-greeter-mx23
 lightdm-gtk-greeter-settings
 lightdm-modified-init
-#linux-headers-686-pae
-#linux-headers-amd64
-#linux-image-686-pae
-#linux-image-amd64
-#live-usb-maker-gui
+linux-image-liquorix-amd64
+linux-headers-liquorix-amd64
 lo-main-helper
 luckybackup
 luckybackup-data
