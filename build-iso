@@ -1280,6 +1280,10 @@ do_stage_4() {
     fi
     #-----------------------------------------------------------------
 
+    #run ldconfig incase of any special linking required.
+    say "Running ldconfig..."
+    ldconfig
+
     local partial_dir=/var/cache/apt/archives/partial
     say "Fix $(pq $partial_dir) directory"
     mkdir -p $partial_dir
