@@ -27,6 +27,23 @@ usb_save=/live/etc/init.d/live-usb-save
     	fi
     fi
 
+#set /etc/papersize
+PAPERSIZE="a4"
+case $(locale | grep ^LC_PAPER= | cut -d= -f2) in
+    en_CA*)  PAPERSIZE="letter"       ;; # English locale for Canada         
+    en_US*)  PAPERSIZE="letter"       ;; # English locale for the USA        
+    es_BO*)  PAPERSIZE="letter"       ;; # Spanish locale for Bolivia        
+    es_CO*)  PAPERSIZE="letter"       ;; # Spanish locale for Colombia       
+    es_MX*)  PAPERSIZE="letter"       ;; # Spanish locale for Mexico         
+    es_NI*)  PAPERSIZE="letter"       ;; # Spanish locale for Nicaragua      
+    es_PA*)  PAPERSIZE="letter"       ;; # Spanish locale for Panama         
+    es_US*)  PAPERSIZE="letter"       ;; # Spanish locale for the USA        
+    es_VE*)  PAPERSIZE="letter"       ;; # Spanish locale for Venezuela      
+    fr_CA*)  PAPERSIZE="letter"       ;; # French locale for Canada          
+         *)  PAPERSIZE="a4"           ;;
+esac
+echo $PAPERSIZE > /etc/papersize
+
 #make sure an apt cache archive partial folder exists for apt-notifier
  [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
 
