@@ -29,7 +29,7 @@ usb_save=/live/etc/init.d/live-usb-save
 
 #set /etc/papersize
 PAPERSIZE="a4"
-case $(locale | grep ^LC_PAPER= | cut -d= -f2) in
+case $(locale | grep ^LC_PAPER= | cut -d= -f2 | tr -d '"'"'" ) in
     en_CA*)  PAPERSIZE="letter"       ;; # English locale for Canada         
     en_US*)  PAPERSIZE="letter"       ;; # English locale for the USA        
     es_BO*)  PAPERSIZE="letter"       ;; # Spanish locale for Bolivia        
