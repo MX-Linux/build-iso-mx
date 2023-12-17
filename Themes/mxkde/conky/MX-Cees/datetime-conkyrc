@@ -13,7 +13,7 @@ background = true,
 own_window = true,
 own_window_type = 'normal',
 own_window_transparent = true,
-own_window_argb_visual = false,
+own_window_argb_visual = true,
 	--own_window_argb_value = 0,
 own_window_hints = 'undecorated,below,skip_taskbar,skip_pager,sticky',
 own_window_colour = '000000',
@@ -63,8 +63,8 @@ alignment = 'top_right',
 
 conky.text = [[
 ###### SET 12H/24H ###
-# ${color1}${voffset -15}${font DejaVu Sans:size=81:bold}${alignc}${time %H}${font}
-${color1}${voffset -15}${font DejaVu Sans:size=81:bold}${alignc}${time %H}${font}
+# ${color1}${voffset -15}${font DejaVu Sans:size=81:bold}${alignc}${time %I}${font}
+${color1}${voffset -15}${font DejaVu Sans:size=81:bold}${alignc}${time %I}${font}
 ###### DAY+DATE ###
 ${color2}${voffset 5}${alignc}${time %A} ${color3}${time %d %b}${font}
 ###### MINUTE ###
@@ -72,9 +72,9 @@ ${color6}${voffset -15}${font DejaVu Sans:size=81:bold}${alignc}${time %M}${colo
 ###### MEM/CPU ###
 ${color3}${voffset 5}${alignc}mem ${color1}${memperc}%  ${color4}cpu ${color1}${cpu cpu0}%
 ###### BATTERY ###
-${color2}${voffset 5}${alignc}bat  \
-${if_existing /sys/class/power_supply/BAT0/status}${voffset 1}${color6}${battery_bar 6,50 BAT0}  ${voffset -1}${color3}${battery_percent BAT0}%${endif}\
-${if_existing /sys/class/power_supply/BAT1/status}${voffset 1}${color6}${battery_bar 6,50 BAT1}  ${voffset -1}${color3}${battery_percent BAT1}%${endif}
+${color2}${voffset 5}${alignc}  \
+${if_existing /sys/class/power_supply/BAT0/status}bat ${voffset 1}${color6}${battery_bar 6,50 BAT0}  ${voffset -1}${color3}${battery_percent BAT0}%${endif}\
+${if_existing /sys/class/power_supply/BAT1/status}bat ${voffset 1}${color6}${battery_bar 6,50 BAT1}  ${voffset -1}${color3}${battery_percent BAT1}%${endif}
 ###### CORRECTION WIDGET HEIGHT ###
 ${voffset -90}
 ]];
