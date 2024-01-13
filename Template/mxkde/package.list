@@ -1,8 +1,3 @@
-# ksysguard
-# ksysguard-data
-# ksysguardd
-# libreoffice-avmedia-backend-gstreamer
-# pulseaudio-module-bluetooth
 advert-block-antix
 akonadi-contacts-data
 alsa-topology-conf
@@ -62,7 +57,6 @@ gnupg-agent
 gsfonts
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
-guvcview
 heif-gdk-pixbuf
 heif-thumbnailer
 hicolor-icon-theme
@@ -82,6 +76,7 @@ kaccounts-providers
 kactivities-bin
 kactivitymanagerd
 kamera
+kamoso
 kamoso
 kate
 kate5-data
@@ -310,7 +305,6 @@ vlc
 vlc-data
 vlc-l10n
 wayland-utils
-#webcamoid
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident
