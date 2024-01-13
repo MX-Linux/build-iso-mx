@@ -122,7 +122,7 @@ gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
 gtkdialog
-#guvcview
+guvcview
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -347,7 +347,7 @@ vlc-data
 vlc-l10n
 #vlc-nox
 volumeicon-alsa
-webcamoid
+#webcamoid
 xdg-user-dirs-gtk
 #xf86-video-sis-antix
 xfburn

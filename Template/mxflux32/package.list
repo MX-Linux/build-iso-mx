@@ -70,6 +70,7 @@ gtk2-engines
 #gtk3-nocsd
 gtkdialog
 gzip
+guvcview
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -295,7 +296,7 @@ vcdimager
 #virtualbox-guest-utils-modified-init
 #virtualbox-guest-x11
 volumeicon-alsa
-webcamoid
+#webcamoid
 whiptail
 wmalauncher
 xdg-user-dirs-gtk

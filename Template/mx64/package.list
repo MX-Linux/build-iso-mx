@@ -124,6 +124,7 @@ hardinfo
 qt-heif-image-plugin
 heif-thumbnailer
 heif-gdk-pixbuf
+guvcview
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -349,7 +350,7 @@ vlc-l10n
 vlc-data
 #vlc-nox
 volumeicon-alsa
-webcamoid
+#webcamoid
 xdg-user-dirs-gtk
 #xf86-video-sis-antix
 xfburn

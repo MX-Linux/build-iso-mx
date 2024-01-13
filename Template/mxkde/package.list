@@ -82,6 +82,7 @@ kaccounts-providers
 kactivities-bin
 kactivitymanagerd
 kamera
+kamoso
 kate
 kate5-data
 kcalc
@@ -309,7 +310,7 @@ vlc
 vlc-data
 vlc-l10n
 wayland-utils
-webcamoid
+#webcamoid
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident
