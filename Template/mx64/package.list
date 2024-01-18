@@ -119,12 +119,12 @@ gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
 gtkdialog
-#guvcview
 hardinfo
 qt-heif-image-plugin
 heif-thumbnailer
 heif-gdk-pixbuf
 guvcview
+guvcview-modified-desktop-file
 gvfs
 gvfs-backends
 gvfs-fuse

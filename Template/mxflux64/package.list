@@ -71,6 +71,7 @@ gtk2-engines
 gtkdialog
 gzip
 guvcview
+guvcview-modified-desktop-file
 gvfs
 gvfs-backends
 gvfs-fuse

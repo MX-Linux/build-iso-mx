@@ -123,6 +123,7 @@ gtk2-engines
 #gtk3-nocsd
 gtkdialog
 guvcview
+guvcview-modified-desktop-file
 gvfs
 gvfs-backends
 gvfs-fuse
