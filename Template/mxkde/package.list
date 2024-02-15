@@ -167,6 +167,8 @@ libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 libreoffice-style-sifr
 libreoffice-writer
+linux-headers-amd64
+linux-image-amd64
 lo-main-helper
 manpages-dev
 media-player-info
