@@ -1,0 +1,7 @@
+#to work with live system,  the systemd specific versions of 
+#wpa_supplicant are disabled.
+
+#the dbus versions are still launched...particularly usefull for 
+#network-manager
+
+##systemd-networkd-wait-online-service hangs if systemd-networkd is not actually in use, so disable
