@@ -27,7 +27,6 @@ usb_save=/live/etc/init.d/live-usb-save
     	fi
     fi
 
-
 #set /etc/papersize
 PAPERSIZE="a4"
 case $(locale | grep ^LC_PAPER= | cut -d= -f2 | tr -d '"'"'" ) in
@@ -49,7 +48,7 @@ echo $PAPERSIZE > /etc/papersize
  [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
 
 #exit if systemd
-if [ -e "/etc/live/config/systemd" ]; then
+if [ -e "/live/config/systemd" ]; then
     exit 0 
 fi
 

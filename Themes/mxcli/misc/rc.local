@@ -20,29 +20,43 @@ restore=/live/etc/init.d/live-restore-services
 usb_save=/live/etc/init.d/live-usb-save
 [ -x $usb_save ] && $usb_save sys
 
-# Make /etc/machine-id from /var/lib/dbus/machine-id if not present
+#make /etc/machine-id from /var/lib/dbus/machine-id if not present
     if [ ! -e /etc/machine-id ]; then
     	if [ -e /var/lib/dbus/machine-id ]; then
     		cp /var/lib/dbus/machine-id /etc/machine-id
     	fi
     fi
 
-# Make sure an apt cache archive partial folder exists for apt-notifier
+#set /etc/papersize
+PAPERSIZE="a4"
+case $(locale | grep ^LC_PAPER= | cut -d= -f2 | tr -d '"'"'" ) in
+    en_CA*)  PAPERSIZE="letter"       ;; # English locale for Canada         
+    en_US*)  PAPERSIZE="letter"       ;; # English locale for the USA        
+    es_BO*)  PAPERSIZE="letter"       ;; # Spanish locale for Bolivia        
+    es_CO*)  PAPERSIZE="letter"       ;; # Spanish locale for Colombia       
+    es_MX*)  PAPERSIZE="letter"       ;; # Spanish locale for Mexico         
+    es_NI*)  PAPERSIZE="letter"       ;; # Spanish locale for Nicaragua      
+    es_PA*)  PAPERSIZE="letter"       ;; # Spanish locale for Panama         
+    es_US*)  PAPERSIZE="letter"       ;; # Spanish locale for the USA        
+    es_VE*)  PAPERSIZE="letter"       ;; # Spanish locale for Venezuela      
+    fr_CA*)  PAPERSIZE="letter"       ;; # French locale for Canada          
+         *)  PAPERSIZE="a4"           ;;
+esac
+echo $PAPERSIZE > /etc/papersize
+
+#make sure an apt cache archive partial folder exists for apt-notifier
  [ -d /var/cache/apt/archives/partial ] || mkdir -p /var/cache/apt/archives/partial 2>/dev/null &
 
-# Exit if systemd
-if [ -e "/etc/live/config/systemd" ]; then
+#exit if systemd
+if [ -e "/live/config/systemd" ]; then
     exit 0 
 fi
 
 # Detect and set up correct broadcom
-[ -e /usr/local/bin/BroadcomStartup ] && /usr/local/bin/BroadcomStartup
+/usr/local/bin/BroadcomStartup
 
 # Set up 12 hour clock format for some countries eg US
-[ -e /usr/local/bin/clock12or24 ] && /usr/local/bin/clock12or24
-
-# Get an IP address
-dhclient&
+/usr/local/bin/clock12or24
 
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
