@@ -95,16 +95,18 @@ do_stop() {
     done
     test -r $PERSIST_CONF && . $PERSIST_CONF
 
-    # We always need to chvt 1 now in semi-auto mode
-    case $AUTOSAVE_MODE in
-        1*) tsplash_alert 'persist-save' ;;
-        2*) tsplash_clear                ;;
-         *) return                       ;;
-    esac
+    # If not running runit, we always need to chvt 1 now in semi-auto mode
+    if [ ! -f /run/runit.stopit ]; then
+        case $AUTOSAVE_MODE in
+            1*) tsplash_alert 'persist-save' ;;
+            2*) tsplash_clear                ;;
+             *) return                       ;;
+        esac
+    fi
 
     get_init_param PERSIST_UUID
     local uuid_dev=$(blkid -U "$PERSIST_UUID" -c /dev/null)
-    [ -z "$uuid_dev" ] && tsplash_clear
+    [ ! -f /run/runit.stopit ] && [ -z "$uuid_dev" ] && tsplash_clear
 
     local p_config=/usr/local/bin/persist-config
     test -x $p_config && $p_config --cli --shutdown
