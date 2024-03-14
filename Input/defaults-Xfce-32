@@ -10,7 +10,7 @@
 #32 bit version of Xfce release, defaults from defaults-system
 
 # standard 32 bit
-K_REVISION="17"
+K_REVISION="18"
 K_TEMPLATE="%V%G-%R-%A-pae"
 K_VERSION="6.1.0"
 UNSIGNED=""
