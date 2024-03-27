@@ -389,7 +389,7 @@ main_wrapper() {
     vmsg 6 'drop caches'
     #free -m >> $MY_LOG
 
-    if find_init_prog INIT_PROG $NEW_ROOT; then
+    if  ! confile init-prog && find_init_prog INIT_PROG $NEW_ROOT; then
 
         vmsg 4 'Run %s instead of %s' $white$INIT_PROG$m_co $white/sbin/init$m_co
         vmsg 5 "${hi_co}%s" 'Please exit shells normally to allow for a clean unmount'
@@ -402,10 +402,9 @@ main_wrapper() {
         safe_shutdown poweroff ask
 
     else
-        : ${INIT_COMMAND:=/sbin/init}
-        test -x $NEW_ROOT$INIT_COMMAND || INIT_COMMAND=/sbin/init
+        : ${INIT_COMMAND:=${INIT_PROG:=/sbin/init}}
+        breakpoint i "befor switch root"
         vmsg 6  "Start %s process" $(pq $INIT_COMMAND)
-
         # Note that "nomodeset" is yet again unreliable!
         # [ "$NO_CLEAR" ] || [ "$NO_MODESET" ] || clear
         [ "$NO_CLEAR" ] || clear
@@ -607,15 +606,20 @@ main_core() {
 
     mount_unionfs "$AUFS_MP" "$SQFS_MP" "$AUFS_RAM_MP" "$ROOTFS_MP"
 
-    SYSTEM_D=
-    local sbin_init=$(readlink $NEW_ROOT/sbin/init)
-    if [ -n "$sbin_init" -a -z "${sbin_init##*systemd}" ]; then
-        SYSTEM_D=true
-        touch /live/config/systemd
-        msg  "$_Detected_X_init_system_" $(cq systemd)
-    fi
-
     breakpoint 6 "after mounting aufs"
+
+    # SYSTEM_D=
+    local init_cmd=${INIT_PROG:=/sbin/init}
+    [ -h $NEW_ROOT/${init_cmd} ] && init_cmd=$(chroot $NEW_ROOT readlink -f "${init_cmd}")
+    if [ -x "$NEW_ROOT/${init_cmd#/}" ] && [ -n "${init_cmd##*/}" ]; then
+        case "${init_cmd##*/}" in
+            init|init*|*init|runit*|*runit|s6-66*|*s6-66|s6-rc*|*s6-rc|openrc*|*openrc|*systemd)
+            echo  ${init_cmd} > /live/config/init-prog
+            ;;
+        esac
+        [ -z "${init_cmd##*/init}"   ] || msg  "$_Detected_X_init_system_" $(cq "${init_cmd##*/}")
+        [ -z "${init_cmd##*systemd}" ] && touch /live/config/systemd
+    fi
 
     load_microcode
 
@@ -659,7 +663,7 @@ main_core() {
 
     stop_hotplug
 
-    #breakpoint 7 "before prepare switch_root"
+    breakpoint 7 "before prepare switch_root"
 
     prepare_switch_root $NEW_ROOT $LIVE_DIR $FINAL_DIR
 
@@ -937,7 +941,7 @@ read_cmdline_params()
                       traceload) TRACE_LOAD=true                                 ;;
                  autoload|aload) FULL_AUTOLOAD=true                              ;;
 
-                         init=*) INIT_PROG=$value                                ;;
+                         init=*) INIT_PROG=$value ; export INIT_PROG         ;;
 
                        noerrlog) NO_ERR_LOG=true                                 ;;
                         noerr=*) NO_ERROR=$value                                 ;;
@@ -6208,7 +6212,7 @@ auto_login() {
 
     db_msg "Enable autologin"
 
-    if [ -z "$SYSTEM_D" ]; then
+    if ! confile systemd; then
         sed -i.bak -r "/autologin/! s=^([$terms]:[0-9]+:respawn:[^ ]+)=\1 --autologin root=" $root/etc/inittab
         return
     fi
