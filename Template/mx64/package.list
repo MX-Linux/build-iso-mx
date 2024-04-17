@@ -351,6 +351,9 @@ vlc-data
 #vlc-nox
 volumeicon-alsa
 #webcamoid
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gtk
 xdg-user-dirs-gtk
 #xf86-video-sis-antix
 xfburn

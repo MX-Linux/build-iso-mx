@@ -352,6 +352,9 @@ vlc-data
 volumeicon-alsa
 #webcamoid
 xdg-user-dirs-gtk
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gtk
 #xf86-video-sis-antix
 xfburn
 #xfce-keyboard-shortcuts
