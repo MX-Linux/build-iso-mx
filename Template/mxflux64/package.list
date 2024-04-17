@@ -46,6 +46,7 @@ fdisk
 featherpad
 feh
 file-roller
+flatpak
 fluxbox
 fonts-font-awesome
 fonts-vlgothic
@@ -301,6 +302,8 @@ volumeicon-alsa
 #webcamoid
 whiptail
 wmalauncher
+xdg-desktop-portal
+xdg-desktop-portal-gtk
 xdg-user-dirs-gtk
 xfburn
 #xfce4-appfinder
