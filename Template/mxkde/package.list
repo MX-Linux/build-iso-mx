@@ -43,6 +43,7 @@ ffmpegthumbnailer
 ffmpegthumbs
 filelight
 flac
+flatpak
 foliate
 fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
@@ -306,6 +307,8 @@ vlc
 vlc-data
 vlc-l10n
 wayland-utils
+xdg-desktop-portal
+xdg-desktop-portal-kde
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident
