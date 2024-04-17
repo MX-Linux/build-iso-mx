@@ -70,6 +70,7 @@ featherpad
 feh
 file-roller
 flac
+flatpak
 #flashplugin-nonfree
 foliate
 fonts-vlgothic #Japanese
@@ -351,7 +352,6 @@ vlc-data
 #vlc-nox
 volumeicon-alsa
 #webcamoid
-flatpak
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-user-dirs-gtk
