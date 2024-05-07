@@ -14,7 +14,7 @@ DISTRO_VERSION="23.3_fluxbox"
 #32 bit version of fluxbox release, defaults from defaults-system
 
 # standard 32 bit
-K_REVISION="18"
+K_REVISION="21"
 K_TEMPLATE="%V%G-%R-%A-pae"
 K_VERSION="6.1.0"
 UNSIGNED=""

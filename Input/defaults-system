@@ -34,7 +34,7 @@ ASCII_CODE_NAME="Libretto"
 
 DISTRO_VERSION="23.3"
 DISTRO_NAME="MX"
-RELEASE_DATE="April 14, 2024"
+RELEASE_DATE="May 19, 2024"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bookworm"
