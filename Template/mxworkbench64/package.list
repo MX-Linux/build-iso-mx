@@ -35,6 +35,7 @@ coreutils
 cpu-x
 cpuid
 cpuidtool
+cpulimit
 cputool
 custom-toolbox
 dbench
