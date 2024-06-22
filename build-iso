@@ -72,6 +72,7 @@ Options:
     --show-parts        Show parts of stage-$chroot_stage and how to control them
     -0 -- -8            Start over from stage N.
     --stop5				Stop process at Stage 5 (cleanup)
+    --stop8				Stop process at Stage 8 (iso generation)
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -205,6 +206,7 @@ main() {
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
              -stop5)         stop_5=true						;;
+             -stop8)         stop_8=true						;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -1789,6 +1791,11 @@ do_stage_7() {
 # Stage 8 creates the iso file.
 #------------------------------------------------------------------------------
 do_stage_8() {
+
+ 	if [ $stop_8 ]; then
+ 		my_exit 0
+ 	fi
+ 	
     enter_stage 8 "Create iso file"
 
     report_size $iso_dir
