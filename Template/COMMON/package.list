@@ -1,12 +1,4 @@
- mx-datetime
-#hddtemp
-#mx-pkexec
-#pppoeconf
-#smxi-inxi-antix
-#xserver-xorg-input-evdev
-#xserver-xorg-input-kbd
-#xserver-xorg-input-mouse
-#xserver-xorg-input-synaptics
+mx-datetime
 accountsservice
 acl
 acpi
@@ -53,7 +45,6 @@ cups-browsed
 cups-bsd
 cups-filters-core-drivers
 curl
-dbus-user-session
 dbus-x11
 dc
 dconf-gsettings-backend
@@ -325,11 +316,6 @@ syslinux
 syslinux-common
 syslinux-utils
 system-tools-backends
-systemd
-systemd-shim
-sysv-rc-conf
-sysvinit-core
-sysvinit-utils
 tcl
 tcpd
 tdb-tools
