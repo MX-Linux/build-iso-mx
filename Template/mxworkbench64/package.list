@@ -5,6 +5,7 @@ alsa-ucm-conf
 apt
 apt-notifier
 apt-utils
+archivemount
 arpwatch
 at
 attr
