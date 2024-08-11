@@ -699,7 +699,7 @@ do_stage_2() {
     create_cache $deboot_cache_opts
 
     say "Customize live system for antiX"
-    $SUDO rm -f  $sqfs_dir/etc/apt/sources.list
+    $SUDO rm -f $sqfs_dir/etc/apt/sources.list
     copy_template_dir squashfs $sqfs_dir
 
     leave_stage
@@ -1355,7 +1355,7 @@ do_stage_5() {
  	if [ $stop_5 ]; then
  		my_exit 0
  	fi
- 	
+
     enter_stage 5 "Finalize and clean the chroot"
 
     check_sqfs_dir
@@ -1795,7 +1795,7 @@ do_stage_8() {
  	if [ $stop_8 ]; then
  		my_exit 0
  	fi
- 	
+
     enter_stage 8 "Create iso file"
 
     report_size $iso_dir
