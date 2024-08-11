@@ -1,4 +1,3 @@
- mx-datetime
 #hddtemp
 #mx-pkexec
 #pppoeconf
@@ -215,6 +214,7 @@ mtools
 mtr
 mx-boot-options
 mx-bootrepair
+mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
