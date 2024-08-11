@@ -34,7 +34,7 @@ ASCII_CODE_NAME="Libretto"
 
 DISTRO_VERSION="23.3"
 DISTRO_NAME="MX"
-RELEASE_DATE="May 19, 2024"
+RELEASE_DATE="Aug 11, 2024"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bookworm"
@@ -44,7 +44,7 @@ NEW_HOSTNAME="mx1"
 
 # kernel
 # standard 64 bit
-K_REVISION="21"
+K_REVISION="23"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="6.1.0"
 UNSIGNED=""
