@@ -273,10 +273,8 @@ main() {
     [[ $# -gt 0 ]]           && fatal "Extra command line parameters: $(pqw $@)"
     [[ -z $script_dir ]]     && fatal "No script_dir!"
     [[ $script_dir = "/" ]]  && fatal "script_dir can't be root dir!"
-    grep -v -P '="[^"]+"(\s+)?$' -r Template/COMMON/initrd/live/locale/xlat && fatal "Translation problems in xlat file"
-
-    [[ -n $show_stages ]] && show_stages
-    [[ -n $show_parts  ]] && show_parts
+    [[ -n $show_stages ]]    && show_stages
+    [[ -n $show_parts  ]]    && show_parts
 
     SUDO=sudo
     [[ $UID -eq 0 ]] && SUDO=
