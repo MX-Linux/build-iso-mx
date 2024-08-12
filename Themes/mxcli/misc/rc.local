@@ -30,16 +30,16 @@ usb_save=/live/etc/init.d/live-usb-save
 #set /etc/papersize
 PAPERSIZE="a4"
 case $(locale | grep ^LC_PAPER= | cut -d= -f2 | tr -d '"'"'" ) in
-    en_CA*)  PAPERSIZE="letter"       ;; # English locale for Canada         
-    en_US*)  PAPERSIZE="letter"       ;; # English locale for the USA        
-    es_BO*)  PAPERSIZE="letter"       ;; # Spanish locale for Bolivia        
-    es_CO*)  PAPERSIZE="letter"       ;; # Spanish locale for Colombia       
-    es_MX*)  PAPERSIZE="letter"       ;; # Spanish locale for Mexico         
-    es_NI*)  PAPERSIZE="letter"       ;; # Spanish locale for Nicaragua      
-    es_PA*)  PAPERSIZE="letter"       ;; # Spanish locale for Panama         
-    es_US*)  PAPERSIZE="letter"       ;; # Spanish locale for the USA        
-    es_VE*)  PAPERSIZE="letter"       ;; # Spanish locale for Venezuela      
-    fr_CA*)  PAPERSIZE="letter"       ;; # French locale for Canada          
+    en_CA*)  PAPERSIZE="letter"       ;; # English locale for Canada
+    en_US*)  PAPERSIZE="letter"       ;; # English locale for the USA
+    es_BO*)  PAPERSIZE="letter"       ;; # Spanish locale for Bolivia
+    es_CO*)  PAPERSIZE="letter"       ;; # Spanish locale for Colombia
+    es_MX*)  PAPERSIZE="letter"       ;; # Spanish locale for Mexico
+    es_NI*)  PAPERSIZE="letter"       ;; # Spanish locale for Nicaragua
+    es_PA*)  PAPERSIZE="letter"       ;; # Spanish locale for Panama
+    es_US*)  PAPERSIZE="letter"       ;; # Spanish locale for the USA
+    es_VE*)  PAPERSIZE="letter"       ;; # Spanish locale for Venezuela
+    fr_CA*)  PAPERSIZE="letter"       ;; # French locale for Canada
          *)  PAPERSIZE="a4"           ;;
 esac
 echo $PAPERSIZE > /etc/papersize
@@ -49,7 +49,7 @@ echo $PAPERSIZE > /etc/papersize
 
 #exit if systemd
 if [ -e "/live/config/systemd" ]; then
-    exit 0 
+    exit 0
 fi
 
 # Detect and set up correct broadcom
@@ -60,7 +60,7 @@ fi
 # Set up 12 hour clock format for some countries eg US
 if [ -e "/usr/local/bin/clock12or24" ]; then
     /usr/local/bin/clock12or24
-ff
+fi
 
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
