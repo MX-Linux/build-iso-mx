@@ -305,7 +305,6 @@ rsync
 rsyslog
 rsyslogd-sysvinit-compat
 rtl8812au-dkms
-rtl8821ce-dkms
 rtl8821cu-dkms
 samba
 sane-utils
