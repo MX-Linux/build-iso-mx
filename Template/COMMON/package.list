@@ -43,14 +43,6 @@ iputils-ping
 keyutils
 krb5-locales
 less
-libacl1:amd64
-libapparmor1:amd64
-libapt-pkg6.0:amd64
-libassuan0:amd64
-libatm1:amd64
-libattr1:amd64
-libaudit-common
-libaudit1:amd64
 locales
 login
 logsave
@@ -84,11 +76,8 @@ sysvinit-utils
 tar
 time
 tzdata
-unzip
 usr-is-merged
 util-linux
 util-linux-extra
 xdg-user-dirs
 xz-utils
-zip
-zlib1g:amd64
