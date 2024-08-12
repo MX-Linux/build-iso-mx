@@ -1303,16 +1303,19 @@ do_stage_4() {
         fi
     fi
 
-    local update_cmd=updatedb
-    say "Run $update_cmd"
-    echo 3 | sudo tee /proc/sys/vm/drop_caches >/dev/null
-    sleep 2
-    mount -t tmpfs -o size=100k tmpfs /var/cache/apt/archives
-    $update_cmd --add-prunepaths /var/cache/apt/archives/ || error "The $(pqw $update_cmd) program failed"
-    $update_cmd || error "The $(pqw $update_cmd) program failed"
-    umount /var/cache/apt/archives
-    sleep 2
-    echo 3 | sudo tee /proc/sys/vm/drop_caches >/dev/null
+    local update_cmd=/usr/bin/updatedb
+    if [[ -x $update_cmd ]]; then
+        say "Run $update_cmd"
+        echo 3 | sudo tee /proc/sys/vm/drop_caches >/dev/null
+        sleep 2
+        mount -t tmpfs -o size=100k tmpfs /var/cache/apt/archives
+        $update_cmd --add-prunepaths /var/cache/apt/archives/ || error "The $(pqw $update_cmd) program failed"
+        $update_cmd || error "The $(pqw $update_cmd) program failed"
+        umount /var/cache/apt/archives
+        sleep 2
+        echo 3 | sudo tee /proc/sys/vm/drop_caches >/dev/null
+    fi
+
     # We send on the exact kernel name we found
     echo "K_NAME=\"$K_NAME\"" > $output_file
 
@@ -1355,7 +1358,7 @@ do_stage_5() {
  	if [ $stop_5 ]; then
  		my_exit 0
  	fi
- 	
+
     enter_stage 5 "Finalize and clean the chroot"
 
     check_sqfs_dir
@@ -1797,7 +1800,7 @@ do_stage_8() {
  	if [ $stop_8 ]; then
  		my_exit 0
  	fi
- 	
+
     enter_stage 8 "Create iso file"
 
     report_size $iso_dir
