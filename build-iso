@@ -3,7 +3,7 @@
 #==============================================================================
 # build-iso: Build antiX liveCD/USB isos from scratch using debootstrap.
 #
-# Copyright 2012 -- 2019
+# Copyright 2012 -- 2024
 #     BitJam and anticapitalista for antiX <antiX@operamail.com>
 #==============================================================================
 
@@ -102,13 +102,13 @@ main() {
     local save_mode jbb_mode
 
     local script_dir
-    script_dir=$(dirname $(readlink -f $0))
+    script_dir=$(dirname "$(readlink -f "$0")")
     local template=$script_dir/Template
     local tools=$script_dir/Tools
     local output_dir=$script_dir/Output
     local input_dir=$script_dir/Input
     local remaster_dir
-    remaster_dir=$(readlink -f $script_dir/Remaster)
+    remaster_dir=$(readlink -f "$script_dir"/Remaster)
     local iso_file_dir=$remaster_dir/iso-files
     local deb_cache_dir=$remaster_dir/deb-cache/archives
     local manual_selections=manual-selections
@@ -121,7 +121,7 @@ main() {
     local err_file=$output_dir/$ME.err
     local make_xinitrc=/usr/share/antiX/lib/make-xinitrc
 
-    local live_files_list=$input_dir/live-files.list
+    # local live_files_list=$input_dir/live-files.list
     local strict_regex_file=$input_dir/strict-exceptions.regex
     local lax_regex_file=$input_dir/lax-errors.regex
     local regex_files="$lax_regex_file $strict_regex_file"
@@ -136,7 +136,7 @@ main() {
     local partial_file=$build_dir/$partial_name
     local seed_fname="random-seed"
     local user_defaults user_default_file apt_yes
-    local initrd_encrypt
+    # local initrd_encrypt
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
