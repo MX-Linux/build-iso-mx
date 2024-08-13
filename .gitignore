@@ -1,8 +1,9 @@
-Deb/
-Output/
-Remaster/
-doc-*.tar.bz2
 /initrd
 /iso
 /sqfs
 /work
+Deb/
+Output/
+Remaster/
+doc-*.tar.bz2
+wget-log*
