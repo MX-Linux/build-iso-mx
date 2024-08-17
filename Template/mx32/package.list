@@ -44,6 +44,7 @@ colord-data
 command-not-found
 compton
 compton-conf
+compton-conf-l10n
 conky-all
 conky-manager
 #consolekit
@@ -121,7 +122,8 @@ gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
 gtkdialog
-#guvcview
+guvcview
+guvcview-modified-desktop-file
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -182,7 +184,7 @@ libsox-fmt-all
 #libtxc-dxtn-s2tc
 #libtxc-dxtn-s2tc:i386
 libvirglrenderer1
-light-locker
+#light-locker
 lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-mx23
@@ -197,6 +199,7 @@ lo-main-helper
 luckybackup
 luckybackup-data
 lxmenu-data
+magnus
 manpages-dev
 #matcha-themes
 #mediterranean-themes
@@ -210,7 +213,6 @@ mugshot
 mx-apps
 #mx-bluebird-themes
 #mx-clocky
-mx-codecs
 mx-conky
 mx-comfort-themes
 #mx-defaultlook
@@ -243,7 +245,6 @@ network-manager-openvpn-gnome
 #nitroshare
 nomacs
 nomacs-l10n
-#ntp
 #numix-gtk-theme
 #numix-icon-theme
 #nvidia-detect
@@ -349,8 +350,11 @@ vlc-l10n
 vlc-data
 #vlc-nox
 volumeicon-alsa
-webcamoid
+#webcamoid
 xdg-user-dirs-gtk
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gtk
 #xf86-video-sis-antix
 xfburn
 #xfce-keyboard-shortcuts
@@ -387,7 +391,7 @@ xfce4-power-manager-data
 xfce4-power-manager-plugins
 xfce4-pulseaudio-plugin
 #xfce4-quicklauncher-plugin
-#xfce4-screensaver
+xfce4-screensaver
 xfce4-screenshooter
 #xfce4-screenshooter-plugin
 xfce4-sensors-plugin

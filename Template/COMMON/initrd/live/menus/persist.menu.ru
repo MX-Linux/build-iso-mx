@@ -1,12 +1,12 @@
    1)  По умолчанию
-   2)  persist_all     Save root in RAM, save home on disk (save root at shutdown)
-   3)  persist_root    Save root and home in RAM then saved at shutdown
-   4)  persist_static  Save root and home on disk with home separate on disk
-   5)  p_static_root   Save root and home on disk together
+   2)  persist_all     Сохранить корневой раздел в RAM, /home на диске (сохранение root при выключении)
+   3)  persist_root    Сохранить корневой раздел и /home в RAM, затем сохраненяя при выключении
+   4)  persist_static  Сохранить корневой и /home разделы на диске, /home отдельно
+   5)  p_static_root   Сохранить корневой и /home разделы на диске вместе
    6)  persist_home    Сохранение состояния только домашнего каталога
-   7)  frugal_persist  Frugal with root in RAM and home on disk
-   8)  frugal_root     Frugal with root and home in RAM then saved at shutdown
-   9)  frugal_static   Frugal with root on disk and home separate on disk
-  10)  f_static_root   Frugal with root and home on disk together
+   7)  frugal_persist  Frugal с корневым разделом в RAM и /home на диске
+   8)  frugal_root     Frugal с корневым и /home разделами в RAM, затем сохраняя при выключении
+   9)  frugal_static   Frugal с корневым и home разделами на диске по отдельности
+  10)  f_static_root   Frugal с корневым и home разделами на диске вместе
   11)  frugal_home     Упрощенная установка с сохранением только домашнего каталога
   12)  frugal_only     Только упрощенная установка, без сохранения

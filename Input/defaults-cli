@@ -7,18 +7,16 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23_CLI"
+DISTRO_VERSION="23.3_CLI"
 
 ARCH="amd64"
 ISO_FLAV="mxcli64"
 THEME="mxcli"
 
 ENABLE_LOCALES="single"
-K_REVISION="3"
-K_VERSION="6.1.0"
 
-#COMPRESSION_TYPE="xz"
-#COMPRESSION_TYPE_CODE="-comp xz -b 262144"
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -b 262144"
 
 MX_LIVE_BOOT_OPTIONS="quiet splasht= nosplash"
 

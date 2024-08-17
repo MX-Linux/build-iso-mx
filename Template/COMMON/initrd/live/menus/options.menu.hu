@@ -1,16 +1,16 @@
    1)  Alapértelmezett
-   2)  checkmd5        Check integrity of the live media
-   3)  checkfs         Check LiveUSB and persistence ext2/3/4 file systems
-   4)  toram           Copy the compressed file system to RAM
-   5)  i915_invert     Invert video on some Intel graphics systems
-   6)  no_i915_invert  Disable Intel graphics invert
-   7)  from=usb        Finish booting from a LiveUSB
-   8)  from=hd         Finish booting from a hard drive
-   9)  hwclock=ask     Have the system help determine the clock setting
-  10)  hwclock=utc     Hardware clock uses UTC (Linux-only systems)
-  11)  hwclock=local   Hardware clock uses local time (Windows systems)
-  12)  password        Change passwords before booting
-  13)  nostore         Disable LiveUSB-Storage feature (LiveUSB only)
-  14)  dostore         Enable LiveUSB-Storage feature (LiveUSB only)
-  15)  savestate       Save some files across reboots (LiveUSB only)
-  16)  nosavestate     Don't save files across reboots (LiveUSB only)
+   2)  checkmd5        Ellenőrizze a Live adathordozó integritását
+   3)  checkfs         Ellenőrizze a LiveUSB és adatmegőrzési ext2/3/4 fájlrendszereket
+   4)  toram           Másolja a tömörített fájlrendszert a memóriába
+   5)  i915_invert     Kép invertálása néhány Intel grafikus rendszeren
+   6)  no_i915_invert  Intel grafika invertálásának letiltása
+   7)  from=usb        Indítás befejezése LiveUSB-ről
+   8)  from=hd         Indítás befejezése merevlemezről
+   9)  hwclock=ask     A rendszer segítsen eldönteni az óra beállítását
+  10)  hwclock=utc     A gép órája UTC időt használ (csak-Linux rendszerek)
+  11)  hwclock=local   A gép órája helyi időt használ (Windows rendszerek)
+  12)  password        Jelszó megváltoztatása indítás előtt
+  13)  nostore         LiveUSB-Tároló funkció letiltása (csak LiveUSB)
+  14)  dostore         LiveUSB-Tároló funkció engedélyezése (csak LiveUSB)
+  15)  savestate       Bizonyos fájlok mentése újraindítások közt (csak LiveUSB)
+  16)  nosavestate     Ne mentsen fájlokat az újraindítások közt (csak LiveUSB)

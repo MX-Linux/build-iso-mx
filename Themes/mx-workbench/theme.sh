@@ -4,9 +4,10 @@ THEME_DIR=$(dirname $(readlink -f $0))
 source $THEME_DIR/../theme-functions.sh
 start_theme "$@"
 
+mkdir -p /etc/skel/.local/share/applications/
 copy_file grub                  /etc/default/
 copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
-copy_dir extra/               	/usr/share/fonts/extra       --create
+copy_dir extra/               	/usr/share/fonts/extra       	--create
 copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/
@@ -17,12 +18,13 @@ copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file desktop.data          /usr/local/share/boot-menus/
 copy_file desktop.menu          /usr/local/share/boot-menus/
 copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
+copy_file ufw.conf       	/etc/ufw/ 	--create
+copy_file zramswap.service 	/etc/systemd/system/
 
 # setup zsh and powerlevel10k
 copy_file .zshrc /etc/skel/
 copy_file .p10k.zsh /etc/skel/
-[ $ISO_ARCH = "x64" ] && copy_file gitstatusd-linux-x86_64 /etc/skel/.cache/gitstatus/ --create
-[ $ISO_ARCH = "386" ] && copy_file gitstatusd-linux-i686 /etc/skel/.cache/gitstatus/ --create
+copy_file gitstatusd-linux-x86_64 /etc/skel/.cache/gitstatus/ --create
 copy_file adduser.conf /etc/
 
 # copy custom Workbench stuff
@@ -40,4 +42,5 @@ copy_dir defaults/terminal/ /etc/skel/.config/xfce4/terminal/ --create
 copy_file mx-snapshot.conf /etc/
 copy_file custom-toolbox.conf /etc/custom-toolbox/
 ln -sf /usr/games/blockout2 /usr/bin/blockout2 # add a link in $PATH
+
 exit

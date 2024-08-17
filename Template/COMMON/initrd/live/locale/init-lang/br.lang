@@ -1,5 +1,5 @@
 COUNTRY="Português-Brasil"
-WM_LANG="pt-br"
+WM_LANG="pt_BR"
 KEYBOARDS="br,us"
 KEYTABLE="br-abnt2"
 LANG="pt_BR.UTF-8"

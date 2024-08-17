@@ -35,6 +35,7 @@ LEAN_SERVICES="
     acpi-fakekey
     acpi-support
     anacron
+    avahi-daemon
     bluetooth
     bootlogs
     #cherokee
@@ -49,6 +50,7 @@ LEAN_SERVICES="
     lvm2
     mdadm
     nfs-common
+    ntpsec
     ofono
     rpcbind
     rsync

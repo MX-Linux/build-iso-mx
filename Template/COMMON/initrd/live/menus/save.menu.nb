@@ -1,2 +1,2 @@
-   1)  Sí Ja (forvalgt)
+   1)  Ja (forvalgt)
    2)  Nei

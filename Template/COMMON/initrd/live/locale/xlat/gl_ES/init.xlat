@@ -196,7 +196,7 @@ _X_does_not_look_like_a_Luks_partition_Found_Y_="%s does not look like a Luks pa
 _X_file_not_found_Y_="Ficheiro %s%s non atopado"
 _X_mismatch_between_Y_and_Z_="Non hai coincidencia %s entre %s e %s"
 _X_set_to_Y_="%s definida para %s"
-_You_must_answer_X_or_Y_Please_try_again_="É necesario responder %s ou %s. Intentar de novo
+_You_must_answer_X_or_Y_Please_try_again_="É necesario responder %s ou %s. Intentar de novo"
 _You_will_be_asked_to_enter_a_new_passphrase_twice_="Será solicitada dúas veces a introdución da frase-contrasinal"
 _automount_mount_="conectar automática|conectar=*"
 _check_X_filesystem_="verificar o sistema de ficheiros %s"
@@ -204,7 +204,7 @@ _continue_="continuar"
 _copy_X_file_to_RAM_="copiar o ficheiro %s para a RAM"
 _copy_X_to_Y_="copiar %s para %s"
 _create_X_persistence_file_="crear ficheiro de persistencia de %s"
-_create_automatically_="crear automaticamente
+_create_automatically_="crear automaticamente"
 _create_custom_="crear manualmente"
 _current_phrase_X_="frase actual %s"
 _default_="predeterminado"

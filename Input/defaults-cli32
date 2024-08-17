@@ -7,7 +7,7 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="21.3_CLI"
+DISTRO_VERSION="23.2_CLI"
 
 ARCH="i386"
 ISO_FLAV="mxcli32"
@@ -16,9 +16,9 @@ THEME="mxcli"
 ENABLE_LOCALES="single"
 
 # standard 32 bit
-K_REVISION="20"
+K_REVISION="17"
 K_TEMPLATE="%V%G-%R-686-pae"
-K_VERSION="5.10.0"
+K_VERSION="6.1.0"
 UNSIGNED=""
 
 COMPRESSION_TYPE="xz"

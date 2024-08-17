@@ -22,6 +22,7 @@ colord
 colord-data
 compton
 compton-conf
+compton-conf-l10n
 conky-all
 conky-manager
 conky-toggle-mx
@@ -40,7 +41,7 @@ dpkg
 e2fsprogs
 #exfat-fuse
 exo-utils
-fbxkb
+#fbxkb
 fdisk
 featherpad
 feh
@@ -69,6 +70,8 @@ gtk2-engines
 #gtk3-nocsd
 gtkdialog
 gzip
+guvcview
+guvcview-modified-desktop-file
 gvfs
 gvfs-backends
 gvfs-fuse
@@ -195,6 +198,7 @@ lsb-base
 #luckybackup
 #luckybackup-data
 #lxappearance
+magnus
 #matcha-themes
 #menulibre
 mesa-vulkan-drivers
@@ -202,7 +206,6 @@ mount
 mugshot
 mx-apps-fluxbox
 mx-cleanup
-mx-codecs
 mx-conky
 mx-comfort-themes
 mx-dockmaker
@@ -211,7 +214,6 @@ mx-fluxbox
 mx-fluxbox-data
 mx-greybird-themes
 mx-idesktool
-mx-idevice-mounter
 mx-installer
 mx-live-usb-maker
 mx-network-assistant
@@ -224,7 +226,6 @@ mx-welcome
 #mx21-archive-keyring
 mx23-artwork
 mxfb-accessories
-mxfb-art
 mxfb-docs
 mxfb-goodies
 nano
@@ -296,7 +297,7 @@ vcdimager
 #virtualbox-guest-utils-modified-init
 #virtualbox-guest-x11
 volumeicon-alsa
-webcamoid
+#webcamoid
 whiptail
 wmalauncher
 xdg-user-dirs-gtk

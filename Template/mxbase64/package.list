@@ -198,7 +198,6 @@ matcha-themes
 mount
 mugshot
 mx-cleanup
-mx-codecs
 mx-conky
 mx-docs
 mx-greybird-themes
@@ -221,7 +220,6 @@ network-manager-openvpn-gnome
 #nictools-pci
 #nomacs
 #nomacs-l10n
-#ntp
 #numix-gtk-theme
 #numix-icon-theme
 nvidia-detect

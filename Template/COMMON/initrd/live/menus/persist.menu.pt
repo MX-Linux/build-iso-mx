@@ -1,5 +1,5 @@
    1)  Pré-definição
-   2)  persist_all     Guardar o raíz na RAM, guardar pasta pessoal no disco (guardar o raíz no encerramento)
+   2)  persist_all     Guardar a raiz na RAM, guardar a pasta pessoal no disco (guardar a raiz ao encerrar)
    3)  persist_root    Gravar root e home na RAM e depois gravar ao encerrar
    4)  persist_static  Gravar root e home em disco com home separada em disco
    5)  p_static_root   Gravar root e home juntas em disco

@@ -1,0 +1,3 @@
+   1)  Por defecto
+   2)  automount       Montar dispositivos automáticamente cuando estén conectados
+   3)  noautomount     Deshabilite todo montaje extra y montaje automático

@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Konzol beállítása egy %s billentyűzethez"
+_Localizing_console_and_timezone_="Időzóna és konzol területi beállításai"
+_Recreate_symlink_X_="Szimbolikus link újra létrehozása: %s"
+_Setting_hostname_to_X_="Gépnév beállítása: %s"
+_Setting_locale_to_X_="Területi beállítás: %s"
+_Setting_timezone_and_localtime_to_X_="Időzóna és helyi idő beállítása: %s"
+_Unknown_time_zone_X_="Ismeretlen időzóna: %s"

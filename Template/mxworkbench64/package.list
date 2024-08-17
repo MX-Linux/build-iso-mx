@@ -5,6 +5,7 @@ alsa-ucm-conf
 apt
 apt-notifier
 apt-utils
+archivemount
 arpwatch
 at
 attr
@@ -35,6 +36,7 @@ coreutils
 cpu-x
 cpuid
 cpuidtool
+cpulimit
 cputool
 custom-toolbox
 dbench
@@ -51,6 +53,7 @@ desktop-defaults-mx-xfce
 desktop-defaults-mx-xfce-desktop
 desktop-defaults-mx-xfce-system
 detox
+dfc
 di
 diffstat
 diffutils
@@ -60,7 +63,6 @@ dislocker
 dmidecode
 dmraid
 dnsutils
-dpt-i2o-raidutils
 dstat
 duf
 dump
@@ -73,8 +75,8 @@ expect
 ext3grep
 ext4magic
 fatresize
-fbxkb
 fdisk
+featherpad
 feh
 file-roller
 filezilla
@@ -101,8 +103,6 @@ ghex
 git
 gnome-accessibility-themes
 gnome-disk-utility
-gnome-mime-data
-gnome-themes-standard
 gpa
 gpart
 gparted
@@ -117,7 +117,6 @@ guymager
 gzip
 hardinfo
 hashcat
-hexedit
 hfsplus
 hfsprogs
 hfsutils
@@ -161,6 +160,7 @@ lsb-base
 lsscsi
 lynx
 lz4
+magic-wormhole
 meld
 memtester
 menulibre
@@ -169,6 +169,7 @@ moreutils
 mount
 mpt-status
 mx-comfort-themes
+mx-datetime
 mx-idevice-mounter
 mx-live-usb-maker
 mx-network-assistant
@@ -178,6 +179,7 @@ ncdu
 ncurses-base
 ncurses-bin
 netbase
+netdiscover
 netwag
 network-manager-gnome
 network-manager-openconnect-gnome
@@ -201,7 +203,6 @@ policykit-1-gnome
 progress
 psensor
 pssh
-pulseaudio-module-bluetooth
 qla-tools
 qpdf
 qpdfview
@@ -213,10 +214,8 @@ reglookup
 reiser4progs
 remmina
 remmina-plugin-exec
-remmina-plugin-nx
 remmina-plugin-rdp
 remmina-plugin-secret
-remmina-plugin-spice
 remmina-plugin-vnc
 rename
 rkhunter
@@ -258,7 +257,6 @@ unhide
 vim
 vmfs-tools
 vnstat
-volumeicon-alsa
 w3m
 wakeonlan
 webcamoid

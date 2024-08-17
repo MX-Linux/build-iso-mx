@@ -2,8 +2,8 @@
    2)  checkmd5        Проверить целостность живого носителя
    3)  checkfs         Проверить файловые системы ext2/3/4 LiveUSB и файла сохранения
    4)  toram           Копировать сжатую ФС в RAM
-   5)  i915_invert     Invert video on some Intel graphics systems
-   6)  no_i915_invert  Disable Intel graphics invert
+   5)  i915_invert     Инвертировать видео на некоторых системах с графикой Intel
+   6)  no_i915_invert  Отключить инвертирование для графики Intel
    7)  from=usb        Завершить загрузку с Live USB
    8)  from=hd         Завершить загрузку с жесткого диска
    9)  hwclock=ask     Система должна помочь определить настройки часов

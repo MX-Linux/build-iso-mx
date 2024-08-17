@@ -380,6 +380,7 @@ live_param_filter() {
         splash=*|fbcon=*);;
         grubsave);;
         kernel=*);;
+        extra=*);;
 
 
         *) printf "%s " "$param" ;;

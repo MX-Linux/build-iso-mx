@@ -58,6 +58,8 @@ dvd+rw-tools
 elinks
 elinks-data
 emacsen-common
+espeak-ng
+espeak-ng-data
 ethtool
 exfatprogs
 extundelete
@@ -83,11 +85,9 @@ fonts-uralic
 fonts-urw-base35
 foomatic-db-compressed-ppds
 ftp
-gcc-10-base:i386
 gddrescue
 ghostscript
 ghostscript-x
-giblib1
 gnome-icon-theme
 gocr
 groff-base
@@ -129,12 +129,12 @@ lp-solve
 lshw
 lxrandr
 mailcap
-man-db
 mawk
 mc
 mc-data
 memtest86+
 menu
+menu-l10n
 menu-xdg
 mesa-utils
 mime-support
@@ -146,6 +146,7 @@ mtr
 mx-boot-options
 mx-bootrepair
 mx-datetime
+mx-goodies
 mx-packageinstaller
 mx-packageinstaller-pkglist
 mx-remastercc
@@ -186,6 +187,8 @@ pv
 python3-bluez
 python3-smbc
 qt5-gtk-platformtheme
+qt6-translations-l10n
+qttranslations5-l10n
 read-edid
 reiserfsprogs
 rpl
@@ -198,6 +201,7 @@ sane-utils
 scrot
 sdparm
 sgml-data
+smartmontools
 spice-vdagent
 sshfs
 strace
@@ -233,6 +237,7 @@ whiptail
 wmctrl
 wodim
 wvdial
+x11-common
 x11-utils
 x11-xserver-utils
 xauth

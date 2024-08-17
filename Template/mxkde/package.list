@@ -1,8 +1,3 @@
-# ksysguard
-# ksysguard-data
-# ksysguardd
-# libreoffice-avmedia-backend-gstreamer
-# pulseaudio-module-bluetooth
 advert-block-antix
 akonadi-contacts-data
 alsa-topology-conf
@@ -48,6 +43,7 @@ ffmpegthumbnailer
 ffmpegthumbs
 filelight
 flac
+flatpak
 foliate
 fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
@@ -62,7 +58,6 @@ gnupg-agent
 gsfonts
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
-guvcview
 heif-gdk-pixbuf
 heif-thumbnailer
 hicolor-icon-theme
@@ -82,6 +77,7 @@ kaccounts-providers
 kactivities-bin
 kactivitymanagerd
 kamera
+kamoso
 kate
 kate5-data
 kcalc
@@ -122,6 +118,7 @@ kio
 kio-extras
 kio-extras-data
 kio-ldap
+kmag
 kmahjongg
 kmenuedit
 kmines
@@ -143,9 +140,9 @@ kwayland-data
 kwin-common
 kwin-data
 kwin-style-breeze
+kwin-wayland
 kwin-x11
 lame
-lazpaint-qt5
 lbreakout2
 lbreakout2-data
 libc6:i386 
@@ -171,6 +168,8 @@ libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 libreoffice-style-sifr
 libreoffice-writer
+linux-headers-amd64
+linux-image-amd64
 lo-main-helper
 manpages-dev
 media-player-info
@@ -178,10 +177,8 @@ mesa-vulkan-drivers
 milou
 mx-apps-kde
 mx-cleanup
-mx-codecs
 mx-conky
 mx-docs
-mx-idevice-mounter
 mx-installer
 mx-live-usb-maker
 mx-network-assistant
@@ -227,6 +224,7 @@ plasma-systemmonitor
 plasma-wallpapers-addons
 plasma-widgets-addons
 plasma-workspace
+plasma-workspace-wayland
 plymouth
 plymouth-themes
 plymouth-themes-mx
@@ -279,9 +277,7 @@ qt-heif-image-plugin
 qt5-image-formats-plugins
 qt5-style-kvantum
 qt5-style-plugins
-qt5ct
 qt6-gtk-platformtheme
-qt6ct
 qtvirtualkeyboard-plugin
 rdesktop
 sddm
@@ -310,7 +306,9 @@ virtualbox-guest-x11
 vlc
 vlc-data
 vlc-l10n
-webcamoid
+wayland-utils
+xdg-desktop-portal
+xdg-desktop-portal-kde
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident

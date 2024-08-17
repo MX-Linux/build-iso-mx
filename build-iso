@@ -3,7 +3,7 @@
 #==============================================================================
 # build-iso: Build antiX liveCD/USB isos from scratch using debootstrap.
 #
-# Copyright 2012 -- 2019
+# Copyright 2012 -- 2024
 #     BitJam and anticapitalista for antiX <antiX@operamail.com>
 #==============================================================================
 
@@ -71,6 +71,8 @@ Options:
     --show-stages       Show the stages of processing
     --show-parts        Show parts of stage-$chroot_stage and how to control them
     -0 -- -8            Start over from stage N.
+    --stop5				Stop process at Stage 5 (cleanup)
+    --stop8				Stop process at Stage 8 (iso generation)
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -100,13 +102,13 @@ main() {
     local save_mode jbb_mode
 
     local script_dir
-    script_dir=$(dirname $(readlink -f $0))
+    script_dir=$(dirname "$(readlink -f "$0")")
     local template=$script_dir/Template
     local tools=$script_dir/Tools
     local output_dir=$script_dir/Output
     local input_dir=$script_dir/Input
     local remaster_dir
-    remaster_dir=$(readlink -f $script_dir/Remaster)
+    remaster_dir=$(readlink -f "$script_dir"/Remaster)
     local iso_file_dir=$remaster_dir/iso-files
     local deb_cache_dir=$remaster_dir/deb-cache/archives
     local manual_selections=manual-selections
@@ -119,7 +121,7 @@ main() {
     local err_file=$output_dir/$ME.err
     local make_xinitrc=/usr/share/antiX/lib/make-xinitrc
 
-    local live_files_list=$input_dir/live-files.list
+    # local live_files_list=$input_dir/live-files.list
     local strict_regex_file=$input_dir/strict-exceptions.regex
     local lax_regex_file=$input_dir/lax-errors.regex
     local regex_files="$lax_regex_file $strict_regex_file"
@@ -134,7 +136,7 @@ main() {
     local partial_file=$build_dir/$partial_name
     local seed_fname="random-seed"
     local user_defaults user_default_file apt_yes
-    local initrd_encrypt
+    # local initrd_encrypt
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
 
@@ -203,6 +205,8 @@ main() {
          -VERBOSE|V)   verbose_mode=true                        ;;
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
+             -stop5)         stop_5=true						;;
+             -stop8)         stop_8=true						;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -269,9 +273,8 @@ main() {
     [[ $# -gt 0 ]]           && fatal "Extra command line parameters: $(pqw $@)"
     [[ -z $script_dir ]]     && fatal "No script_dir!"
     [[ $script_dir = "/" ]]  && fatal "script_dir can't be root dir!"
-
-    [[ -n $show_stages ]] && show_stages
-    [[ -n $show_parts  ]] && show_parts
+    [[ -n $show_stages ]]    && show_stages
+    [[ -n $show_parts  ]]    && show_parts
 
     SUDO=sudo
     [[ $UID -eq 0 ]] && SUDO=
@@ -694,7 +697,7 @@ do_stage_2() {
     create_cache $deboot_cache_opts
 
     say "Customize live system for antiX"
-    $SUDO rm -f  $sqfs_dir/etc/apt/sources.list
+    $SUDO rm -f $sqfs_dir/etc/apt/sources.list
     copy_template_dir squashfs $sqfs_dir
 
     leave_stage
@@ -1277,6 +1280,10 @@ do_stage_4() {
     fi
     #-----------------------------------------------------------------
 
+    #run ldconfig incase of any special linking required.
+    say "Running ldconfig..."
+    ldconfig
+
     local partial_dir=/var/cache/apt/archives/partial
     say "Fix $(pq $partial_dir) directory"
     mkdir -p $partial_dir
@@ -1343,6 +1350,10 @@ apply_theme() {
 # Stage 5
 #------------------------------------------------------------------------------
 do_stage_5() {
+ 	if [ $stop_5 ]; then
+ 		my_exit 0
+ 	fi
+
     enter_stage 5 "Finalize and clean the chroot"
 
     check_sqfs_dir
@@ -1668,18 +1679,16 @@ Bootloader_Data
     say "Write initrd_release file"
     write_initrd_release $initrd_dir
 
-    is_antiX && initrd_encrypt="--encrypt"
-
     if [[ -z $iso_only ]]; then
         say "Copy $(pq $K_NAME) modules into initrd"
 
         rm -rf $initrd_dir/lib/modules/
 
         # Note: please use built-in list so we are all in sync. Thanks!     #anticap
-        $tools/copy-initrd-modules $initrd_encrypt --quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
+        $tools/copy-initrd-modules --encrypt --very-quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
 
         #anticap#$tools/copy-initrd-programs --to $initrd_dir --clean
-        $tools/copy-initrd-programs $initrd_encrypt --to $initrd_dir --from $sqfs_dir
+        $tools/copy-initrd-programs --encrypt --quiet --to $initrd_dir --from $sqfs_dir
     fi
 
     local initrd_gz=$iso_dir/antiX/initrd.gz
@@ -1726,16 +1735,17 @@ do_stage_7() {
     $SUDO rm -rf $sqfs_dir/run
     $SUDO mkdir -p $sqfs_dir/run
 
-    say "Run updatedb one last time"
-    $SUDO chroot $sqfs_dir /usr/bin/updatedb
+    if [[ -x $sqfs_dir/usr/bin/updatedb ]]; then
+        say "Run updatedb one last time"
+        $SUDO chroot $sqfs_dir /usr/bin/updatedb
+    fi
 
     say "Update font cache"
-    $SUDO chroot $sqfs_dir fc-cache -r -s -v
+    [[ -x $sqfs_dir/usr/bin/fc-cache ]] && $SUDO chroot $sqfs_dir fc-cache -r -s -v
 
     if ! is_antiX; then
-        $SUDO chroot $sqfs_dir fc-cache -r -v /usr/share/fonts/extra
-        [[ -d $sqfs_dir/etc/skel/.cache/fontconfig ]] || \
-            $SUDO mkdir -p $sqfs_dir/etc/skel/.cache/fontconfig
+        [[ -x $sqfs_dir/usr/bin/fc-cache ]] && $SUDO chroot $sqfs_dir fc-cache -r -v /usr/share/fonts/extra
+        [[ -d $sqfs_dir/etc/skel/.cache/fontconfig ]] || $SUDO mkdir -p $sqfs_dir/etc/skel/.cache/fontconfig
 
         $SUDO rm -f $sqfs_dir/etc/skel/.cache/fontconfig/*
         $SUDO cp $sqfs_dir/var/cache/fontconfig/* $sqfs_dir/etc/skel/.cache/fontconfig/
@@ -1780,6 +1790,11 @@ do_stage_7() {
 # Stage 8 creates the iso file.
 #------------------------------------------------------------------------------
 do_stage_8() {
+
+ 	if [ $stop_8 ]; then
+ 		my_exit 0
+ 	fi
+
     enter_stage 8 "Create iso file"
 
     report_size $iso_dir

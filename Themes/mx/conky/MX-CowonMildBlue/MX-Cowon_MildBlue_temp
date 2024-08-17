@@ -1,0 +1,97 @@
+conky.config = {
+
+--#####################
+-- - Conky settings - #
+--#####################
+	update_interval = 1,
+	total_run_times = 0,
+	net_avg_samples = 1,
+	cpu_avg_samples = 1,
+
+	imlib_cache_size = 0,
+	double_buffer = true,
+	no_buffers = true,
+
+--####################
+-- - Text settings - #
+--####################
+	use_xft = true,
+    font = 'Roboto Light:size=100',
+	override_utf8_locale = true,
+	text_buffer_size = 2048,
+	xftalpha = 0.9,
+
+--############################
+-- - Window specifications - #
+--############################
+	own_window_class = 'Conky',
+	own_window = true,
+	own_window_type = 'normal',
+	
+own_window_transparent = true,
+own_window_argb_visual = true,
+own_window_argb_value = 0,
+	
+	own_window_hints = 'undecorated,below,skip_taskbar,skip_pager,sticky',
+
+alignment = 'top_right',
+gap_x = 30,
+gap_y = 45,
+minimum_width = 210,
+minimum_height = 0,
+
+--########################
+-- - Graphics settings - #
+--########################
+	draw_shades = false,
+own_window_colour = '000000',
+	
+	--hour
+	default_color = 'aabbcc',
+	default_shade_color = '1d1d1d',
+	color0 = 'ffffff',
+	--date
+	color1 = 'aabbcc',
+	--min
+	color2 = '77ddff',
+	--text
+	color3 = '77ddff',
+	--percentages
+	color4 = 'aabbcc',
+
+	lua_load = 'lua/conky.lua',
+
+};
+
+		-- fluxbox adjustment
+		-- if os.getenv("XDG_SESSION_DESKTOP") == 'fluxbox' then
+		-- return_code = os.execute('pidof -q fluxbox')
+		-- if _VERSION == 'Lua 5.1' and math.floor(return_code/256) == 0 or
+		--   _VERSION ~= 'Lua 5.1' and return_code then
+		--   conky.config.own_window_transparent = true,
+		--   conky.config.own_window_argb_visual = false,
+		-- end
+
+conky.text = [[
+### hours
+${if_match "${lua time A}" == "${time %A}"}${lua set_time A}${else}${lua set_time a}${endif}\
+${if_match "${lua time B}" == "${time %B}"}${lua set_time B}${else}${lua set_time b}${endif}\
+${voffset -175}
+${lua hours}
+### minutes
+${color2}${offset 36}${voffset -95}${time %M}
+### date
+${voffset -130}${offset 10}\
+${if_match "${lua cjk}" == "false"}${font Roboto Light:bold:size=11}${else}${font wqy-microhei:bold:size=12}${endif}${color1}${lua date}
+### am/pm
+${offset 150}${voffset -175}\
+${if_match "${lua cjk}" == "false"}${font Roboto Light:size=12}${else}${font wqy-microhei:size=12}${endif}${color2}${lua AM_PM}
+#system
+${offset 0}${voffset 160}\
+${font Roboto Light:bold:size=10}${goto 25}${color3}hdd ${offset 2}${color4}${fs_used_perc /}%\
+${font Roboto Light:bold:size=10}${goto 105}${color3}temp ${offset 2}${color4}${if_existing /sys/class/thermal/thermal_zone0/temp}${eval ${acpitemp}}${endif}°C 
+${voffset 2}\
+${font Roboto Light:bold:size=10}${goto 25}${color3}mem ${offset 2}${color4}${memperc}%\
+${font Roboto Light:bold:size=10}${goto 105}${color3}cpu${offset 6}${color4}${cpu}%
+${voffset -215}
+]];
