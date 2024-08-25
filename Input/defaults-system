@@ -32,9 +32,9 @@ HOME_URL="https://mxlinux.org"
 CODE_NAME="Libretto"
 ASCII_CODE_NAME="Libretto"
 
-DISTRO_VERSION="23.4"
+DISTRO_VERSION="23.3"
 DISTRO_NAME="MX"
-RELEASE_DATE="May 19, 2024"
+RELEASE_DATE="August 19, 2024"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bookworm"
