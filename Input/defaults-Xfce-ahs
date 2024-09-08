@@ -8,13 +8,13 @@
 #----------------------------------------------------------------------
 
 
-DISTRO_VERSION="23.3_ahs"
+DISTRO_VERSION="23.4_ahs"
 
 # kernel
 # ahs
-K_REVISION="3-liquorix"
+K_REVISION="1-liquorix"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="6.8.9"
+K_VERSION="6.10.8"
 #UNSIGNED="-unsigned"
 
 ENABLE_LOCALES=Default
