@@ -7,7 +7,7 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23.3_minimal"
+DISTRO_VERSION="23.4_minimal"
 
 ARCH="amd64"
 ISO_FLAV="mxmin64"
