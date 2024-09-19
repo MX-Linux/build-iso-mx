@@ -75,7 +75,7 @@ guvcview-modified-desktop-file
 gvfs
 gvfs-backends
 gvfs-fuse
-hardinfo
+hardinfo2
 qt-heif-image-plugin
 heif-thumbnailer
 heif-gdk-pixbuf

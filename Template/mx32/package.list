@@ -128,7 +128,7 @@ gvfs
 gvfs-backends
 gvfs-fuse
 gxkb
-hardinfo
+hardinfo2
 qt-heif-image-plugin
 heif-thumbnailer
 heif-gdk-pixbuf

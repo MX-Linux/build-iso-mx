@@ -120,7 +120,7 @@ gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
 gtkdialog
-hardinfo
+hardinfo2
 qt-heif-image-plugin
 heif-thumbnailer
 heif-gdk-pixbuf

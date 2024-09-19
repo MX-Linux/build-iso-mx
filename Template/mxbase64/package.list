@@ -80,7 +80,7 @@ gzip
 gvfs
 gvfs-backends
 gvfs-fuse
-hardinfo
+hardinfo2
 hfsplus
 hfsprogs
 hfsutils
