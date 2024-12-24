@@ -5531,6 +5531,8 @@ prepare_persistence() {
     [ -z "$REMASTERABLE" -a -n "$NEED_PERSIST" ] || return
 
     AUTO_PERSIST="$DISTRO_NAME-Persist"
+    tsplash_warn "Persistence was requested on a read-only boot device"
+    sleep 3
     warn
     warn  "Persistence was requested on a read-only boot device"
     warn  "Will search for a persistence device with the label %s" "$(pqw $AUTO_PERSIST)"
