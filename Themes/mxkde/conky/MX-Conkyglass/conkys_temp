@@ -2,7 +2,7 @@ conky.config = {
 -- Use Xft?
 	use_xft = true,
 	font = 'mono:size=9',
-minimum_width = 230, minimum_height = 330,
+minimum_width = 230, minimum_height = 348,
 
 -- Update interval in seconds
 	update_interval = 3,
@@ -94,11 +94,12 @@ if _VERSION == 'Lua 5.1' and math.floor(return_code/256) == 0 or
 end
 
 conky.text = [[
-${image ./conkyground.png  -s 220x320 -p 20,5}
+${image ./conkyground.png  -s 220x338 -p 20,5}
 ${alignc}${voffset 10}${alignc}${color FFFFFF}$kernel
 ${alignc} UpTime: ${alignc}${color FFFFFF}$uptime
 
 ${alignc}CPU:${color ffffff} ${offset 2}${cpu cpu0}%  ${alignc}${voffset 1}${cpugraph cpu0 6,40 f1f1f1 000000}
+${alignc}${color ffffff}Temp ${offset 2}${hwmon temp 1}°C 
 
 ${alignc} MEM: ${alignc}${color ffffff}$mem
 ${alignc} ${membar 6,80} 
