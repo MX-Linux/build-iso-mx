@@ -375,7 +375,7 @@ live_param_filter() {
         xusbatm.*=*|yellowfin.*=*|yenta_socket.*=*|zd1201.*=*|zd1301.*=*|zd1301_demod.*=*|ziirave_wdt.*=*|zl10036.*=*);;
         zl10039.*=*|zl10353.*=*|zl6100.*=*|zr36016.*=*|zr36050.*=*|zr36060.*=*|zr36067.*=*|zr364xx.*=*|zram.*=*);;
         zswap.*=*);;
-
+        amd_pstate=*);;
         nomodeset|*.modeset=*);;
         splash=*|fbcon=*);;
         grubsave);;
