@@ -1355,7 +1355,7 @@ do_welcome() {
 
     echo "$pretty_name" > /live/config/pretty-name
 
-    if lspci -n | grep -iq " 80ee:beef"; then
+    if lspci -n | grep -iqE " 80ee:(beef|cafe)"; then
         vmsg 7 'VirtualBox detected'
         touch /live/config/virtualbox
     fi
