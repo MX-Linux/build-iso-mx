@@ -273,6 +273,7 @@ sensible-utils
 # smbclient
 ssh-askpass-gnome
 synaptic
+sysbench
 system-config-printer
 system-config-printer-udev
 # system-config-samba
