@@ -89,6 +89,7 @@ extlinux
 extundelete
 f2fs-tools
 fakeroot
+fastfetch
 fbcat
 file
 firefox
@@ -231,7 +232,6 @@ mx-tweak-data
 mx-user
 nala
 ncurses-term
-neofetch
 netcat-traditional
 network-manager
 network-manager-openconnect
