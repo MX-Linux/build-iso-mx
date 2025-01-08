@@ -11,9 +11,9 @@ DISTRO_VERSION="23.5_KDE"
 
 # kernel
 # ahs
-K_REVISION="28"
+K_REVISION="1-liquorix"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="6.1.0"
+K_VERSION="6.12.6"
 #UNSIGNED="-unsigned"
 
 ISO_FLAV="mxkde"
