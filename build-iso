@@ -1236,17 +1236,7 @@ do_stage_4() {
     say "Write version files"
     write_version_files
 
-    if ! is_antiX; then
-        mv /etc/antix-version /etc/mx-version
-        ln -frs /etc/mx-version /etc/antix-version
-
-        ##fix at-spi-dbus.desktop startup sequence
-        if [ -e /etc/xdg/autostart/at-spi-dbus-bus.desktop ]; then
-            cp /etc/xdg/autostart/at-spi-dbus-bus.desktop /etc/xdg/autostart/zz-at-spi-dbus-bus.desktop
-            rm /etc/xdg/autostart/at-spi-dbus-bus.desktop
-        fi
-
-        ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
+       ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
         systemctl mask cgmanager.service
 
     fi
@@ -1283,7 +1273,6 @@ do_stage_4() {
     #run ldconfig incase of any special linking required.
     say "Running ldconfig..."
     ldconfig
-
     local partial_dir=/var/cache/apt/archives/partial
     say "Fix $(pq $partial_dir) directory"
     mkdir -p $partial_dir
