@@ -7,17 +7,13 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23.4_minimal"
+DISTRO_VERSION="23.5_minimal"
 
 ARCH="amd64"
 ISO_FLAV="mxmin64"
 THEME="mxmin"
 
 ENABLE_LOCALES="default"
-
-# DE particular items
-X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
-CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -b 262144"
