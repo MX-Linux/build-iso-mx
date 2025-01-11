@@ -1236,8 +1236,13 @@ do_stage_4() {
     say "Write version files"
     write_version_files
 
-       ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
-        systemctl mask cgmanager.service
+    if ! is_antiX; then
+        mv /etc/antix-version /etc/mx-version
+        ln -frs /etc/mx-version /etc/antix-version
+    fi
+
+    # mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
+    systemctl mask cgmanager.service
 
     mkdir -p /usr/share/antiX
 
