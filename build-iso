@@ -1242,7 +1242,7 @@ do_stage_4() {
 
         ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
         systemctl mask cgmanager.service
-
+        
     fi
 
     mkdir -p /usr/share/antiX
