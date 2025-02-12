@@ -165,6 +165,7 @@ iputils-ping
 iso-codes
 isomount
 jfsutils
+jq
 kbd
 keyboard-configuration
 krb5-locales
@@ -193,17 +194,18 @@ lsb-release
 lshw
 lsof
 lvm2
+mailcap
 make
 manpages
 mbr
 mc
 mdadm
 memtest86+
+media-types
 menu
 menu-l10n
 menu-xdg
 mesa-utils
-mime-support
 mobile-broadband-provider-info
 modemmanager
 module-assistant
