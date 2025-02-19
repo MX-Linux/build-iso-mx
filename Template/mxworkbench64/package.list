@@ -140,6 +140,7 @@ isc-dhcp-common
 isomaster
 jmtpfs
 job-scheduler
+jq
 keepassx
 keepassxc
 kmod
