@@ -4,10 +4,10 @@ etc/*.dpkg-old
 etc/apt/sources.list.d/*.dpkg-dist
 etc/apt/sources.list.d/*.dpkg-old
 etc/desktop-session
-etc/grub.d/*.dpkg-dist
+#etc/grub.d/*.dpkg-dist
 etc/group-
 etc/gshadow-
-etc/init.d/*.dpkg-dist
+#etc/init.d/*.dpkg-dist
 etc/issue
 etc/issue.net
 etc/machine-id
