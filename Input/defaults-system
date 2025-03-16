@@ -32,9 +32,9 @@ HOME_URL="https://mxlinux.org"
 CODE_NAME="Libretto"
 ASCII_CODE_NAME="Libretto"
 
-DISTRO_VERSION="23.5"
+DISTRO_VERSION="23.6"
 DISTRO_NAME="MX"
-RELEASE_DATE="Jan 12, 2025"
+RELEASE_DATE="April 13, 2025"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="bookworm"
@@ -44,7 +44,7 @@ NEW_HOSTNAME="mx1"
 
 # kernel
 # standard 64 bit
-K_REVISION="29"
+K_REVISION="32"
 K_TEMPLATE="%V%G-%R-%A"
 K_VERSION="6.1.0"
 UNSIGNED=""

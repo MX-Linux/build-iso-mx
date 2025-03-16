@@ -9,12 +9,12 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="23.5_fluxbox"
+DISTRO_VERSION="23.6_fluxbox"
 
 #32 bit version of fluxbox release, defaults from defaults-system
 
 # standard 32 bit
-K_REVISION="29"
+K_REVISION="32"
 K_TEMPLATE="%V%G-%R-%A-pae"
 K_VERSION="6.1.0"
 UNSIGNED=""
