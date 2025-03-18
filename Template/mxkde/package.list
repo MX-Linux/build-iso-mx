@@ -87,6 +87,7 @@ kde-config-gtk-style
 kde-config-mailtransport
 kde-config-screenlocker
 kde-config-sddm
+kde-config-updates
 kde-servicemenu-checkhash-installdebs
 kde-servicemenu-extract-and-compress
 kde-servicemenu-kim5
