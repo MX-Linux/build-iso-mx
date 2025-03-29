@@ -45,7 +45,7 @@ exo-utils
 fdisk
 featherpad
 feh
-file-roller
+#file-roller
 fluxbox
 fonts-font-awesome
 fonts-vlgothic
@@ -301,6 +301,7 @@ volumeicon-alsa
 #webcamoid
 whiptail
 wmalauncher
+xarchiver
 xdg-user-dirs-gtk
 xfburn
 #xfce4-appfinder
