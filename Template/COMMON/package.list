@@ -245,6 +245,7 @@ nfs-common
 nfs-common-modified-init
 nfs-kernel-server
 ntfs-3g
+nvme-cli
 nwipe
 obexfs
 openconnect
