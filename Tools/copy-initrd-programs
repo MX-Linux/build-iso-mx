@@ -2,19 +2,28 @@
 
 ME=${0##*/}
 
-: ${PATH_LIST:=/usr/local/bin /usr/sbin /usr/bin /sbin /bin}
-: ${BIN_SUBDIR:=bin}
-: ${LIB_SUBDIR:=lib}
+VERSION="25.04"
 
-: ${DEFAULT_PROG_LIST:=ntfs-3g eject kmod}
-: ${ENCRYPT_PROG_LIST:=cryptsetup}
+: "${PATH_LIST:=/usr/local/bin /usr/sbin /usr/bin /sbin /bin}"
+: "${BIN_SUBDIR:=bin}"
+: "${LIB_SUBDIR:=lib}"
 
-: ${DEFAULT_KMOD_LIST:=depmod insmod lsmod modinfo modprobe}
+: "${DEFAULT_PROG_LIST:=ntfs-3g eject kmod}"
+: "${ENCRYPT_PROG_LIST:=cryptsetup}"
+: "${ENCRYPT_PROG_LIBS:=libgcc_s.so}"
+
+: "${DEFAULT_KMOD_LIST:=depmod insmod lsmod modinfo modprobe}"
+: "${DEFAULT_KMOD_LIBS:=libkmod.so liblzma.so libz.so liblz4.so libzstd.so}"
+
+: "${DEFAULT_XZ_LIST:=xz xzcat unxz}"
+: "${DEFAULT_ZSTD_LIST:=zstd zstdcat unzstd}"
 
 X86_64_DIR=/lib/x86_64-linux-gnu
 
-VAR_LIST="PATH_LIST BIN_SUBDIR LIB_SUBDIR"
-VAR_LIST+=" DEFAULT_PROG_LIST ENCRYPT_PROG_LIST DEFAULT_KMOD_LIST"
+VAR_LIST=""
+VAR_LIST+="PATH_LIST BIN_SUBDIR LIB_SUBDIR "
+VAR_LIST+="DEFAULT_PROG_LIST ENCRYPT_PROG_LIST DEFAULT_KMOD_LIST "
+VAR_LIST+="DEFAULT_PROG_LIST ENCRYPT_PROG_LIBS DEFAULT_KMOD_LIBS "
 
 #PRETEND=true
 
@@ -39,14 +48,20 @@ Options:
     -s --show          Show default values of environment variables
     -t --to=<dir>      Copy to /bin and /lib under <dir>
     -v --verbose       Show more information
+    -V --version       Show version
 
 A --to directory or a from --directory must be specified.
 Short options can be stacked.  Example:
 
     $ME -cnp
+
 Usage
 
-    exit ${1:-0}
+    exit "${1:-0}"
+}
+
+show_version() {
+    echo "$ME Version:" "$VERSION"
 }
 
 #------------------------------------------------------------------------------
@@ -69,6 +84,7 @@ eval_argument() {
                 -to|t) TO_DIR=$val             ;;
                 -to=*) TO_DIR=$val             ;;
            -verbose|v) VERBOSE=true            ;;
+           -version|V) show_version   ; exit 0 ;;
                     *) fatal "Unknown parameter -$arg" ;;
     esac
 }
@@ -90,35 +106,42 @@ takes_param() {
 main() {
     [ $# -eq 0 ] && usage 0
 
-    local SHIFT SHORT_STACK="cCefFhnpqtv"
+    show_version
+
+    local SHIFT SHORT_STACK="cCefFhnpqtvV"
 
     local SUDO
     [ "$UID" = 1 ] || SUDO=sudo
 
     read_params "$@"
-    shift $SHIFT
+    shift "$SHIFT"
 
     [ -n "$NO_COLOR" ] || set_colors
 
     local prog_list abs_prog_list
     case $# in
-        0)  prog_list=$DEFAULT_PROG_LIST                     ;;
+        0)  prog_list=$DEFAULT_PROG_LIST                          ;;
         *)  prog_list="$*"
-            qsay "Installing %s program(s) from command line" $#  ;;
+            [ "$DO_CLEAN" ] || qsay "Installing %s program(s) from command line" $#
+            ;;
     esac
 
-    if [ $# -eq 0 -a -n "$ADD_ENCRYPT$DO_CLEAN" ]; then
-        #qsay "Adding encryption programs"
+    if [ $# -eq 0 ] && [ -n "$ADD_ENCRYPT$DO_CLEAN" ]; then
+        vsay "Adding encryption programs to clean list"
         prog_list="$prog_list $ENCRYPT_PROG_LIST"
     fi
 
-    : ${TO_DIR:=.}
+    if [ $# -eq 0 ] && [ -n "$DO_CLEAN" ]; then
+        vsay "Adding kmod programs to clean list"
+        prog_list="$prog_list $DEFAULT_KMOD_LIST"
+    fi
 
+    : "${TO_DIR:=.}"
 
     [ "$CREATE" ] && mkdir -p "$TO_DIR"
     test -e "$TO_DIR" || fatal "The --to directory %s does not exist.  Use --create to have it created" "$TO_DIR"
 
-    local bin_dir=$TO_DIR/$BIN_SUBDIR  lib_dir=$TO_DIR/$LIB_SUBDIR
+    local bin_dir=${TO_DIR%/}/$BIN_SUBDIR  lib_dir=${TO_DIR%/}/$LIB_SUBDIR
 
     if [ "$DO_CLEAN" ]; then
         qsay "Cleaning out all libraries and these program(s): %s" "$prog_list"
@@ -126,7 +149,7 @@ main() {
         exit 0
     fi
 
-    test -d "$TO_DIR" || fatal "The --to directory %s parameter is not a directoryparameter is not a directory." "$TO_DIR"
+    test -d "$TO_DIR" || fatal "The --to directory %s parameter is not a directory." "$TO_DIR"
 
     # Find the absolute path to each program under FROM_DIR
     local prog  path  abs_prog  abs_prog_list missing_progs
@@ -134,7 +157,7 @@ main() {
         local found=
         for path in $PATH_LIST; do
             abs_prog=$path/$prog
-            test -x "${FROM_DIR%/}"/$abs_prog || continue
+            test -x "${FROM_DIR%/}$abs_prog" || continue
             found=true
             abs_prog_list="$abs_prog_list $abs_prog"
             break
@@ -157,30 +180,45 @@ main() {
     # Copy each program to the bin directory ...
     # And ind the libraries needed for each program
     for abs_prog in $abs_prog_list; do
-        local from_prog="$FROM_DIR$abs_prog"
-        local basename_prog=$(basename "$abs_prog")
+        local from_prog basename_prog
+        from_prog="${FROM_DIR%/}$abs_prog"
+        basename_prog=$(basename "$abs_prog")
 
-        qsay "  add program: %s" "$(basename $abs_prog)"
+        qsay "  add program: %s" "$basename_prog"
         [ -e "$bin_dir/$basename_prog" ] && pretend rm "$bin_dir/$basename_prog"
         pretend cp "$from_prog" "$bin_dir/$basename_prog"
         # kmod handling
         if [ "$basename_prog" = kmod ] && [ -x "$bin_dir/kmod" ]; then
-            local kmods="$DEFAULT_KMOD_LIST"
-            local mod
-            for mod in $kmods; do
-                pretend ln -nsf kmod "$bin_dir"/$mod
+            local link
+            for link in $DEFAULT_KMOD_LIST; do
+                pretend ln -nsf kmod "$bin_dir/$link"
             done
         fi
+        # xz handling
+        if [ "$basename_prog" = xz ] && [ -x "$bin_dir/xz" ]; then
+            local link
+            for link in $DEFAULT_XZ_LIST; do
+                pretend ln -nsf xz "$bin_dir/$link"
+            done
+        fi
+        # zstd handling
+        if [ "$basename_prog" = zstd ] && [ -x "$bin_dir/zstd" ]; then
+            local link
+            for link in $DEFAULT_ZSTD_LIST; do
+                pretend ln -nsf zstd "$bin_dir/$link"
+            done
+        fi
+
         local raw_libs
         if [ -n "$FROM_DIR" ]; then
-            local LINUX_ARG=$(get_linux_arg "$from_prog")
-            raw_libs=$($SUDO $LINUX_ARG chroot "$FROM_DIR" /usr/bin/ldd $abs_prog)
+            local LINUX_ARG; LINUX_ARG=$(get_linux_arg "$from_prog")
+            raw_libs=$($SUDO ${LINUX_ARG:+"$LINUX_ARG"} chroot "$FROM_DIR" /usr/bin/ldd "$abs_prog")
         else
-            raw_libs=$(ldd $abs_prog)
+            raw_libs=$(ldd "$abs_prog")
         fi
 
         #echo "$raw_libs"
-        local libs=$(echo "$raw_libs" | sed -nr "s/.*=>\s*([^ ]+)\s.*/\1/p")
+        local libs; libs=$(echo "$raw_libs" | sed -nr "s/.*=>\s*([^ ]+)\s.*/\1/p")
 
         if [ -z "$libs" ]; then
             warn_err "No libs found for %s" "$(basename "$abs_prog")"
@@ -189,38 +227,89 @@ main() {
 
         #echo -e "$libs"
         local lib
-        # luks2 handling - needs libgcc_s.so.*
-        if [ "${abs_prog##*/}" = "cryptsetup" ]; then
-            local extra libdir libgcc libname
-            for lib in $libs; do
-                libdir=${lib%/*};
-                libname=${lib##*/}; libname=${libname%%.*};
-                [ -n "${libname##libcryptsetup*}" ] && continue
-                libgcc="libgcc_s.so.*"
-            done
-            [ -n "${libgcc}" ] && extra=( $(cd "${FROM_DIR:-.}"; find "${FROM_DIR:+.}"${libdir} -type f -name "${libgcc}") )
-            echo libs+=" ${extra[*]#.}"
-            libs+=" ${extra[*]}"
+        # luks2 handling - needs libgcc_s.so.* ...
+        if [ "$basename_prog" = "cryptsetup" ] && [ -x "$bin_dir/cryptsetup" ]; then
+			vsay "luks2 handling"
+			if  echo "$ENCRYPT_PROG_LIBS" | grep -q "libgcc_s.so"; then
+				local libdir libname regex
+                libdir=""
+				vsay "libs=$libs"
+                for lib in $libs; do
+                    libname=${lib##*/}; libname=${libname%%.*};
+                    [ -n "${libname##libc*}" ] && continue  # get libdir from libc.so
+                    libdir=${lib%/*};
+                    break
+                done
+				vsay "libdir: $libdir"
+
+                if [ -n "${libdir}" ]; then
+                    local extra=()
+                    regex=$(echo "$ENCRYPT_PROG_LIBS" | \
+                            sed -r 's/[.]so//g; s:^\s*:.*/(:; s/\s*$/)[.]so.*/; s/\s+/|/g')
+                    readarray -t extra < <(
+                        cd "${FROM_DIR:-/}" 2>/dev/null && \
+                        find "${FROM_DIR:+.}$libdir" ! -type d \
+                        -regextype posix-extended \
+                        -regex "$regex"  2>/dev/null
+                    )
+                    vsay "libs+=%s" "${extra[*]#.}"
+                    libs+=" ${extra[*]}"
+                fi
+            fi
+        fi
+
+        # kmod handling - maybe needs libkmod.so, liblzma.so , libzstd.so
+        local extra=()
+        if [ "$basename_prog" = "kmod" ] && [ -x "$bin_dir/kmod" ]; then
+			vsay "kmod handling"
+			if  echo "$DEFAULT_KMOD_LIBS" | grep -q "libkmod"; then
+                local libdir libname
+
+                libdir=""
+				vsay "libs=$libs"
+                for lib in $libs; do
+                    libname=${lib##*/}; libname=${libname%%.*};
+                    [ -n "${libname##libc*}" ] && continue  # get libdir from libc.so
+                    libdir=${lib%/*};
+                    break
+                done
+				vsay "libdir: $libdir"
+
+                if [ -n "${libdir}" ]; then
+                    local regex
+                    regex=$(echo "$DEFAULT_KMOD_LIBS" | \
+                            sed -r 's/.so//g; s:^\s*:.*/(:; s/\s*$/)[.]so.*/; s/\s+/|/g')
+                    readarray -t extra < <(
+                        cd "${FROM_DIR:-/}" 2>/dev/null && \
+                        find "${FROM_DIR:+.}$libdir" ! -type d \
+                        -regextype posix-extended \
+                        -regex "$regex"  2>/dev/null
+                    )
+                    vsay "libs+=%s" "${extra[*]#.}"
+                    libs+=" ${extra[*]}"
+                fi
+            fi
         fi
 
         # For each library, copy the library and the symlink to the lib directory
         for lib in $libs; do
-            copy_symlink "$FROM_DIR" "$lib" "$lib_dir"
+            vsay "copy_symlink  ${FROM_DIR:-/} $lib  $lib_dir"
+            copy_symlink "${FROM_DIR:-/}" "$lib" "$lib_dir"
         done
 
         # copy in the ld-linux program specifed by the program
         ld_linux=$(echo "$raw_libs" | sed -nr "s@^\s*(/lib[^ ]*/ld-linux[^ ]*) .*@\1@p")
         [ -z "$ld_linux" ] && continue
 
-        local ld_dir="$TO_DIR"$(dirname "$ld_linux")
+        local ld_dir; ld_dir="$TO_DIR"$(dirname "$ld_linux")
         echo "ld_linux: $ld_linux"
         if [ "${ld_dir##*/}" = lib64 ]; then
             my_mkdir "$ld_dir"
-            pretend cp -a "$FROM_DIR"$ld_linux $ld_dir
+            pretend cp -a "${FROM_DIR%/}${ld_linux}" "$ld_dir"
 
             ld_dir=${ld_dir%/lib64}$X86_64_DIR
         fi
-        echo ld_dir: $ld_dir
+        echo "ld_dir: $ld_dir"
         my_mkdir "$ld_dir"
         copy_symlink "$FROM_DIR" "$ld_linux" "$ld_dir"
 
@@ -236,26 +325,26 @@ copy_symlink() {
 
     # This works for relative symlinks and absolute symlinks that are also
     # exist on the host
-    local real_file=$($SUDO $LINUX_ARG chroot "$from_dir" readlink -f $symlink)
+    local real_file; real_file=$($SUDO ${LINUX_ARG:+"$LINUX_ARG"} chroot "$from_dir" readlink -f "$symlink")
 
     # echo -e "    symlink: $symlink\n  real_file: $real_file"
 
     # If it was not really a symlink then just copy and return
-    if [ -z "$real_file" -o "$real_file" = "$symlink" ]; then
-        local dest_file="$dest_dir"/$(basename $symlink)
+    if [ -z "$real_file" ] || [ "$real_file" = "$symlink" ]; then
+        local dest_file; dest_file="$dest_dir"/"$(basename "$symlink")"
         test -e "$dest_file" || pretend cp "$from_dir$symlink" "$dest_file" \
             || fatal "Failed to copy:\n  %s -->\n  %s" "$from_dir$symlink" "$dest_file"
         return
     fi
 
     # Otherwise, copy the file and then make a relative symlink to it
-    local dest_file="$dest_dir"/$(basename $real_file)
-    test -e "$dest_file" || pretend cp -a "$from_dir$real_file" "$dest_file" \
+    local dest_file; dest_file="$dest_dir"/"$(basename "$real_file")"
+    test -e "$dest_file" || pretend cp -a "${from_dir%/}/${real_file#/}" "$dest_file" \
         || fatal "Failed to copy:\n  %s -->\n  %s" "$from_dir$real_file" "$dest_file"
 
-    local sym_targ=$(basename $real_file)
-    local sym_sorc="$dest_dir"/$(basename $symlink)
-    test -e "$sym_sorc" || pretend ln -s $sym_targ "$sym_sorc" \
+    local sym_targ; sym_targ=$(basename "$real_file")
+    local sym_sorc; sym_sorc="$dest_dir"/"$(basename "$symlink")"
+    test -e "$sym_sorc" || pretend ln -s "$sym_targ" "$sym_sorc" \
         || fatal "Failed to create symlink at:\n  %s" "$sym_sorc"
 }
 
@@ -288,39 +377,51 @@ do_clean() {
 
     local prog
     local restore=""
+
+    if  echo " $prog_list " | grep -sq " kmod "; then
+        vsay "Adding kmod symlinked programs"
+        prog_list="$prog_list $DEFAULT_KMOD_LIST"
+    fi
+
+    if  echo " $prog_list " | grep -sq " xz "; then
+        vsay "Adding xz symlinked programs"
+        prog_list="$prog_list $DEFAULT_XZ_LIST"
+    fi
+
+    if  echo " $prog_list " | grep -sq " zstd "; then
+        vsay "Adding zstd symlinked programs"
+        prog_list="$prog_list $DEFAULT_ZSTD_LIST"
+    fi
+
+    prog_list=$(echo "$prog_list" | sed 's/\s/\n/g' | sort -u | tr  '\n' ' ' );
+    prog_list=${prog_list% }
+
+    local busybox="$bin_dir"/busybox
     for prog in $prog_list; do
-        local busybox="$bin_dir"/busybox
         local full="$bin_dir/$prog"
-        test -e "$full" && pretend rm -f "$full"
-        if [ -x "$busybox"  ] && "$busybox" --list | grep -q "^$prog$"; then
-                restore+=" $prog"
-        fi
-        [ "$prog" = kmod ] || continue
-        if [ ! -x "$bin_dir/kmod" ] && [ -x "$busybox"  ]; then
-            local kmods="$DEFAULT_KMOD_LIST"
-            local mod
-            for mod in $kmods; do
-                [ x"$(readlink "$bin_dir"/$mod)" = xbusybox ] && continue
-                restore+=" $mod"
-            done
+        { test -e "$full" || test -L "$full"; }  && pretend rm -f "$full"
+        if [ -x "$busybox"  ] && { "$busybox" --list | grep -sq "^${prog}$"; }; then
+            restore+="$prog "
         fi
     done
+    restore="${restore% }"
     # restore busybox links
+    [ -n "$restore" ] && qsay "Restoring these busybox symlink(s): %s" "$restore"
     local link
     for link in $restore; do
         local full="$bin_dir/$link"
-        if [ -x "$busybox"  ] && "$busybox" --list | grep -q "^$link$"; then
-            pretend ln -nsf busybox "$bin_dir"/$link
+        if [ -x "$busybox"  ] &&  { "$busybox" --list | grep -sq "^${link}$"; }; then
+            pretend ln -nsf busybox "$full"
         fi
     done
 
     local lib
-    for lib in "$to_dir"/lib*/{lib,ld}*.so*  "$to_dir"/$X86_64_DIR/ld-*.so*; do
-        [ -e "$lib" -o -L "$lib" ] && pretend rm -f "$lib"
+    for lib in "$to_dir"/lib*/{lib,ld}*.so*  "$to_dir"/"$X86_64_DIR"/ld-*.so*; do
+        { [ -e "$lib" ] || [ -L "$lib" ]; } && pretend rm -f "$lib"
     done
 
     local dir
-    for dir in "$to_dir"/lib*/ $bin_dir "$to_dir"$X86_64_DIR; do
+    for dir in "$to_dir"/lib*/ $bin_dir "$to_dir$X86_64_DIR"; do
         test -d "$dir" || continue
         [ -z "$(ls -A "$dir" 2>/dev/null)" ] && pretend rmdir "$dir"
     done
@@ -333,7 +434,8 @@ do_show() {
     printf "%s environment variables\n" "$ME"
     local var val
     for var in $VAR_LIST; do
-        eval val=\$$var
+        #eval val=\$"$var"
+        local -n ref="$var"; val="$ref"
         printf "%20s: %s\n" "$var" "$val"
     done
 }
@@ -351,7 +453,7 @@ my_mkdir() {
 # Only run the command if not PRETEND.  Show command if PRETEND or VERBOSE.
 #------------------------------------------------------------------------------
 pretend() {
-    [ "$PRETEND" -o "$VERBOSE" ] && echo "$@"
+    { [ "$PRETEND" ] || [ "$VERBOSE" ]; } && echo "$@"
     [ "$PRETEND" ] && return
     "$@"
 }
@@ -374,7 +476,7 @@ read_params() {
     local arg val
 
     # Loop through the cmdline args
-    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+    while [ $# -gt 0 ] && [ ${#1} -gt 0 ] && [ -z "${1##-*}" ]; do
         arg=${1#-}
         shift
         SHIFT=$((SHIFT + 1))
@@ -384,7 +486,9 @@ read_params() {
             [$SHORT_STACK][$SHORT_STACK]*)
                 if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
                     local old_cnt=$#
-                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    local ARGS=()
+                    read -ra ARGS < <(echo "$arg" | sed -r 's/([a-zA-Z])/ -\1 /g')
+                    set -- "${ARGS[@]}" "$@"
                     SHIFT=$((SHIFT - $# + old_cnt))
                     continue
                 fi;;
@@ -394,7 +498,7 @@ read_params() {
         if takes_param "$arg"; then
             [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
             val=$1
-            [ -n "$val" -a -z "${val##-*}" ] \
+            [ -n "$val" ] && [ -z "${val##-*}" ] \
                 && fatal "Suspicious argument after -$arg: $val"
             SHIFT=$((SHIFT + 1))
             shift
@@ -409,28 +513,32 @@ read_params() {
     done
 }
 
-vsay() {
-    [ "$VERBOSE" ] || return
-    local fmt=$1  ; shift
-    printf "$fmt\n" "$@"
-}
-
 say() {
     local fmt=$1  ; shift
+    # ignore "Don't use variables in the printf format string." shellcheck warnings
+    # shellcheck disable=SC2059
     printf "$fmt\n" "$@"
 }
 
+vsay() {
+    [ "$VERBOSE" ] || return
+    say "$@"
+}
 
 qsay() {
     [ "$QUIET" ] && return
-    local fmt=$1  ; shift
-    printf "$fmt\n" "$@"
+    say "$@"
 }
 
+fatal() {
+    local fmt=$1; shift
+    say "$ME$err_co fatal error:$warn_co $fmt$nc_co" "$@" >&2
+    exit 2
+}
 
 warn() {
     local fmt=$1; shift
-    printf "$ME$err_co warning:$warn_co $fmt$nc_co\n" "$@" >&2
+    say "$ME$err_co warning:$warn_co $fmt$nc_co" "$@" >&2
 }
 
 warn_err() {
@@ -441,20 +549,16 @@ warn_err() {
     fi
 }
 
-fatal() {
-    local fmt=$1; shift
-    printf "$ME$err_co fatal error:$warn_co $fmt$nc_co\n" "$@" >&2
-    exit 2
-}
-
+# ignore "unused variables ..." shellcheck warnings
+# shellcheck disable=SC2034
 set_colors() {
-   local e=$(printf "\e")
+   local e; e=$(printf "\e")
 
-         black="$e[0;30m" ;    blue="$e[0;34m" ;    green="$e[0;32m" ;    cyan="$e[0;36m" ;
-           red="$e[0;31m" ;  purple="$e[0;35m" ;    brown="$e[0;33m" ; lt_gray="$e[0;37m" ;
-       dk_gray="$e[1;30m" ; lt_blue="$e[1;34m" ; lt_green="$e[1;32m" ; lt_cyan="$e[1;36m" ;
-        lt_red="$e[1;31m" ; magenta="$e[1;35m" ;   yellow="$e[1;33m" ;   white="$e[1;37m" ;
-         nc_co="$e[0m"    ;   brown="$e[0;33m" ;
+         black="${e}[0;30m" ;    blue="${e}[0;34m" ;    green="${e}[0;32m" ;    cyan="${e}[0;36m" ;
+           red="${e}[0;31m" ;  purple="${e}[0;35m" ;    brown="${e}[0;33m" ; lt_gray="${e}[0;37m" ;
+       dk_gray="${e}[1;30m" ; lt_blue="${e}[1;34m" ; lt_green="${e}[1;32m" ; lt_cyan="${e}[1;36m" ;
+        lt_red="${e}[1;31m" ; magenta="${e}[1;35m" ;   yellow="${e}[1;33m" ;   white="${e}[1;37m" ;
+         nc_co="${e}[0m"    ;   brown="${e}[0;33m" ;
 
            m_co=$cyan
           hi_co=$white
