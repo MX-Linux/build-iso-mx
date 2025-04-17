@@ -20,14 +20,12 @@ debconf-i18n
 debconf-utils
 deborphan
 dialog
-dictionaries-common
 discover
 djvulibre-bin
 docbook-xml
 dvd+rw-tools
 elinks
 elinks-data
-emacsen-common
 ethtool
 extundelete
 f2fs-tools

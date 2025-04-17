@@ -1,16 +1,12 @@
-adduser
 apt-notifier
 blueman
 bluez
 desktop-defaults-mx-xfce
-desktop-defaults-mx-xfce-desktop
-desktop-defaults-mx-xfce-system
 featherpad
 gparted
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
 gtkdialog
-libdbus-glib-1-2 # Needed for Firefox
 lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-mx23
@@ -19,13 +15,10 @@ lightdm-modified-init
 linux-headers-amd64
 linux-image-amd64
 mx-comfort-themes
-mx-datetime
 mx-installer
-mx-live-usb-maker
 mx-usb-unmounter
 mx23-artwork
 network-manager-gnome
-onboard
 papirus-mxblue
 pavucontrol
 pinentry-gtk2
