@@ -7,7 +7,8 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23.6_CLI"
+DISTRO_VERSION="23.6.1_CLI"
+RELEASE_DATE="April 17, 2025"
 
 ARCH="amd64"
 ISO_FLAV="mxcli64"
