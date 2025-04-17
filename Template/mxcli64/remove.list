@@ -7,7 +7,6 @@ cups-filters
 cups-filters-core-drivers
 cups-ipp-utils
 cups-server-common
-curl
 debconf-i18n
 dialog
 dirmngr

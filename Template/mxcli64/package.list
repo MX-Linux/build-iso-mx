@@ -1,5 +1,7 @@
 ceni
 cli-installer-mx
+curl
+efibootmgr
 iso-snapshot-cli
 iw
 linux-headers-amd64
