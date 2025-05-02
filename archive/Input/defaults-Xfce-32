@@ -10,9 +10,9 @@
 #32 bit version of Xfce release, defaults from defaults-system
 
 # standard 32 bit
-K_REVISION="33"
-K_TEMPLATE="%V%G-%R-%A-pae"
-K_VERSION="6.1.0"
+K_REVISION="antix.1"
+K_TEMPLATE="%V%G-%R-686-smp-pae"
+K_VERSION="5.10.234"
 UNSIGNED=""
 
 ENABLE_LOCALES=Default

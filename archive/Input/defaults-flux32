@@ -9,14 +9,14 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="23.6_fluxbox"
+DISTRO_VERSION="25_fluxbox"
 
 #32 bit version of fluxbox release, defaults from defaults-system
 
 # standard 32 bit
-K_REVISION="33"
+K_REVISION="20"
 K_TEMPLATE="%V%G-%R-%A-pae"
-K_VERSION="6.1.0"
+K_VERSION="6.12.0"
 UNSIGNED=""
 
 # system defaults, these end up inside the squash file system mostly
