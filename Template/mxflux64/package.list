@@ -46,7 +46,7 @@ exo-utils
 fdisk
 featherpad
 feh
-file-roller
+# file-roller
 flatpak
 fluxbox
 fonts-font-awesome
@@ -304,6 +304,7 @@ volumeicon-alsa
 #webcamoid
 whiptail
 wmalauncher
+xarchiver
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-user-dirs-gtk
