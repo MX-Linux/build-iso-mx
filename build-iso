@@ -1841,7 +1841,7 @@ do_stage_8() {
         $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
     fi
 
-    md5sum_file $full_iso_file
+    #md5sum_file $full_iso_file
     sha256sum_file $full_iso_file
     zsyncmake_file $full_iso_file
 
