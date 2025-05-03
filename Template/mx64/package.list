@@ -127,7 +127,7 @@ gvfs-backends
 gvfs-fuse
 gxkb
 hardinfo2
-#qt-heif-image-plugin
+qt-heif-image-plugin
 heif-thumbnailer
 heif-gdk-pixbuf
 hicolor-icon-theme
