@@ -13,6 +13,7 @@ aspell
 aspell-en
 baloo6
 bash-config
+bind9-dnsutils
 bluedevil
 bluetooth
 bluez
@@ -35,7 +36,6 @@ cracklib-runtime
 debconf-kde-helper
 dh-python
 digikam
-dnsutils
 docbook-xsl
 dolphin
 drkonqi
@@ -63,7 +63,7 @@ heif-thumbnailer
 hicolor-icon-theme
 hunspell-en-gb
 hunspell-en-us
-ibus-table-emoji
+ibus-table-emoticon
 icedax
 icoutils
 ieee-data
