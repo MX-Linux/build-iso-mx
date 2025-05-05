@@ -34,7 +34,7 @@ ASCII_CODE_NAME="Infinity"
 
 DISTRO_VERSION="25_alpha1"
 DISTRO_NAME="MX"
-RELEASE_DATE="May 3, 2025"
+RELEASE_DATE="May xx, 2025"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="trixie"
@@ -44,7 +44,7 @@ NEW_HOSTNAME="mx1"
 
 # kernel
 # standard 64 bit
-K_REVISION="22"
+K_REVISION="25"
 K_TEMPLATE="%V%G.%R-%A"
 K_VERSION="6.12"
 UNSIGNED=""
