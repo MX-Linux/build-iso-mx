@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="25_fluxbox"
+DISTRO_VERSION="25_fluxbox_Aplha1"
 
 # DE particular items
 
