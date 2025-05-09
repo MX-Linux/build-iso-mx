@@ -22,8 +22,8 @@ clipman
 colord
 colord-data
 compton
-compton-conf
-compton-conf-l10n
+# compton-conf
+# compton-conf-l10n
 conky-all
 conky-manager
 conky-toggle-mx
@@ -250,6 +250,7 @@ papirus-mxblue
 pavucontrol
 perl-base
 phonon-backend-gstreamer-common
+picom
 pinentry-gtk2
 plymouth
 plymouth-themes
