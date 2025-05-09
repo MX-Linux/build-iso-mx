@@ -107,14 +107,14 @@ libcap2-bin
 libcom-err2
 libcrypt1
 libcryptsetup12
-libdb5.3
+#  libdb5.3
 libdebconfclient0
 libdevmapper1.02.1
 # libdns-export1110
 libedit2
-libelf1
+#  libelf1
 libestr0
-libext2fs2
+#  libext2fs2
 libfastjson4
 libfdisk1
 libffi8
@@ -122,10 +122,10 @@ libgcc-s1
 libgcc-s1:i386
 libgcrypt20
 libgmp10
-libgnutls30
+#  libgnutls30
 libgpg-error0
 libgssapi-krb5-2
-libhogweed6
+#  libhogweed6
 libidn2-0
 libip4tc2
 # libisc-export1105
@@ -145,7 +145,7 @@ libmnl0
 libmount1
 libncurses6
 libncursesw6
-libnettle8
+#  libnettle8
 libnewt0.52
 libnftables1
 libnftnl11
@@ -160,7 +160,7 @@ libpcre2-8-0
 # libpcre3
 libpopt0
 libproc2-0
-libreadline8
+#  libreadline8
 libseccomp2
 libselinux1
 libsemanage-common
@@ -169,7 +169,7 @@ libsepol2
 libslang2
 libsmartcols1
 libss2
-libssl3
+#  libssl3
 libstdc++6
 libsystemd0
 libtasn1-6
@@ -178,7 +178,7 @@ libtext-iconv-perl
 libtext-wrapi18n-perl
 libtinfo6
 libtirpc-common
-libtirpc3
+#  libtirpc3
 libudev1
 # libunistring2
 libuuid1
