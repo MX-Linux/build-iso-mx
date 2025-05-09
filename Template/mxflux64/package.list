@@ -4,7 +4,7 @@ advert-block-antix
 alsa-topology-conf
 alsa-ucm-conf
 apt
-apt-notifier
+# apt-notifier
 apt-utils
 arandr
 arc-theme
@@ -42,11 +42,11 @@ dpkg
 e2fsprogs
 #exfat-fuse
 exo-utils
-#fbxkb
+# fbxkb
 fdisk
 featherpad
 feh
-#file-roller
+# file-roller
 flatpak
 fluxbox
 fonts-font-awesome
@@ -55,8 +55,8 @@ fonts-wqy-microhei
 formatusb
 galculator
 gcc-12-base
-gconf-service
-gconf2-common
+# gconf-service
+# gconf2-common
 gcr
 #gdebi
 geany
@@ -66,11 +66,11 @@ gparted
 grep
 gsfonts
 gsimplecal
-#gthumb
+# gthumb
 gtk2-engines-murrine
 gtk2-engines
-#gtk3-nocsd
-gtkdialog
+# gtk3-nocsd
+# gtkdialog
 gzip
 guvcview
 guvcview-modified-desktop-file
@@ -90,7 +90,7 @@ isc-dhcp-common
 kmod
 libacl1
 libapparmor1
-libapt-pkg6.0
+# libapt-pkg6.0
 libargon2-1
 libattr1
 libaudit-common
@@ -107,14 +107,14 @@ libcap2-bin
 libcom-err2
 libcrypt1
 libcryptsetup12
-libdb5.3
+#  libdb5.3
 libdebconfclient0
 libdevmapper1.02.1
-#libdns-export1110
+# libdns-export1110
 libedit2
-libelf1
+#  libelf1
 libestr0
-libext2fs2
+#  libext2fs2
 libfastjson4
 libfdisk1
 libffi8
@@ -122,13 +122,13 @@ libgcc-s1
 libgcc-s1:i386
 libgcrypt20
 libgmp10
-libgnutls30
+#  libgnutls30
 libgpg-error0
 libgssapi-krb5-2
-libhogweed6
+#  libhogweed6
 libidn2-0
 libip4tc2
-#libisc-export1105
+# libisc-export1105
 libjansson4
 libjson-c5
 libk5crypto3
@@ -145,7 +145,7 @@ libmnl0
 libmount1
 libncurses6
 libncursesw6
-libnettle8
+#  libnettle8
 libnewt0.52
 libnftables1
 libnftnl11
@@ -157,10 +157,10 @@ libpam-modules-bin
 libpam-runtime
 libpam0g
 libpcre2-8-0
-libpcre3
+# libpcre3
 libpopt0
 libproc2-0
-libreadline8
+#  libreadline8
 libseccomp2
 libselinux1
 libsemanage-common
@@ -169,7 +169,7 @@ libsepol2
 libslang2
 libsmartcols1
 libss2
-libssl3
+#  libssl3
 libstdc++6
 libsystemd0
 libtasn1-6
@@ -178,9 +178,9 @@ libtext-iconv-perl
 libtext-wrapi18n-perl
 libtinfo6
 libtirpc-common
-libtirpc3
+#  libtirpc3
 libudev1
-libunistring2
+# libunistring2
 libuuid1
 libxtables12
 libxxhash0
@@ -193,17 +193,17 @@ lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-image-amd64
 linux-headers-amd64
-#live-grubsave-mx
+# live-grubsave-mx
 lo-main-helper
 logrotate
 logsave
 lsb-base
-#luckybackup
-#luckybackup-data
-#lxappearance
+# luckybackup
+# luckybackup-data
+# lxappearance
 magnus
-#matcha-themes
-#menulibre
+# matcha-themes
+# menulibre
 mesa-vulkan-drivers
 mount
 mugshot
@@ -226,7 +226,7 @@ mx-tour
 mx-usb-unmounter
 mx-viewer
 mx-welcome
-#mx21-archive-keyring
+# mx21-archive-keyring
 mx25-artwork
 mxfb-accessories
 mxfb-docs
@@ -241,8 +241,8 @@ network-manager-openvpn-gnome
 nftables
 nomacs
 nomacs-l10n
-#numix-gtk-theme
-#numix-icon-theme
+# numix-gtk-theme
+# numix-icon-theme
 nvidia-detect
 open-vm-tools
 pacpl
@@ -264,13 +264,13 @@ qpdfview
 qpdfview-djvu-plugin
 qpdfview-ps-plugin
 qpdfview-translations
-#qt5-style-plugins
+# qt5-style-plugins
 qt6-gtk-platformtheme
-#qt6gtk2
+# qt6gtk2
 readline-common
 rofi
 rofi-calc
-roxterm
+# roxterm
 seahorse
 sendemail
 sensible-utils
@@ -292,18 +292,18 @@ thunar-gtkhash
 thunar-modified-desktop-file
 thunar-volman
 tint2
-touchpad-indicator
-#ttf-mscorefonts-installer
+# touchpad-indicator
+# ttf-mscorefonts-installer
 tumbler
 tumbler-common
 tumbler-plugins-extra
 vcdimager
-#virtualbox-guest-dkms
-virtualbox-guest-utils
-virtualbox-guest-utils-modified-init
-virtualbox-guest-x11
+# virtualbox-guest-dkms
+# virtualbox-guest-utils
+# virtualbox-guest-utils-modified-init
+# virtualbox-guest-x11
 volumeicon-alsa
-#webcamoid
+# webcamoid
 whiptail
 wmalauncher
 xarchiver
@@ -311,17 +311,17 @@ xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-user-dirs-gtk
 xfburn
-#xfce4-appfinder
+# xfce4-appfinder
 xfce4-clipman
 xfce4-notifyd
-#xfce4-screenshooter
-#xfce4-settings
+# xfce4-screenshooter
+# xfce4-settings
 xfce4-terminal
-#xfce4-whiskermenu-plugin
+# xfce4-whiskermenu-plugin
 xfconf
-#xfdesktop4
-#xfdesktop4-data
-#xfwm4
+# xfdesktop4
+# xfdesktop4-data
+# xfwm4
 xserver-xorg-video-mach64
 xserver-xorg-video-tdfx
 xserver-xorg-video-trident
