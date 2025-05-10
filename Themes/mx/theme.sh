@@ -21,8 +21,6 @@ copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file desktop.data          /usr/local/share/boot-menus/
 copy_file desktop.menu          /usr/local/share/boot-menus/
 copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
-copy_file compton.desktop 	/etc/skel/.local/share/applications/
-copy_file compton-conf.desktop 	/etc/skel/.local/share/applications/
 copy_file plymouthd.conf 	/etc/plymouth/	--create
 copy_file ufw.conf       	/etc/ufw/ 	--create
 copy_file magnus-autostart.desktop /etc/skel/.config/autostart
