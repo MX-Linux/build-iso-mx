@@ -21,7 +21,7 @@ apt-transport-https
 at-spi2-core
 atmel-firmware
 avahi-daemon
-avahi-sysvinit-compat
+# avahi-sysvinit-compat
 bc
 bind9-host
 bind9-dnsutils
@@ -240,7 +240,7 @@ network-manager
 network-manager-openconnect
 network-manager-openvpn
 network-manager-pptp
-network-manager-sysvinit-compat
+# network-manager-sysvinit-compat
 network-manager-vpnc
 nfs-common
 nfs-common-modified-init
@@ -307,7 +307,7 @@ rpcbind
 rpl
 rsync
 rsyslog
-rsyslogd-sysvinit-compat
+# rsyslogd-sysvinit-compat
 rtl8812au-dkms
 rtl8821cu-dkms
 samba
@@ -397,6 +397,6 @@ xserver-xorg-video-sisusb
 yad
 zip
 zram-tools
-zramswap-sysvinit-compat
+# zramswap-sysvinit-compat
 zstd
 zsync

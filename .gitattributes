@@ -1,0 +1,3 @@
+Template/COMMON/remove.list merge=ours
+Template/COMMON/package.list merge=ours
+.gitattributes merge=ours
