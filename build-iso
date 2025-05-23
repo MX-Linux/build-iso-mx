@@ -227,11 +227,11 @@ main() {
     fi
 
     if [[ -n $update_mode ]]; then
-        : ${start_from:=$((chroot_stage - 1))}
+        : "${start_from:=$((chroot_stage - 1))}"
         SKIP_PART="$SKIP_PART${SKIP_PART:+,}$UPDATE_SKIP_PART"
     fi
 
-    [[ -n $reset_mode ]] && : ${start_from:=0}
+    [[ -n $reset_mode ]] && : "${start_from:=0}"
     [[ -n $iso_only   ]] && SKIP_STAGE="$SKIP_STAGE${SKIP_STAGE:+,}$ISO_SKIP_STAGE"
 
     case $color_mode in
@@ -492,7 +492,7 @@ Remaster_Blurb
     load_defaults
 
     # Fill in default value
-    : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
+    : "${RELEASE_DATE:=$(date +"%-e %B %Y")}"
 
     choose "local mirror" LOCAL_MIRROR                       \
                 us gr au be bg br ch cz de dk ee es "fi" fr  \
@@ -905,7 +905,7 @@ do_stage_4() {
         skip_part 2 "Search for complete kernel name"
     fi
 
-    : ${LOCALE:=en_US.UTF-8}
+    : "${LOCALE:=en_US.UTF-8}"
 
     if do_part 3 "!Define locales"; then
         case $ENABLE_LOCALES in
@@ -943,7 +943,7 @@ do_stage_4() {
     fi
 
     if do_part 6 "Update locales"; then
-        : ${LOCALE:=en_US.UTF-8}
+        : "${LOCALE:=en_US.UTF-8}"
         say "Set default locale to $(pq $LOCALE)"
         update-locale LANG=$LOCALE
         end_part_lax
@@ -1242,7 +1242,7 @@ do_stage_4() {
 
         ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
         systemctl mask cgmanager.service
-        
+
     fi
 
     mkdir -p /usr/share/antiX
@@ -2344,7 +2344,7 @@ my_ps() {
 
 get_cache_free_swap() {
     local lab free cache swap
-    while read lab total used free shared cache available; do
+    while read lab total used free cache; do
         case $lab in
             Mem:) echo free=$free
                   echo cache=$cache ;;
@@ -2445,7 +2445,8 @@ apt_get_packages() {
     cnt=$(echo "$pkg_list" | wc -w)
     [[ $cnt -eq 0 ]] && return
 
-    msg=$(plural $cnt "apt-get ${@:$#} $(pqn %n) $label package%s.")
+    local last_arg="${!#}"
+    msg=$(plural $cnt "apt-get $last_arg $(pqn %n) $label package%s.")
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
 
@@ -2981,7 +2982,7 @@ umount_chroot() {
 
         $SUDO umount -l $mp 2>/dev/null
 
-        for try in 1 2 3; do
+        for _ in 1 2 3; do
             mountpoint -q $mp || break
             say "umount $name"
             $SUDO umount -l $mp
@@ -3826,7 +3827,7 @@ require_programs() {
 gather() { _gather_ "$@" | sort -u; }
 
 _gather_() {
-    local file=$1.list base=${2:-$template}
+    local file=$1.list
 
     for dir in $(flav_dirs); do
         test -r $dir/$file || continue
