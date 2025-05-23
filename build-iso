@@ -205,8 +205,8 @@ main() {
          -VERBOSE|V)   verbose_mode=true                        ;;
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
-             -stop5)         stop_5=true						;;
-             -stop8)         stop_8=true						;;
+             -stop5)         stop_5=true                        ;;
+             -stop8)         stop_8=true                        ;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
