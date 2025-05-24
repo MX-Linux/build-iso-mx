@@ -11,7 +11,7 @@ alsa-ucm-conf
 aptitude
 aptitude-common
 #arandr
-arc-theme
+#arc-theme
 #arc-theme-hdpi
 #arc-theme-xhdpi
 aspell
@@ -20,7 +20,7 @@ asunder
 #b43-fwcutter
 baobab
 bash-config
-blackbird-gtk-theme
+#blackbird-gtk-theme
 #bleachbit
 blueman
 bluetooth
@@ -106,7 +106,7 @@ gnome-mahjongg
 gnupg-agent
 #gottet
 gparted
-#greybird-gtk-theme
+greybird-gtk-theme
 #grub-customizer
 #gscan2pdf
 gsfonts
@@ -218,7 +218,7 @@ mx-matcha-themes
 mx-docs
 #mx-findshares
 #mx-fluxbox
-mx-greybird-themes
+#mx-greybird-themes
 mx-installer
 mx-select-sound
 mx-sound-theme-borealis
@@ -318,7 +318,7 @@ system-config-printer
 system-config-printer-udev
 #system-config-samba
 #systemd-sysv
-tango-icon-theme
+#tango-icon-theme
 thunar
 thunar-archive-plugin
 thunar-shares-plugin
