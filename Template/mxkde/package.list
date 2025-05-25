@@ -1,4 +1,3 @@
-#advert-block-antix
 akonadi-contacts-data
 alsa-topology-conf
 alsa-ucm-conf
@@ -49,6 +48,7 @@ fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
 formatusb
 frameworkintegration
+fsearch
 gcc-14-base:i386
 gdb-minimal
 gimp
@@ -58,6 +58,7 @@ gnupg-agent
 gsfonts
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
+hardinfo2
 heif-gdk-pixbuf
 heif-thumbnailer
 hicolor-icon-theme
@@ -84,20 +85,13 @@ kcalc
 kde-cli-tools
 kde-cli-tools-data
 kde-config-gtk-style
-#kde-config-mailtransport
 kde-config-screenlocker
 kde-config-sddm
 kde-config-updates
-#kde-servicemenu-checkhash-installdebs
-#kde-servicemenu-extract-and-compress
-#kde-servicemenu-kim5
-#kde-servicemenu-rootactions
 kde-spectacle 
 kde-standard
 kde-style-breeze
 kde-style-oxygen-qt6
-#kde-style-qtcurve-qt5
-#kde-thumbnailer-epub
 kdeconnect
 kded6
 kdegraphics-thumbnailers
@@ -110,8 +104,6 @@ kfind
 kgamma
 kgpg
 khelpcenter
-#khotkeys
-#khotkeys-data
 kimageformat-plugins
 kinfocenter
 kinit
@@ -135,24 +127,20 @@ ksshaskpass
 ksudoku
 ktexteditor-data
 ktexteditor-katepart
-ktorrent
 kwalletmanager
-#kwayland-data
 kwin-common
 kwin-data
 kwin-style-breeze
 kwin-wayland
 kwin-x11
 lame
-#lbreakout2
-#lbreakout2-data
+libbaloowidgets-bin
 libc6:i386 
 libcanberra-gstreamer
 libcanberra-gtk3-module
 libcanberra-pulse
 libffmpegthumbnailer4v5
 libgcc-s1:i386 
-libbaloowidgets-bin
 libreoffice-base
 libreoffice-base-core
 libreoffice-calc
@@ -207,7 +195,6 @@ pdfarranger
 peg-e
 phonon-backend-gstreamer-common
 phonon4qt6
-#phonon4qt6-backend-gstreamer
 pinentry-qt
 plasma-browser-integration
 plasma-dataengines-addons
@@ -226,7 +213,6 @@ plasma-systemmonitor
 plasma-wallpapers-addons
 plasma-widgets-addons
 plasma-workspace
-#plasma-workspace-wayland
 plymouth
 plymouth-themes
 plymouth-themes-mx
@@ -240,8 +226,9 @@ print-manager
 pulseaudio-utils
 python3-gi-cairo
 python3-pycurl
-#python3-software-properties
+qbittorrent
 qdbus-qt6
+qimgv
 qml-module-org-kde-activities
 qml-module-org-kde-bluezqt
 qml-module-org-kde-draganddrop
@@ -274,12 +261,9 @@ qml-module-qtquick-virtualkeyboard
 qml-module-qtquick-window2
 qml-module-qtquick-xmllistmodel
 qml-module-qtquick2
-#qml-module-qtwebkit
 qt-heif-image-plugin
-qt6-image-formats-plugins
-#qt6-style-kvantum
-#qt6-style-plugins
 qt6-gtk-platformtheme
+qt6-image-formats-plugins
 qtvirtualkeyboard-plugin
 rdesktop
 sddm
@@ -302,9 +286,6 @@ uno-libs-private
 ure
 vcdimager
 vim
-#virtualbox-guest-utils
-#virtualbox-guest-utils-modified-init
-#virtualbox-guest-x11
 vlc
 vlc-data
 vlc-l10n
