@@ -116,6 +116,11 @@ fi
 echo $PATH | grep -Eq "(^|:)/sbin(:|)"     || PATH=$PATH:/sbin
 echo $PATH | grep -Eq "(^|:)/usr/sbin(:|)" || PATH=$PATH:/usr/sbin
 
+# add user home folder ./bin if it exists
+if [ -d "$HOME/bin" ]; then
+	echo $PATH | grep -Eq "(^|:)/$HOME/bin(:|)" || PATH=$PATH:"/$HOME/bin"
+fi
+
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
 xterm*|rxvt*)
