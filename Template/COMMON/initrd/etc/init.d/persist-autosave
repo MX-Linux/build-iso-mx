@@ -109,6 +109,9 @@ do_stop() {
     [ ! -f /run/runit.stopit ] && [ ! -d /run/systemd/system ] && [ -z "$uuid_dev" ] && tsplash_clear
 
     local p_config=/usr/bin/persist-config
+    if [ -e "/usr/local/bin/persist-config" ]; then
+		p_config=/usr/bin/persist-config
+	fi
     test -x $p_config && $p_config --cli --shutdown
 }
 
