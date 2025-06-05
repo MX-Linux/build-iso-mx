@@ -11,7 +11,7 @@ copy_file libuser.conf          /etc/
 copy_file modules               /etc/
 copy_file timezone		/etc/
 copy_file pc-speaker.conf	/etc/modprobe.d/
-copy_file desktop.data          /usr/local/share/boot-menus/
-copy_file desktop.menu          /usr/local/share/boot-menus/
+copy_file desktop.data          /usr/share/boot-menus/
+copy_file desktop.menu          /usr/share/boot-menus/
 
 exit

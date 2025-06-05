@@ -4184,7 +4184,7 @@ do_early_menus() {
 #
 #------------------------------------------------------------------------------
 do_late_menus() {
-    local BOOT_MENU_DIR=/live/aufs/usr/local/share/boot-menus
+    local BOOT_MENU_DIR=/live/aufs/usr/share/boot-menus
     local BOOT_MENU_WARN=
     local lang time_zone option persist desktop
     local cmdline
@@ -6259,7 +6259,7 @@ page_updown_keys() {
 #------------------------------------------------------------------------------
 fancy_prompt() {
     local prompt=${1:-prompt-fancy}  dir=$2
-    local bashrc=$dir/etc/skel/.bashrc  fp_prog=/usr/local/bin/fancy-prompts.bash
+    local bashrc=$dir/etc/skel/.bashrc  fp_prog=/usr/bin/fancy-prompts.bash
 
     local cmd=${prompt%%\ *}
     [ -r $dir/$fp_prog -a -n "$prompt" ] || return
@@ -6792,8 +6792,8 @@ detect_vga_menu() {
 #------------------------------------------------------------------------------
 detect_old_persist_scripts() {
     local root=$1
-    local lib_file=$root/usr/local/lib/antiX/antiX-common.sh
-    local enabled_file=$root/usr/local/bin/persist-enabled
+    local lib_file=$root/usr/lib/antiX/antiX-common.sh
+    local enabled_file=$root/usr/bin/persist-enabled
 
     if [ -e $lib_file ]; then
         head -n 20 $lib_file | grep -q /etc/live/config || return 0

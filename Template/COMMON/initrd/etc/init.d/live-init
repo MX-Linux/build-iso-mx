@@ -42,7 +42,7 @@ AUTOMOUNT_CMD="/usr/local/bin/automount-antix"
 NETWORK_IF_FILE="/etc/network/interfaces"
 
 LIVE_MNT_DIR="/media"
-SPLASH_PROGRAMS="/sbin/splash-all /sbin/splash-term /usr/local/bin/splash-select /etc/udev/rules.d/*-fbcondecor.rules"
+SPLASH_PROGRAMS="/sbin/splash-all /sbin/splash-term /usr/bin/splash-select /etc/udev/rules.d/*-fbcondecor.rules"
 
 SWAP_FILE="/live/boot-dev/swap-file"
 
