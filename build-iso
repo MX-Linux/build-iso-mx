@@ -1461,13 +1461,13 @@ Eth0_entry
         $SUDO rm $cached*
     fi
 
-    local exclude_files="$sqfs_dir/usr/share/excludes/*.list"
-    local efile ofile
-    for efile in $exclude_files; do
-        ofile=${efile%.list}.orig
-        $SUDO cp $efile $ofile
-        $SUDO chmod a-wx $ofile
-    done
+    #local exclude_files="$sqfs_dir/usr/share/excludes/*.list"
+    #local efile ofile
+   # for efile in $exclude_files; do
+   #     ofile=${efile%.list}.orig
+   #     $SUDO cp $efile $ofile
+   #     $SUDO chmod a-wx $ofile
+   # done
 
     local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
     local bc_fw_txt=${bc_fw_bin%.bin}.txt
