@@ -9,7 +9,7 @@ antix_specific_code() {
     #ln -s /etc/resolvconf/run/resolv.conf $dir/etc/resolv.conf 2>/dev/null
     
     #remove /etc/resolv.conf no matter what it is
-	rm -f $dir/etc/resolv.conf
+	#rm -f $dir/etc/resolv.conf
 
     rm -f $dir/etc/fstab.hotplug
     

@@ -13,7 +13,10 @@
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 
-LIST_FILE=/usr/local/share/excludes/static-root-delete.list
+LIST_FILE=/usr/share/excludes/static-root-delete.list
+if [ -e "/usr/local/share/excludes/static-root-delete.list" ]; then
+	LIST_FILE=/usr/local/share/excludes/static-root-delete.list
+fi
 
 main() {
     case $1 in

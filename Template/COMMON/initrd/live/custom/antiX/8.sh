@@ -12,6 +12,9 @@ antix_specific_code() {
     # -jbb
     mkdir -p $dir/var/log/samba $dir/var/log/fsck
 
+    #remove /etc/resolv.conf no matter what it is
+	rm -f $dir/etc/resolv.conf
+
     # Create the /etc/resolv.conf symlink if it does not already exist
     ln -s /etc/resolvconf/run/resolv.conf $dir/etc/resolv.conf 2>/dev/null
 

@@ -195,7 +195,6 @@ linux-headers-liquorix-amd64
 lo-main-helper
 luckybackup
 luckybackup-data
-lxmenu-data
 magnus
 manpages-dev
 #matcha-themes
@@ -288,8 +287,9 @@ qpdfview-djvu-plugin
 qpdfview-ps-plugin
 qpdfview-translations
 #qt4-fsarchiver
-qt5-style-plugins
+#qt5-style-plugins
 qt6-gtk-platformtheme
+#qt6gtk2
 #qtchooser
 #qtcore4-l10n
 #rarian-compat
@@ -358,6 +358,7 @@ xdg-user-dirs-gtk
 xfburn
 #xfce-keyboard-shortcuts
 xfce-superkey-mx
+xfce-modified-default-background
 #xfce-theme-manager
 xfce4-appfinder
 xfce4-battery-plugin

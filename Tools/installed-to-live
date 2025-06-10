@@ -26,19 +26,21 @@ BIND_ROOT=/.bind-root
 REAL_ROOT=/
 WORK_DIR=/tmp/$ME
 
-EXCLUDES_DIR=/usr/local/share/excludes
+EXCLUDES_DIR=/usr/share/excludes
 VERSION_FILE=/etc/live/version/linuxfs.ver
 
 CONF_FILE=$WORK_DIR/cleanup.conf
 
-TEMPLATE_DIR=/usr/local/share/live-files
+TEMPLATE_DIR=/usr/share/live-files
 
 DEF_TZ="America/New_York"
 DEF_REPO="us"
 
-DEF_SHELL="/usr/bin/bash"
+DEF_SHELL=$(grep ^DSHELL= /etc/adduser.conf 2>/dev/null | tail -1 | cut -d= -f2)
 DEF_BIN=$(sed -n '/^valid_user()/,/^}/{/^\s*local ent=/{s=.*:/bin/.*=/bin=p;q}}' /live/etc/init.d/live-init 2>/dev/null)
-[ x"$DEF_BIN" = x"/bin" ] && DEF_SHELL="/bin/bash"
+: ${DEF_SHELL:=/usr/bin/bash}
+: ${DEF_BIN:=/usr/bin}
+DEF_SHELL=${DEF_BIN}/${DEF_SHELL##*/bin/}
 
 PRETEND=
 

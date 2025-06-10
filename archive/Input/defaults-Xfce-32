@@ -1,0 +1,21 @@
+#----------------------------------------------------------------------
+# defaults file for build-antiX-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+#32 bit version of Xfce release, defaults from defaults-system
+
+# standard 32 bit
+K_REVISION="antix.1"
+K_TEMPLATE="%V%G-%R-686-smp-pae"
+K_VERSION="5.10.234"
+UNSIGNED=""
+
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mx32
+ARCH=i386

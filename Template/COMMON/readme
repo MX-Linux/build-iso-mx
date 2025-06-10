@@ -1,0 +1,4 @@
+systemd-sysv is removed in remove.list to allow systemd-shim to be installed.  its odd way to do it, but debian's construction of "essential" files that are difficult to remove makes this the easiet way for the apt solver to get systemd-shim installed.
+
+
+you may be asked about overwriting some init scripts.  accept default (N) in all cases

@@ -205,8 +205,8 @@ main() {
          -VERBOSE|V)   verbose_mode=true                        ;;
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
-             -stop5)         stop_5=true						;;
-             -stop8)         stop_8=true						;;
+             -stop5)         stop_5=true                        ;;
+             -stop8)         stop_8=true                        ;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -227,11 +227,11 @@ main() {
     fi
 
     if [[ -n $update_mode ]]; then
-        : ${start_from:=$((chroot_stage - 1))}
+        : "${start_from:=$((chroot_stage - 1))}"
         SKIP_PART="$SKIP_PART${SKIP_PART:+,}$UPDATE_SKIP_PART"
     fi
 
-    [[ -n $reset_mode ]] && : ${start_from:=0}
+    [[ -n $reset_mode ]] && : "${start_from:=0}"
     [[ -n $iso_only   ]] && SKIP_STAGE="$SKIP_STAGE${SKIP_STAGE:+,}$ISO_SKIP_STAGE"
 
     case $color_mode in
@@ -352,7 +352,7 @@ main() {
         local sqfs_dir=$work_dir/squashfs
         local sqfs_output_dir=$sqfs_dir$build_dir/Output
         local sqfs_input_dir=$sqfs_dir$build_dir/Input
-        local boot_menu_dir=$sqfs_dir/usr/local/share/boot-menus
+        local boot_menu_dir=$sqfs_dir/usr/share/boot-menus
 
         local initrd_dir=$work_dir/initrd
         local manual_selections_template=$template/COMMON/$manual_selections
@@ -492,7 +492,7 @@ Remaster_Blurb
     load_defaults
 
     # Fill in default value
-    : ${RELEASE_DATE:=$(date +"%-e %B %Y")}
+    : "${RELEASE_DATE:=$(date +"%-e %B %Y")}"
 
     choose "local mirror" LOCAL_MIRROR                       \
                 us gr au be bg br ch cz de dk ee es "fi" fr  \
@@ -905,7 +905,7 @@ do_stage_4() {
         skip_part 2 "Search for complete kernel name"
     fi
 
-    : ${LOCALE:=en_US.UTF-8}
+    : "${LOCALE:=en_US.UTF-8}"
 
     if do_part 3 "!Define locales"; then
         case $ENABLE_LOCALES in
@@ -943,7 +943,7 @@ do_stage_4() {
     fi
 
     if do_part 6 "Update locales"; then
-        : ${LOCALE:=en_US.UTF-8}
+        : "${LOCALE:=en_US.UTF-8}"
         say "Set default locale to $(pq $LOCALE)"
         update-locale LANG=$LOCALE
         end_part_lax
@@ -998,8 +998,8 @@ do_stage_4() {
     if gather_any remove \
         && do_part 11 "Remove some packages"; then
         gather_say remove "Remove $(pqn %n) package%s"
-        apt-get purge $(gather remove) $apt_yes
-        end_part_lax
+        apt-get purge $(gather remove) $apt_yes --allow-remove-essential
+        end_part_strict
     fi
 
     if gather_any add \
@@ -1242,7 +1242,7 @@ do_stage_4() {
 
         ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
         systemctl mask cgmanager.service
-        
+
     fi
 
     mkdir -p /usr/share/antiX
@@ -1435,10 +1435,10 @@ do_stage_5() {
         sleep 1
         $SUDO mkdir $sqfs_dir/usr/lib64/sane
 
-        #collect_live_files $live_files_list /usr/local/share/live-files
+        #collect_live_files $live_files_list /usr/share/live-files
         say "Save Live files for snapshot"
 
-        $SUDO rm -rf $sqfs_dir/usr/local/share/live-files
+        $SUDO rm -rf $sqfs_dir/usr/share/live-files
         $SUDO $tools/installed-to-live populate-live-files $sqfs_dir $sqfs_dir
 
         if [[ $FLAV = "core" ]] && is_antiX; then
@@ -1461,13 +1461,13 @@ Eth0_entry
         $SUDO rm $cached*
     fi
 
-    local exclude_files="$sqfs_dir/usr/local/share/excludes/*.list"
-    local efile ofile
-    for efile in $exclude_files; do
-        ofile=${efile%.list}.orig
-        $SUDO cp $efile $ofile
-        $SUDO chmod a-wx $ofile
-    done
+    #local exclude_files="$sqfs_dir/usr/share/excludes/*.list"
+    #local efile ofile
+   # for efile in $exclude_files; do
+   #     ofile=${efile%.list}.orig
+   #     $SUDO cp $efile $ofile
+   #     $SUDO chmod a-wx $ofile
+   # done
 
     local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
     local bc_fw_txt=${bc_fw_bin%.bin}.txt
@@ -1841,7 +1841,7 @@ do_stage_8() {
         $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
     fi
 
-    md5sum_file $full_iso_file
+    #md5sum_file $full_iso_file
     sha256sum_file $full_iso_file
     zsyncmake_file $full_iso_file
 
@@ -2344,7 +2344,7 @@ my_ps() {
 
 get_cache_free_swap() {
     local lab free cache swap
-    while read lab total used free shared cache available; do
+    while read lab total used free cache; do
         case $lab in
             Mem:) echo free=$free
                   echo cache=$cache ;;
@@ -2445,7 +2445,8 @@ apt_get_packages() {
     cnt=$(echo "$pkg_list" | wc -w)
     [[ $cnt -eq 0 ]] && return
 
-    msg=$(plural $cnt "apt-get ${@:$#} $(pqn %n) $label package%s.")
+    local last_arg="${!#}"
+    msg=$(plural $cnt "apt-get $last_arg $(pqn %n) $label package%s.")
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
 
@@ -2981,7 +2982,7 @@ umount_chroot() {
 
         $SUDO umount -l $mp 2>/dev/null
 
-        for try in 1 2 3; do
+        for _ in 1 2 3; do
             mountpoint -q $mp || break
             say "umount $name"
             $SUDO umount -l $mp
@@ -3826,7 +3827,7 @@ require_programs() {
 gather() { _gather_ "$@" | sort -u; }
 
 _gather_() {
-    local file=$1.list base=${2:-$template}
+    local file=$1.list
 
     for dir in $(flav_dirs); do
         test -r $dir/$file || continue

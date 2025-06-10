@@ -1,7 +1,7 @@
 favorites=xfce4-run.desktop,conky-toggle.desktop,libreoffice-startcenter.desktop,mx-tools.desktop,workbench-tools.desktop,Help.desktop,xfce4-taskmanager.desktop,xfce4-terminal.desktop
 recent=xfce4-appfinder.desktop,org.gnome.FileRoller.desktop,mx-tools.desktop,mx-welcome.desktop,xfce4-power-manager-settings.desktop,synaptic.desktop,xfce4-terminal.desktop
 button-title=Applications Menu
-button-icon=/usr/local/share/icons/mxfcelogo-rounded.png
+button-icon=/usr/share/icons/mxfcelogo-rounded.png
 button-single-row=false
 show-button-title=false
 show-button-icon=true
