@@ -141,6 +141,7 @@ gnupg2
 gocr
 groff
 grub-efi-amd64-bin
+grub-efi-amd64-signed
 grub-efi-ia32-bin
 grub-pc
 grub-themes-mx
@@ -316,6 +317,7 @@ scrot
 sdparm
 sgml-data
 shared-mime-info
+shim-signed
 smartmontools
 speech-dispatcher-espeak
 spice-vdagent
