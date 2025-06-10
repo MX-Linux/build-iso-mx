@@ -16,8 +16,8 @@ copy_file modules               /etc/
 copy_file timezone              /etc/
 copy_file sddm.conf             /etc/
 copy_file pc-speaker.conf       /etc/modprobe.d/
-copy_file desktop.data          /usr/local/share/boot-menus/
-copy_file desktop.menu          /usr/local/share/boot-menus/
+copy_file desktop.data          /usr/share/boot-menus/
+copy_file desktop.menu          /usr/share/boot-menus/
 copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 copy_file yad-icon-browser.desktop /etc/skel/.local/share/applications/ --create
 copy_file plymouthd.conf        /etc/plymouth/  --create

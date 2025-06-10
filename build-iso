@@ -352,7 +352,7 @@ main() {
         local sqfs_dir=$work_dir/squashfs
         local sqfs_output_dir=$sqfs_dir$build_dir/Output
         local sqfs_input_dir=$sqfs_dir$build_dir/Input
-        local boot_menu_dir=$sqfs_dir/usr/local/share/boot-menus
+        local boot_menu_dir=$sqfs_dir/usr/share/boot-menus
 
         local initrd_dir=$work_dir/initrd
         local manual_selections_template=$template/COMMON/$manual_selections
@@ -1435,10 +1435,10 @@ do_stage_5() {
         sleep 1
         $SUDO mkdir $sqfs_dir/usr/lib64/sane
 
-        #collect_live_files $live_files_list /usr/local/share/live-files
+        #collect_live_files $live_files_list /usr/share/live-files
         say "Save Live files for snapshot"
 
-        $SUDO rm -rf $sqfs_dir/usr/local/share/live-files
+        $SUDO rm -rf $sqfs_dir/usr/share/live-files
         $SUDO $tools/installed-to-live populate-live-files $sqfs_dir $sqfs_dir
 
         if [[ $FLAV = "core" ]] && is_antiX; then
@@ -1461,13 +1461,13 @@ Eth0_entry
         $SUDO rm $cached*
     fi
 
-    local exclude_files="$sqfs_dir/usr/local/share/excludes/*.list"
-    local efile ofile
-    for efile in $exclude_files; do
-        ofile=${efile%.list}.orig
-        $SUDO cp $efile $ofile
-        $SUDO chmod a-wx $ofile
-    done
+    #local exclude_files="$sqfs_dir/usr/share/excludes/*.list"
+    #local efile ofile
+   # for efile in $exclude_files; do
+   #     ofile=${efile%.list}.orig
+   #     $SUDO cp $efile $ofile
+   #     $SUDO chmod a-wx $ofile
+   # done
 
     local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
     local bc_fw_txt=${bc_fw_bin%.bin}.txt
