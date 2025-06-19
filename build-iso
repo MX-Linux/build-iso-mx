@@ -1116,7 +1116,7 @@ do_stage_4() {
         if [[ $save_cnt -gt 0 || $reconfig_cnt -gt 0 ]]; then
             YES_no "Save these new selections"                     \
                 && debconf-get-selections                          \
-                | grep -E "^$package_re" | grep -v "[[:space:]]$"  \
+                | { [[ -n $package_re ]] && grep -E "^$package_re" || cat; } | grep -v "[[:space:]]$"  \
                 | sort > $build_dir/$manual_selections
         fi
         end_part_lax
@@ -1932,7 +1932,7 @@ enter_stage() {
     title=${2#!}
 
     has_word EXIT_STAGE $stage && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn $stage)$nc"
-    grep ^$stage$ $did_stage_file && fatal "Re-entering stage $stage"
+    [[ -n $stage ]] && grep "^$stage$" $did_stage_file 2>/dev/null && fatal "Re-entering stage $stage"
 
     _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(date +"%F %T %Z")"
     [[ -z $quiet_mode && $stage -gt 0 ]] \
@@ -2137,10 +2137,10 @@ _check_errors_() {
     while true; do
 
         if [[ -n $regex ]]; then
-            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -E $flag "($regex)" | grep -Ev "^\s*$")
+            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -E ${flag:+"$flag"} "($regex)" | grep -Ev "^\s*$")
 
         elif [[ $type = STRICT ]]; then
-            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -Ev $flag "^\s*$")
+            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -Ev ${flag:+"$flag"} "^\s*$")
         fi
 
         [[ -z $errors ]] && check_errors_reset && return
@@ -2484,7 +2484,91 @@ apt_get_packages() {
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
 
-    echo "$pkg_list" | xargs apt-get $APT_GET_OPTS "$@"
+    local remaining_packages="$pkg_list"
+    local failed_packages=""
+    local attempt=1
+
+    # Keep trying to install packages, removing problematic ones each time
+    while [[ -n $remaining_packages ]]; do
+        if [[ $attempt -gt 1 ]]; then
+            local remaining_cnt=$(echo "$remaining_packages" | wc -w)
+            say "Attempt $attempt: trying to install remaining $remaining_cnt packages..."
+        fi
+
+        # Try to install current package list (with real-time output)
+        local temp_output=$(mktemp)
+        local exit_code
+
+        # Run apt-get with tee to show output in real-time and capture to file
+        echo "$remaining_packages" | xargs apt-get $APT_GET_OPTS "$@" 2>&1 | tee "$temp_output"
+        exit_code=${PIPESTATUS[1]}
+
+        # Read the captured output for error parsing
+        local install_output
+        install_output=$(cat "$temp_output")
+        rm -f "$temp_output"
+
+        if [[ $exit_code -eq 0 ]]; then
+            # Success - all remaining packages installed
+            break
+        fi
+
+        # Parse output to find which package couldn't be found
+        local problem_pkg
+        problem_pkg=$(echo "$install_output" | \
+            grep -oE "Unable to locate package [^ ]+" | \
+            head -1 | \
+            awk '{print $NF}' | \
+            sed "s/'//g")
+
+        # If that didn't work, try alternative patterns
+        if [[ -z $problem_pkg ]]; then
+            problem_pkg=$(echo "$install_output" | \
+                grep -oE "Package [^ ]+ not available" | \
+                head -1 | \
+                awk '{print $2}' | \
+                sed "s/'//g")
+        fi
+
+        # Try pattern for "has no installation candidate"
+        if [[ -z $problem_pkg ]]; then
+            problem_pkg=$(echo "$install_output" | \
+                grep -oE "Package '[^']+' has no installation candidate" | \
+                head -1 | \
+                sed "s/Package '\\([^']*\\)' has no installation candidate/\\1/")
+        fi
+
+        if [[ -z $problem_pkg ]]; then
+            # Can't identify specific problem package, show error and exit
+            echo "$install_output" >&2
+            error "Package installation failed and couldn't identify problematic package"
+            return 1
+        fi
+
+        say "Package '$problem_pkg' not found, removing from list and retrying..."
+        failed_packages="$failed_packages $problem_pkg"
+
+        # Remove the problematic package from remaining list
+        remaining_packages=$(echo "$remaining_packages" | sed "s/\b$problem_pkg\b//g" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+
+        attempt=$((attempt + 1))
+
+        # Safety valve to prevent infinite loops
+        if [[ $attempt -gt 50 ]]; then
+            error "Too many package installation attempts, giving up"
+            return 1
+        fi
+    done
+
+    # Report any packages that couldn't be installed
+    if [[ -n $failed_packages ]]; then
+        local failed_cnt=$(echo "$failed_packages" | wc -w)
+        # Clean up the failed packages list (remove leading/trailing spaces)
+        failed_packages=$(echo "$failed_packages" | sed 's/^ *//;s/ *$//')
+	say_in $high_co "$(plural $failed_cnt "$(pqw %n) $label package%s could not be found:")
+	$failed_packages"
+	error "Package installation completed with missing packages above"
+    fi
 }
 
 install_packages() {
@@ -2542,8 +2626,8 @@ gather_deb() {
     for dir in $(flav_dirs $deb_dir); do
         for f in "$dir"/*.deb; do
             test -f $f || continue
-            basename $f | grep -q -- $filt_arch && continue
-            basename $f | grep -q -- $filt_flav && continue
+            [[ -n $filt_arch ]] && basename $f | grep -q -- "$filt_arch" && continue
+            [[ -n $filt_flav ]] && basename $f | grep -q -- "$filt_flav" && continue
             echo $f
         done
     done
@@ -2673,7 +2757,7 @@ copy_second_kernel() {
 
     local version_0 version_1
     version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
-    version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | grep -v "^$version_0$")
+    version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | { [[ -n $version_0 ]] && grep -v "^$version_0$" || cat; })
 
     case $(echo -n "$version_1" | grep -c .) in
         0) return ;;
@@ -2685,7 +2769,7 @@ copy_second_kernel() {
 
     say "Found 2nd kernel $version_1"
     local k1
-    k1=$($version_prog -n $from_dir | grep " $version_1 " | cut -d" " -f1)
+    [[ -n $version_1 ]] && k1=$($version_prog -n $from_dir | grep " $version_1 " | cut -d" " -f1) || k1=""
     say "copy $k1 $vmlinuz_1"
     cp $k1 $vmlinuz_1
     (cd $to_dir && md5sum $k1_name > $k1_name.md5)
@@ -3689,8 +3773,8 @@ do_pretend() {
     echo "$ME would next do stage: $bold_co$stage$nc"
 
     local stage_info
-    stage_info=$(grep -m 1 "^\s\+enter_stage\s\+$stage" $0\
-        | sed -r "s/^\s*enter_stage\s*$stage\s*\"[!]?([^\"]+)\".*/    \1/")
+    [[ -n $stage ]] && stage_info=$(grep -m 1 "^\s\+enter_stage\s\+$stage" $0\
+        | sed -r "s/^\s*enter_stage\s*$stage\s*\"[!]?([^\"]+)\".*/    \1/") || stage_info=""
 
     [[ -n $stage_info ]] && echo -e "$text_co$stage_info$nc"
 
