@@ -31,11 +31,7 @@ GRUB_DISABLE_RECOVERY="true"
 # Uncomment to get a beep at grub start
 #GRUB_INIT_TUNE="480 440 1"
 
-#run dpkg-reconfigure grub-pc to allow toggle of os-prober
-#GRUB_DISABLE_OS_PROBER=false
-
-if [ -e /etc/default/grub.mx-defaults ]; then
-     .  /etc/default/grub.mx-defaults
-fi
+GRUB_DISABLE_OS_PROBER=false
 
 GRUB_THEME="/boot/grub/themes/mx_linux/theme.txt"
+
