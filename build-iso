@@ -1971,7 +1971,7 @@ leave_stage() {
 mount_tmpfs() {
     local dir needed name
     dir=${1:-$sqfs_dir}
-    needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
+    needed=$(((2500 + 70 * $(gather_cnt package)) / 10))
     name=$(basename $dir)
 
     [[ -n $dir ]] || fatal "Can't mount_tmpfs() without a directory specified"
@@ -3830,8 +3830,11 @@ do_one_stat() {
     else
         gather_say package            "    $(pqn %3d) antiX                package%s"
     fi
-    local needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
-    say "$(printf "size of tmps: $(pqn %6d) meg\n" $needed)"
+    local pkg_count=$(gather_cnt package)
+    # TMPFS_SIZE format: "fixed + per_package" both in 100KB units
+    # Need to evaluate: (2500 + 70 * pkg_count) / 10 to get MB
+    local needed=$(((2500 + 70 * pkg_count) / 10))
+    say "$(printf "size of tmps: $(pqn %6d) MB\n" $needed)"
 }
 
 #------------------------------------------------------------------------------
