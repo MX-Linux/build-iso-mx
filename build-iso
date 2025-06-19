@@ -2085,7 +2085,7 @@ display_tmpfs() {
 
 kill_chroot_procs() {
     local pids
-    pids=$($SUDO lsof | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
+    pids=$($SUDO lsof 2>/dev/null | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
     if [[ -z $pids ]]; then
         say "No remaining chroot processes found"
         return
