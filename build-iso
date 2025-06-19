@@ -556,13 +556,9 @@ Remaster_Blurb
         *) error "Cannot detect Host ARCH" ;;
     esac
 
-    # Detect kernel if using wildcards
-    # This won't work if host is running a different ARCH
+    # Kernel wildcard resolution deferred to Stage 4 (after chroot setup)
     if [[ $K_NAME =~ \* ]]; then
-        if [[ $ISO_ARCH == "$HOST_ARCH" ]]; then
-            search_for_k_name || error "Not running on the same ARCH as the build, \
-might want to avoid using wildcards for kernels, otherwise you won't be able to start the build at different steps."
-        fi
+        say "Kernel wildcard $(pq $K_NAME) will be resolved in Stage 4"
     fi
 
     #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
@@ -818,6 +814,14 @@ do_stage_4() {
 
     [[ -n $K_NAME ]] || error "No K_NAME specified"
 
+    # Resolve kernel wildcard using target repository
+    if [[ $K_NAME =~ \* ]] && do_part 1 "Search for complete kernel name"; then
+        search_for_k_name
+        end_part_strict
+    else
+        skip_part 1 "Search for complete kernel name"
+    fi
+
     if ! [[ -r $manual_selections_template ]]; then
         say "No $(pq $manual_selections) file found. Forcing $(pq interactive) mode"
         interactive=true
@@ -897,10 +901,8 @@ do_stage_4() {
         end_part_lax
     fi
 
-    if [[ $K_NAME =~ \* ]] && do_part 2 "Search for complete kernel name"; then
-        # Use apt-cache to get full kernel name if it contains a "*"
-        search_for_k_name
-        end_part_strict
+    if [[ $K_NAME =~ \* ]]; then
+        skip_part 2 "Search for complete kernel name (deferred to Stage 4)"
     else
         skip_part 2 "Search for complete kernel name"
     fi
@@ -2382,11 +2384,43 @@ search_for_k_name() {
     search_name=$(echo $K_NAME | sed -e "s/\./\\./g" -e "s/\*/[0-9]+/g")
     say "Search for kernel matching regex $(pq $K_NAME)"
     local name
-    name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
-    if [[ -z $name ]]; then
-        warn "No kernel matching $(pqw $K_NAME) found. Possible kernels:"
-        apt-cache search linux-image-.\*-antix | cut -d" " -f1
-        my_exit
+
+    # Check if we're running inside chroot (Stage 4)
+    if [[ "$script_dir" == "$build_dir" ]]; then
+        # We're inside chroot - use apt-cache directly
+        say "Running inside chroot environment, updating package cache"
+        apt-get update -qq
+
+        # Search for kernel packages - try broader search patterns
+        say "Searching for available kernel packages..."
+        local all_kernels=$(apt-cache search "^linux-image-" | cut -d" " -f1)
+        say "Available kernels in repository:"
+        echo "$all_kernels" | head -10
+
+        # Try the specific search
+        name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
+
+        # If no exact match, try looser patterns
+        if [[ -z $name ]]; then
+            say "No exact match found, trying broader search..."
+            # Try without the trailing $ anchor
+            name=$(apt-cache search "^linux-image-$search_name" | cut -d" " -f1 | sort -V | tail -n 1)
+        fi
+
+        if [[ -z $name ]]; then
+            warn "No kernel matching $(pqw $K_NAME) found in target repository. Available kernels:"
+            apt-cache search "^linux-image-" | cut -d" " -f1 | head -20
+            my_exit
+        fi
+    else
+        # We're outside chroot - fallback to host system
+        say "Running on host system, using host package cache"
+        name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
+        if [[ -z $name ]]; then
+            warn "No kernel matching $(pqw $K_NAME) found. Possible kernels:"
+            apt-cache search linux-image-.\*-antix | cut -d" " -f1
+            my_exit
+        fi
     fi
 
     K_NAME=${name#linux-image-}
