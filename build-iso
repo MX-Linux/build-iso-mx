@@ -854,7 +854,11 @@ do_stage_4() {
 
     require_programs apt-get
 
-    if [[ -s $partial_file ]]  \
+    # Skip PARTIAL file check if we have no stage output files (clean build)
+    if [[ ! -f $script_dir/../Output/stage-1.out ]] && [[ -s $partial_file ]]; then
+        rm -f $partial_file
+        skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
+    elif [[ -s $partial_file ]]  \
         && do_part 0 "!Read PARTIAL file to skip parts done"; then
         local add_skip
         add_skip=$(join_lines $partial_file ",")
