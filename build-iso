@@ -1740,7 +1740,7 @@ do_stage_7() {
 
     if [[ -x $sqfs_dir/usr/bin/updatedb ]]; then
         say "Run updatedb one last time"
-        $SUDO chroot $sqfs_dir /usr/bin/updatedb
+        $SUDO chroot $sqfs_dir /usr/bin/updatedb 2>/dev/null || true
     fi
 
     say "Update font cache"
