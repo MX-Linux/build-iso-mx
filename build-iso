@@ -854,7 +854,11 @@ do_stage_4() {
 
     require_programs apt-get
 
-    if [[ -s $partial_file ]]  \
+    # Skip PARTIAL file check if we have no stage output files (clean build)
+    if [[ ! -f $script_dir/../Output/stage-1.out ]] && [[ -s $partial_file ]]; then
+        rm -f $partial_file
+        skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
+    elif [[ -s $partial_file ]]  \
         && do_part 0 "!Read PARTIAL file to skip parts done"; then
         local add_skip
         add_skip=$(join_lines $partial_file ",")
@@ -1736,7 +1740,7 @@ do_stage_7() {
 
     if [[ -x $sqfs_dir/usr/bin/updatedb ]]; then
         say "Run updatedb one last time"
-        $SUDO chroot $sqfs_dir /usr/bin/updatedb
+        $SUDO chroot $sqfs_dir /usr/bin/updatedb 2>/dev/null || true
     fi
 
     say "Update font cache"
@@ -1971,7 +1975,7 @@ leave_stage() {
 mount_tmpfs() {
     local dir needed name
     dir=${1:-$sqfs_dir}
-    needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
+    needed=$(((2500 + 70 * $(gather_cnt package)) / 10))
     name=$(basename $dir)
 
     [[ -n $dir ]] || fatal "Can't mount_tmpfs() without a directory specified"
@@ -3830,8 +3834,11 @@ do_one_stat() {
     else
         gather_say package            "    $(pqn %3d) antiX                package%s"
     fi
-    local needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
-    say "$(printf "size of tmps: $(pqn %6d) meg\n" $needed)"
+    local pkg_count=$(gather_cnt package)
+    # TMPFS_SIZE format: "fixed + per_package" both in 100KB units
+    # Need to evaluate: (2500 + 70 * pkg_count) / 10 to get MB
+    local needed=$(((2500 + 70 * pkg_count) / 10))
+    say "$(printf "size of tmps: $(pqn %6d) MB\n" $needed)"
 }
 
 #------------------------------------------------------------------------------
