@@ -459,7 +459,7 @@ do_repo() {
     repo_dir=$work_dir/repo
     copy_dir=$repo_dir$real_dir
     pretend mkdir -p $copy_dir
-    pretend cp $real_dir/*.list $copy_dir
+    pretend cp $real_dir/* $copy_dir
     pretend localize-repo $verbose --dir=$copy_dir $country
     bind_mount_template "$repo_dir"  "$BIND_ROOT" "$REAL_ROOT"
 }
