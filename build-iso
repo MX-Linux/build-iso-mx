@@ -2492,6 +2492,67 @@ apt_get_packages() {
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
 
+    # First, simulate the installation to identify missing packages
+    say "Simulating package installation to check availability..."
+    local temp_output=$(mktemp)
+    local simulation_output
+    local missing_packages=""
+
+    # Run simulation with -s flag
+    echo "$pkg_list" | xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
+    simulation_output=$(cat "$temp_output")
+    rm -f "$temp_output"
+
+    # Parse simulation output to find missing packages
+    missing_packages=$(echo "$simulation_output" | \
+        grep -oE "Unable to locate package [^ ]+" | \
+        awk '{print $NF}' | \
+        sed "s/'//g")
+
+    # Try alternative patterns for missing packages
+    if [[ -z $missing_packages ]]; then
+        missing_packages=$(echo "$simulation_output" | \
+            grep -oE "Package [^ ]+ not available" | \
+            awk '{print $2}' | \
+            sed "s/'//g")
+    fi
+
+    # Try pattern for "has no installation candidate"
+    local candidate_missing
+    candidate_missing=$(echo "$simulation_output" | \
+        grep -oE "Package '[^']+' has no installation candidate" | \
+        sed "s/Package '\\([^']*\\)' has no installation candidate/\\1/")
+
+    if [[ -n $candidate_missing ]]; then
+        missing_packages="$missing_packages $candidate_missing"
+    fi
+
+    # Clean up missing packages list
+    missing_packages=$(echo "$missing_packages" | tr ' ' '\n' | sort -u | tr '\n' ' ' | sed 's/^ *//;s/ *$//')
+
+    # If there are missing packages, prompt user
+    if [[ -n $missing_packages ]]; then
+        local missing_cnt=$(echo "$missing_packages" | wc -w)
+        say_in $high_co "$(plural $missing_cnt "$(pqw %n) $label package%s not available:")
+$missing_packages"
+
+        local available_packages="$pkg_list"
+        # Remove missing packages from the list
+        for missing_pkg in $missing_packages; do
+            available_packages=$(echo "$available_packages" | sed "s/\b$missing_pkg\b//g" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+        done
+
+        local available_cnt=$(echo "$available_packages" | wc -w)
+        if [[ $available_cnt -eq 0 ]]; then
+            error "No packages available for installation"
+            return 1
+        fi
+
+        say "$(plural $available_cnt "$(pqw %n) package%s will be installed.")"
+        YES_no "\nContinue with installation of available packages?" || my_exit
+        pkg_list="$available_packages"
+    fi
+
     local remaining_packages="$pkg_list"
     local failed_packages=""
     local attempt=1
