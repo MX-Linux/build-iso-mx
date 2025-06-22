@@ -854,7 +854,11 @@ do_stage_4() {
 
     require_programs apt-get
 
-    if [[ -s $partial_file ]]  \
+    # Skip PARTIAL file check if we have no stage output files (clean build)
+    if [[ ! -f $script_dir/../Output/stage-1.out ]] && [[ -s $partial_file ]]; then
+        rm -f $partial_file
+        skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
+    elif [[ -s $partial_file ]]  \
         && do_part 0 "!Read PARTIAL file to skip parts done"; then
         local add_skip
         add_skip=$(join_lines $partial_file ",")
@@ -955,6 +959,10 @@ do_stage_4() {
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
         for package in $(compile_pkg_list pesky-package exclude-chroot); do
+            # Pre-configure firmware-ipw2x00 to accept license automatically
+            if [ "$package" = "firmware-ipw2x00" ]; then
+                echo 'firmware-ipw2x00 firmware-ipw2x00/license/accepted boolean true' | debconf-set-selections
+            fi
             DEBIAN_FRONTEND=dialog apt-get install $apt_yes $package
         done
         end_part_lax
@@ -1732,7 +1740,7 @@ do_stage_7() {
 
     if [[ -x $sqfs_dir/usr/bin/updatedb ]]; then
         say "Run updatedb one last time"
-        $SUDO chroot $sqfs_dir /usr/bin/updatedb
+        $SUDO chroot $sqfs_dir /usr/bin/updatedb 2>/dev/null || true
     fi
 
     say "Update font cache"
@@ -1967,7 +1975,7 @@ leave_stage() {
 mount_tmpfs() {
     local dir needed name
     dir=${1:-$sqfs_dir}
-    needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
+    needed=$(((2500 + 70 * $(gather_cnt package)) / 10))
     name=$(basename $dir)
 
     [[ -n $dir ]] || fatal "Can't mount_tmpfs() without a directory specified"
@@ -2081,7 +2089,7 @@ display_tmpfs() {
 
 kill_chroot_procs() {
     local pids
-    pids=$($SUDO lsof | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
+    pids=$($SUDO lsof 2>/dev/null | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
     if [[ -z $pids ]]; then
         say "No remaining chroot processes found"
         return
@@ -2483,6 +2491,67 @@ apt_get_packages() {
     msg=$(plural $cnt "apt-get $last_arg $(pqn %n) $label package%s.")
     [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
     say "$msg"
+
+    # First, simulate the installation to identify missing packages
+    say "Simulating package installation to check availability..."
+    local temp_output=$(mktemp)
+    local simulation_output
+    local missing_packages=""
+
+    # Run simulation with -s flag
+    echo "$pkg_list" | xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
+    simulation_output=$(cat "$temp_output")
+    rm -f "$temp_output"
+
+    # Parse simulation output to find missing packages
+    missing_packages=$(echo "$simulation_output" | \
+        grep -oE "Unable to locate package [^ ]+" | \
+        awk '{print $NF}' | \
+        sed "s/'//g")
+
+    # Try alternative patterns for missing packages
+    if [[ -z $missing_packages ]]; then
+        missing_packages=$(echo "$simulation_output" | \
+            grep -oE "Package [^ ]+ not available" | \
+            awk '{print $2}' | \
+            sed "s/'//g")
+    fi
+
+    # Try pattern for "has no installation candidate"
+    local candidate_missing
+    candidate_missing=$(echo "$simulation_output" | \
+        grep -oE "Package '[^']+' has no installation candidate" | \
+        sed "s/Package '\\([^']*\\)' has no installation candidate/\\1/")
+
+    if [[ -n $candidate_missing ]]; then
+        missing_packages="$missing_packages $candidate_missing"
+    fi
+
+    # Clean up missing packages list
+    missing_packages=$(echo "$missing_packages" | tr ' ' '\n' | sort -u | tr '\n' ' ' | sed 's/^ *//;s/ *$//')
+
+    # If there are missing packages, prompt user
+    if [[ -n $missing_packages ]]; then
+        local missing_cnt=$(echo "$missing_packages" | wc -w)
+        say_in $high_co "$(plural $missing_cnt "$(pqw %n) $label package%s not available:")
+$missing_packages"
+
+        local available_packages="$pkg_list"
+        # Remove missing packages from the list
+        for missing_pkg in $missing_packages; do
+            available_packages=$(echo "$available_packages" | sed "s/\b$missing_pkg\b//g" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+        done
+
+        local available_cnt=$(echo "$available_packages" | wc -w)
+        if [[ $available_cnt -eq 0 ]]; then
+            error "No packages available for installation"
+            return 1
+        fi
+
+        say "$(plural $available_cnt "$(pqw %n) package%s will be installed.")"
+        YES_no "\nContinue with installation of available packages?" || my_exit
+        pkg_list="$available_packages"
+    fi
 
     local remaining_packages="$pkg_list"
     local failed_packages=""
@@ -3826,8 +3895,11 @@ do_one_stat() {
     else
         gather_say package            "    $(pqn %3d) antiX                package%s"
     fi
-    local needed=$(((TMPFS_SIZE * $(gather_cnt package))/ 10 ))
-    say "$(printf "size of tmps: $(pqn %6d) meg\n" $needed)"
+    local pkg_count=$(gather_cnt package)
+    # TMPFS_SIZE format: "fixed + per_package" both in 100KB units
+    # Need to evaluate: (2500 + 70 * pkg_count) / 10 to get MB
+    local needed=$(((2500 + 70 * pkg_count) / 10))
+    say "$(printf "size of tmps: $(pqn %6d) MB\n" $needed)"
 }
 
 #------------------------------------------------------------------------------
