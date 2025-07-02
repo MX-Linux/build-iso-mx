@@ -1519,14 +1519,14 @@ Eth0_entry
         local dir file
         for dir in /root /etc/skel; do
             file=$sqfs_dir$dir/.bash_history
-            #$SUDO [[ -e $file ]] && continue
+            #[[ -e $file ]] && continue
 
             say "Putting command line control centre into Bash history in $(pq $dir)"
             echo $cli_cc_prog | $SUDO tee $file >/dev/null
         done
 
     # Make sure root's history is either clobbered (above) or erased
-    elif $SUDO [[ -e $sqfs_dir/root/.bash_history ]]; then
+    elif [[ -e $sqfs_dir/root/.bash_history ]]; then
         say "Deleting root's history"
         $SUDO rm -f $sqfs_dir/root/.bash_history
     fi
