@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2317
 
 #==============================================================================
 # build-iso: Build antiX liveCD/USB isos from scratch using debootstrap.
@@ -150,6 +151,7 @@ main() {
         case $arg in
             [$short_stack][$short_stack]*)
                 if echo "$arg" | grep -q "^[$short_stack]\+$"; then
+                    # shellcheck disable=SC2046
                     set -- $(echo "$arg" | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
                     continue
                 fi;;
@@ -247,13 +249,18 @@ main() {
     local   num_co     prompt_co  time_co
     local  high_co
 
-    if [[ $color_mode != "off" ]]; then
+    # shellcheck disable=SC2034
+    set_colors() {
           black="\x1B[0;30m";     blue="\x1B[0;34m";      green="\x1B[0;32m";
            cyan="\x1B[0;36m";      red="\x1B[0;31m";     purple="\x1B[0;35m";
           brown="\x1B[0;33m";  lt_gray="\x1B[0;37m";    dk_gray="\x1B[1;30m";
         lt_blue="\x1B[1;34m"; lt_green="\x1B[1;32m";    lt_cyan="\x1B[1;36m";
          lt_red="\x1B[1;31m";  magenta="\x1B[1;35m";     yellow="\x1B[1;33m";
           white="\x1B[1;37m";  rev_red="\x1B[0;7;31m";       nc="\x1B[0m";
+    }
+
+    if [[ $color_mode != "off" ]]; then
+        set_colors
     fi
 
     case $color_mode in
@@ -297,7 +304,7 @@ main() {
     if [[ -n $pretend_mode || -n $chroot_mode || -n $stats_mode ]]; then
         log_file=/dev/null
     else
-        mkdir -p $(dirname "$log_file")
+        mkdir -p "$(dirname "$log_file")"
     fi
 
     if [[ -n $check_tmpfs ]]; then
@@ -337,6 +344,7 @@ main() {
             output_file="$output_dir/stage-$stage.out"
             [[ -r "$output_file" ]] || break
             [[ -n "$start_from" ]] && (( stage == start_from )) && break
+            # shellcheck disable=SC1090
             source "$output_file"
         done
 
@@ -398,7 +406,7 @@ main() {
 
         if (( stage != chroot_stage )) && [[ -z $no_log_errors ]]; then
 
-            [[ -e "$exit_file" ]] && exit $(cat "$exit_file")
+            [[ -e "$exit_file" ]] && exit "$(cat "$exit_file")"
 
             # The tee and sed only apply to stdrr. Stdout goes right through.
             # This highlights stderr output and stores it in a file which we
@@ -409,7 +417,7 @@ main() {
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command. This fixes it by using my_exit() which
             # writes $exit_file before exiting
-            [[ -e "$exit_file" ]] && exit $(cat "$exit_file" 2>/dev/null)
+            [[ -e "$exit_file" ]] && exit "$(cat "$exit_file" 2>/dev/null)"
 
         else
             main_case
@@ -508,6 +516,7 @@ Remaster_Blurb
                 "Single (the one default locale)"
 
     choose "arch"     ARCH      i386 amd64
+    # shellcheck disable=SC2046
     choose "flavour"  ISO_FLAV  $(flavour_list) core-libre
 
     K_GNU=
@@ -612,7 +621,7 @@ Output
     fi
     do_one_stat
     printf "$pretty_fmt"  REMASTER_DIR  "$remaster_dir"
-    printf "$pretty_fmt" "on device"    $(df "$remaster_dir" | tail -n1 | cut -f1 -d" ")
+    printf "$pretty_fmt" "on device"    "$(df "$remaster_dir" | tail -n1 | cut -f1 -d" ")"
 }
 
 #------------------------------------------------------------------------------
@@ -644,7 +653,7 @@ do_stage_2() {
         say "Clear out existing files ..."
         check_sqfs_dir
         # Convoluted to be safer against deleting entire filesystem
-        $SUDO rm -rf $(dirname "$sqfs_dir")/squashfs/*
+        $SUDO rm -rf "$(dirname "$sqfs_dir")"/squashfs/*
     fi
 
     if restore_cache $chroot_cache_opts; then
@@ -1009,6 +1018,7 @@ do_stage_4() {
     if gather_any remove \
         && do_part 11 "Remove some packages"; then
         gather_say remove "Remove $(pqn %n) package%s"
+        # shellcheck disable=SC2046
         apt-get purge $(gather "remove") $apt_yes --allow-remove-essential
         end_part_strict
     fi
@@ -1215,10 +1225,11 @@ do_stage_4() {
         if [[ -n "$default_desktop" ]] && do_part 19 "!Update SLiM defaults"; then
 
             if ! test -x "$make_xinitrc"; then
-                mkdir -p $(dirname "$make_xinitrc")    || my_exit
+                mkdir -p "$(dirname "$make_xinitrc")"    || my_exit
                 cp "$tools/make-xinitrc" "$make_xinitrc" || my_exit
             fi
 
+            # shellcheck disable=SC2046
             say "Found desktops $(pq $("$make_xinitrc" --list))"
 
             say "Create .xinitrc in /etc/skel"
@@ -1819,7 +1830,7 @@ do_stage_8() {
     local file_dir chown_opts
     file_dir="$full_iso_file $iso_dir"
     chown_opts="-uid 0 -gid 0"
-    say "Using $(pq $(basename $MAKE_ISO)) to make iso file"
+    say "Using $(pq "$(basename $MAKE_ISO)") to make iso file"
     if [[ -z ${MAKE_ISO%%*xorriso} ]]; then
         $SUDO chown -R root:root $iso_dir
         make_xorriso_iso $MAKE_ISO $file_dir
@@ -1986,6 +1997,7 @@ mount_tmpfs() {
         return
     fi
     local cache free swap
+    # shellcheck disable=SC2046
     eval $(get_cache_free_swap)
     say "The tmpfs will require $(pqn ${needed}) meg of RAM"
     display_cache_free_swap $cache $free $swap
@@ -2027,12 +2039,13 @@ umount_tmpfs() {
 
     say "About to umount $(pq $name)"
     report_size $dir
+    # shellcheck disable=SC2046
     YES_no_loud "Cache chroot directory before umount" && force_cache $chroot_cache_opts
 
     YES_no_loud "Clear out $name/ and umount it" || return 1
 
     check_sqfs_dir $dir
-    $SUDO rm -rf $(dirname $dir)/squashfs/*
+    $SUDO rm -rf "$(dirname $dir)"/squashfs/*
     $SUDO umount $dir
     mountpoint -q $dir || return
     warn "name did not simply umount. Trying -l (lazy option)"
@@ -2073,7 +2086,7 @@ check_all_tmpfs() {
         YES_no_loud "Cache chroot directory before umount" && force_cache chroot "$name" "$dir"
         YES_no "Clear and umount this directory" || continue
 
-        $SUDO rm -rf $(dirname $dir)/squashfs/*
+        $SUDO rm -rf "$(dirname $dir)"/squashfs/*
         $SUDO umount -l $dir
     done
 
@@ -2369,6 +2382,7 @@ Get_Free
 
 display_cache_free_swap() {
     local cache=$1 free=$2 swap=$3
+    # shellcheck disable=SC2046
     (( $# == 3 )) || eval $(get_cache_free_swap)
     say_fmt "Free Mem"  $free
     say_fmt "Free Swap" $swap
@@ -2716,21 +2730,22 @@ collect_live_files() {
     test -r $list_file || return
     echo "Collecting Live-files"
     local list
-    list=$(cat $list_file | grep -v "^\s*#\s*" | sed 's/\s*#.*//' \
-        | grep "^/" | sed "s=^=$sqfs_dir=")
+    list="$(cat $list_file | grep -v "^\s*#\s*" | sed 's/\s*#.*//' \
+        | grep "^/" | sed "s=^=$sqfs_dir=")"
     #echo "$list"
 
     $SUDO mkdir -p $dest_dir
     # This hard-codes the live-files dir but it is safer in case
     # $dest_dir is empty.
-    $SUDO rm -rf $(dirname $dest_dir)/live-files/*
+    $SUDO rm -rf "$(dirname $dest_dir)"/live-files/*
 
     local file dest
+    # shellcheck disable=SC2086
     for file in $list; do
         test -e $file || continue
         dest_file=${file#"$sqfs_dir"}
         dest=$dest_dir$dest_file
-        $SUDO mkdir -p $(dirname $dest)
+        $SUDO mkdir -p "$(dirname $dest)"
         $SUDO cp -a $file $dest
     done
 }
@@ -2801,12 +2816,12 @@ update_gfxboot_menu() {
     local menu_file=$1 conf_file=$2
     shift 2
     local subdir
-    subdir=$(basename $(dirname $conf_file))
+    subdir="$(basename "$(dirname $conf_file)")"
     local menu_string="Function key menu"
     # Insert Function key menu into gfxboot.cfg
     [[ -e $menu_file && -e $conf_file ]] || return
-    grep -q "$menu_string" $conf_file || return
-    say "Update Fn key menu in $(pq $subdir/$(basename $conf_file))"
+    grep -q "$menu_string" "$conf_file" || return
+    say "Update Fn key menu in $(pq $subdir/"$(basename $conf_file)")"
     sed -i "/$menu_string/,$ d" $conf_file
     cat << Fn_Menu >> $conf_file
 ; >>>>>>>>>> Function key menu >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -2859,13 +2874,13 @@ write_version_files() {
     local prefix=$1
 
     local version_info_file=$prefix/etc/live/version/antiX
-    mkdir -p $(dirname $version_info_file)
+    mkdir -p "$(dirname $version_info_file)"
     write_version_info > $version_info_file
 
     echo "$fancy_name" > $prefix/etc/antix-version
 
     local rstring
-    rstring=$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)
+    rstring="$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)"
     local kernels=$K_NAME
     [[ -n $K_NAME2 ]] && kernels="$kernels $K_NAME2"
     local title=$LINUXFS_TITLE
@@ -2874,7 +2889,7 @@ write_version_files() {
         [[ $DISTRO_NAME =~ ^antiX && -n $FLAV ]] && title="$title $FLAV"
     fi
     local linuxfs_version_file=$prefix/etc/live/version/linuxfs.ver
-    mkdir -p $(dirname $linuxfs_version_file)
+    mkdir -p "$(dirname $linuxfs_version_file)"
     cat > $linuxfs_version_file << Linuxfs_Version
 === $rstring
 
@@ -2906,9 +2921,9 @@ write_initrd_release() {
     is_antiX || DISTRO_BASE="MX"
 
     local file1=$dir/etc/$name  file2=$dir/etc/live/version/$name
-    $sudo mkdir -p $(dirname $file1) $(dirname $file2)
+    $sudo mkdir -p "$(dirname $file1)" "$(dirname $file2)"
 
-    : ${ASCII_CODE_NAME:=$(echo $CODE_NAME | utf8_to_ascii)}
+    : ${ASCII_CODE_NAME:="$(echo $CODE_NAME | utf8_to_ascii)"}
 
     if [[ $ASCII_CODE_NAME != "$CODE_NAME" ]]; then
 
@@ -3152,11 +3167,12 @@ copy_theme_dir() {
     [[ -z $THEME || $THEME = none ]] && return
     local b_dir=$1 t_dir=$theme_dir/$THEME
     if [[ ! -d $t_dir ]]; then
-        error "Theme directory $(pqw $(short_dir $t_dir)) does not exist"
+        # shellcheck disable=SC2046
+        error "Theme directory $(pqw \"$(short_dir \"$t_dir\")\") does not exist"
         return
     fi
     local b_theme_dir
-    b_theme_dir=$b_dir/$(basename $theme_dir)
+    b_theme_dir=$b_dir/"$(basename $theme_dir)"
     mkdir -p $b_theme_dir/$THEME
     cp -a $t_dir/* $b_theme_dir/$THEME/
     cp -a $theme_dir/*.sh $b_theme_dir/
@@ -3206,7 +3222,7 @@ set_chroot_mirror() {
     local file=$sqfs_dir/etc/apt/sources.list.d/debian.list
     [[ -f $file ]] || return
 
-    say "Set apt mirror to $@ $(pq $mirror)"
+    say "Set apt mirror to $* $(pq $mirror)"
     $SUDO sed -i "s=/ftp\.\(..\.\)\\?debian\.org/=/ftp.$mirror.debian.org/=" $file
 }
 
@@ -3301,6 +3317,7 @@ short_dir() {
 #==============================================================================
 start_timer() {
     local name=${1:-START_T}
+    # shellcheck disable=SC2046
     eval $name=\"$(date +%s)\"
 }
 
@@ -3334,7 +3351,7 @@ elapsed() {
         return
     fi
 
-    (( secs < 60 )) && printf "%8d %s\n" $secs $(plural $secs "sec%s") && return
+    (( secs < 60 )) && printf "%8d %s\n" $secs "$(plural $secs "sec%s")" && return
     mins=$((secs / 60))
     secs=$((secs - 60 * mins))
     (( mins < 60 )) && printf "%5d:%02d mm:ss" $mins $secs && return
@@ -3405,7 +3422,7 @@ _cache_() {
         say "Found cache $(pq $name$ext)"
         YES_no "Restore from this cache" || return 1
 
-        if [[ -d "$dir" && $(find "$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null) ]]; then
+        if [[ -d "$dir" && "$(find "$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
             say "Clear out existing files"
             find "$dir" -mindepth 1 -delete
         fi
@@ -3415,7 +3432,7 @@ _cache_() {
         start_timer
         (cd $dir && gunzip -c $file | $SUDO cpio -idum --quiet)
         end_timer "Restore cache"
-        say "Restored $(pqn $(du_size $dir)) bytes of data"
+        say "Restored $(pqn "$(du_size $dir)") bytes of data"
         ;;
 
     create|force)
@@ -3759,6 +3776,7 @@ load_defaults() {
     for file in $all_defaults; do
         short=$(short_dir $file)
         [[ -r $file ]] || fatal "No $(pqw $short) file found."
+        # shellcheck disable=SC1090
         source $file
     done
 }
