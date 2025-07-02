@@ -533,7 +533,7 @@ Remaster_Blurb
         choose "flavour to base respin on" ISO_RESPIN_OF full base core
 
         if [[ -z $(ls "$template/$FLAV") ]] \
-            && YES_no "Fill \"$FLAV\" directory from "$ISO_RESPIN_OF" ?"; then
+            && YES_no "Fill \"$FLAV\" directory from \"$ISO_RESPIN_OF\" ?"; then
             cp "$template/$ISO_RESPIN_OF"/*.list "$template/$FLAV/"
             YES_no "Do you want to stop now to edit your new respin?" \
                 && vexit "at user's request"
@@ -649,7 +649,7 @@ do_stage_2() {
 
     [[ $do_fast ]] && mount_tmpfs
 
-    if test -d "$sqfs_dir"; then
+    if [[ -d "$sqfs_dir" ]]; then
         say "Clear out existing files ..."
         check_sqfs_dir
         # Convoluted to be safer against deleting entire filesystem
@@ -682,7 +682,7 @@ do_stage_2() {
         check_errors_strict
         start_timer
         $SUDO debootstrap $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
-        end_timer "run debootstrap "$ARCH" "$DEBIAN_RELEASE""
+        end_timer "run debootstrap \"$ARCH\" \"$DEBIAN_RELEASE\""
         check_errors_lax
 
         ##anticapitalista - remove systemd from 4 files in /etc
@@ -1058,7 +1058,7 @@ do_stage_4() {
             local theme dir
             for theme in oxy-white oxy-black Breeze-Snow Breeze-Amber; do
                 dir=/usr/share/icons/$theme
-                test -d "$dir" || continue
+                [[ -d "$dir" ]] || continue
                 update-alternatives --install /usr/share/icons/default/index.theme x-cursor-theme "$dir"/index.theme 20
             done
         fi
@@ -1224,7 +1224,7 @@ do_stage_4() {
     if is_antiX; then
         if [[ -n "$default_desktop" ]] && do_part 19 "!Update SLiM defaults"; then
 
-            if ! test -x "$make_xinitrc"; then
+            if ! [[ -x "$make_xinitrc" ]]; then
                 mkdir -p "$(dirname "$make_xinitrc")"    || my_exit
                 cp "$tools/make-xinitrc" "$make_xinitrc" || my_exit
             fi
@@ -1478,7 +1478,7 @@ Eth0_entry
     fi
 
     local cached=$sqfs_dir/etc/console-setup/cached_setup_keyboard.sh
-    if test -e $cached; then
+    if [[ -e $cached ]]; then
         say "Removing console-setup cached files"
         $SUDO rm $cached*
     fi
@@ -1496,7 +1496,7 @@ Eth0_entry
     local bc_fw_name
     bc_fw_name=$(basename $bc_fw_bin)
 
-    if test -e $bc_fw_bin && ! test -e $bc_fw_txt; then
+    if [[ -e $bc_fw_bin && ! -e $bc_fw_txt ]]; then
         say "Linking to $(pq $bc_fw_name)"
         $SUDO ln -s $bc_fw_name $bc_fw_txt
     fi
@@ -1515,18 +1515,18 @@ Eth0_entry
     fi
 
     local cli_cc_prog=antiX-cli-cc
-    if test -x $sqfs_dir/usr/local/bin/$cli_cc_prog; then
+    if [[ -x $sqfs_dir/usr/local/bin/$cli_cc_prog ]]; then
         local dir file
         for dir in /root /etc/skel; do
             file=$sqfs_dir$dir/.bash_history
-            #$SUDO test -e $file && continue
+            #$SUDO [[ -e $file ]] && continue
 
             say "Putting command line control centre into Bash history in $(pq $dir)"
             echo $cli_cc_prog | $SUDO tee $file >/dev/null
         done
 
     # Make sure root's history is either clobbered (above) or erased
-    elif $SUDO test -e $sqfs_dir/root/.bash_history; then
+    elif $SUDO [[ -e $sqfs_dir/root/.bash_history ]]; then
         say "Deleting root's history"
         $SUDO rm -f $sqfs_dir/root/.bash_history
     fi
@@ -1627,14 +1627,14 @@ Bootloader_Data
 
     # (8) Create/update text (UEFI) desktop menu based on menu in isolinux cpio archive
     local desktop_men=$isolinux_cpio/desktop.men
-    if test -e $desktop_men; then
+    if [[ -e $desktop_men ]]; then
         say "Create desktop text boot-menu"
         $SUDO $tools/make-text-menu desktop $boot_menu_dir $desktop_men
         local append_menu dir targ
         get_template_file append-to-desktop.men append_menu
         for dir in $isolinux_cpio $syslinux_cpio; do
             targ=$dir/desktop.men
-            test -e $targ || continue
+            [[ -e $targ ]] || continue
             say "Append to $(basename $dir)/$(basename $targ)"
             cat $append_menu >> $targ
         done
@@ -1822,7 +1822,7 @@ do_stage_8() {
     local file full
     for file in vmlinuz linuxfs initrd.gz; do
         full=$iso_dir/antiX/$file
-        test -e $full && md5sum_file $full
+        [[ -e $full ]] && md5sum_file $full
     done
 
     start_timer
@@ -2717,7 +2717,7 @@ gather_deb() {
     local flav=$ISO_RESPIN_OF
     for dir in $(flav_dirs $deb_dir); do
         for f in "$dir"/*.deb; do
-            test -f $f || continue
+            [[ -f $f ]] || continue
             [[ -n $filt_arch ]] && basename $f | grep -q -- "$filt_arch" && continue
             [[ -n $filt_flav ]] && basename $f | grep -q -- "$filt_flav" && continue
             echo $f
@@ -2727,7 +2727,7 @@ gather_deb() {
 
 collect_live_files() {
     local list_file=$1 dest_dir=$sqfs_dir$2
-    test -r $list_file || return
+    [[ -r $list_file ]] || return
     echo "Collecting Live-files"
     local list
     list="$(cat $list_file | grep -v "^\s*#\s*" | sed 's/\s*#.*//' \
@@ -2742,7 +2742,7 @@ collect_live_files() {
     local file dest
     # shellcheck disable=SC2086
     for file in $list; do
-        test -e $file || continue
+        [[ -e $file ]] || continue
         dest_file=${file#"$sqfs_dir"}
         dest=$dest_dir$dest_file
         $SUDO mkdir -p "$(dirname $dest)"
@@ -2842,11 +2842,11 @@ copy_second_kernel() {
     local version_prog=$tools/vmlinuz-version
     local lmk=$tools/live-multi-kernel
 
-    ! test -d $from_dir       && error "boot directory $from_dir not found"   && return 1
-    ! test -d $to_dir         && error "iso boot directory $to_dir not found" && return 1
-    ! test -e "$vmlinuz"      && error "File $vmlinuz not found"              && return 1
-    ! test -x "$version_prog" && error "Could not find program $version_prog" && return 1
-    ! test -x "$lmk"          && error "Could not find program $lmk"          && return 1
+    ! [[ -d $from_dir ]]       && error "boot directory $from_dir not found"   && return 1
+    ! [[ -d $to_dir ]]         && error "iso boot directory $to_dir not found" && return 1
+    ! [[ -e "$vmlinuz" ]]      && error "File $vmlinuz not found"              && return 1
+    ! [[ -x "$version_prog" ]] && error "Could not find program $version_prog" && return 1
+    ! [[ -x "$lmk" ]]          && error "Could not find program $lmk"          && return 1
 
     local version_0 version_1
     version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
@@ -3261,7 +3261,7 @@ check_sqfs_dir() {
     echo $dir | grep -q "^$remaster_dir/work/.*/squashfs" \
         || fatal "Suspicous sqfs_dir in stage $stage: <$(pqw $dir)>"
 
-    test -d $dir || fatal "sqfs_dir does not exist! in stage: $stage"
+    [[ -d $dir ]] || fatal "sqfs_dir does not exist! in stage: $stage"
 }
 
 #------------------------------------------------------------------------------
@@ -3399,7 +3399,7 @@ _cache_() {
     local file=$cache_dir/$name$ext
 
     if [[ $ctype = was ]]; then
-        test -e $file
+        [[ -e $file ]]
         return $?
     fi
 
@@ -3418,7 +3418,7 @@ _cache_() {
 
     case $ctype in
     restore)
-        test -e $file || return 1
+        [[ -e $file ]] || return 1
         say "Found cache $(pq $name$ext)"
         YES_no "Restore from this cache" || return 1
 
@@ -3439,12 +3439,12 @@ _cache_() {
 
         say "Create cache of $(pq $type $subtype)"
 
-        if test -e $file; then
+        if [[ -e $file ]]; then
             [[ $ctype = create ]] && return 1
             YES_no "Overwrite exiting cache file?" || return 1
         fi
 
-        test -d $dir || fatal "Can't cache a non-existent directory: $dir"
+        [[ -d $dir ]] || fatal "Can't cache a non-existent directory: $dir"
         mkdir -p $cache_dir
 
         # This prevents us from prompting for the password two
@@ -3994,17 +3994,17 @@ pretty_output() {
 # window title if it was set.
 #------------------------------------------------------------------------------
 on_exit() {
-    test -z $UMOUNT_ERRORS && umount_chroot
+    [[ -z $UMOUNT_ERRORS ]] && umount_chroot
 
     [[ -n $exit_file ]] && rm -f $exit_file
 
     #kill_children
     clear_pids
 
-    test -n $DID_WINDOW_TITLE &&  echo -ne "\e]0;\a"
+    [[ -n $DID_WINDOW_TITLE ]] &&  echo -ne "\e]0;\a"
 
     et=$((-MAIN_T + $(date +%s)))
-    if test $et -ge 30; then
+    if (( et >= 30 )); then
     #if [[ -n $STAGE_1_T && -n $STAGE_6_T ]]; then
         _end_timer_ MAIN_T "$ME $ARCH $FLAV"
     fi
@@ -4025,7 +4025,7 @@ clear_pids() {
     for name in TAIL_PID_1 TAIL_PID_2; do
         eval local pid=\$$name
         unset   $name
-        test -z $pid && continue
+        [[ -z $pid ]] && continue
         disown  $pid 2>/dev/null
         kill    $pid 2>/dev/null
     done
@@ -4068,7 +4068,7 @@ _gather_() {
     local file=$1.list
 
     for dir in $(flav_dirs); do
-        test -r $dir/$file || continue
+        [[ -r $dir/$file ]] || continue
         sed '/^\s*#/d; s/\s*#.*//' $dir/$file | grep '[a-zA-Z0-9]'
     done
 }
@@ -4186,7 +4186,7 @@ only_overwrite() {
     local from_dir=$1  dest_dir=$2  from  dest
     while read from; do
         dest=$dest_dir${from#"$from_dir"}
-        test -f $dest || continue
+        [[ -f $dest ]] || continue
         echo "  --> ${dest#"$dest_dir"}"
         $sudo cp -d $from $dest
     done<<Only_Overwrite
@@ -4297,10 +4297,10 @@ zsyncmake_file() {
 #------------------------------------------------------------------------------
 make_real() {
     local file=$1
-    test -L $file || return
+    [[ -L $file ]] || return
     local dest
     dest=$(readlink -f $file)
-    test -f "$dest" || return
+    [[ -f "$dest" ]] || return
     say "Convert symlink $file to a real file"
     local tmp
     tmp=$(mktemp $file.XXXXXXXX)
@@ -4353,7 +4353,7 @@ update_template() {
 update_template_file() {
     local old=$1 new=$2
     for dir in Template/*; do
-        test -d $dir     || continue
+        [[ -d $dir ]] || continue
         [[ -e $dir/$new ]] && continue
         [[ -e $dir/$old ]] || continue
         say "Moving $(pq $old) to $(pq $new) in Template/$(basename $dir)"
