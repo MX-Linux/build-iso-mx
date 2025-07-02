@@ -150,7 +150,7 @@ main() {
         case $arg in
             [$short_stack][$short_stack]*)
                 if echo "$arg" | grep -q "^[$short_stack]\+$"; then
-                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    set -- $(echo "$arg" | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
                     continue
                 fi;;
         esac
@@ -270,7 +270,7 @@ main() {
 
     local pretty_fmt="%15s: $text_co%s$nc\n"
 
-    (( $# > 0 ))           && fatal "Extra command line parameters: $(pqw $@)"
+    (( $# > 0 ))           && fatal "Extra command line parameters: $(pqw "$@")"
     [[ -z $script_dir ]]     && fatal "No script_dir!"
     [[ $script_dir = "/" ]]  && fatal "script_dir can't be root dir!"
     [[ -n $show_stages ]]    && show_stages
