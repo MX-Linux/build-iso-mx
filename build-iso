@@ -3316,8 +3316,24 @@ _end_timer_() {
 }
 
 elapsed() {
-    local secs mins hours
-    secs=$((-$1 + $(date +%s)))
+    local secs mins hours start_time current_time
+    start_time=${1:-0}
+    current_time=$(date +%s)
+
+    # Validate timestamps and calculate safely
+    if [[ ! "$start_time" =~ ^[0-9]+$ ]] || (( start_time <= 0 )); then
+        printf "%8d %s\n" 0 "secs"
+        return
+    fi
+
+    secs=$((current_time - start_time))
+
+    # Handle negative or invalid time differences
+    if (( secs < 0 )); then
+        printf "%8d %s\n" 0 "secs"
+        return
+    fi
+
     (( secs < 60 )) && printf "%8d %s\n" $secs $(plural $secs "sec%s") && return
     mins=$((secs / 60))
     secs=$((secs - 60 * mins))
