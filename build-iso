@@ -103,29 +103,29 @@ main() {
 
     local script_dir
     script_dir=$(dirname "$(readlink -f "$0")")
-    local template=$script_dir/Template
-    local tools=$script_dir/Tools
-    local output_dir=$script_dir/Output
-    local input_dir=$script_dir/Input
+    local template="$script_dir/Template"
+    local tools="$script_dir/Tools"
+    local output_dir="$script_dir/Output"
+    local input_dir="$script_dir/Input"
     local remaster_dir
     remaster_dir=$(readlink -f "$script_dir"/Remaster)
-    local iso_file_dir=$remaster_dir/iso-files
-    local deb_cache_dir=$remaster_dir/deb-cache/archives
+    local iso_file_dir="$remaster_dir/iso-files"
+    local deb_cache_dir="$remaster_dir/deb-cache/archives"
     local manual_selections=manual-selections
-    local exit_file=$output_dir/MUST-EXIT
-    local sign_off_file=$output_dir/SIGN-OFF
+    local exit_file="$output_dir/MUST-EXIT"
+    local sign_off_file="$output_dir/SIGN-OFF"
 
-    local first_time_file=$input_dir/first-time
-    local did_stage_file=$output_dir/did-stage
-    local log_file=$output_dir/$ME.log
-    local err_file=$output_dir/$ME.err
+    local first_time_file="$input_dir/first-time"
+    local did_stage_file="$output_dir/did-stage"
+    local log_file="$output_dir/$ME.log"
+    local err_file="$output_dir/$ME.err"
     local make_xinitrc=/usr/share/antiX/lib/make-xinitrc
 
     # local live_files_list=$input_dir/live-files.list
-    local strict_regex_file=$input_dir/strict-exceptions.regex
-    local lax_regex_file=$input_dir/lax-errors.regex
+    local strict_regex_file="$input_dir/strict-exceptions.regex"
+    local lax_regex_file="$input_dir/lax-errors.regex"
     local regex_files="$lax_regex_file $strict_regex_file"
-    local theme_dir=$script_dir/Themes
+    local theme_dir="$script_dir/Themes"
     local root_path="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/bin"
 
     local part_env="ASK_PART EXIT_PART RUN_PART SHELL_PART SKIP_PART TEST_PART"
@@ -133,7 +133,7 @@ main() {
 
     local build_dir="/Build"
     local partial_name="PARTIAL"
-    local partial_file=$build_dir/$partial_name
+    local partial_file="$build_dir/$partial_name"
     local seed_fname="random-seed"
     local user_defaults user_default_file apt_yes
     # local initrd_encrypt
@@ -160,14 +160,14 @@ main() {
           -color|C) (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -$arg)"
                     val=$1
                     [[ $val =~ ^- ]] \
-                        && fatal "Suspicious argument after -$arg: $(pqw $val)"
+                        && fatal "Suspicious argument after -$arg: $(pqw "$val")"
 
                     shift         ;;
-    -user-default)  [ $# -lt 1 ] && fatal "Expected a parameter after: $(pqw -$arg)"
+    -user-default)  (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -$arg)"
                     val=$1
                     user_defaults="$input_dir/$val"
-                    [ ! -e "$user_defaults" ] \
-                        && fatal "Default file not found -$arg: $(pqw $val)"
+                    [[ ! -e "$user_defaults" ]] \
+                        && fatal "Default file not found -$arg: $(pqw "$val")"
 
                     shift         ;;
               *=*)  val=${arg#*=} ;;
@@ -218,7 +218,7 @@ main() {
 
     is_antiX && apt_yes=
 
-    if [[ $# -eq 1  && -z $start_from ]]; then
+    if (( $# == 1 )) && [[ -z $start_from ]]; then
         arg=$1; shift
         case $arg in
             [0-8])  start_from=$arg ;;
@@ -277,14 +277,14 @@ main() {
     [[ -n $show_parts  ]]    && show_parts
 
     SUDO=sudo
-    [[ $UID -eq 0 ]] && SUDO=
+    (( UID == 0 )) && SUDO=
 
     [[ -n $show_parts || -n $show_stages ]] && exit
 
     local normal_defaults="$input_dir/defaults $input_dir/defaults-local"
     local all_defaults="$input_dir/defaults-system $normal_defaults"
 
-    if [[ -n $user_default_file ]]; then
+    if [[ -n $user_defaults ]]; then
         local normal_defaults="$user_defaults $input_dir/defaults-local"
         local all_defaults="$input_dir/defaults-system $normal_defaults"
     fi
@@ -297,7 +297,7 @@ main() {
     if [[ -n $pretend_mode || -n $chroot_mode || -n $stats_mode ]]; then
         log_file=/dev/null
     else
-        mkdir -p $(dirname $log_file)
+        mkdir -p $(dirname "$log_file")
     fi
 
     if [[ -n $check_tmpfs ]]; then
@@ -313,20 +313,20 @@ main() {
         echo -e "  version: $VERSION ($VERSION_DATE)"
         echo -e "  started: $(date)"
         echo -e "directory: $script_dir\n"
-    } >> $log_file
+    } >> "$log_file"
 
     # Always start out with a clean slate
-    rm -f $exit_file $sign_off_file
+    rm -f "$exit_file" "$sign_off_file"
 
     update_template_file basic-applications.list basic-package.list
     update_template_file pesky-packages.list     pesky-package.list
 
-    [[ -n $update_mode ]] && say "update mode: skipping parts $(pq $SKIP_PART)"
+    [[ -n $update_mode ]] && say "update mode: skipping parts $(pq "$SKIP_PART")"
 
     expand_parts $part_env $stage_env
 
     # Clear out the did-stage file
-    : > $did_stage_file
+    : > "$did_stage_file"
     # We only advance to the next stage if the previous stages all completed and wrote
     # stage-N.out output files. These files are also used for passing information on
     # from one stage to the next.
@@ -334,19 +334,19 @@ main() {
 
         # Read previous output files and set the stage
         for stage in $all_stages; do
-            output_file=$output_dir/stage-$stage.out
-            [[ -r $output_file ]] || break
-            [[ -n $start_from ]] && [[ $stage -eq $start_from ]] && break
-            source $output_file
+            output_file="$output_dir/stage-$stage.out"
+            [[ -r "$output_file" ]] || break
+            [[ -n "$start_from" ]] && (( stage == start_from )) && break
+            source "$output_file"
         done
 
         # Variables derived from output files
-        local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
-        [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
+        local full_distro_name="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
+        [[ "$DISTRO_NAME" = antiX ]] && full_distro_name="$full_distro_name-$ISO_FLAV"
 
         local fancy_name="$full_distro_name $CODE_NAME $RELEASE_DATE"
-        local work_name=$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH-$DEBIAN_RELEASE
-        [[ $DISTRO_NAME = antiX ]] && work_name=$work_name-$ISO_FLAV
+        local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH-$DEBIAN_RELEASE"
+        [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
         local work_dir=$remaster_dir/work/$work_name
         local iso_dir=$work_dir/iso
         local sqfs_dir=$work_dir/squashfs
@@ -365,9 +365,9 @@ main() {
 
         if [[ -n $start_from ]]; then
             (( stage < start_from )) \
-                && fatal "Only at stage $(pqnw $stage). Can't start from stage $(pqnw $start_from)."
+                && fatal "Only at stage $(pqnw "$stage"). Can't start from stage $(pqnw "$start_from")."
 
-            clear_outputs $start_from "$pretend_mode" "$delete_mode" || exit
+            clear_outputs "$start_from" "$pretend_mode" "$delete_mode" || exit
             start_from=
         fi
         [[ -n $save_mode    ]] && do_save    && exit
@@ -376,14 +376,14 @@ main() {
         [[ -n $UPDATE_mode  ]] && update_add_remove_lists && exit
 
         [[ "$script_dir" == "$build_dir" && "$stage" != "$chroot_stage" ]] \
-            && fatal "In chroot environment but stage is $(pqw $stage)"
+            && fatal "In chroot environment but stage is $(pqw "$stage")"
 
         # Set window title (but only in normal modes)
         echo -ne "\e]0;$ME stage:$stage $full_distro_name\a"
         DID_WINDOW_TITLE=true
 
-        if has_word SKIP_STAGE $stage; then
-            say "Skipping stage $(pqn $stage)"
+        if has_word SKIP_STAGE "$stage"; then
+            say "Skipping stage $(pqn "$stage")"
             leave_stage notime
             continue
         fi
@@ -396,20 +396,20 @@ main() {
             #say "ERROR_OFFSET=$ERROR_OFFSET"
         fi
 
-        if [[ $stage -ne $chroot_stage && -z $no_log_errors ]]; then
+        if (( stage != chroot_stage )) && [[ -z $no_log_errors ]]; then
 
-            [[ -e $exit_file ]] && exit $(cat $exit_file)
+            [[ -e "$exit_file" ]] && exit $(cat "$exit_file")
 
             # The tee and sed only apply to stdrr. Stdout goes right through.
             # This highlights stderr output and stores it in a file which we
             # periodically scan with the check_errors_* routines
             main_case  7>&1 1>&2 2>&7 \
-                | tee -a $err_file | sed -e "s/^/$red/" -e "s/$/$nc/"
+                | tee -a "$err_file" | sed -e "s/^/$red/" -e "s/$/$nc/"
 
             # The redirects above cause main_case() to launch in a subshell which
             # breaks the "exit" command. This fixes it by using my_exit() which
             # writes $exit_file before exiting
-            [[ -e $exit_file ]] && exit $(cat $exit_file 2>/dev/null)
+            [[ -e "$exit_file" ]] && exit $(cat "$exit_file" 2>/dev/null)
 
         else
             main_case
@@ -443,17 +443,17 @@ main_case() {
 do_stage_0() {
     enter_stage 0 "!Gather inputs and set defaults"
 
-    [[ -s $err_file && -z $no_log_errors ]]  \
-        && YES_no "Clear error file $(pq $ME.err)" && : > $err_file
+    [[ -s "$err_file" && -z "$no_log_errors" ]]  \
+        && YES_no "Clear error file $(pq "$ME.err")" && : > "$err_file"
 
-    if [[ -e $first_time_file ]]; then
+    if [[ -e "$first_time_file" ]]; then
         say    "The input file structure and layout have changed."
         say    "Your are encouraged to run in $(pq --reset) mode to verify input parameters."
         if YES_no "Enter $(pq --reset) mode"; then
             say "Entering $(pq --reset) mode."
             reset_mode=true
         else
-            rm -f $first_time_file
+            rm -f "$first_time_file"
         fi
     fi
 
@@ -463,7 +463,7 @@ do_stage_0() {
     require_programs chroot debootstrap isohybrid mksquashfs md5sum sudo tee zsync \
         pkill column expand strings iconv unbuffer
 
-    mkdir -p $output_dir || my_exit
+    mkdir -p "$output_dir" || my_exit
 
     # Give user a chance to set up directories the way they want
     if ! [[ -d $remaster_dir ]]; then
@@ -480,7 +480,7 @@ Remaster_Blurb
         YES_no_loud "Shall I create a local \"Remaster\" directory for you" \
             || vexit "Need Remaster symlink or directory to continue"
 
-        mkdir -p $script_dir/Remaster || my_exit
+        mkdir -p "$script_dir/Remaster" || my_exit
     fi
 
     local name
@@ -518,31 +518,31 @@ Remaster_Blurb
     esac
 
     RESPIN_INHERIT=
-    if is_distro_flav $FLAV; then
+    if is_distro_flav "$FLAV"; then
         ISO_RESPIN_OF=$FLAV
     else
         choose "flavour to base respin on" ISO_RESPIN_OF full base core
 
-        if [[ -z $(ls $template/$FLAV) ]] \
-            && YES_no "Fill \"$FLAV\" directory from $ISO_RESPIN_OF ?"; then
-            cp $template/$ISO_RESPIN_OF/*.list $template/$FLAV/
+        if [[ -z $(ls "$template/$FLAV") ]] \
+            && YES_no "Fill \"$FLAV\" directory from "$ISO_RESPIN_OF" ?"; then
+            cp "$template/$ISO_RESPIN_OF"/*.list "$template/$FLAV/"
             YES_no "Do you want to stop now to edit your new respin?" \
                 && vexit "at user's request"
         fi
         RESPIN_INHERIT=$ISO_RESPIN_OF
     fi
 
-    is_distro_flav $ISO_RESPIN_OF || fatal "Invalid flavour to base respin on: $ISO_RESPIN_OF"
+    is_distro_flav "$ISO_RESPIN_OF" || fatal "Invalid flavour to base respin on: $ISO_RESPIN_OF"
 
     local distro_k_arch=686
     is_antiX && distro_k_arch=486
     case $ARCH in
          i386) K_ARCH=$distro_k_arch   ; ISO_ARCH=386  ;;
         amd64) K_ARCH=amd64            ; ISO_ARCH=x64  ;;
-            *) error "Invalid ARCH $(pqw $ARCH). Expected $(pqw i386) or $(pqw amd64)". ;;
+            *) error "Invalid ARCH $(pqw "$ARCH"). Expected $(pqw i386) or $(pqw amd64)". ;;
     esac
 
-    K_NAME=$(echo $K_TEMPLATE | sed \
+    K_NAME=$(echo "$K_TEMPLATE" | sed \
     -e "s/%V/$K_VERSION/"   \
     -e "s/%G/$K_GNU/"       \
     -e "s/%R/$K_REVISION/"  \
@@ -558,29 +558,29 @@ Remaster_Blurb
 
     # Kernel wildcard resolution deferred to Stage 4 (after chroot setup)
     if [[ $K_NAME =~ \* ]]; then
-        say "Kernel wildcard $(pq $K_NAME) will be resolved in Stage 4"
+        say "Kernel wildcard $(pq "$K_NAME") will be resolved in Stage 4"
     fi
 
     #$K_VERSION$K_GNU-antix.$K_REVISION-$K_ARCH-smp
 
     [[ -n $THEME ]] || select_theme
 
-    check_theme_dir $THEME
+    check_theme_dir "$THEME"
 
     # repeated code
-    remaster_dir=$(readlink -f $script_dir/Remaster)
+    remaster_dir=$(readlink -f "$script_dir/Remaster")
     local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
     [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
     local iso_file=$full_distro_name.iso
 
     local dir
     for dir in $(flavour_list) COMMON base-AND-full; do
-        mkdir -p $script_dir/Deb/$dir
+        mkdir -p "$script_dir/Deb/$dir"
     done
 
     local full_iso_file=$iso_file_dir/$iso_file
-    if [[ -e $full_iso_file ]]; then
-        say "The output file $(pq Remaster/iso-files/$iso_file) already exists!"
+    if [[ -e "$full_iso_file" ]]; then
+        say "The output file $(pq "Remaster/iso-files/$iso_file") already exists!"
         say "If we continue then it will get over-written."
         YES_no "Continue anyway" || my_exit 0
     fi
@@ -600,10 +600,10 @@ THEME="$THEME"
 ISO_RESPIN_OF="$ISO_RESPIN_OF"
 Output
 
-    say "Ready to begin creation of $(pq $iso_file)"
+    say "Ready to begin creation of $(pq "$iso_file")"
     pretty_output $((stage + 1)) >> $log_file
 
-    [[ -e $first_time_file ]] && rm -f $first_time_file
+    [[ -e "$first_time_file" ]] && rm -f "$first_time_file"
 
     if [[ -z $quiet_mode ]]; then
         echo "With:"
@@ -611,8 +611,8 @@ Output
         echo
     fi
     do_one_stat
-    printf "$pretty_fmt"  REMASTER_DIR  $remaster_dir
-    printf "$pretty_fmt" "on device"    $(df $remaster_dir | tail -n1 | cut -f1 -d" ")
+    printf "$pretty_fmt"  REMASTER_DIR  "$remaster_dir"
+    printf "$pretty_fmt" "on device"    $(df "$remaster_dir" | tail -n1 | cut -f1 -d" ")
 }
 
 #------------------------------------------------------------------------------
@@ -621,12 +621,12 @@ Output
 do_stage_1() {
     enter_stage 1 "Make directories and symlinks"
 
-    convenience_link $work_dir   work
-    convenience_link $sqfs_dir   sqfs
-    convenience_link $iso_dir    iso
-    convenience_link $initrd_dir initrd
+    convenience_link "$work_dir"   work
+    convenience_link "$sqfs_dir"   sqfs
+    convenience_link "$iso_dir"    iso
+    convenience_link "$initrd_dir" initrd
 
-    $SUDO chown root:root $sqfs_dir
+    $SUDO chown root:root "$sqfs_dir"
 
     leave_stage notime
 }
@@ -640,11 +640,11 @@ do_stage_2() {
 
     [[ $do_fast ]] && mount_tmpfs
 
-    if test -d $sqfs_dir; then
+    if test -d "$sqfs_dir"; then
         say "Clear out existing files ..."
         check_sqfs_dir
         # Convoluted to be safer against deleting entire filesystem
-        $SUDO rm -rf $(dirname $sqfs_dir)/squashfs/*
+        $SUDO rm -rf $(dirname "$sqfs_dir")/squashfs/*
     fi
 
     if restore_cache $chroot_cache_opts; then
@@ -654,7 +654,7 @@ do_stage_2() {
 
     if ! restore_cache $deboot_cache_opts; then
 
-        say "debootstrap for $(pq $ARCH $DEBIAN_RELEASE) from local mirror $(pq $LOCAL_MIRROR) ..."
+        say "debootstrap for $(pq "$ARCH" "$DEBIAN_RELEASE") from local mirror $(pq "$LOCAL_MIRROR") ..."
         umount_chroot
         mount_deb_cache
 
@@ -665,36 +665,36 @@ do_stage_2() {
         cnt=$(echo "$exclude_list" | tr ',' '\n' | wc -l)
         psay $cnt "Exclude $(pqn %n) package%s"
         keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
-        [[ -n $exclude_list ]] && args="$args --exclude=$exclude_list"
-        [[ -n $include_list ]] && args="$args --include=$include_list"
-        [[ -r $keyring ]] && args="$args --keyring=$keyring"
-        url="$(eval echo $MIRROR_URL_TEMPLATE)"
+        [[ -n "$exclude_list" ]] && args="$args --exclude=$exclude_list"
+        [[ -n "$include_list" ]] && args="$args --include=$include_list"
+        [[ -r "$keyring" ]] && args="$args --keyring=$keyring"
+        url="$(eval echo "$MIRROR_URL_TEMPLATE")"
 
         check_errors_strict
         start_timer
-        $SUDO debootstrap $args $DEBIAN_RELEASE $sqfs_dir $url
-        end_timer "run debootstrap $ARCH $DEBIAN_RELEASE"
+        $SUDO debootstrap $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
+        end_timer "run debootstrap "$ARCH" "$DEBIAN_RELEASE""
         check_errors_lax
 
         ##anticapitalista - remove systemd from 4 files in /etc
         if is_antiX; then
             say "removing systemd from 4 files"
-            $SUDO sed -i '/^systemd/d' $sqfs_dir/etc/{group,gshadow,passwd,shadow}
+            $SUDO sed -i '/^systemd/d' "$sqfs_dir"/etc/{group,gshadow,passwd,shadow}
             say "de-systemd complete"
         fi
 
         umount_chroot
 
-        [[ -e $sqfs_dir/bin/bash ]] || error "debootstrap failed"
+        [[ -e "$sqfs_dir/bin/bash" ]] || error "debootstrap failed"
     fi
 
-    report_size $sqfs_dir
+    report_size "$sqfs_dir"
 
     create_cache $deboot_cache_opts
 
     say "Customize live system for antiX"
-    $SUDO rm -f $sqfs_dir/etc/apt/sources.list
-    copy_template_dir squashfs $sqfs_dir
+    $SUDO rm -f "$sqfs_dir/etc/apt/sources.list"
+    copy_template_dir squashfs "$sqfs_dir"
 
     leave_stage
 }
@@ -714,28 +714,28 @@ do_stage_3() {
     leave_stage notime
 
     # Save the PARTIAL file from destruction but don't be fooled by older copies
-    rm -f $work_dir/$partial_name
-    [[ -e $sqfs_dir$partial_file ]] && cp $sqfs_dir$partial_file $work_dir
+    rm -f "$work_dir/$partial_name"
+    [[ -e "$sqfs_dir$partial_file" ]] && cp "$sqfs_dir$partial_file" "$work_dir"
 
     # Make sure we start over from scratch
-    $SUDO rm -rf $sqfs_dir$build_dir
+    $SUDO rm -rf "$sqfs_dir$build_dir"
 
     prep_chroot
 
     # Put saved PARTIAL file back in the build directory
-    [[ -e $work_dir/$partial_name ]] \
-        && $SUDO mv $work_dir/$partial_name $sqfs_dir$partial_file
+    [[ -e "$work_dir/$partial_name" ]] \
+        && $SUDO mv "$work_dir/$partial_name" "$sqfs_dir$partial_file"
 
     # This stage must fail if the next stage fails
-    rm $output_file
+    rm "$output_file"
 
     # Get realtime log updates from the chroot
-    (tail -n 0 -f $sqfs_output_dir/$ME.log >> $log_file) &
+    (tail -n 0 -f "$sqfs_output_dir/$ME.log" >> "$log_file") &
     export TAIL_PID_1=$!
 
     if [[ -z $no_log_errors ]]; then
-        touch $err_file
-        (tail -n 0 -f $err_file > $sqfs_output_dir/$ME.err) &
+        touch "$err_file"
+        (tail -n 0 -f "$err_file" > "$sqfs_output_dir/$ME.err") &
         export TAIL_PID_2=$!
     fi
     HOST_HOSTNAME=$(hostname)
@@ -750,16 +750,16 @@ do_stage_3() {
     [[ -n $verbose_mode    ]] && args="$args --VERBOSE"
     [[ $color_mode != high ]] && args="$args --COLOR=$color_mode"
     [[ -n $disable_errors  ]] && args="$args --no-error-check"
-    mountpoint -q $sqfs_dir   && args="$args --fast"
+    mountpoint -q "$sqfs_dir"   && args="$args --fast"
 
     check_errors_strict
 
-    say "Run $(pq $ME) in chroot"
-    $SUDO chroot $sqfs_dir $build_dir/$ME $args
+    say "Run $(pq "$ME") in chroot"
+    $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args
 
     $SUDO hostname "$HOST_HOSTNAME"
 
-    if [[ ! -e $next_output_file && -n $manual_mode ]]; then
+    if [[ ! -e "$next_output_file" && -n "$manual_mode" ]]; then
         say "The buld inside the chroot failed"
         say  "======================================================="
         say  "You are in a chroot environment."
@@ -767,7 +767,7 @@ do_stage_3() {
         say  "to continue building"
         say  "Use $(pq exit) or $(pq Ctrl-D) when done"
         say  "======================================================="
-        $SUDO chroot $sqfs_dir /bin/bash -rcfile $build_dir/bashrc 2>&1
+        $SUDO chroot "$sqfs_dir" /bin/bash -rcfile "$build_dir/bashrc" 2>&1
         say "Left chroot"
     fi
 
@@ -776,27 +776,27 @@ do_stage_3() {
     kill_chroot_procs
     umount_chroot
 
-    [[ -e $next_output_file ]] || fatal "Build inside chroot failed"
+    [[ -e "$next_output_file" ]] || fatal "Build inside chroot failed"
 
     local chroot_selections=$sqfs_dir$build_dir/$manual_selections
-    if [[ -r $chroot_selections ]]; then
-        say "Update $(pq $manual_selections) in Template"
-        cp $chroot_selections $manual_selections_template
+    if [[ -r "$chroot_selections" ]]; then
+        say "Update $(pq "$manual_selections") in Template"
+        cp "$chroot_selections" "$manual_selections_template"
     fi
 
     local missing
     for missing in "$sqfs_dir$build_dir"/missing*; do
-        [[ -r $missing ]] && cp $missing $work_dir
+        [[ -r "$missing" ]] && cp "$missing" "$work_dir"
     done
 
-    cp $sqfs_output_dir/package-list.out        $work_dir
-    cp $sqfs_input_dir/strict-exceptions.regex  $input_dir
-    cp $sqfs_input_dir/lax-errors.regex         $input_dir
-    cp $next_output_file                        $output_dir
+    cp "$sqfs_output_dir/package-list.out"        "$work_dir"
+    cp "$sqfs_input_dir/strict-exceptions.regex"  "$input_dir"
+    cp "$sqfs_input_dir/lax-errors.regex"         "$input_dir"
+    cp "$next_output_file"                        "$output_dir"
 
     leave_stage
 
-    report_size $sqfs_dir
+    report_size "$sqfs_dir"
 }
 
 #-----------------------------------------------------------------------------
@@ -829,15 +829,15 @@ do_stage_4() {
 
     if [[ -n $interactive ]]; then
         say "Interactive mode $(pq enabled)"
-        if [[ -r $manual_selections_template ]] && YES_no_loud "Load current defaults"; then
-            say "Set defaults from $(pq $manual_selections) file"
-            debconf-set-selections $manual_selections_template
+        if [[ -r "$manual_selections_template" ]] && YES_no_loud "Load current defaults"; then
+            say "Set defaults from $(pq "$manual_selections") file"
+            debconf-set-selections "$manual_selections_template"
         fi
     else
         say "interactive mode ${num_co}disabled"
         export DEBIAN_FRONTEND=noninteractive
-        say "Set defaults from $(pq $manual_selections) file"
-        debconf-set-selections $manual_selections_template
+        say "Set defaults from $(pq "$manual_selections") file"
+        debconf-set-selections "$manual_selections_template"
     fi
 
     # Doesn't seem to be needed, it just shows an error that /proc/mounts = /etc/mtab
@@ -850,23 +850,23 @@ do_stage_4() {
     PATH=$build_dir/fake:$PATH
 
     # Read in the ASK_PART, SKIP_PART, etc values from outer program
-    [[ -r $script_dir/ENV_IN ]] && source $script_dir/ENV_IN
+    [[ -r "$script_dir/ENV_IN" ]] && source "$script_dir/ENV_IN"
 
     require_programs apt-get
 
     # Skip PARTIAL file check if we have no stage output files (clean build)
-    if [[ ! -f $script_dir/../Output/stage-1.out ]] && [[ -s $partial_file ]]; then
-        rm -f $partial_file
+    if [[ ! -f "$script_dir/../Output/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+        rm -f "$partial_file"
         skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
-    elif [[ -s $partial_file ]]  \
+    elif [[ -s "$partial_file" ]]  \
         && do_part 0 "!Read PARTIAL file to skip parts done"; then
         local add_skip
-        add_skip=$(join_lines $partial_file ",")
-        say "have already processed these parts: $(pq $add_skip)"
+        add_skip=$(join_lines "$partial_file" ",")
+        say "have already processed these parts: $(pq "$add_skip")"
         if YES_no "Skip these parts this time"; then
             SKIP_PART="$SKIP_PART${SKIP_PART:+,}$add_skip"
         else
-            rm -f $partial_file
+            rm -f "$partial_file"
         fi
     else
         skip_part 0 "Read PARTIAL file to skip parts done"
@@ -876,15 +876,15 @@ do_stage_4() {
         local early_deb
         if ls /*${ARCH}.deb >/dev/null 2>&1; then
             for early_deb in /*${ARCH}.deb; do
-                [[ -f $early_deb ]] || continue
-                say "Install arch deb package $(pq $early_deb)"
+                [[ -f "$early_deb" ]] || continue
+                say "Install arch deb package $(pq "$early_deb")"
                 apt-get install "$early_deb"; rm "$early_deb"
             done
         fi
         if ls /*all.deb >/dev/null 2>&1; then
             for early_deb in /*all.deb; do
-                say "Install all deb package $(pq $early_deb)"
-                apt-get install $early_deb; rm $early_deb
+                say "Install all deb package $(pq "$early_deb")"
+                apt-get install "$early_deb"; rm "$early_deb"
             done
         fi
     fi
@@ -929,7 +929,7 @@ do_stage_4() {
 
         local cnt
         cnt=$(grep -c '^[a-zA-Z]' /etc/locale.gen)
-        psay $cnt "There %are now $(pqn %n) locale%s to generate"
+        psay "$cnt" "There %are now $(pqn %n) locale%s to generate"
         end_part_lax
     fi
 
@@ -942,28 +942,28 @@ do_stage_4() {
     fi
 
     if do_part 5 "Install kernel & headers"; then
-        local kname=linux-image-$K_NAME
-        ! is_antiX && kname=$kname$UNSIGNED
-        apt-get $APT_GET_OPTS install linux-headers-$K_NAME $kname
+        local kname="linux-image-$K_NAME"
+        ! is_antiX && kname="$kname$UNSIGNED"
+        apt-get $APT_GET_OPTS install "linux-headers-$K_NAME" "$kname"
         end_part_strict
     fi
 
     if do_part 6 "Update locales"; then
         : "${LOCALE:=en_US.UTF-8}"
-        say "Set default locale to $(pq $LOCALE)"
-        update-locale LANG=$LOCALE
+        say "Set default locale to $(pq "$LOCALE")"
+        update-locale "LANG=$LOCALE"
         end_part_lax
     fi
 
     if gather_any pesky-package \
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
-        for package in $(compile_pkg_list pesky-package exclude-chroot); do
+        for package in $(compile_pkg_list "pesky-package" "exclude-chroot"); do
             # Pre-configure firmware-ipw2x00 to accept license automatically
-            if [ "$package" = "firmware-ipw2x00" ]; then
+            if [[ "$package" = "firmware-ipw2x00" ]]; then
                 echo 'firmware-ipw2x00 firmware-ipw2x00/license/accepted boolean true' | debconf-set-selections
             fi
-            DEBIAN_FRONTEND=dialog apt-get install $apt_yes $package
+            DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package"
         done
         end_part_lax
     else
@@ -997,8 +997,8 @@ do_stage_4() {
         psay $cnt "Install $(pqn %n) .deb package%s"
 
         for deb in $debs; do
-            say "install $(pq ${deb##*/})"
-            apt-get install $deb
+            say "install $(pq "${deb##*/}")"
+            apt-get install "$deb"
         done
         end_part_lax
     else
@@ -1008,7 +1008,7 @@ do_stage_4() {
     if gather_any remove \
         && do_part 11 "Remove some packages"; then
         gather_say remove "Remove $(pqn %n) package%s"
-        apt-get purge $(gather remove) $apt_yes --allow-remove-essential
+        apt-get purge $(gather "remove") $apt_yes --allow-remove-essential
         end_part_strict
     fi
 
@@ -1034,9 +1034,9 @@ do_stage_4() {
             sed -i -r '/default_user/ s/^#+//' /etc/slim.conf
         fi
 
-        if [[ -n $X_TERM_EMULATOR && -x $X_TERM_EMULATOR ]]; then
-            say "Set x-terminal-emulator to $(pq $X_TERM_EMULATOR)"
-            update-alternatives --set x-terminal-emulator $X_TERM_EMULATOR
+        if [[ -n "$X_TERM_EMULATOR" && -x "$X_TERM_EMULATOR" ]]; then
+            say "Set x-terminal-emulator to $(pq "$X_TERM_EMULATOR")"
+            update-alternatives --set x-terminal-emulator "$X_TERM_EMULATOR"
         else
             error "Missing or unknown x-term-emulator $(pqw $X_TERM_EMULATOR)"
         fi
@@ -1100,22 +1100,22 @@ do_stage_4() {
         say "Manual configuration"
         local save_cnt
         save_cnt=$(gather_cnt save-selections)
-        psay $save_cnt "Save selections from $(pqn %n) package%s"
+        psay "$save_cnt" "Save selections from $(pqn %n) package%s"
         local package package_re
-        for package in $(gather save-selections); do
+        for package in $(gather "save-selections"); do
             package_re=${package_re:+$package_re\|}
             package_re=$package_re^$package
         done
 
         local reconfig_cnt
         reconfig_cnt=$(gather_cnt reconfigure)
-        psay $reconfig_cnt "Reconfigure $(pqn %n) package%s"
+        psay "$reconfig_cnt" "Reconfigure $(pqn %n) package%s"
 
         if (( reconfig_cnt > 0 )) && YES_no "Are you ready"; then
 
-            for package in $(gather reconfigure); do
-                say "Manual configuration for $(pqn $package)"
-                dpkg-reconfigure -f dialog $package
+            for package in $(gather "reconfigure"); do
+                say "Manual configuration for $(pqn "$package")"
+                dpkg-reconfigure -f dialog "$package"
                 package_re=${package_re:+$package_re\|}
                 package_re=$package_re^$package
             done
@@ -1124,19 +1124,19 @@ do_stage_4() {
         if (( save_cnt > 0 || reconfig_cnt > 0 )); then
             YES_no "Save these new selections"                     \
                 && debconf-get-selections                          \
-                | { [[ -n $package_re ]] && grep -E "^$package_re" || cat; } | grep -v "[[:space:]]$"  \
-                | sort > $build_dir/$manual_selections
+                | { [[ -n "$package_re" ]] && grep -E "^$package_re" || cat; } | grep -v "[[:space:]]$"  \
+                | sort > "$build_dir/$manual_selections"
         fi
         end_part_lax
     else
         skip_part 16 "Manual configuration"
         _say_
         local reconfigure cnt
-        reconfigure=$(cut -f1 $manual_selections_template | cut -d: -f1 | sort -u)
+        reconfigure=$(cut -f1 "$manual_selections_template" | cut -d: -f1 | sort -u)
         cnt=$(echo "$reconfigure" | wc -w)
-        psay $cnt "Automatic reconfiguration of $(pqn %n) package%s"
+        psay "$cnt" "Automatic reconfiguration of $(pqn %n) package%s"
         for package in $reconfigure; do
-            dpkg-reconfigure -f noninteractive $package
+            dpkg-reconfigure -f noninteractive "$package"
         done
         check_errors_lax
     fi
@@ -1206,27 +1206,27 @@ do_stage_4() {
 
     local desktop_file default_desktop
     get_template_file default-desktop desktop_file \
-        && default_desktop=$(cat $desktop_file 2>/dev/null)
+        && default_desktop=$(cat "$desktop_file" 2>/dev/null)
 
     check_errors_strict
 
     if is_antiX; then
-        if [[ -n $default_desktop ]] && do_part 19 "!Update SLiM defaults"; then
+        if [[ -n "$default_desktop" ]] && do_part 19 "!Update SLiM defaults"; then
 
-            if ! test -x $make_xinitrc; then
-                mkdir -p $(dirname $make_xinitrc)    || my_exit
-                cp $tools/make-xinitrc $make_xinitrc || my_exit
+            if ! test -x "$make_xinitrc"; then
+                mkdir -p $(dirname "$make_xinitrc")    || my_exit
+                cp "$tools/make-xinitrc" "$make_xinitrc" || my_exit
             fi
 
-            say "Found desktops $(pq $($make_xinitrc --list))"
+            say "Found desktops $(pq $("$make_xinitrc" --list))"
 
             say "Create .xinitrc in /etc/skel"
-                $make_xinitrc "$default_desktop" > /etc/skel/.xinitrc \
+                "$make_xinitrc" "$default_desktop" > /etc/skel/.xinitrc \
                 || error "Failed to create/update .xinitrc file"
 
             if [[ -e /etc/slim.conf ]]; then
                 say "Update /etc/slim.conf"
-                $make_xinitrc --slim || error "Failed to update slim.conf"
+                "$make_xinitrc" --slim || error "Failed to update slim.conf"
             fi
 
             end_part_strict
@@ -1296,7 +1296,7 @@ do_stage_4() {
     if ! is_antiX; then
 
     say "fix apparmor profile for smbd"
-        if [ -e /etc/apparmor.d/samba/smbd-shares ]; then
+        if [[ -e /etc/apparmor.d/samba/smbd-shares ]]; then
             echo "skip apparmor config"
         else
             [[ -d /etc/apparmor.d/samba ]] || mkdir -p /etc/apparmor.d/samba
@@ -1320,7 +1320,7 @@ do_stage_4() {
     _say_ "$num_co===============================================================$nc"
     SIGN_OFF="$text_co$ME in chroot done$nc"
 
-    rm -f $partial_file
+    rm -f "$partial_file"
     leave_stage
     my_exit
 }
@@ -1353,7 +1353,7 @@ apply_theme() {
 # Stage 5
 #------------------------------------------------------------------------------
 do_stage_5() {
- 	if [ $stop_5 ]; then
+	if [[ $stop_5 ]]; then
  		my_exit 0
  	fi
 
@@ -1794,7 +1794,7 @@ do_stage_7() {
 #------------------------------------------------------------------------------
 do_stage_8() {
 
- 	if [ $stop_8 ]; then
+	if [[ $stop_8 ]]; then
  		my_exit 0
  	fi
 
@@ -2068,7 +2068,7 @@ check_all_tmpfs() {
         echo
         local dir=$remaster_dir/work/$name/squashfs
         display_tmpfs $name
-        YES_no_loud "Cache chroot directory before umount" && force_cache chroot $name $dir
+        YES_no_loud "Cache chroot directory before umount" && force_cache chroot "$name" "$dir"
         YES_no "Clear and umount this directory" || continue
 
         $SUDO rm -rf $(dirname $dir)/squashfs/*
@@ -2367,7 +2367,7 @@ Get_Free
 
 display_cache_free_swap() {
     local cache=$1 free=$2 swap=$3
-    [[ $# -eq 3 ]] || eval $(get_cache_free_swap)
+    (( $# == 3 )) || eval $(get_cache_free_swap)
     say_fmt "Free Mem"  $free
     say_fmt "Free Swap" $swap
     say_fmt "Cached"    $cache
@@ -2485,7 +2485,7 @@ apt_get_packages() {
     local pkg_list cnt msg
     pkg_list=$(compile_pkg_list $file exclude-chroot)
     cnt=$(echo "$pkg_list" | wc -w)
-    [[ $cnt -eq 0 ]] && return
+    (( cnt == 0 )) && return
 
     local last_arg="${!#}"
     msg=$(plural $cnt "apt-get $last_arg $(pqn %n) $label package%s.")
@@ -2543,7 +2543,7 @@ $missing_packages"
         done
 
         local available_cnt=$(echo "$available_packages" | wc -w)
-        if [[ $available_cnt -eq 0 ]]; then
+        if (( available_cnt == 0 )); then
             error "No packages available for installation"
             return 1
         fi
@@ -2577,7 +2577,7 @@ $missing_packages"
         install_output=$(cat "$temp_output")
         rm -f "$temp_output"
 
-        if [[ $exit_code -eq 0 ]]; then
+        if (( exit_code == 0 )); then
             # Success - all remaining packages installed
             break
         fi
@@ -2651,7 +2651,7 @@ check_missing() {
     local pkg missing file=$1 label=$2 pkg_list cnt
     pkg_list=$(compile_pkg_list $file exclude-chroot)
     cnt=$(echo "$pkg_list" | wc -w)
-    [[ $cnt -eq 0 ]] && return
+    (( cnt == 0 )) && return
 
     local installed=/Build/installed-$label
 
@@ -3084,7 +3084,7 @@ make_build_dir() {
     cp -r $0 Input $tools $regex_files $b_dir
 
     #make custom user-defaults file defaults in chroot, if it exists and switch was used
-    if [[ -n $user_default_file ]]; then
+    if [[ -n $user_defaults ]]; then
         cp $user_defaults $b_dir/Input/defaults
     fi
 
@@ -3583,10 +3583,10 @@ Parts_Blurb
 expand_parts() {
     local val var
     for var; do
-        eval val=\$$var
+        eval "val=\${$var:-}"
         [[ $val =~ - ]] || continue
-        val=$(expand_range $val)
-        eval $var=\$val
+        val=$(expand_range "$val")
+        eval "$var=\$val"
     done
 }
 
@@ -3746,7 +3746,7 @@ pick_prog() {
         found=true
         break
     done
-    [[ -n $found ]] || error "Could not find any of these programs: $(pqw $*)"
+    [[ -n $found ]] || error "Could not find any of these programs: $(pqw "$@")"
 }
 
 select_theme() {
@@ -3895,10 +3895,12 @@ do_one_stat() {
     else
         gather_say package            "    $(pqn %3d) antiX                package%s"
     fi
-    local pkg_count=$(gather_cnt package)
+    local pkg_count
+    pkg_count=$(gather_cnt package)
     # TMPFS_SIZE format: "fixed + per_package" both in 100KB units
     # Need to evaluate: (2500 + 70 * pkg_count) / 10 to get MB
-    local needed=$(((2500 + 70 * pkg_count) / 10))
+    local needed
+    needed=$(((2500 + 70 * pkg_count) / 10))
     say "$(printf "size of tmps: $(pqn %6d) MB\n" $needed)"
 }
 

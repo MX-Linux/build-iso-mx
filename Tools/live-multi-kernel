@@ -13,12 +13,13 @@ VERSION_DATE="Wed Apr 21 12:19:41 PM MDT 2021"
     MY_DIR=$(dirname "$(readlink -f $0)")
 MY_LIB_DIR=$(readlink -f "$MY_DIR/../../cli-shell-utils")
    LIB_DIR="/usr/lib/cli-shell-utils"
+   LOCAL_LIB_DIR="/usr/local/lib/cli-shell-utils"
 
 GRAPHICAL_MENUS=true
 export TEXTDOMAIN="$ME"
 
-  LIB_PATH="$MY_LIB_DIR:$LIB_DIR"
-      PATH="$MY_LIB_DIR/bin:$LIB_DIR/bin:$PATH"
+  LIB_PATH="$MY_LIB_DIR:$LIB_DIR:$LOCAL_LIB_DIR"
+      PATH="$MY_LIB_DIR/bin:$LIB_DIR/bin:$LOCAL_LIB_DIR/bin:$PATH"
  SHELL_LIB="cli-shell-utils.bash"
 
     # We already use "DISTRO" in substitutions so we use CONF_DISTRO for selecting the
