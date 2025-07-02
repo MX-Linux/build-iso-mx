@@ -143,7 +143,7 @@ main() {
     local arg val ARGS
     ARGS="$*"
 
-    while [[ $# -gt 0 && $1 =~ ^- ]]; do
+    while (( $# > 0 )) && [[ $1 =~ ^- ]]; do
         arg=${1#-}; shift
 
         # Unstack single-letter options
@@ -157,7 +157,7 @@ main() {
 
         # Deal with all options that take a parameter
         case $arg in
-          -color|C) [[ $# -lt 1 ]] && fatal "Expected a parameter after: $(pqw -$arg)"
+          -color|C) (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -$arg)"
                     val=$1
                     [[ $val =~ ^- ]] \
                         && fatal "Suspicious argument after -$arg: $(pqw $val)"
@@ -270,7 +270,7 @@ main() {
 
     local pretty_fmt="%15s: $text_co%s$nc\n"
 
-    [[ $# -gt 0 ]]           && fatal "Extra command line parameters: $(pqw $@)"
+    (( $# > 0 ))           && fatal "Extra command line parameters: $(pqw $@)"
     [[ -z $script_dir ]]     && fatal "No script_dir!"
     [[ $script_dir = "/" ]]  && fatal "script_dir can't be root dir!"
     [[ -n $show_stages ]]    && show_stages
@@ -364,7 +364,7 @@ main() {
         [[ -n $chroot_mode ]] && do_chroot && exit
 
         if [[ -n $start_from ]]; then
-            [[ $stage -lt $start_from ]] \
+            (( stage < start_from )) \
                 && fatal "Only at stage $(pqnw $stage). Can't start from stage $(pqnw $start_from)."
 
             clear_outputs $start_from "$pretend_mode" "$delete_mode" || exit
@@ -992,7 +992,7 @@ do_stage_4() {
     local debs cnt
     debs=$(ls $build_dir/Deb/*.deb 2>/dev/null)
     cnt=$(echo "$debs" | wc -w)
-    if [[ $cnt -gt 0 ]] \
+    if (( cnt > 0 )) \
         && do_part 10 "Install latest antiX debs"; then
         psay $cnt "Install $(pqn %n) .deb package%s"
 
@@ -1111,7 +1111,7 @@ do_stage_4() {
         reconfig_cnt=$(gather_cnt reconfigure)
         psay $reconfig_cnt "Reconfigure $(pqn %n) package%s"
 
-        if [[ $reconfig_cnt -gt 0 ]] && YES_no "Are you ready"; then
+        if (( reconfig_cnt > 0 )) && YES_no "Are you ready"; then
 
             for package in $(gather reconfigure); do
                 say "Manual configuration for $(pqn $package)"
@@ -1121,7 +1121,7 @@ do_stage_4() {
             done
         fi
 
-        if [[ $save_cnt -gt 0 || $reconfig_cnt -gt 0 ]]; then
+        if (( save_cnt > 0 || reconfig_cnt > 0 )); then
             YES_no "Save these new selections"                     \
                 && debconf-get-selections                          \
                 | { [[ -n $package_re ]] && grep -E "^$package_re" || cat; } | grep -v "[[:space:]]$"  \
@@ -1923,7 +1923,7 @@ do_stage_9() {
 }
 
 do_save() {
-    [[ $stage -gt 0 ]] || return 1
+    (( stage > 0 )) || return 1
     force_cache $chroot_cache_opts
     return 0
 }
@@ -1943,7 +1943,7 @@ enter_stage() {
     [[ -n $stage ]] && grep "^$stage$" $did_stage_file 2>/dev/null && fatal "Re-entering stage $stage"
 
     _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(date +"%F %T %Z")"
-    [[ -z $quiet_mode && $stage -gt 0 ]] \
+    [[ -z $quiet_mode ]] && (( stage > 0 )) \
         && say "Making: $(pq $full_distro_name) with kernel $(pq $K_NAME)"
 
     has_word  ASK_STAGE $stage \
@@ -1963,7 +1963,7 @@ enter_stage() {
 
 leave_stage() {
     touch $output_file
-    [[ $# -gt 0 ]] && return
+    (( $# > 0 )) && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
     return 0
@@ -1990,8 +1990,8 @@ mount_tmpfs() {
     display_cache_free_swap $cache $free $swap
 
     local balance=$((free + swap - needed))
-    [[ $balance -lt 0   ]] && fatal "Need more memory than is available in RAM and swap"
-    [[ $balance -lt 200 ]] && error "Less than 200 Meg memory margin (free RAM + swap - needed)"
+    (( balance < 0   )) && fatal "Need more memory than is available in RAM and swap"
+    (( balance < 200 )) && error "Less than 200 Meg memory margin (free RAM + swap - needed)"
 
     YES_no "Mount as tmpfs" || return
 
@@ -2334,7 +2334,7 @@ list_newer_procs() {
     local newer pid ref=${1:-$$}
 
     for pid in $(pgrep .); do
-        [[ $pid -gt $ref ]]         || continue
+        (( pid > ref ))         || continue
         is_zombie_or_kthread $pid && continue
         newer=$newer,$pid
     done
@@ -2489,7 +2489,7 @@ apt_get_packages() {
 
     local last_arg="${!#}"
     msg=$(plural $cnt "apt-get $last_arg $(pqn %n) $label package%s.")
-    [[ $cnt -ge 100 ]] && msg="$msg  This could take some time."
+    (( cnt >= 100 )) && msg="$msg  This could take some time."
     say "$msg"
 
     # First, simulate the installation to identify missing packages
@@ -2559,7 +2559,7 @@ $missing_packages"
 
     # Keep trying to install packages, removing problematic ones each time
     while [[ -n $remaining_packages ]]; do
-        if [[ $attempt -gt 1 ]]; then
+        if (( attempt > 1 )); then
             local remaining_cnt=$(echo "$remaining_packages" | wc -w)
             say "Attempt $attempt: trying to install remaining $remaining_cnt packages..."
         fi
@@ -2623,7 +2623,7 @@ $missing_packages"
         attempt=$((attempt + 1))
 
         # Safety valve to prevent infinite loops
-        if [[ $attempt -gt 50 ]]; then
+        if (( attempt > 50 )); then
             error "Too many package installation attempts, giving up"
             return 1
         fi
@@ -2983,7 +2983,7 @@ busybox_depmod() {
 # Chroot related routines
 #==============================================================================
 do_chroot() {
-    [[ $stage -ge 1 ]] || fatal "Not ready to do chroot"
+    (( stage >= 1 )) || fatal "Not ready to do chroot"
 
     prep_chroot
     say "Enter chroot for $(pq $full_distro_name)"
@@ -3307,10 +3307,10 @@ _end_timer_() {
 elapsed() {
     local secs mins hours
     secs=$((-$1 + $(date +%s)))
-    [[ $secs -lt 60 ]] && printf "%8d %s\n" $secs $(plural $secs "sec%s") && return
+    (( secs < 60 )) && printf "%8d %s\n" $secs $(plural $secs "sec%s") && return
     mins=$((secs / 60))
     secs=$((secs - 60 * mins))
-    [[ $mins -lt 60 ]] && printf "%5d:%02d mm:ss" $mins $secs && return
+    (( mins < 60 )) && printf "%5d:%02d mm:ss" $mins $secs && return
     hours=$((mins / 60))
     mins=$((mins - 60 * hours))
     printf "%2d:%02d:%02d hh:mm:ss" $hours $mins $secs
@@ -3361,7 +3361,7 @@ _cache_() {
 
     local short
     short=$(short_dir $cache_dir)
-    if [[ -n $CACHE_EXPIRE && $CACHE_EXPIRE -gt 0 ]]; then
+    if [[ -n $CACHE_EXPIRE ]] && (( CACHE_EXPIRE > 0 )); then
         #vsay "Find $(pqn $ext) files to expire in $(pq $short)"
         local expire
         expire=$(find $cache_dir -name "*$ext" -ctime +$CACHE_EXPIRE)
@@ -3514,7 +3514,7 @@ yes_NO_loud() { _yes_no_ -1  1 "((y/N))" "$1"; }
 _yes_no_() {
     local ans quiet_ret=$1 def_ret=$2 yn=$3 prompt=$4
 
-    [[ -n $quiet_mode && $quiet_ret -ge 0 ]] && return $quiet_ret
+    [[ -n $quiet_mode ]] && (( quiet_ret >= 0 )) && return $quiet_ret
 
     while true; do
         echo -ne "$text_co$prompt$prompt_co $yn?$nc "
@@ -3522,7 +3522,7 @@ _yes_no_() {
         case x$ans in
             x[Yy]*) return 0;;
             x[Nn]*) return 1;;
-                 x) [[ $def_ret -ge 0 ]] && return $def_ret;;
+                 x) (( def_ret >= 0 )) && return $def_ret;;
         esac
 
         [[  -z $ans ]] && echo -n 'You must answer "y" or "n".  '
@@ -3784,7 +3784,7 @@ check_theme_dir() {
 clear_outputs() {
     local names files stop=${1:-0} pretend=$2 delete=$3
     for i in $(reverse $all_stages); do
-        [[ $i -lt $stop ]] && break
+        (( i < stop )) && break
         local name=stage-$i.out
         local file=$output_dir/$name
         [[ -f $file ]] || continue
@@ -3854,7 +3854,7 @@ do_pretend() {
         pretty_output $stage
     fi
 
-    if [[ $stage -gt 0 ]]; then
+    if (( stage > 0 )); then
         echo
         do_one_stat
     fi
@@ -4028,7 +4028,7 @@ _gather_() {
 gather_cnt() { gather "$@" | wc -l ;}
 
 gather_any() {
-    [[ $(gather_cnt "$@") -ge 1 ]]
+    (( $(gather_cnt "$@") >= 1 ))
     return $?
 }
 
