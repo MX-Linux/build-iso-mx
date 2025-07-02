@@ -203,7 +203,7 @@ main() {
        -show-stages)    show_stages=true                        ;;
           -update|u)    update_mode=true                        ;;
           -UPDATE|U)    UPDATE_mode=true                        ;;
-      -user-default) user_default_file=true                     ;;
+      -user-default)                                            ;;
          -VERBOSE|V)   verbose_mode=true                        ;;
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
@@ -620,7 +620,9 @@ Output
         echo
     fi
     do_one_stat
+    # shellcheck disable=SC2059
     printf "$pretty_fmt"  REMASTER_DIR  "$remaster_dir"
+    # shellcheck disable=SC2059
     printf "$pretty_fmt" "on device"    "$(df "$remaster_dir" | tail -n1 | cut -f1 -d" ")"
 }
 
@@ -2101,6 +2103,7 @@ display_tmpfs() {
     fmt="    $high_co%-35s $(pqn %6s)/$(pqn %s) meg$nc\n"
     dir=$remaster_dir/work/$name/squashfs
     sizes=$(df -m $dir | awk '{size=$2; used=$3} END {print used " " size}')
+    # shellcheck disable=SC2059
     printf "$fmt" "$name" $sizes
 }
 
@@ -2213,7 +2216,7 @@ read_error_regexes() {
 
 join_lines() {
     local sep file=$1
-    while read line; do
+    while read -r line; do
         echo -n "$sep$line"
         sep=${2:-,}
     done << Join_Lines
@@ -2371,7 +2374,7 @@ my_ps() {
 
 get_cache_free_swap() {
     local lab free cache swap
-    while read lab total used free cache; do
+    while read -r lab total used free cache; do
         case $lab in
             Mem:) echo free=$free
                   echo cache=$cache ;;
@@ -2694,9 +2697,9 @@ check_missing() {
     echo -e "$missing"     >  /Build/missing-$label.list
 
     local mcnt
-    mcnt=$(printf "$missing" | wc -w)
+    mcnt=$(echo -e "$missing" | wc -w)
     _say_ "$high_co------------------------------------------------$nc"
-    say_in $high_co "$missing"
+    _say_ "$(echo -e "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
     #_say_ "$(printf "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
     error "$(plural $mcnt "$(pqw %n) missing $label package%s")"
 }
@@ -3055,7 +3058,12 @@ prep_chroot() {
     mount_deb_cache
 
     for fs in proc sys; do
-        bind_mount /$fs $sqfs_dir/$fs
+        say "Mounting $(pq /$fs) in chroot"
+        if ! bind_mount /$fs $sqfs_dir/$fs; then
+            error "Failed to mount $(pq /$fs) in chroot"
+            my_exit
+        fi
+        say "Successfully mounted $(pq /$fs)"
     done
 
     if ! [[ -e $sqfs_dir/dev/tty ]]; then
@@ -3146,7 +3154,7 @@ make_build_dir() {
 : \${TEST_PART:=$TEST_PART}
 Env_In
 
-    local lt_blue="\e[1;34m" lt_green="\e[1;32m" lt_red="\e1;31m" nc="\e[0m"
+    local lt_blue="\e[1;34m" lt_green="\e[1;32m" lt_red="\e[1;31m" nc="\e[0m"
 
     cat << Bashrc > $b_dir/bashrc
 source ~/.bashrc
@@ -3491,6 +3499,7 @@ say_fmt() {
     local lab=$1 val=$2
     local fmt
     fmt="%15s:$(pqn %5s) meg\n"
+    # shellcheck disable=SC2059
     say "$(printf "$fmt" "$lab" "$val")"
 }
 
@@ -3505,7 +3514,7 @@ _say_() {
 }
 
 error()  {
-    _say_ "${err_co}Error:$bold_co $*$nc"
+    _say_ "${err_co}Error:$bold_co $@$nc"
 
     YES_no "Ignore this error" || my_exit 1
     say "Error ignored"
@@ -3565,7 +3574,7 @@ _yes_no_() {
 
     while true; do
         echo -ne "$text_co$prompt$prompt_co $yn?$nc "
-        read ans
+        read -r ans
         case x$ans in
             x[Yy]*) return 0;;
             x[Nn]*) return 1;;
@@ -3583,7 +3592,7 @@ _yes_no_() {
 #==============================================================================
 show_stages() {
     echo -e "${bold_co}The stages of processsing:$nc\n"
-    while read num title; do
+    while read -r num title; do
         printf " $bold_co%2d$nc. $text_co%s$nc\n" "$num" "$title"
     done << Extract_Stages
 $(sed -r -n "s/^\s*enter_stage\s*([0-9]+)\s*\"[!]?([^\"]+)\".*/\1 \2/p" $0)
@@ -3604,7 +3613,7 @@ Stages_Blurb
 
 show_parts() {
     echo -e "${bold_co}The parts within stage-4:$nc\n"
-    while read num title; do
+    while read -r num title; do
         printf " $bold_co%2d$nc. $text_co%s$nc\n" "$num" "$title"
     done << Extract_Parts
 $(sed -r -n 's=^\s.*do_part\s+([0-9]+)\s+"[!]?([^"]+)".*=\1 \2=p' $0)
@@ -3700,11 +3709,14 @@ my_select() {
     local val input
     while [[ -z $val ]]; do
 
-        printf "$bold_co$title$nc\n"
-        printf "$display" | column | sed -r "s/(^|\t)( ?[0-9]+)/\t$green\2$nc/g"
-        printf "$prompt"
+        # shellcheck disable=SC2059
+        printf "%s" "$bold_co$title$nc\n"
+        # shellcheck disable=SC2059
+        printf "%s" "$display" | column | sed -r "s/(^|\t)( ?[0-9]+)/\t$green\2$nc/g"
+        # shellcheck disable=SC2059
+        printf "%s" "$prompt"
 
-        read input
+        read -r input
         if [[ -z $input ]] || ! echo "$input" | grep -q "^[0-9]\+$"; then
             echo "You must input a number"
             continue
@@ -3735,7 +3747,7 @@ update_default() {
 
     while true; do
         echo -n "Enter new default> "
-        read value
+        read -r value
         echo
         : ${value:=$orig_val}
         if echo "$value" | grep -q '["\\$]'; then
@@ -3949,6 +3961,7 @@ do_one_stat() {
     # Need to evaluate: (2500 + 70 * pkg_count) / 10 to get MB
     local needed
     needed=$(((2500 + 70 * pkg_count) / 10))
+    # shellcheck disable=SC2059
     say "$(printf "size of tmps: $(pqn %6d) MB\n" $needed)"
 }
 
@@ -3984,6 +3997,7 @@ pretty_output() {
     local name value
     for name in $(global_names "$@"); do
         eval value=\"\$$name\"
+        # shellcheck disable=SC2059
         printf "$pretty_fmt" "$name" "$value"
     done
 }
@@ -4187,7 +4201,7 @@ copy_template_dir() {
 
 only_overwrite() {
     local from_dir=$1  dest_dir=$2  from  dest
-    while read from; do
+    while read -r from; do
         dest=$dest_dir${from#"$from_dir"}
         [[ -f $dest ]] || continue
         echo "  --> ${dest#"$dest_dir"}"
