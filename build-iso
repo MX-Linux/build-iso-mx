@@ -741,7 +741,8 @@ do_stage_3() {
     HOST_HOSTNAME=$(hostname)
 
     local args
-    local next_output_file=$sqfs_output_dir/stage-$((stage + 1)).out
+    local next_output_file
+    next_output_file=$sqfs_output_dir/stage-$((stage + 1)).out
 
     [[ -n $interactive     ]] && args="--interactive"
     [[ -n $auto_mode       ]] && args="$args --auto"
@@ -1989,7 +1990,8 @@ mount_tmpfs() {
     say "The tmpfs will require $(pqn ${needed}) meg of RAM"
     display_cache_free_swap $cache $free $swap
 
-    local balance=$((free + swap - needed))
+    local balance
+    balance=$((free + swap - needed))
     (( balance < 0   )) && fatal "Need more memory than is available in RAM and swap"
     (( balance < 200 )) && error "Less than 200 Meg memory margin (free RAM + swap - needed)"
 
@@ -2401,7 +2403,8 @@ search_for_k_name() {
 
         # Search for kernel packages - try broader search patterns
         say "Searching for available kernel packages..."
-        local all_kernels=$(apt-cache search "^linux-image-" | cut -d" " -f1)
+        local all_kernels
+        all_kernels=$(apt-cache search "^linux-image-" | cut -d" " -f1)
         say "Available kernels in repository:"
         echo "$all_kernels" | head -10
 
@@ -2494,7 +2497,8 @@ apt_get_packages() {
 
     # First, simulate the installation to identify missing packages
     say "Simulating package installation to check availability..."
-    local temp_output=$(mktemp)
+    local temp_output
+    temp_output=$(mktemp)
     local simulation_output
     local missing_packages=""
 
@@ -2532,7 +2536,8 @@ apt_get_packages() {
 
     # If there are missing packages, prompt user
     if [[ -n $missing_packages ]]; then
-        local missing_cnt=$(echo "$missing_packages" | wc -w)
+        local missing_cnt
+        missing_cnt=$(echo "$missing_packages" | wc -w)
         say_in $high_co "$(plural $missing_cnt "$(pqw %n) $label package%s not available:")
 $missing_packages"
 
@@ -2542,7 +2547,8 @@ $missing_packages"
             available_packages=$(echo "$available_packages" | sed "s/\b$missing_pkg\b//g" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
         done
 
-        local available_cnt=$(echo "$available_packages" | wc -w)
+        local available_cnt
+        available_cnt=$(echo "$available_packages" | wc -w)
         if (( available_cnt == 0 )); then
             error "No packages available for installation"
             return 1
@@ -2560,12 +2566,14 @@ $missing_packages"
     # Keep trying to install packages, removing problematic ones each time
     while [[ -n $remaining_packages ]]; do
         if (( attempt > 1 )); then
-            local remaining_cnt=$(echo "$remaining_packages" | wc -w)
+            local remaining_cnt
+            remaining_cnt=$(echo "$remaining_packages" | wc -w)
             say "Attempt $attempt: trying to install remaining $remaining_cnt packages..."
         fi
 
         # Try to install current package list (with real-time output)
-        local temp_output=$(mktemp)
+        local temp_output
+        temp_output=$(mktemp)
         local exit_code
 
         # Run apt-get with tee to show output in real-time and capture to file
@@ -2631,7 +2639,8 @@ $missing_packages"
 
     # Report any packages that couldn't be installed
     if [[ -n $failed_packages ]]; then
-        local failed_cnt=$(echo "$failed_packages" | wc -w)
+        local failed_cnt
+        failed_cnt=$(echo "$failed_packages" | wc -w)
         # Clean up the failed packages list (remove leading/trailing spaces)
         failed_packages=$(echo "$failed_packages" | sed 's/^ *//;s/ *$//')
 	say_in $high_co "$(plural $failed_cnt "$(pqw %n) $label package%s could not be found:")
@@ -3263,13 +3272,15 @@ strip_color() { sed -r 's/\x1b\[[0-9;]+[mK]//g'; }
 
 cprint_left() {
     local width=$1 str=$2
-    local pad=$((width - $(str_len "$str")))
+    local pad
+    pad=$((width - $(str_len "$str")))
     printf "%s%${pad}s" "$str" ""
 }
 
 cprint_right() {
     local width=$1 str=$2
-    local pad=$((width - $(str_len "$str")))
+    local pad
+    pad=$((width - $(str_len "$str")))
     printf "%${pad}s%s" "" "$str"
 }
 
@@ -3910,7 +3921,8 @@ do_one_stat() {
 #------------------------------------------------------------------------------
 global_names() {
     local stage=${1:-$stage}
-    local prev=$((stage - 1))
+    local prev
+    prev=$((stage - 1))
 
     # Gather input files
     local files=$normal_defaults
