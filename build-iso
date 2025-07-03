@@ -2875,13 +2875,11 @@ copy_second_kernel() {
 }
 
 write_version_files() {
-    local prefix=$1
-
-    local version_info_file=$prefix/etc/live/version/antiX
+    local version_info_file=/etc/live/version/antiX
     mkdir -p "$(dirname $version_info_file)"
     write_version_info > $version_info_file
 
-    echo "$fancy_name" > $prefix/etc/antix-version
+    echo "$fancy_name" > /etc/antix-version
 
     local rstring
     rstring="$(dd status=none if=/dev/urandom bs=1 count=40 2>/dev/null | md5sum | cut -d" " -f1)"
@@ -2892,9 +2890,9 @@ write_version_files() {
         title="Original $DISTRO_NAME $DISTRO_VERSION $ISO_ARCH"
         [[ $DISTRO_NAME =~ ^antiX && -n $FLAV ]] && title="$title $FLAV"
     fi
-    local linuxfs_version_file=$prefix/etc/live/version/linuxfs.ver
-    mkdir -p "$(dirname $linuxfs_version_file)"
-    cat > $linuxfs_version_file << Linuxfs_Version
+    local linuxfs_version_file=/etc/live/version/linuxfs.ver
+    mkdir -p "$(dirname "$linuxfs_version_file")"
+    cat > "$linuxfs_version_file" << Linuxfs_Version
 === $rstring
 
 title: $title
