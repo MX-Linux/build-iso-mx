@@ -886,8 +886,8 @@ do_stage_4() {
 
     if ! is_antiX; then
         local early_deb
-        if ls /*${ARCH}.deb >/dev/null 2>&1; then
-            for early_deb in /*${ARCH}.deb; do
+        if ls /*"${ARCH}".deb >/dev/null 2>&1; then
+            for early_deb in /*"${ARCH}".deb; do
                 [[ -f "$early_deb" ]] || continue
                 say "Install arch deb package $(pq "$early_deb")"
                 apt-get install "$early_deb"; rm "$early_deb"
@@ -1151,6 +1151,7 @@ do_stage_4() {
         for package in $reconfigure; do
             dpkg-reconfigure -f noninteractive "$package"
         done
+        echo  # Ensure clean line separation after dpkg-reconfigure
         check_errors_lax
     fi
 
@@ -1988,6 +1989,7 @@ leave_stage() {
 # Routines for tmpfs mounts
 #==============================================================================
 
+# shellcheck disable=SC2120
 mount_tmpfs() {
     local dir needed name
     dir=${1:-$sqfs_dir}
@@ -2032,6 +2034,7 @@ mount_tmpfs() {
     fi
 }
 
+# shellcheck disable=SC2120
 umount_tmpfs() {
     local dir name
     dir=${1:-$sqfs_dir}
@@ -2788,11 +2791,11 @@ make_xorriso_iso() {
     opts_2="$opts_2 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
     opts_2="$opts_2 -isohybrid-apm-hfsplus -isohybrid-gpt-basdat"
 
-    cmd="$prog $(echo $opts_1) -V $label $(echo $opts_2) -o $file $dir"
-    echo $cmd
+    cmd="$prog $opts_1 -V $label $opts_2 -o $file $dir"
+    echo "$cmd"
 
     $cmd 2>&1 || error "iso file creation failed"
-    isohybrid --uefi $file
+    isohybrid --uefi "$file"
 }
 
 
@@ -2925,7 +2928,7 @@ write_initrd_release() {
     local file1=$dir/etc/$name  file2=$dir/etc/live/version/$name
     $sudo mkdir -p "$(dirname $file1)" "$(dirname $file2)"
 
-    : ${ASCII_CODE_NAME:="$(echo $CODE_NAME | utf8_to_ascii)"}
+    : ${ASCII_CODE_NAME:="$(echo "$CODE_NAME" | utf8_to_ascii)"}
 
     if [[ $ASCII_CODE_NAME != "$CODE_NAME" ]]; then
 
@@ -3361,10 +3364,10 @@ elapsed() {
     (( secs < 60 )) && printf "%8d %s\n" $secs "$(plural $secs "sec%s")" && return
     mins=$((secs / 60))
     secs=$((secs - 60 * mins))
-    (( mins < 60 )) && printf "%5d:%02d mm:ss" $mins $secs && return
+    (( mins < 60 )) && printf "%5d:%02d mm:ss\n" $mins $secs && return
     hours=$((mins / 60))
     mins=$((mins - 60 * hours))
-    printf "%2d:%02d:%02d hh:mm:ss" $hours $mins $secs
+    printf "%2d:%02d:%02d hh:mm:ss\n" $hours $mins $secs
 }
 
 #==============================================================================
@@ -3745,7 +3748,7 @@ update_default() {
         echo -n "Enter new default> "
         read -r value
         echo
-        : ${value:=$orig_val}
+        : ${value:="$orig_val"}
         if echo "$value" | grep -q '["\\$]'; then
             warn "Removing [\"\\\$] characters"
             # Remove all occurrences of " \ $
