@@ -251,12 +251,12 @@ main() {
 
     # shellcheck disable=SC2034
     set_colors() {
-          black="\x1B[0;30m";     blue="\x1B[0;34m";      green="\x1B[0;32m";
-           cyan="\x1B[0;36m";      red="\x1B[0;31m";     purple="\x1B[0;35m";
-          brown="\x1B[0;33m";  lt_gray="\x1B[0;37m";    dk_gray="\x1B[1;30m";
-        lt_blue="\x1B[1;34m"; lt_green="\x1B[1;32m";    lt_cyan="\x1B[1;36m";
-         lt_red="\x1B[1;31m";  magenta="\x1B[1;35m";     yellow="\x1B[1;33m";
-          white="\x1B[1;37m";  rev_red="\x1B[0;7;31m";       nc="\x1B[0m";
+          black=$'\x1B[0;30m';     blue=$'\x1B[0;34m';      green=$'\x1B[0;32m';
+           cyan=$'\x1B[0;36m';      red=$'\x1B[0;31m';     purple=$'\x1B[0;35m';
+          brown=$'\x1B[0;33m';  lt_gray=$'\x1B[0;37m';    dk_gray=$'\x1B[1;30m';
+        lt_blue=$'\x1B[1;34m'; lt_green=$'\x1B[1;32m';    lt_cyan=$'\x1B[1;36m';
+         lt_red=$'\x1B[1;31m';  magenta=$'\x1B[1;35m';     yellow=$'\x1B[1;33m';
+          white=$'\x1B[1;37m';  rev_red=$'\x1B[0;7;31m';       nc=$'\x1B[0m';
     }
 
     if [[ $color_mode != "off" ]]; then
@@ -1149,7 +1149,7 @@ do_stage_4() {
         cnt=$(echo "$reconfigure" | wc -w)
         psay "$cnt" "Automatic reconfiguration of $(pqn %n) package%s"
         for package in $reconfigure; do
-            dpkg-reconfigure -f noninteractive "$package"
+            dpkg-reconfigure -f noninteractive "$package" 2>&1
         done
         echo  # Ensure clean line separation after dpkg-reconfigure
         check_errors_lax
@@ -1159,7 +1159,8 @@ do_stage_4() {
        if [[  -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
             say "Set timezone and localtime to $(pq $TIME_ZONE)"
             echo $TIME_ZONE > /etc/timezone
-            DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata
+            DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata 2>&1
+            echo  # Ensure clean line separation after tzdata reconfigure
             end_part_lax
         else
             error "Unknown time zone $(pqw $TIME_ZONE)"
