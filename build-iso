@@ -2410,8 +2410,8 @@ is_zombie_or_kthread() {
 #------------------------------------------------------------------------------
 search_for_k_name() {
     local search_name
-    search_name=$(echo $K_NAME | sed -e "s/\./\\./g" -e "s/\*/[0-9]+/g")
-    say "Search for kernel matching regex $(pq $K_NAME)"
+    search_name=$(echo "$K_NAME" | sed -e "s/\./\\./g" -e "s/\*/[0-9]+.*/g" -e "s/\+/\\+/g")
+    say "Search for kernel matching regex $(pq "$K_NAME")"
     local name
 
     # Check if we're running inside chroot (Stage 4)
@@ -2427,27 +2427,26 @@ search_for_k_name() {
         say "Available kernels in repository:"
         echo "$all_kernels" | head -10
 
-        # Try the specific search
-        name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
+        # Try the specific search with version sorting to get the highest version
+        name=$(apt-cache search "^linux-image-$search_name" | cut -d" " -f1 | grep -vE "\-(dbg|unsigned|signed-template|cloud|rt)" | sort -V | tail -1)
 
-        # If no exact match, try looser patterns
+        # Backup: if no specific kernel found, try broader search
         if [[ -z $name ]]; then
-            say "No exact match found, trying broader search..."
-            # Try without the trailing $ anchor
-            name=$(apt-cache search "^linux-image-$search_name" | cut -d" " -f1 | sort -V | tail -n 1)
+            say "No specific kernel found, trying broader search..."
+            name=$(apt-cache search "^linux-image-" | cut -d" " -f1 | grep -vE "\-(dbg|unsigned|signed-template|cloud|rt)" | sort -V | tail -1)
         fi
 
         if [[ -z $name ]]; then
-            warn "No kernel matching $(pqw $K_NAME) found in target repository. Available kernels:"
+            warn "No kernel matching $(pqw "$K_NAME") found in target repository. Available kernels:"
             apt-cache search "^linux-image-" | cut -d" " -f1 | head -20
             my_exit
         fi
     else
         # We're outside chroot - fallback to host system
         say "Running on host system, using host package cache"
-        name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | sort -V | tail -n 1)
+        name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | grep -vE "\-(dbg|unsigned|signed-template|cloud|rt)" | sort -V | tail -1)
         if [[ -z $name ]]; then
-            warn "No kernel matching $(pqw $K_NAME) found. Possible kernels:"
+            warn "No kernel matching $(pqw "$K_NAME") found. Possible kernels:"
             apt-cache search linux-image-.\*-antix | cut -d" " -f1
             my_exit
         fi
@@ -2460,7 +2459,7 @@ search_for_k_name() {
 vmlinuz_gcc_version() {
     local vmlinuz=$1
     $tools/extract-vmlinux $vmlinuz  2>/dev/null | strings \
-        | sed -n -r '/gcc version/ s/.*gcc version ([0-9.]+).*/\1/p' | head -n 1
+        | sed -n -r '/gcc version/ s/.*gcc version ([0-9.]+).*/\1/p' | head -1
 }
 
 check_kernel_gcc() {
@@ -3514,7 +3513,7 @@ _say_() {
 }
 
 error()  {
-    _say_ "${err_co}Error:$bold_co $@$nc"
+    _say_ "${err_co}Error:$bold_co $*$nc"
 
     YES_no "Ignore this error" || my_exit 1
     say "Error ignored"
