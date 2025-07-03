@@ -1149,9 +1149,8 @@ do_stage_4() {
         cnt=$(echo "$reconfigure" | wc -w)
         psay "$cnt" "Automatic reconfiguration of $(pqn %n) package%s"
         for package in $reconfigure; do
-            dpkg-reconfigure -f noninteractive "$package" 2>&1
+            dpkg-reconfigure -f noninteractive "$package" 2>&1 && echo
         done
-        echo  # Ensure clean line separation after dpkg-reconfigure
         check_errors_lax
     fi
 
@@ -1159,8 +1158,7 @@ do_stage_4() {
        if [[  -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
             say "Set timezone and localtime to $(pq $TIME_ZONE)"
             echo $TIME_ZONE > /etc/timezone
-            DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata 2>&1
-            echo  # Ensure clean line separation after tzdata reconfigure
+            DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata 2>&1 && echo
             end_part_lax
         else
             error "Unknown time zone $(pqw $TIME_ZONE)"
@@ -3340,6 +3338,7 @@ _end_timer_() {
     title=$(cprint_left 36 "$2")
     eval local start_t=\$$name
     # shellcheck disable=SC2154
+    echo  # Ensure we start on a fresh line
     _say_ "${time_co}time for $text_co$title$nc $(pqn "$(elapsed $start_t)")$nc"
 }
 
