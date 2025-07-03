@@ -87,7 +87,7 @@ Usage
 # Output from start_main() does not get vlogged
 main() {
     unset UMOUNT_ERRORS
-    MAIN_T=$(date +%s)
+    MAIN_T=$EPOCHSECONDS
 
     local firefox_prefs="/etc/skel/.mozilla/firefox/*/prefs.js"
 
@@ -136,7 +136,7 @@ main() {
     local partial_name="PARTIAL"
     local partial_file="$build_dir/$partial_name"
     local seed_fname="random-seed"
-    local user_defaults user_default_file apt_yes
+    local user_defaults apt_yes
     # local initrd_encrypt
 
     local short_stack="aAcCdDefFhiIjmnNpqrsuUvV0-8"
@@ -500,7 +500,7 @@ Remaster_Blurb
     load_defaults
 
     # Fill in default value
-    : "${RELEASE_DATE:=$(date +"%-e %B %Y")}"
+    : "${RELEASE_DATE:=$(printf '%(%e %B %Y)T' -1)}"
 
     choose "local mirror" LOCAL_MIRROR                       \
                 us gr au be bg br ch cz de dk ee es "fi" fr  \
@@ -1958,7 +1958,7 @@ enter_stage() {
     has_word EXIT_STAGE $stage && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn $stage)$nc"
     [[ -n $stage ]] && grep "^$stage$" $did_stage_file 2>/dev/null && fatal "Re-entering stage $stage"
 
-    _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(date +"%F %T %Z")"
+    _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(printf '%(%F %T %Z)T' -1)"
     [[ -z $quiet_mode ]] && (( stage > 0 )) \
         && say "Making: $(pq $full_distro_name) with kernel $(pq $K_NAME)"
 
@@ -2256,7 +2256,7 @@ do_part() {
     pnum="$(printf "%2d" $part)"
 
     _say_
-    _say_ "${bold_co}Part $num_co$pnum$text_co: $ptitle$nc @ $(date +"%F %T %Z")"
+    _say_ "${bold_co}Part $num_co$pnum$text_co: $ptitle$nc @ $(printf '%(%F %T %Z)T' -1)"
     [[ -n $quiet_mode ]] || _say_ "Making: $full_distro_name"
 
     # Update window title
@@ -2896,7 +2896,7 @@ write_version_files() {
 === $rstring
 
 title: $title
-creation date: $(date +"%e %B %Y %T %Z")
+creation date: $(printf '%(%e %B %Y %T %Z)T' -1)
 kernel: $kernels
 inxi version: $fancy_name
 Linuxfs_Version
@@ -3324,8 +3324,7 @@ short_dir() {
 #==============================================================================
 start_timer() {
     local name=${1:-START_T}
-    # shellcheck disable=SC2046
-    eval $name=\"$(date +%s)\"
+    eval $name=\"$EPOCHSECONDS\"
 }
 
 end_timer() {
@@ -3343,7 +3342,7 @@ _end_timer_() {
 elapsed() {
     local secs mins hours start_time current_time
     start_time=${1:-0}
-    current_time=$(date +%s)
+    current_time=$EPOCHSECONDS
 
     # Validate timestamps and calculate safely
     if [[ ! "$start_time" =~ ^[0-9]+$ ]] || (( start_time <= 0 )); then
@@ -4017,7 +4016,7 @@ on_exit() {
 
     [[ -n $DID_WINDOW_TITLE ]] &&  echo -ne "\e]0;\a"
 
-    et=$((-MAIN_T + $(date +%s)))
+    et=$((-MAIN_T + EPOCHSECONDS))
     if (( et >= 30 )); then
     #if [[ -n $STAGE_1_T && -n $STAGE_6_T ]]; then
         _end_timer_ MAIN_T "$ME $ARCH $FLAV"
@@ -4210,7 +4209,7 @@ Only_Overwrite
 
 update_add_remove_lists() {
     local flav dir fname file pkgs date
-    date=$(date +"%e %B, %Y")
+    date=$(printf '%(%e %B, %Y)T' -1)
 
     for flav in $(flavour_list); do
         dir=$template/$flav
