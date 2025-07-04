@@ -167,6 +167,8 @@ main() {
                     shift         ;;
     -user-default)  (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -$arg)"
                     val=$1
+                    # Use basename to allow both "filename" and "Input/filename" formats
+                    val=$(basename "$val")
                     user_defaults="$input_dir/$val"
                     [[ ! -e "$user_defaults" ]] \
                         && fatal "Default file not found -$arg: $(pqw "$val")"
