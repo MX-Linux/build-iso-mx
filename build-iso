@@ -72,8 +72,6 @@ Options:
     --show-stages       Show the stages of processing
     --show-parts        Show parts of stage-$chroot_stage and how to control them
     -0 -- -8            Start over from stage N.
-    --stop5				Stop process at Stage 5 (cleanup)
-    --stop8				Stop process at Stage 8 (iso generation)
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
