@@ -1,5 +1,6 @@
 avahi-daemon
 bzip2
+cli-installer-mx
 curl
 dialog
 file
