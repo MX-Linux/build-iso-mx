@@ -83,7 +83,6 @@ fonts-wqy-microhei #Chinese
 galculator
 #galternatives
 gcc-14-base
-gcc
 #gconf-service
 #gconf2
 #gconf2-common

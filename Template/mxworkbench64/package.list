@@ -139,7 +139,6 @@ isc-dhcp-common
 isomaster
 jmtpfs
 job-scheduler
-jq
 keepassx
 keepassxc
 kmod
@@ -169,7 +168,6 @@ moreutils
 mount
 mpt-status
 mx-comfort-themes
-mx-datetime
 mx-idevice-mounter
 mx-live-usb-maker
 mx-network-assistant
@@ -186,7 +184,6 @@ network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 nmap
 nmon
-nvme-cli
 onboard
 open-vm-tools
 openipmi
