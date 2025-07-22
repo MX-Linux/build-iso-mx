@@ -59,6 +59,7 @@ TORAM_ALL_OTHER_FILES="boot EFI version"
           LOG_FILE="$LOG_DIR/initrd.log"
 
             MY_LOG=/init.log
+      CHECKMD5_LOG=/checkmd5.log
            VID_DIR="/etc/live/version"
           VID_FILE="$VID_DIR/linuxfs.ver"
           MAKE_OLD="rootfs xtra deb xtra.tgz linuxfs.md5 state"
@@ -389,6 +390,9 @@ main_wrapper() {
 
     write_log_files $MY_LOG $NEW_ROOT/$LOG_FILE
     MY_LOG=$NEW_ROOT/$LOG_FILE.color
+    local new_checkmd5_log=$NEW_ROOT/$LOG_DIR/$(basename $CHECKMD5_LOG)
+    [ -f "$CHECKMD5_LOG" ] && cp -p "$CHECKMD5_LOG" "$new_checkmd5_log"
+    CHECKMD5_LOG=$new_checkmd5_log
     [ "$NO_SAVE_LOGS" ] || copy_live_logs "$NEW_ROOT" "$LOG_DIR"
 
     breakpoint b9    "Bash shell right before starting init"
@@ -5109,64 +5113,45 @@ check_vid() {
 #------------------------------------------------------------------------------
 check_md5()
 {
-    local dir=$1 passed="passed"  failed="failed"
+    local dir=$1
     [ ! -d "$dir" ] && dir=$(echo $1 | sed 's|\(.*\)/.*|\1|')
     dir=$(echo $dir | sed 's|/$||')
     if ! [ -d "$dir" ]; then
         msg $tbar
         err  "Directory %s does not exist" "$(fqe $1)"
-        err  "Can't perform %s check" md5
+        err  "Can't perform %s check" MD5
         msg $tbar
         return 0
     fi
 
-    local fcnt=0
+    local fcnt=$(ls -1dp $dir/*.md5 | grep -v "/$" | wc -l)
 
     vmsg 2 $tbar
-    #. Check <md5> of files in <some> directory
-    tsplash_alert_nc  "$_Check_X_of_files_in_Y_directory_Please_be_patient_" md5 "$(fq $dir)"
+    if tsplash_enabled; then
+        tsplash_alert_nc  "$_Check_X_of_files_in_Y_directory_Please_be_patient_" MD5 "$(fq $dir)"
+    fi
 
-    local file fname md5_file file_md5 true_md5 error
-    for fname in $(ls $dir); do
-        file=$dir/$fname
-        local size=$(du -sm $file | cut -f1)
-        md5_file="$file.md5"
-        [ -f "$md5_file" -a -f "$file" ] || continue
-
-        local size_str="$nc_co($num_co$size$nc_co M)"
-        # vmsg 1
-        vmsg 1 $tbar
-        vmsg_nc 1  "$_file_X_" "${nc_co}$fname $size_str"
-        fcnt=$(( fcnt + 1 ))
-        true_md5="$(head -n 1 $md5_file | cut -d" " -f1)"
-
-        (bogo_meter)&
-        local pid=$!
-        file_md5=$(md5sum $file | cut -d" " -f1)
-        kill -9 $pid
-
-        if [ "$file_md5" == "$true_md5" ]; then
-            vmsg_nc 1  "$_result_X_" "${ok_co}$passed"
-        else
-            vmsg_nc 1  "$_result_X_" "${err_co}$failed"
-            error=true
-        fi
-
-        vmsg 6  "         wanted: %s" "$num_co$true_md5"
-        vmsg 6  "            got: %s" "$num_co$file_md5"
-    done
-
-    vmsg 1
     if [ "$fcnt" = 0 ]; then
-        #. No <md5> checksums were found in <directory>.  Can't do any <md5> checks.
-        err  "$_No_X_checksums_were_found_in_Y_Cant_do_any_Z_checks_" md5 "$(fqe $dir)" md5
-    elif [ "$error" ]; then
-        non_fatal  "$_At_least_one_X_checksum_did_not_match_" md5
-    elif [ "$fcnt" = 1 ]; then
-        tsplash_alert  "$_Success_The_file_passed_"
+        err  "$_No_X_checksums_were_found_in_Y_Cant_do_any_Z_checks_" MD5 "$(fqe $dir)" MD5
     else
-        #. Success! All <count> file(s) passed
-        tsplash_alert  "$_Success_All_X_files_passed_" $(nq $fcnt)
+        # openvt does not pass the exit value through.
+        tsplash_enabled && local back_tty=$(fgconsole)
+        [ "$back_tty" != "" ] && chvt $MY_TTY
+        (cd "$dir" && checkmd5 --log=$CHECKMD5_LOG *.md5)
+        local rc=$?
+        [ "$back_tty" != "" ] && chvt $back_tty
+
+        if [ "$rc" = 1 ]; then
+            non_fatal  "$_At_least_one_X_checksum_did_not_match_" MD5
+        elif [ "$rc" = 2 ]; then
+            tsplash_alert "$_The_integrity_check_was_aborted_"
+        elif [ "$rc" != 0 ]; then
+            non_fatal "$_The_integrity_check_could_not_be_completed_"
+        elif [ "$fcnt" = 1 ]; then
+            tsplash_alert  "$_Success_The_file_passed_"
+        else
+            tsplash_alert  "$_Success_All_X_files_passed_" $(nq $fcnt)
+        fi
     fi
     vmsg 2 $tbar
 }
