@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Exec=sh .conky/conky-startup.sh
+Exec=sh /usr/share/mx-conky-data/conky-startup.sh
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
