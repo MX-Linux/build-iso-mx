@@ -25,7 +25,6 @@ colord-data
 # compton-conf
 # compton-conf-l10n
 conky-all
-conky-manager
 conky-toggle-mx
 coreutils
 custom-toolbox
