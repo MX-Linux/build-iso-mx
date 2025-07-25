@@ -1,7 +1,18 @@
+#apt-xapian-index
+#bootlogd
+#cpufrequtils
+#deborphan
+#ghostscript-x
 #hddtemp
 #mx-pkexec
 #pppoeconf
+#printer-driver-gutenprint
 #smxi-inxi-antix
+#systemd
+#systemd-shim
+#sysv-rc-conf
+#sysvinit-core
+#sysvinit-utils
 #xserver-xorg-input-evdev
 #xserver-xorg-input-kbd
 #xserver-xorg-input-mouse
@@ -17,18 +28,16 @@ amd64-microcode
 anacron
 antix-libs
 apt-transport-https
-#apt-xapian-index
 at-spi2-core
 atmel-firmware
 avahi-daemon
 avahi-sysvinit-compat
 bc
-bind9-host
 bind9-dnsutils
+bind9-host
 binutils
 bluez-firmware
 bluez-obexd
-#bootlogd
 broadcom-sta-dkms
 btrfs-progs
 build-essential
@@ -45,7 +54,6 @@ cli-shell-utils
 console-data
 console-setup
 console-setup-linux
-#cpufrequtils
 cryptsetup
 cryptsetup-bin
 cryptsetup-initramfs
@@ -60,7 +68,6 @@ dconf-gsettings-backend
 dctrl-tools
 ddm-mx
 debconf-utils
-#deborphan
 desktop-defaults-mx-applications
 desktop-defaults-mx-common
 desktop-file-utils
@@ -134,7 +141,6 @@ gcc
 gddrescue
 gdisk
 ghostscript
-#ghostscript-x
 glib-networking
 gnome-icon-theme
 gnupg2
@@ -146,7 +152,6 @@ grub-efi-ia32-bin
 grub-pc
 grub-themes-mx
 gsettings-desktop-schemas
-gsmartcontrol
 gstreamer1.0-alsa
 gstreamer1.0-libav
 gufw
@@ -202,8 +207,8 @@ manpages
 mbr
 mc
 mdadm
-memtest86+
 media-types
+memtest86+
 menu
 menu-l10n
 menu-xdg
@@ -216,7 +221,6 @@ most
 mpg123
 mtools
 mtr
-mx25-archive-keyring
 mx-boot-options
 mx-bootrepair
 mx-datetime
@@ -235,6 +239,7 @@ mx-tools
 mx-tweak
 mx-tweak-data
 mx-user
+mx25-archive-keyring
 nala
 ncurses-term
 netcat-traditional
@@ -267,11 +272,11 @@ patch
 pciutils
 pcmciautils
 pipewire-setup-mx
+pkexec
 plocate
 pm-utils
 pmount
 polkitd
-pkexec
 powermgmt-base
 printer-driver-all
 printer-driver-brlaser
@@ -282,7 +287,6 @@ printer-driver-dymo
 printer-driver-escpr
 printer-driver-foo2zjs
 printer-driver-fujixerox
-#printer-driver-gutenprint
 printer-driver-hpcups
 printer-driver-indexbraille
 printer-driver-m2300w
@@ -300,6 +304,7 @@ psutils
 pv
 python3-bluez
 python3-smbc
+qdiskinfo
 qt5-gtk-platformtheme
 qt6-translations-l10n
 qttranslations5-l10n
@@ -331,11 +336,6 @@ syslinux
 syslinux-common
 syslinux-utils
 system-tools-backends
-#systemd
-#systemd-shim
-#sysv-rc-conf
-#sysvinit-core
-#sysvinit-utils
 tcl
 tcpd
 tdb-tools
