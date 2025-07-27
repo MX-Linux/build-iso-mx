@@ -30,6 +30,7 @@ command-not-found
 conky-all
 conky-toggle-mx
 cracklib-runtime
+dbus-user-session
 debconf-kde-helper
 dh-python
 digikam

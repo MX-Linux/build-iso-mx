@@ -49,6 +49,7 @@ conky-all
 #consolekit
 #cryptsetup-modified-functions
 #cups-driver-gutenprint
+dbus-user-session
 dconf-cli
 dconf-editor
 #dconf-tools

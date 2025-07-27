@@ -28,6 +28,7 @@ conky-all
 conky-toggle-mx
 coreutils
 custom-toolbox
+dbus-user-session
 dconf-cli
 dconf-editor
 deadbeef
