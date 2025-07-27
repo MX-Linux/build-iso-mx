@@ -1,6 +1,7 @@
 #apt-xapian-index
 #bootlogd
 #cpufrequtils
+#dbus-user-session
 #deborphan
 #ghostscript-x
 #hddtemp
@@ -61,7 +62,6 @@ cups-browsed
 cups-bsd
 cups-filters-core-drivers
 curl
-dbus-user-session
 dbus-x11
 dc
 dconf-gsettings-backend
