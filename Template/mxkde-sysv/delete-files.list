@@ -1,0 +1,2 @@
+#usr/share/lightdm/lightdm.conf.d/40-kde-plasma-kf5.conf
+usr/share/sddm/themes/debian-theme # rm link that adds duplicate 
