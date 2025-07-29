@@ -16,8 +16,8 @@ DISTRO_VERSION="25_KDE_sysvinit"
 # K_VERSION="6.12.8"
 #UNSIGNED="-unsigned"
 
-ISO_FLAV="mxkde_sysv"
 THEME="mxkde"
+ISO_FLAV="mxkde-sysv"
 ARCH="amd64"
 
 ENABLE_LOCALES="Default"
