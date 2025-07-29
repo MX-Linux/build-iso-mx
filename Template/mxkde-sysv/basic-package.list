@@ -2,3 +2,4 @@ initscripts
 systemd-standalone-sysusers
 libpam-elogind
 elogind
+dbus-x11
