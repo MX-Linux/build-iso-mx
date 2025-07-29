@@ -267,7 +267,6 @@ qt6-image-formats-plugins
 qtvirtualkeyboard-plugin
 rdesktop
 sddm
-sddm-modified-init
 sddm-theme-breeze
 sendemail
 signon-plugin-oauth2
