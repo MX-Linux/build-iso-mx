@@ -1,6 +1,6 @@
 #amd64
 adduser
-advert-block-antix
+#advert-block-antix
 alsa-topology-conf
 alsa-ucm-conf
 apt
