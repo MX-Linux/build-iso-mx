@@ -58,6 +58,7 @@ dh-python
 #dukto
 #elogind
 #eudev
+engrampa
 exo-utils
 #faenza-cupertino-icons
 #faenza-cupertino-mini-icons
@@ -67,7 +68,6 @@ exo-utils
 #fbsplash-antix
 featherpad
 feh
-file-roller
 flac
 flatpak
 #flashplugin-nonfree
