@@ -248,14 +248,9 @@ nomacs-l10n
 #numix-gtk-theme
 #numix-icon-theme
 nvidia-detect
+onboard
+onboard-data
 open-vm-tools
-#openjdk-8-jre
-#openjdk-8-jre-headless
-#openjdk-8-jre-lib
-#openjfx - only in backports
-#openssh-blacklist
-#openssh-blacklist-extra
-#openssh-server
 orage
 pacpl
 papirus-mxblue
