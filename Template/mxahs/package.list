@@ -187,7 +187,7 @@ libvirglrenderer1
 #light-locker
 lightdm
 lightdm-gtk-greeter
-lightdm-gtk-greeter-mx23
+lightdm-gtk-greeter-mx
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-image-liquorix-amd64
