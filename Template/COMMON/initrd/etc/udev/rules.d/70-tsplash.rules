@@ -1,2 +1,0 @@
-KERNEL=="fb[0-9]", ACTION!="remove", RUN+="/live/bin/tsplash udev-rule"
-KERNEL=="fb[0-9]", ACTION=="remove",  RUN+="/live/bin/tsplash clear"
