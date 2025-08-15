@@ -1,0 +1,8 @@
+COUNTRY="Georgian"
+WM_LANG="en"
+KEYBOARDS="ge,us"
+KEYTABLE="ge"
+LANG="ka_GE.UTF-8"
+MIRROR="ru"
+TZ="Asia/Tbilisi"
+XKBLAYOUT="ge,us"

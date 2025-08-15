@@ -1,0 +1,8 @@
+COUNTRY="Latvijas"
+WM_LANG="en"
+KEYBOARDS="lv,us"
+KEYTABLE="lv-latin7"
+LANG="lv_LV.UTF-8"
+MIRROR="ee"
+TZ="Europe/Riga"
+XKBLAYOUT="lv,us"

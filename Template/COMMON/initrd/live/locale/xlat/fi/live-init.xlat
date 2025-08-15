@@ -1,0 +1,8 @@
+_Automount_enabled_="Automaattinen liittäminen otettu käyttöön"
+_Bad_fstab_option_X_="Virheellinen fstab valinta %s"
+_Creating_file_X_="Luodaan tiedostoa %s"
+_Creating_missing_X_file_="Luodaan puuttuva %s tiedosto"
+_Directory_not_found_X_="Hakemistoa %s ei löytynyt"
+_Disabling_splash_fbcondecor_inside_of_Virtual_Box_="Poistetaan splash (fbcondecor) käytöstä VirtualBoxin sisällä"
+_Mounting_all_devices_="Liitetään kaikki laitteet"
+_Setting_desktop_theme_to_X_="Asetetaan %s työpöydän ulkoasuksi"

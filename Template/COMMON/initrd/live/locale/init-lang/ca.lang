@@ -1,0 +1,8 @@
+COUNTRY="Català"
+WM_LANG="ca"
+KEYBOARDS="es,us"
+KEYTABLE="es"
+LANG="ca_ES.UTF-8"
+MIRROR="es"
+TZ="Europe/Madrid"
+XKBLAYOUT="es,us"

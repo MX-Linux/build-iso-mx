@@ -1,0 +1,8 @@
+COUNTRY="Canada"
+WM_LANG="fr"
+KEYBOARDS="us"
+KEYTABLE="us"
+LANG="fr_CA.UTF-8"
+MIRROR="ca"
+TZ="America/Montreal"
+XKBLAYOUT="ca,us"

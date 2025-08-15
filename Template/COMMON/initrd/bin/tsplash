@@ -1,0 +1,1175 @@
+#!/live/bin/bash
+
+#==============================================================================
+# Create a text based "splash screen" for starting live MX/antiX
+#
+# We rely on the openvt command to draw-on/work-in in a given tty.
+#
+# (C) 2019 Paul Banham <antiX@operamail.com>
+# License: GPLv3 or later
+#==============================================================================
+
+#          HUP INT  TERM
+trap ""     1   2    15
+
+ME=${0##*/}
+ME=${ME#_}
+
+#DB_HEIGHT=25
+SCREEN_COLS=100
+WELCOME_Y_OFFSET=-6
+RAW_SCREEN_HEIGHT=24
+
+RAW_Y0=1
+Y0=1
+X0=1
+
+CONF_FILE="/live/etc/tsplash.conf"
+
+PROG_BAR_PAUSE="1"
+
+VERBOSE_PROGRESS=true
+SHOW_BORDER=true
+SHOW_NAV=true
+
+MAX_PROGRESS=7
+PROG_CHARS=4
+
+LOCALE_DIR=/live/locale
+CONF_DIR=/live/config
+WORK_DIR=$CONF_DIR/tsplash
+LANG_FILE=$CONF_DIR/lang
+
+  WELCOME_FILE=$WORK_DIR/welcome
+     PROG_FILE=$WORK_DIR/progress
+      LOG_FILE=$WORK_DIR/$ME.log
+      TTY_FILE=$WORK_DIR/tty
+  TTY_NUM_FILE=$WORK_DIR/tty-num
+  MY_CONF_FILE=$WORK_DIR/config
+
+  PROG_BAR_WIDTH=90
+
+C_DOT="\u2022"
+C_DOT="•"
+
+FONT_DIRS="/usr/share/consolefonts /live/locale/fonts"
+
+USB_DIRTY_BYTES=20000000
+
+#------------------------------------------------------------------------------
+# The main event!
+#------------------------------------------------------------------------------
+main() {
+    local cmd=$1 ; shift
+    unset START_X
+
+    PATH=$PATH:/live/bin
+
+    stty cbreak -echo
+
+    printf "\e[?25l"  # cursor off
+    MY_TTY=$(tty)
+
+    case $MY_TTY in
+        /dev/tty*) TTY_NUM=${MY_TTY#/dev/tty} ;;
+                *) fatal "$ME can only be run in a virtual console %s" "$MY_TTY" ;;
+    esac
+
+    case $cmd in
+         start)  do_start "$@" ; my_exit  0 ;;
+    esac
+
+    echo -e "---------------------------" >> $LOG_FILE
+    log_it 'cmd: %s' "$cmd $*"
+
+    # Read back our configuration
+    /live/bin/bash -n $MY_CONF_FILE 2>/dev/null 1>/dev/null && . $MY_CONF_FILE
+
+    read_xlat $ME $LANG
+
+    WELCOME_MSG=$(cat $WELCOME_FILE 2>/dev/null)
+    eval_cmd "$cmd" "$@"
+}
+
+#------------------------------------------------------------------------------
+# This evaluates all commands except "start" which is a special case.
+#------------------------------------------------------------------------------
+eval_cmd() {
+    local cmd=$1 ; shift
+
+    case $cmd in
+             prog-bar) test_prog_bar "$@"  ;;
+               redraw) do_redraw           ;;
+         redraw-clear) do_redraw_clear     ;;
+                clear) clear               ;;
+             progress) do_progress  "$@"   ;;
+                alert) _do_alert  0 "$@"   ;;
+               alert2) _do_alert  1 "$@"   ;;
+                 warn) do_warn      "$@"   ;;
+
+      redraw-progress) do_redraw
+                       do_progress "$@"    ;;
+
+       clear-progress) clear_progress "$@"
+                       clear_prog_bar      ;;
+       clear-prog-bar) clear_prog_bar      ;;
+
+            udev-rule) do_redraw           ;;
+             udev-end) udev_end            ;;
+     prepare-consoles) do_final            ;;
+
+              start-x) START_X=true
+                       echo  "$_start_X_" >> $PROG_FILE
+                       do_redraw
+                       do_progress         ;;
+
+             shutdown) clear_progress $cmd ;;
+               reboot) clear_progress $cmd ;;
+
+         mk_swap_file) mk_swap_file   $cmd "$@"   ;;
+       frugal_install) frugal_install $cmd "$@"   ;;
+           copy_toram) copy_toram     $cmd "$@"   ;;
+
+                *) fatal 'Unknown command %s' "$cmd" ;;
+    esac
+
+    my_exit 0
+}
+
+#------------------------------------------------------------------------------
+# Clear the screen
+#------------------------------------------------------------------------------
+do_clear() {
+    log_it clear
+    clear
+}
+
+#------------------------------------------------------------------------------
+# Do what needs to be done at the end of the udev init.d script:
+# Show "udev done" progress and redraw the screen (since the framebuffer may
+# have changed when udev ran)
+#------------------------------------------------------------------------------
+udev_end() {
+    # Note: udev is the name of a program
+    echo -e  "$_udev_done_" >> $PROG_FILE
+    do_redraw $((MAX_PROGRESS - 1))
+}
+
+#------------------------------------------------------------------------------
+# This is called from rc.local when we are not in runlevel 5.
+#------------------------------------------------------------------------------
+do_final() {
+    echo -e  "$_prepare_consoles_" >> $PROG_FILE
+    do_redraw $MAX_PROGRESS
+}
+
+#------------------------------------------------------------------------------
+# Set up our work directory and then draw/redraw the screen
+#------------------------------------------------------------------------------
+do_start() {
+    local param=$1
+    # Set up files under /live/config/tsplash
+
+    rm -rf   "$WORK_DIR"
+    mkdir -p "$WORK_DIR"
+
+    local start_t=$(get_seconds $(cut -d" " -f22 /proc/$$/stat))
+
+    printf  "[%8s] Started %s with '%s'\n" "$start_t" "$ME" "$param" >> $LOG_FILE
+
+    test -r $CONF_FILE && /live/bin/bash -n $CONF_FILE &>/dev/null && . $CONF_FILE
+
+    # Read back what we stored when we started
+    LANG=$(cat $LANG_FILE 2>/dev/null)
+
+    echo "$TTY_NUM" > $TTY_NUM_FILE
+
+    read_xlat $ME $LANG
+
+    if [ -n "$param" ]; then
+        [ -z "${param##*[ba]*}" ] && SHOW_BORDER=true
+        [ -z "${param##*[BA]*}" ] && SHOW_BORDER=
+        [ -z "${param##*[va]*}" ] && VERBOSE_PROGRESS=true
+        [ -z "${param##*[VA]*}" ] && VERBOSE_PROGRESS=
+        [ -z "${param##*[na]*}" ] && SHOW_NAV=true
+        [ -z "${param##*[NA]*}" ] && SHOW_NAV=
+        [ -z "${param##*[ka]*}" ] && SHOW_KERNEL=true
+        [ -z "${param##*[KA]*}" ] && SHOW_KERNEL=
+        [ -z "${param##*[I]*}"  ] && ASCII_ONLY=true
+        [ -z "${param##*[w]*}"  ] && NAV_7=true
+
+        [ -z "${param##*[W]*}"  ] && NAV_7=
+    fi
+
+    cat <<Config > $MY_CONF_FILE
+VERBOSE_PROGRESS=$VERBOSE_PROGRESS
+SHOW_BORDER=$SHOW_BORDER
+SHOW_NAV=$SHOW_NAV
+NAV_7=$NAV_7
+SCREEN_COLS=$SCREEN_COLS
+PROG_BAR_PAUSE=$PROG_BAR_PAUSE
+SHOW_KERNEL=$SHOW_KERNEL
+LANG=$LANG
+Config
+
+    local WELCOME_MSG=$(get_welcome_msg)
+    echo "$WELCOME_MSG" > $WELCOME_FILE
+    log_it "$WELCOME_MSG"
+
+    touch $PROG_FILE
+    #echo "start" >> $PROG_FILE
+
+    do_redraw
+}
+
+#------------------------------------------------------------------------------
+# Add a line to the progress file and draw/redraw the progress
+#------------------------------------------------------------------------------
+do_progress() {
+    echo "$*" >> $PROG_FILE
+    set_color
+    screen_init
+    show_progress
+}
+
+#------------------------------------------------------------------------------
+# Put an "alert" message in the progress bar area (after clearing)
+#------------------------------------------------------------------------------
+_do_alert() {
+    local yoff=$1 ; shift
+    set_color
+    screen_init
+    local y=$(($PROG_BAR_Y - 3 + $yoff * 2))
+    clear_line $y
+    ctext $y "$*"
+}
+
+#------------------------------------------------------------------------------
+# Not used ATM
+#------------------------------------------------------------------------------
+do_warn() {
+    set_color
+    screen_init
+    clear_line $PROG_BAR_Y
+    ctext $PROG_BAR_Y "$*" $bold_co
+}
+
+#------------------------------------------------------------------------------
+# Clear the progress dots and the verbose progress line
+#------------------------------------------------------------------------------
+clear_progress() {
+    local cmd=$1
+    set_color
+    screen_init
+    log_it "clear line $PROG_Y"
+    clear_line $PROG_Y
+    clear_line $PROG_Y2
+    [ -z "$cmd" ] && return
+    ctext $PROG_Y2 "$cmd" $bold_co
+}
+
+#------------------------------------------------------------------------------
+# Redraw the screen then clear the dot progress
+#------------------------------------------------------------------------------
+do_redraw_clear() {
+    do_redraw 0
+    clear_progress
+}
+
+#------------------------------------------------------------------------------
+# Draw/redraw the screen.  This is needed when we start and when we draw
+# on a new tty and also after the framebuffer changes
+#------------------------------------------------------------------------------
+do_redraw() {
+    local cnt=$1
+    local tty=$(tty)
+    log_it 'redraw on %s' "$tty"
+    clear
+    set_color
+    set_console_width
+    screen_init
+
+    [ -n "$SHOW_BORDER" ] && box $SCREEN_BOX $lt_cyan
+
+    local arch
+    case $(uname -m) in
+          i686) arch=" 32-bit" ;;
+        x86_64) arch=" 64-bit" ;;
+    esac
+
+    if [ "$SHOW_KERNEL" ]; then
+        ctext "$((WELCOME_Y -2))" "$WELCOME_MSG" "$lt_cyan"
+        ctext "$WELCOME_Y"        "$(uname -r) $arch"  "$nc_co"
+    else
+        ctext "$WELCOME_Y" "$WELCOME_MSG" "$lt_cyan"
+    fi
+
+    show_progress $cnt
+
+    case $tty in
+        *tty7) [ "$NAV_7" ] && SHOW_NAV=true ;;
+    esac
+    [ -n "$SHOW_NAV" ] && draw_nav_keys
+}
+
+#------------------------------------------------------------------------------
+# Show a string of dots with some of them highlighted.  The number highlighted
+# is the number of lines in the "progress" file.
+#------------------------------------------------------------------------------
+show_progress() {
+    local p_cnt=${1:-$(cat $PROG_FILE 2>/dev/null | wc -l)}
+
+    local y=$PROG_Y
+    local x=$PROG_X
+
+    local off_color=$dk_grey
+
+    if [ "$ASCII_ONLY" ]; then
+        C_DOT="o"
+        off_color=$nc_co
+    fi
+
+    printf "$bold_co\e[$y;${x}H"
+    for cnt in $(seq 1 $MAX_PROGRESS); do
+        [ $cnt -gt ${p_cnt:-0} ] && printf "$off_color"
+        printf "%-${PROG_CHARS}s$C_DOT" ""
+    done
+    printf "$nc_co"
+
+    [ -n "$VERBOSE_PROGRESS" ] || return
+
+    last_progress
+}
+
+#------------------------------------------------------------------------------
+# Normal verbose progress showing last line of progress file
+#------------------------------------------------------------------------------
+last_progress() {
+    local last_msg=$(tail -n1 $PROG_FILE)
+    [ -n "$last_msg" ] || return
+    verbose_progress "$last_msg" $lt_grey
+}
+
+#------------------------------------------------------------------------------
+# Clear out verbose progress area and display any message and color
+#------------------------------------------------------------------------------
+verbose_progress() {
+    local msg=$1  color=${2:-$lt_grey}  y2=$PROG_Y2
+    clear_line $y2
+    ctext $y2 "$msg" $color
+}
+
+#------------------------------------------------------------------------------
+# Read in the variables from the initrrd-release file and then display the
+# wecome message.  Note that this is only called once by "start" and then
+# is cached.
+#------------------------------------------------------------------------------
+get_welcome_msg() {
+    local initrd_release=/etc/initrd_release
+    [ -r $initrd_release ] || initrd_release=/etc/initrd-release
+    read_distro_release $initrd_release
+    : ${DISTRO_BUG_REPORT_URL:=$BUG_REPORT_URL}
+    : ${DISTRO_NAME:=antiX}
+    : ${DISTRO_PRETTY_NAME:=antiX-17 (generic)}
+    # do_welcome "$DISTRO_PRETTY_NAME"
+    echo "$DISTRO_PRETTY_NAME"
+}
+
+#------------------------------------------------------------------------------
+# Return the number of seconds since the kernel started
+#------------------------------------------------------------------------------
+get_seconds() {
+    local msecs=${1:-$(cut -d" " -f22 /proc/self/stat)}
+    printf "%06d" $msecs | sed  -r 's/(..)$/.\1/'
+}
+
+#------------------------------------------------------------------------------
+# Draw the navigation help at the bottom of the screen
+# (a bit funky ATM re the START_X kludge)
+#------------------------------------------------------------------------------
+draw_nav_keys() {
+
+    local  left_press=$(mk_key_str  "$_see_boot_process_" 'Alt-F1')
+    [ "$START_X" ] && left_press=$(mk_key_str  "$_console_login_" 'Alt-F2')
+    local right_press=$(mk_key_str  "$_return_here_"      "Alt-F$TTY_NUM")
+
+    left_text  $((SCREEN_BOTTOM))  "  $left_press"
+    right_text $((SCREEN_BOTTOM))  "$right_press  "
+}
+
+#------------------------------------------------------------------------------
+# Blank out a line but stay away from the edges
+#------------------------------------------------------------------------------
+clear_line() {
+    local y=$1
+    printf "\e[$y;${SCREEN_X0}H%${SCREEN_WIDTH}s" ""
+}
+
+#------------------------------------------------------------------------------
+# Make a string to show a specific key press
+#------------------------------------------------------------------------------
+mk_key() {
+    local key=$1 c1=$lt_cyan c2=$lt_grey
+    echo  "<$c1$key$c2>"
+}
+
+mk_key_str() {
+    local str=$1  key=$2
+    printf "%s $lt_grey$str$nc_co" "$(mk_key "$key")"
+}
+
+#------------------------------------------------------------------------------
+# Read in a "distro release" file by making DISTRO_* variables based on the
+# variaables defined in the file
+#------------------------------------------------------------------------------
+read_distro_release() {
+    local file=$1
+    test -r "$file" || return
+    eval $(sed -r -n 's/^\s*([A-Z0-9_]+=)/DISTRO_\1/p' $file)
+}
+#------------------------------------------------------------------------------
+# Set the console font, based on langauge choose a size to make the screen
+# approximately $SCREEN_COLS characters wide
+#------------------------------------------------------------------------------
+set_console_width() {
+    local width=$SCREEN_COLS   lang=$LANG
+    local def_size=8  name=Terminus  ext=.psf
+
+    local dir fdir
+    for dir in $FONT_DIRS; do
+        test -d $dir || continue
+        fdir=$dir
+        break
+    done
+
+    [ -n "$fdir" ] || fatal 'could not find a font directory'
+    [ "$fdir" = /usr/share/consolefonts ] && ext=.psf.gz
+
+    local code
+    case ${lang%%_*} in
+                     kk|ky|tj) code='CyrAsia'  ;;
+                        ru|uk) code='CyrKoi'   ;;
+                  bg|mk|ru|sr) code='CyrSlav'  ;;
+      bs|hr|cs|hu|pl|ro|sk|sl) code='Lat2'     ;;
+        af|sq|ast|da|nl|et|fr) code='Lat15'    ;;
+    'fi'|de|is|id|pt|es|sv|tr) code='Lat15'    ;;
+                        lt|lv) code='Lat7'     ;;
+                           el) code='Greek'    ;;
+                            *) code='Uni2'     ;;
+    esac
+
+    local font file
+    # This loop only runs at most once.  Use "break" for control flow
+    while true; do
+
+        test -e /dev/fb0 || break
+
+        case $width in
+            [1-9][0-9]|[1-9][0-9][0-9]) ;;
+            off) break ;;
+              *) fatal 'Invalid %s value %s' "$conwidth" "$width"
+                 break ;;
+        esac
+
+        # Make sure we have at least 80 chars per line
+        local min_width=${MIN_SCREEN_WIDTH:-80}
+        [ $width -lt $min_width ] && width=$min_width
+
+        # Don't try setting font if we can't find the framebuffer!
+        local pixel_width=$(get_pixel_width) || return 1
+
+        log_it 'Width of screen in pixels %s'  "$pixel_width"
+        [ -z "$pixel_width" ] && break
+        local cmd_size=$((pixel_width / width))
+
+        local size
+        case $cmd_size in
+                  [1-7]) size=12x6                ;;
+                   [89]) size=16                  ;;
+                     10) size=20x10               ;;
+                     11) size=22x11               ;;
+                  1[23]) size=24x12               ;;
+                  1[45]) size=28x14               ;;
+                1[6789]) size=32x16               ;;
+           [23456][0-9]) size=32x16               ;;
+        esac
+
+        local try  f_size  f_face
+        for f_size in $size $def_size; do
+            for f_face in ${name}Bold VGA $name; do
+                try=$code-$f_face$f_size
+                #log_it "try: $try"
+                file=$dir/$try$ext
+                test -e $file || continue
+                font=$try
+                break
+            done
+            [ "$font" ] && break
+        done
+
+        break
+    done
+
+    # If we didn't find a font, fall back to VGA16 so we still
+    # get the right unicode chars for the chosen language
+    if [ -z "$font" ]; then
+        font=$code-VGA16
+        file=$fdir/$font$ext
+        test -e $file || return 2
+    fi
+
+     log_it 'Set font to %s' "$font"
+
+    setfont $file -C $(tty)
+
+    SCREEN_WIDTH=$(stty size 2>/dev/null | cut -d" " -f2)
+    log_it 'New screen width %s'  "$SCREEN_WIDTH"
+}
+
+#------------------------------------------------------------------------------
+# Get the width of the screen in pixels.
+# FIXME: should I default to 80 if there is no framebuffer?
+#------------------------------------------------------------------------------
+get_pixel_width() {
+    local res=$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)
+    [ -z "$res" ] && return 1
+    echo ${res%%,*}
+}
+
+#------------------------------------------------------------------------------
+# Current not used
+#------------------------------------------------------------------------------
+get_fbcondecor_width() {
+    local theme=${1:-default}
+    local res=$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)
+    [ -z "$res" ] && return
+    if test -e /dev/fbcondecor-jbb; then
+        local file=/etc/splash/$theme/${res/,/x}.cfg
+        test -r $file || return
+        sed -rn "s/^\s*tw=([0-9]+).*/\1/p" $file | tail -n1
+    else
+        echo ${res%%,*}
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Log time and message to log file
+#------------------------------------------------------------------------------
+log_it() {
+    local fmt=$1 ; shift
+    printf "[%8s] $fmt\n" "$(get_seconds)" "$@" >> $LOG_FILE
+}
+
+#------------------------------------------------------------------------------
+# "fatal" errors
+#------------------------------------------------------------------------------
+fatal() {
+    local fmt=$1 ; shift
+    printf "[%8s] Fatal: $fmt\n" "$(get_seconds)" "$@" >> $LOG_FILE
+    my_exit 2
+}
+
+#------------------------------------------------------------------------------
+# Other errors (which also cause us to exit)
+#------------------------------------------------------------------------------
+error() {
+    local fmt=$1 ; shift
+    printf "[%8s] Error: $fmt\n" "$(get_seconds)" "$@" >> $LOG_FILE
+    my_exit 2
+}
+
+#------------------------------------------------------------------------------
+# Convenience routines for coloring text inside of strings
+#------------------------------------------------------------------------------
+pq()      { echo "$hi_co$*$m_co"  ;}
+pqw()     { echo "$hi_co$*$m_co"  ;}
+
+#==============================================================================
+#=======  OLD CODE STARTS HERE ================================================
+
+#------------------------------------------------------------------------------
+# Create the geometry of the screen
+#------------------------------------------------------------------------------
+
+screen_init() {
+
+    test -e /dev/fb0 || ASCII_ONLY=true
+
+    : ${SCREEN_BORDER:=1}
+
+    RAW_X0=1 ; RAW_Y0=1
+    RAW_SCREEN_WIDTH=${WIDTH:-$(  stty size | cut -d" " -f2)}
+    RAW_SCREEN_HEIGHT=${HEIGHT:-$(stty size | cut -d" " -f1)}
+
+    RAW_SCREEN_HEIGHT=${DB_HEIGHT:-$RAW_SCREEN_HEIGHT}
+
+    REAL_HEIGHT=$RAW_SCREEN_HEIGHT
+
+    SCREEN_X0=$((SCREEN_BORDER + RAW_X0))
+    SCREEN_Y0=$((SCREEN_BORDER + RAW_Y0))
+
+    SCREEN_HEIGHT=$((RAW_SCREEN_HEIGHT - 2 * SCREEN_BORDER))
+    SCREEN_WIDTH=$(( RAW_SCREEN_WIDTH  - 2 * SCREEN_BORDER))
+
+    SCREEN_BOTTOM=$((RAW_SCREEN_HEIGHT - 1))
+
+    CENTER_Y=$((SCREEN_HEIGHT / 2 + RAW_Y0))
+    CENTER_X=$((RAW_SCREEN_WIDTH / 2))
+
+    SCREEN_BOX="$RAW_X0 $RAW_Y0 $RAW_SCREEN_WIDTH $RAW_SCREEN_HEIGHT"
+
+    WELCOME_Y=$((CENTER_Y + WELCOME_Y_OFFSET))
+    PROG_Y=$((WELCOME_Y +  2))
+    PROG_Y2=$((PROG_Y + 2))
+    PROG_BAR_Y=$(( SCREEN_HEIGHT * 3 / 4 - 1))
+
+    PROG_X=$(((RAW_SCREEN_WIDTH - MAX_PROGRESS * (PROG_CHARS + 1) - 2) / 2))
+
+}
+
+#------------------------------------------------------------------------------
+# Print the main "welcome" message which ATM is the distro pretty name
+#------------------------------------------------------------------------------
+do_welcome() {
+    local pretty_name=$1
+    echo "$pretty_name"
+
+}
+
+#------------------------------------------------------------------------------
+# Draw a box in a certain style and with a color
+# Style is set with -X flags.
+#------------------------------------------------------------------------------
+box() {
+    local flag
+    while [ $# -gt 0 -a -z "${1##-*}" ]; do
+        flag=$flag${1#-}
+        shift
+    done
+
+    #return
+    local x0=$1 y0=$2 width=$3 height=$4 color=$5
+
+    [ "$color" ] && printf "$nc$color"
+
+    local iwidth=$((width - 2))
+    local x1=$((x0 + width - 1))
+
+    #-- Set up line style and colors
+
+    [ "$ASCII_ONLY" ] && flag=A$flag
+    case $flag in
+      Ac) local hbar=' ' vbar=' ' tl_corn=' ' bl_corn=' ' tr_corn=' ' br_corn=' ' ;;
+      Ad) local hbar='=' vbar='|' tl_corn='#' bl_corn='#' tr_corn='#' br_corn='#' ;;
+      A*) local hbar='-' vbar='|' tl_corn='+' bl_corn='+' tr_corn='+' br_corn='+' ;;
+       c) local hbar=' ' vbar=' ' tl_corn=' ' bl_corn=' ' tr_corn=' ' br_corn=' ' ;;
+       b) local hbar='━' vbar='┃' tl_corn='┏' tr_corn='┓' bl_corn='┗' br_corn='┛' ;;
+       d) local hbar='═' vbar='║' tl_corn='╔' tr_corn='╗' bl_corn='╚' br_corn='╝' ;;
+       *) local hbar='─' vbar='│' tl_corn='┌' tr_corn='┐' bl_corn='└' br_corn='┘' ;;
+    esac
+
+    local bar=$(printf "%${iwidth}s" | sed "s/ /$hbar/g")
+    printf "\e[$y0;${x0}H$tl_corn$bar$tr_corn"
+    local y
+    for y in $(seq $((y0 + 1)) $((y0 + height - 2))); do
+        printf "\e[$y;${x0}H$vbar"
+        printf "\e[$y;${x1}H$vbar"
+    done
+    printf "\e[$((y0 + height - 1));${x0}H$bl_corn$bar$br_corn"
+}
+
+#======================================================================
+# Strings
+#======================================================================
+
+# Note, the 2nd regex helps shells that don't know about unicode as long as sed
+# is unicode-aware then you are okay.  Unfortunately BusyBox sed doesn't work
+# here for stripping colors.  So we CHEAT and use . instead of \x1B
+
+str_len() {
+    echo -n "$*" | sed -r -e 's/.\[[0-9;]+[mK]//g' | wc -m
+}
+
+str_rtrunc() {
+    local msg=$(echo "$1" | sed -r 's/.\[[0-9;]+[mK]//g')
+    local len=$2
+    echo "$msg" | sed -r "s/(.{$len}).*/\1/"
+}
+
+str_ltrunc() {
+    local msg=$(echo "$1" | sed -r 's/.\[[0-9;]+[mK]//g')
+    local len=$2
+    echo "$msg" | sed -r "s/.*(.{$len})$/\1/"
+}
+
+text_right() {
+    local x=$1  y=$2 msg=$3  len=$(str_len "$3")
+
+    local avail=$((${SCREEN_WIDTH:-78} - x + 1))
+    [ $avail -lt 0 ] && avail=78
+    local pad=$((avail - len))
+    [ $pad -lt 0 ] && pad=0
+    #msg=$(str_rtrunc "$3" $avail)
+    printf "\e[$y;${x}H%s%${pad}s" "$msg" ""
+}
+
+ctext() {
+    local y=$1  msg=$2  color=$3
+    local x0=$((RAW_SCREEN_WIDTH / 2))
+
+    local len=$(str_len "$msg")
+    local x=$((1 + x0 - len/2))
+    printf "$color\e[$y;${x}H$msg"
+}
+
+goto() {
+    local x=${1-1}  y=${2:-1}
+    printf "\e[$y;${x}H"
+}
+
+cline() {
+    local y=$1 msg=$2 color=$3
+    [ "$msg" ] || return
+    msg=$(echo "$msg" | sed "s/<color>/$color/g")
+
+    local x=$SCREEN_X0
+    local len=$(str_len "$msg")
+    local width=$SCREEN_WIDTH
+    [ $len -ge $width ] && msg=$(str_rtrunc "$msg" $width)
+    local pad1=$(( (width - len) / 2))
+    local pad2=$((width - len - pad1))
+    printf "\e[$y;${x}H$color%${pad1}s%s%${pad2}s" "" "$msg" ""
+}
+
+left_text() {
+    local y=$1 x=$((SCREEN_X0 + 1))
+    shift
+    local msg=$(printf "$@")
+    printf "\e[$y;${x}H$color$msg"
+}
+
+right_text() {
+    local y=$1
+    shift
+    local msg=$(printf "$@")
+    local len=$(str_len "$msg")
+    local x=$((SCREEN_WIDTH - len + SCREEN_X0 - 1))
+    printf "\e[$y;${x}H$color$msg"
+}
+
+#------------------------------------------------------------------------------
+# Print a "ruler" on the screen.  Currently not used
+#------------------------------------------------------------------------------
+cruler() {
+    local i y midx
+    for y in $(echo "$1" | sed 's/,/ /g'); do
+        y=$(($y + SCREEN_Y0)) color=$2
+        midx=$((RAW_SCREEN_WIDTH/2))
+        printf "\e[$y;1H$color"
+        for i in $(seq 1 $midx); do
+            printf $((i % 10))
+        done
+
+        for i in $(seq 1 $midx); do
+            printf "\e[$y;$((RAW_SCREEN_WIDTH -i + 1))H"
+            printf $((i % 10))
+        done
+        printf $nc
+    done
+}
+
+
+#==============================================================================
+# Progress bar routines
+#==============================================================================
+#------------------------------------------------------------------------------
+# frugal_install
+#------------------------------------------------------------------------------
+frugal_install() {
+    local cmd=$1 ; shift
+    set_color
+    screen_init
+    verbose_progress "$cmd" $bold_co
+
+    local size=$(du_size "$@")
+    # Copy <size> to RAM
+    bar_box  "$_Copying_X_" "$(label_meg $size)"
+
+    prog_copy "$@"
+    local ret=$?
+
+    sleep $PROG_BAR_PAUSE
+    _clear_prog_bar
+    last_progress
+    log_it '%s done'" $cmd"
+    my_exit $ret
+}
+
+#------------------------------------------------------------------------------
+# copy_toram() $dest (src1 src2 ...)
+#------------------------------------------------------------------------------
+copy_toram() {
+    local cmd=$1 ; shift
+    set_color
+    screen_init
+    verbose_progress "$cmd" $bold_co
+
+    local size=$(du_size "$@")
+    # Copy <size> to RAM
+    bar_box  "$_Copy_X_to_RAM_" "$(label_meg $size)"
+
+    prog_copy "$@"
+    local ret=$?
+
+    sleep $PROG_BAR_PAUSE
+    _clear_prog_bar
+    last_progress
+    log_it '%s done'" $cmd"
+    my_exit $ret
+}
+
+
+#------------------------------------------------------------------------------
+# mk_swap_file <file> <megs> [size-label]
+#------------------------------------------------------------------------------
+mk_swap_file() {
+    local  cmd=$1  file=$2  size=$3  label=$(label_meg $3)
+    set_color
+    screen_init
+    verbose_progress $cmd  $bold_co
+
+    #. Create <size> swap file
+    bar_box  "$_Create_X_swap_file_" "$label"
+
+    prog_dd "$file" "$size"
+    local ret=$?
+
+    sleep $PROG_BAR_PAUSE
+    _clear_prog_bar
+    last_progress
+    log_it '%s done'" $cmd"
+    my_exit $ret
+}
+
+#------------------------------------------------------------------------------
+# Do a "dd" from /dev/zero to a file with a progress bar
+#------------------------------------------------------------------------------
+prog_dd() {
+    local dest=$1  cnt=$2  src=${3:-/dev/zero}  bs=${4:-1M}
+    local err_file=/live/dd-copy-failed
+    # TEST directories or fatal error
+
+    mkdir -p "$(dirname "$dest")"
+
+    rm -f "$file"
+    local final_size=$cnt  base_size=0
+
+    local dirty_ratio dirty_bytes
+    read dirty_ratio < /proc/sys/vm/dirty_ratio
+    read dirty_bytes < /proc/sys/vm/dirty_bytes
+    echo $USB_DIRTY_BYTES > /proc/sys/vm/dirty_bytes
+
+    rm -f $err_file
+    (dd if=$src of=$dest bs=$bs count=$cnt status=none || echo $? > $err_file) &
+    COPY_PID=$!
+    #echo "copy pid: $COPY_PID" >> $LOG_FILE
+
+    local cur_size=$base_size cur_pct last_pct=0
+    while true; do
+        if ! test -d /proc/$COPY_PID; then
+            echo 1000
+            break
+        fi
+        sleep 0.1
+
+        cur_size=$(du_size $dest)
+        cur_pct=$((cur_size * 1000 / final_size))
+        [ $cur_pct -gt $last_pct ] || continue
+        echo $cur_pct
+        last_pct=$cur_pct
+
+    done | text_progress
+
+    sync ; sync
+
+    [ ${dirty_bytes:-0} -gt 0 ] 2>/dev/null && echo $dirty_bytes > /proc/sys/vm/dirty_bytes
+    [ ${dirty_ratio:-0} -gt 0 ] 2>/dev/null && echo $dirty_ratio > /proc/sys/vm/dirty_ratio
+
+    log_it 'text_progress done'
+
+    # Use err_file as a semaphore from (...)& process
+    if test -e $err_file; then
+        rm -f $err_file
+        return 2
+    fi
+
+    test -d /proc/$COPY_PID && wait $COPY_PID
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# prog_copy <dest> <src1> <src2> ...
+# Copy source files to destination directory and display a bar indicating the
+# progress.
+#------------------------------------------------------------------------------
+prog_copy() {
+    local dest=$1 ; shift
+    local err_file=/prog-copy-failed
+    # TEST directories or fatal error
+
+    local final_size=$(du_size "$@")
+    local base_size=$(du_size "$dest")
+
+    local dirty_ratio dirty_bytes
+    read dirty_ratio < /proc/sys/vm/dirty_ratio
+    read dirty_bytes < /proc/sys/vm/dirty_bytes
+    echo $USB_DIRTY_BYTES > /proc/sys/vm/dirty_bytes
+
+    mkdir -p "$dest"
+    rm -f $err_file
+    (cp -a "$@" $dest/ || echo $? > $err_file) &
+    COPY_PID=$!
+    #echo "copy pid: $COPY_PID" >> $LOG_FILE
+
+    local cur_size=$base_size cur_pct last_pct=0
+    while true; do
+        if ! test -d /proc/$COPY_PID; then
+            echo 1000
+            break
+        fi
+        sleep 0.1
+
+        cur_size=$(du_size $dest)
+        cur_pct=$((cur_size * 1000 / final_size))
+        [ $cur_pct -gt $last_pct ] || continue
+        echo $cur_pct
+        last_pct=$cur_pct
+
+    done | text_progress
+
+    echo
+
+    sync ; sync
+
+    [ ${dirty_bytes:-0} -gt 0 ] 2>/dev/null && echo $dirty_bytes > /proc/sys/vm/dirty_bytes
+    [ ${dirty_ratio:-0} -gt 0 ] 2>/dev/null && echo $dirty_ratio > /proc/sys/vm/dirty_ratio
+
+    # Use err_file as a semaphore from (...)& process
+    if test -e $err_file; then
+        rm -f $err_file
+        return 2
+    fi
+
+    test -d /proc/$COPY_PID && wait $COPY_PID
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Draw a box around where the progress bar will go
+#------------------------------------------------------------------------------
+bar_box() {
+    local fmt=$1 ; shift
+    local title=$(printf "$fmt" "$@")
+    local width=$((PROG_BAR_WIDTH * SCREEN_WIDTH / 100 + 2))
+    local x1=$((CENTER_X - width / 2))
+    local y1=$((PROG_BAR_Y - 1))
+    local height=3
+
+    box $x1 $y1 $width $height $white
+    [ -n "$title" ] && ctext $((y1 - 1 )) " $title " $white
+}
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+test_prog_bar() {
+    set_color
+    screen_init
+    verbose_progress 'mk_swap_file' $bold_co
+
+    local dest=$1  cnt=$2  src=${3:-/dev/zero}  bs=${4:-1M}
+
+    # Create <size> swap file
+    bar_box  "$_Create_X_swap_file_"   100M
+
+    local base_size=0
+
+    local cur_size=$base_size cur_pct last_pct=0
+    while true; do
+        sleep 0.03
+        cur_pct=$((cur_pct + 8))
+        [ $cur_pct -ge 600 ]       && exit
+        [ $cur_pct -gt $last_pct ] || continue
+        echo $cur_pct
+        last_pct=$cur_pct
+    done | text_progress
+    exit
+    sleep $PROG_BAR_PAUSE
+    _clear_prog_bar
+    last_progress
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Clear the progress bar area of the screen.  Stand alone.
+#------------------------------------------------------------------------------
+clear_prog_bar() {
+    set_color
+    screen_init
+    _clear_prog_bar
+}
+
+#------------------------------------------------------------------------------
+# clear the progress bar area assuming set_colors and screen_init have already
+# been run
+#------------------------------------------------------------------------------
+_clear_prog_bar() {
+    local y  y0=$((PROG_BAR_Y - 4))
+    for y in $(seq 1 4); do
+        clear_line $((y + y0))
+    done
+}
+#------------------------------------------------------------------------------
+# This acts like an external program to draw a progress bar on the screen.
+# It expects integer percentages as input on stdin to move the bar.
+# Now using 1/10th percent steps which seems to reduce jitteriness/jaggedness.
+# Yes, because there was aliasing between 100 steps and width of screen.
+#------------------------------------------------------------------------------
+text_progress() {
+    local width=$((PROG_BAR_WIDTH * SCREEN_WIDTH / 100))
+    local min_x=$((CENTER_X - width / 2))
+    local abs_max_x=$((min_x + width))
+    local y=$PROG_BAR_Y
+
+    # length of ">100%" plus one = 6 (??)
+    local max_x=$((abs_max_x - 7))
+
+    # Create end-points and save our location on the screen
+    #printf "\e[$y;${min_x}H|$nc_co"
+    printf "\e[$y;${max_x}H$white|$nc_co"
+    #printf "\e[u\e[$((max_x + 2))C$from_co|$nc_co\e[u"
+    local cur_x last_x=$min_x  delta_x=$((max_x - min_x))
+
+    #log_it "$min_x $max_x $width $delta_x"
+
+    while read input; do
+        case $input in
+            [0-9]|[0-9][0-9]|[0-9][0-9][0-9]) ;;
+                        [0-9][0-9][0-9][0-9]) ;;
+            *) break;;
+        esac
+
+        [ $input -gt 1000 ] && input=1000
+        cur_x=$((min_x + delta_x * input / 1000))
+        local len=$((delta_x * input / 1000))
+        # Note we always draw entire bar to avoid problems when switching
+        # virtual terminals while the bar is being drawn
+
+        [ $cur_x -le $last_x ] && continue
+        # Draw the bar
+        printf "\e[$y;${min_x}H$lt_cyan%${len}s$bold_co>$nc_co\e[u" | tr ' ' '='
+        # Show the percentage
+        local color=
+        [ $input -ge 1000 ] && color=$bold_co
+        printf "$color\e[$y;$((max_x + 2))H%3s%%" "$((input / 10))"
+
+        last_x=$cur_x
+
+        [ $input -ge 1000 ] && break
+    done
+}
+
+#------------------------------------------------------------------------------
+# Label sizes given in Megs (MiB)
+#------------------------------------------------------------------------------
+label_meg() { label_any_size "$1" " " MiB GiB TiB PiB EiB; }
+
+#------------------------------------------------------------------------------
+# More compact horizontally, for tables
+#------------------------------------------------------------------------------
+size_label_m() { label_any_size "$1" "" M G T P E; }
+
+#------------------------------------------------------------------------------
+# Bite the bullet and do it "right"
+#------------------------------------------------------------------------------
+label_any_size() {
+    local size=$1  sep=$2  u0=$3  unit=$4  meg=$((1024 * 1024))  new_unit ; shift 4
+
+    for new_unit; do
+        [ $size -lt $meg ] && break
+        size=$((size / 1024))
+        unit=$new_unit
+    done
+
+    if [ $size -ge 102400 ]; then
+        awk "BEGIN {printf \"%d$sep$unit\n\", $size / 1024}"
+    elif [ $size -ge 10240 ]; then
+        awk "BEGIN {printf \"%0.1f$sep$unit\n\", $size / 1024}"
+    elif [ $size -ge 1024 ]; then
+        awk "BEGIN {printf \"%0.2f$sep$unit\n\", $size / 1024}"
+    else
+        awk "BEGIN {printf \"%d$sep$u0\n\", $size}"
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Read the translation file based on the LANG variable
+# Note: the LANG gets read in from a file elsewhere
+#------------------------------------------------------------------------------
+read_xlat() {
+    local prog=$1  lang=${2%%_*}
+    local xdir=$LOCALE_DIR/xlat
+
+    local xlat=$xdir/en/$prog.xlat
+    [ -r $xlat ] && . $xlat
+    [ -r $xlat ] && log_it "read $xlat"
+
+    [ "$lang" ] || return
+
+    xlat=$xdir/$lang/$prog.xlat
+    [ -r "$xlat" ] || return
+    . $xlat
+    log_it 'Translate to %s' $lang
+}
+
+#------------------------------------------------------------------------------
+# Park cursor in a safe place when we exit
+#------------------------------------------------------------------------------
+my_exit() {
+    local ret=$1  y=3  x=3
+    printf "\e[$y;${x}H$nc_co$black"
+    exit $ret
+}
+
+#------------------------------------------------------------------------------
+# The size of files in meg as reported by the du command
+#------------------------------------------------------------------------------
+du_size() { du -scm "$@" | awk 'END{ print $1}' ;}
+
+#------------------------------------------------------------------------------
+# Set gobal color strings.  Lower-case because that makes the code more
+# readable.
+#------------------------------------------------------------------------------
+set_color() {
+    local e=$(printf "\e")
+     black="$e[0;30m";    blue="$e[0;34m";    green="$e[0;32m";    cyan="$e[0;36m";
+       red="$e[0;31m";  purple="$e[0;35m";    brown="$e[0;33m"; lt_gray="$e[0;37m";
+   dk_grey="$e[1;30m"; lt_blue="$e[1;34m"; lt_green="$e[1;32m"; lt_cyan="$e[1;36m";
+    lt_red="$e[1;31m"; magenta="$e[1;35m";   yellow="$e[1;33m";   white="$e[1;37m";
+     nc_co="$e[0m";                           amber="$e[0;33m"; lt_grey="$e[0;37m";
+
+    cheat_co=$white;      err_co=$red;       hi_co=$white;
+      cmd_co=$white;     from_co=$lt_green;  mp_co=$magenta;   num_co=$magenta;
+      dev_co=$magenta;   head_co=$yellow;     m_co=$lt_cyan;    ok_co=$lt_green;
+       to_co=$lt_green;  warn_co=$yellow;  bold_co=$yellow;
+
+    clear="$e[2;J"; cursor_off="$e[?25l"; cursor_on="$e[?25h"
+
+    printf $nc_co
+}
+
+
+mkdir -p $WORK_DIR
+
+main "$@" 2>> $WORK_DIR/errors

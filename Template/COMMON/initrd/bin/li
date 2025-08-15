@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ $# -gt 1 ]]; then
+
+	ls --color -F $@
+
+elif [[ -d $1 ]];  then
+
+	ls --color -F $1/
+
+elif [[ -f $1 ]]; then
+
+	#vimpager -c :AnsiEsc $1
+	less -R $1
+
+else
+
+	ls --color -F $1
+
+fi
+

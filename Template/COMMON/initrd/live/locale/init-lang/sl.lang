@@ -1,0 +1,8 @@
+COUNTRY="Slovenski"
+WM_LANG="sl"
+KEYBOARDS="si,us"
+KEYTABLE="slovene"
+LANG="sl_SI.UTF-8"
+MIRROR="si"
+TZ="Europe/Ljubljana"
+XKBLAYOUT="si,us"

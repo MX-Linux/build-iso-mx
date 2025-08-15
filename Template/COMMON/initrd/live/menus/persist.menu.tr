@@ -1,0 +1,12 @@
+   1)  Öntanımlı
+   2)  persist_all     Root'u RAM'e kaydedin, Ev dizinini diske kaydedin (kapanırken root'u kaydedin)
+   3)  persist_root    Root'u ve Ev dizinini RAM'e kaydedin, kapanırken diske kaydedin
+   4)  persist_static  Ev diskte ayrı olacak şekilde root ve Ev dizinini diske kaydedin
+   5)  p_static_root   Root ve Ev dizinini birlikte diske kaydedin
+   6)  persist_home    Sadece Ev dizini kalıcı
+   7)  frugal_persist  RAM'de root ve diskte Ev ile sabit kurulum
+   8)  frugal_root     RAM'de root ve Ev dizini ile sabit kurulum, sonra kapatma sırasında kaydedilecek
+   9)  frugal_static   Diskte root ve diskte ayrı Ev dizini ile sabit kurulum
+  10)  f_static_root   Root ve Ev dizini diskte birlikte sabit kurulum
+  11)  frugal_home     Sadeve Ev dizini kalıcı şekilde sabit kurulum
+  12)  frugal_only     Sadece sabit kurulum, kalıcılık yok

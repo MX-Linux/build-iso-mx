@@ -1,0 +1,58 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-deb-install
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Default-Start:     
+# Default-Stop:      0 1 6
+# Short-Description:
+# Description:       install deb package before booting
+### END INIT INFO
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+. /live/lib/live-init-utils.sh
+start_init_logging
+
+main() {
+    case $1 in
+        start) do_start                      ;;
+         stop)                               ;;
+            *) echo "Usage: $0 {start|stop}" ;;
+    esac
+    exit 0
+}
+
+do_start() {
+    . /live/config/initrd.out
+    local deb_dir=$SQFILE_DIR/deb
+    test -d $deb_dir || return
+    ls $deb_dir/*.deb &>/dev/null || return
+
+    if [ -f $deb_dir/order ] ; then
+        list=$(cat $deb_dir/order 2>/dev/null)
+    else
+        list=$(ls $deb_dir | grep "\.deb$")
+    fi
+
+    [ ${#list} -gt 0 ] || return
+
+    echo_script "Installing Debian packages" $0
+
+    local deb full
+    for deb in $list; do
+        full=$deb_dir/$deb
+        test -r $full || continue
+        echo_live "Installing %s" "$(pquote $deb)"
+        /usr/bin/dpkg -i $full
+    done
+
+    echo_live "Configuring unconfigured packages"
+    /usr/bin/dpkg --configure -a
+}
+
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE
+
+exit 0

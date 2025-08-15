@@ -1,0 +1,65 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:         live-restore-services
+# Required-Start:   live-disable-services
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: restore service symlinks
+# Description:       restore service symlinks that were temporarily disabled
+### END INIT INFO
+
+# We replace all the service symlinks we moved so the system
+# wakes up looking like nothing happened.
+#
+# See live-disable-services for how the symlinks got moved.
+# This undoes all the symlink moving that was done there.
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+case "$1" in
+    start)
+        ;;
+    stop)
+        exit 0;
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+from=/live/config/disabled-rc.d
+
+[ -d $from ] || exit 0
+
+. /live/lib/live-init-utils.sh
+
+start_init_logging
+load_translation
+
+{
+    echo_script "$_restoring_service_links_" $0
+
+     for rc_dir in $from/rc?.d; do
+        [ -d "$rc_dir" ]          || continue
+        [ -n "$(ls -A $rc_dir)" ] || continue
+
+        # Strip off leading directories
+        rc_dir=${rc_dir##*/}
+        dest=/etc/$rc_dir
+
+        # Skip if destination directory is missing
+        [ -d "$dest" ] || continue
+
+        mv $from/$rc_dir/* $dest
+    done
+
+    rmdir $from/* $from
+
+} 2>&1 | tee -a $INIT_LOG_FILE
+
+exit 0

@@ -1,0 +1,8 @@
+_Customizing_services_="Personnalisation des services"
+_Disabling_NFS_server_X_="Désactivation du serveur NFS %s"
+_Disabling_X_service_="Désactivation du service %s"
+_Disabling_X_services_Y_="Désactivation %s des services %s"
+_Disabling_more_services_X_="Désactivation supplémentaire de services %s"
+_Disabling_network_services_X_="Désactivation des services réseaux %s"
+_Disabling_some_services_X_="Désactivation de certains services %s"
+_Enabling_X_service_="Activation du service %s"

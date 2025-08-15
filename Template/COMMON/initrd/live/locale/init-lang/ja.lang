@@ -1,0 +1,8 @@
+COUNTRY="Japanese"
+WM_LANG="ja"
+KEYBOARDS="jp,us"
+KEYTABLE="us"
+LANG="ja_JP.UTF-8"
+MIRROR="jp"
+TZ="Asia/Tokyo"
+XKBLAYOUT="jp,us"

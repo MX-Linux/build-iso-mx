@@ -1,0 +1,12 @@
+   1)  Alapértelmezett
+   2)  persist_all     Gyökérkönyvtár mentése a memóriába, a /home mentése a lemezre (gyökér mentése leállításkor)
+   3)  persist_root    Gyökérkönyvtár és /home mentése a memóriába, majd mentés leállításkor
+   4)  persist_static  A gyökérkönyvtár és a /home mentése a lemezre, /home külön lemezen
+   5)  p_static_root   Gyökérkönyvtár és /home ugyanazon a lemezen
+   6)  persist_home    Csak /home adatmegőrzés
+   7)  frugal_persist  Lemezképként telepített, gyökérkönyvtár a memóriában, /home a lemezen
+   8)  frugal_root     Lemezképként telepített, gyökérkönyvtár és /home a memóriában, majd mentés leállításkor
+   9)  frugal_static   Lemezképként telepített, gyökérkönyvtár és /home külön lemezen
+  10)  f_static_root   Lemezképként telepített, gyökérkönyvtár és /home ugyanazon a lemezen
+  11)  frugal_home     Lemezképként telepített, csak /home adatmegőrzés
+  12)  frugal_only     Csak Lemezképként telepített, nincs adatmegőrzés

@@ -1,0 +1,27 @@
+#!/bin/bash
+PATH=/live/bin:/bin
+
+ps_no_kthreads() {
+    local pid user time cmnd start_t
+    local format="%6s %12s %s\n"
+    printf "$format" PID START_T CMD
+    while read pid user time cmnd; do
+        is_zombie_or_kthread $pid      && continue
+        start_t=$(get_start_t $pid)    || continue
+        printf "$format" $pid $start_t "$cmnd"
+    done <<Ps_No_Kthreads
+$(ps)
+Ps_No_Kthreads
+
+}
+
+get_start_t() { cut -d" " -f22 /proc/$1/stat 2>/dev/null; }
+
+is_zombie_or_kthread() {
+    local len=$(wc -c /proc/$pid/cmdline 2>/dev/null) || return 0
+    [ -z "$len" ]                                     && return 0
+    #printf "%6s $s\n" $pid $len
+    [ "${len%% *}" = 0 ]
+}
+
+ps_no_kthreads

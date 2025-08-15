@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Console configureren voor een %s indeling"
+_Localizing_console_and_timezone_="Console en tijdzone localiseren"
+_Recreate_symlink_X_="Hercreëer symlink %s"
+_Setting_hostname_to_X_="Computernaam instellen tot %s"
+_Setting_locale_to_X_="Locale instellen naar %s"
+_Setting_timezone_and_localtime_to_X_="Tijdzone en locale tijd instellen op %s"
+_Unknown_time_zone_X_="Onbekend tijdzone %s"

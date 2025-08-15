@@ -1,0 +1,29 @@
+console-data	console-data/bootmap-md5sum	string	none
+console-data	console-data/keymap/family	select	qwerty
+console-data	console-data/keymap/policy	select	Don't touch keymap
+console-setup	console-setup/charmap47	select	UTF-8
+console-setup	console-setup/codeset47	select	Guess optimal character set
+console-setup	console-setup/codesetcode	string	guess
+console-setup	console-setup/fontface47	select	VGA
+console-setup	console-setup/fontsize	string	8x16
+console-setup	console-setup/fontsize-fb47	select	8x16
+console-setup	console-setup/fontsize-text47	select	8x16
+console-setup	console-setup/store_defaults_in_debconf_db	boolean	true
+keyboard-configuration	keyboard-configuration/altgr	select	The default for the keyboard layout
+keyboard-configuration	keyboard-configuration/compose	select	No compose key
+keyboard-configuration	keyboard-configuration/ctrl_alt_bksp	boolean	false
+keyboard-configuration	keyboard-configuration/layoutcode	string	us
+keyboard-configuration	keyboard-configuration/model	select	Generic 105-key (Intl) PC
+keyboard-configuration	keyboard-configuration/modelcode	string	pc105
+keyboard-configuration	keyboard-configuration/store_defaults_in_debconf_db	boolean	true
+keyboard-configuration	keyboard-configuration/switch	select	No temporary switch
+keyboard-configuration	keyboard-configuration/toggle	select	No toggling
+keyboard-configuration	keyboard-configuration/unsupported_config_layout	boolean	true
+keyboard-configuration	keyboard-configuration/unsupported_config_options	boolean	true
+keyboard-configuration	keyboard-configuration/unsupported_layout	boolean	true
+keyboard-configuration	keyboard-configuration/unsupported_options	boolean	true
+keyboard-configuration	keyboard-configuration/variant	select	English (US)
+keyboard-configuration	keyboard-configuration/xkb-keymap	select	us
+libpaper1	libpaper/defaultpaper	select	letter
+libpaper1:amd64	libpaper/defaultpaper	select	letter
+libpaper1:i386	libpaper/defaultpaper	select	letter

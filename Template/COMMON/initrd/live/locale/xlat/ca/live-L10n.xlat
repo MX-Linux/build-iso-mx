@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="S'està configurant la consola per al mapa de teclat %s"
+_Localizing_console_and_timezone_="Localitzant la consola i la zona horària"
+_Recreate_symlink_X_="Torna a crear l'enllaç simbòlic %s"
+_Setting_hostname_to_X_="S'està configurant el nom de la màquina a %s"
+_Setting_locale_to_X_="S'està configurant la localització a %s"
+_Setting_timezone_and_localtime_to_X_="Establint la zona horària i l'hora local a %s"
+_Unknown_time_zone_X_="Zona horària desconeguda %s"

@@ -1,0 +1,200 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          networking ifupdown
+# Required-Start:    mountkernfs $local_fs urandom
+# Required-Stop:     $local_fs
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Raise network interfaces.
+# Description:       Prepare /run/network directory, ifstate file and raise network interfaces, or take them down.
+### END INIT INFO
+
+# Don't exit on error status
+set +e
+
+PATH="/sbin:/bin:/usr/bin"
+RUN_DIR="/run/network"
+IFSTATE="$RUN_DIR/ifstate"
+STATEDIR="$RUN_DIR/state"
+NET_STATE="$RUN_DIR/net-state"
+
+[ -x /sbin/ifup ] || exit 0
+[ -x /sbin/ifdown ] || exit 0
+
+ME=${0##*/}
+
+. /lib/lsb/init-functions
+
+LOG_FILE=/var/log/init.d-$ME.log
+CONFIGURE_INTERFACES=yes
+EXCLUDE_INTERFACES=
+
+[ -f /etc/default/networking ] && . /etc/default/networking
+
+: ${LOG_FILE:=/dev/null}
+: ${IFUP_TIMEOUT:=60}
+
+check_run_dir() {
+    test -d "$RUN_DIR" && return
+    if mkdir -p "$RUN_DIR"; then
+        chown root:netdev "$RUN_DIR" || log_warning_msg "can't chown $RUN_DIR"
+    else
+        log_failure_msg "can't create $RUN_DIR"
+        exit 1
+    fi
+}
+
+check_ifstate() {
+    test -r "$IFSTATE" && return
+    :> "$IFSTATE"
+    test -r "$IFSTATE" && return
+    log_failure_msg "can't initialise $IFSTATE"
+    exit 1
+}
+
+check_network_file_systems() {
+    [ -e /proc/mounts ] || return 0
+
+    if [ -e /etc/iscsi/iscsi.initramfs ]; then
+        log_warning_msg "not deconfiguring network interfaces: iSCSI root is mounted."
+        exit 0
+    fi
+
+    while read DEV MTPT FSTYPE REST; do
+        case $DEV in
+        /dev/nbd*|/dev/nd[a-z]*|/dev/etherd/e*)
+            log_warning_msg "not deconfiguring network interfaces: network devices still mounted."
+            exit 0
+            ;;
+        esac
+        case $FSTYPE in
+        nfs|nfs4|smbfs|ncp|ncpfs|cifs|coda|ocfs2|gfs|pvfs|pvfs2|fuse.httpfs|fuse.curlftpfs)
+            log_warning_msg "not deconfiguring network interfaces: network file systems still mounted."
+            exit 0
+            ;;
+        esac
+    done < /proc/mounts
+}
+
+check_network_swap() {
+    [ -e /proc/swaps ] || return 0
+
+    while read DEV MTPT FSTYPE REST; do
+        case $DEV in
+        /dev/nbd*|/dev/nd[a-z]*|/dev/etherd/e*)
+            log_warning_msg "not deconfiguring network interfaces: network swap still mounted."
+            exit 0
+            ;;
+        esac
+    done < /proc/swaps
+}
+
+# Try to bring up every hot-plug interface that has a sys directory
+# and that is not listed in EXCLUDE_INTERFACES.  Launch each interface
+# in the background
+ifup_hotplug () {
+	local all_ifaces="${*:-$(ifquery --list --allow=hotplug 2>/dev/null)}"
+
+    local excludes="$EXCLUDE_INTERFACES"  sys_dir=/sys/class/net
+
+    test -d $sys_dir || return
+
+    printf " "
+
+    local children iface
+    for iface in $all_ifaces; do
+        test -d $sys_dir/$iface || continue
+        case " $excludes " in  *" $iface "*) continue;;  esac
+
+        # # Make sure ifup is not already running for this interface
+        # local proc="$(ps -C ifup ho args)"
+        # [ "${proc%$iface*}" != "$proc" ] && continue
+
+        printf "%s " $iface
+        echo "$ME: ifup $iface" >/dev/kmsg
+        (ifup $iface >>$LOG_FILE 2>>$LOG_FILE) &
+        children="$children $!"
+    done
+
+    [ -z "$children" ] && return
+    local reaper=/usr/local/bin/process-reaper
+    if test -x $reaper; then
+    $reaper $children &
+    else
+    (sleep $IFUP_TIMEOUT ; kill $children) &
+    fi
+    return 0
+}
+
+udevadmin_settle() {
+    [ -x /sbin/udevadm ] || return
+    #[ -z "$(ifquery --list --exclude=lo)" ] && [ -z "$(ifquery --list --allow=hotplug 2>/dev/null)" ] && return
+    udevadm settle
+}
+
+case $1 in
+    start)
+        init_is_upstart && exit 1
+        check_run_dir
+        check_ifstate
+        touch $NET_STATE
+
+        if [ "$CONFIGURE_INTERFACES" = no ]
+        then
+            log_action_msg "Not configuring network interfaces, see /etc/default/networking"
+            log_action_end_msg 0
+            exit 0
+        fi
+        set -f
+
+        log_action_begin_msg "Configuring network interfaces in background"
+
+        test -f $LOG_FILE && rm -f $LOG_FILE
+
+        udevadmin_settle
+
+        ifup -a && ifup_hotplug
+        log_action_end_msg $?
+        echo "$ME done" > /dev/kmsg
+        ;;
+
+    stop)
+        init_is_upstart && exit 0
+        check_network_file_systems
+        check_network_swap
+
+        rm -r $NET_STATE
+
+        test -e /run/network/.ifstate.lock || exit 0
+        log_action_begin_msg "Deconfiguring network interfaces"
+        ifdown --all --exclude=lo
+        log_action_end_msg $?
+        ;;
+
+    reload)
+        init_is_upstart && exit 1
+
+        log_action_begin_msg "Reloading network interfaces configuration"
+        state=$(ifquery --state)
+        ifdown --all --exclude=lo
+        ifup --exclude=lo $state
+        log_action_end_msg $?
+        ;;
+
+    force-reload|restart)
+        init_is_upstart && exit 1
+
+        log_warning_msg "Running $0 $1 is deprecated because it may not re-enable some interfaces"
+        log_action_begin_msg "Reconfiguring network interfaces"
+        ifdown --all --exclude=lo
+        ifup --all --exclude=lo && ifup_hotplug
+        log_action_end_msg $?
+        ;;
+
+    *)
+        echo "Usage: /etc/init.d/networking {start|stop|reload|restart|force-reload}"
+        exit 1
+        ;;
+esac
+
+exit 0

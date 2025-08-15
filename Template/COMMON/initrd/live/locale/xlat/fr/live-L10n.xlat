@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Configuration de la console pour un clavier %s"
+_Localizing_console_and_timezone_="Régionalisation de la console et du fuseau horaire"
+_Recreate_symlink_X_="Recréation du lien symbolique %s"
+_Setting_hostname_to_X_="Configuration du nom d'hôte sur %s"
+_Setting_locale_to_X_="Configuration de la locale sur %s"
+_Setting_timezone_and_localtime_to_X_="Configurer le fuseau horaire et l'heure locale sur %s"
+_Unknown_time_zone_X_="Fuseau horaire inconnu %s"

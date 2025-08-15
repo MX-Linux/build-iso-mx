@@ -1,0 +1,16 @@
+   1)  Padrão
+   2)  checkmd5        Verificar a integridade do dispositivo externo
+   3)  checkfs         Verificar os sistemas de arquivos ext2/3/4 da Instalação USB Externa e da área persistente
+   4)  toram           Copiar o sistema de arquivos comprimido para a memória (RAM)
+   5)  i915_invert     Inverter o vídeo em alguns sistemas gráficos Intel
+   6)  no_i915_invert  Desativar a inversão de gráficos Intel
+   7)  from=usb        Concluir a inicialização a partir de uma Instalação USB Externa (LiveUSB)
+   8)  from=hd         Concluir a inicialização a partir de um disco rígido
+   9)  hwclock=ask     Solicita ajuda ao sistema para determinar as configurações do relógio
+  10)  hwclock=utc     O relógio interno utiliza o UTC (somente para sistemas operacionais GNU/Linux)
+  11)  hwclock=local   O relógio interno utiliza a hora local (para sistemas operacionais Windows)
+  12)  password        Alterar as senhas antes de inicializar
+  13)  nostore         Desativar a funcionalidade de Armazenamento em Instalação USB Externa (somente para Instalações USB)
+  14)  dostore         Ativar a funcionalidade de Armazenamento em Instalação USB Externa (somente para Instalações USB)
+  15)  savestate       Salvar alguns arquivos entre as reinicializações (somente para Instalações USB)
+  16)  nosavestate     Não salvar arquivos entre reinicializações (somente para Instalações USB)

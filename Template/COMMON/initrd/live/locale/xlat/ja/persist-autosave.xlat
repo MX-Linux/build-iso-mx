@@ -1,0 +1,5 @@
+_Already_saved_X_seconds_ago_="既に %s 秒前に保存済み"
+_Possibly_save_persistent_information_="パーシステンス情報は保存されます"
+_Save_new_autosave_selection_="新たな自動保存セッションの保存"
+_Save_new_passwords_="新しいパスワードの保存"
+_Wont_autosave_within_X_seconds_of_a_previous_save_="%s秒以内の分は自動的に保存されません"

@@ -1,0 +1,8 @@
+COUNTRY="Iranian"
+WM_LANG="fa"
+KEYBOARDS="ir,us"
+KEYTABLE="fa"
+LANG="fa_IR.UTF-8"
+MIRROR="de"
+TZ="Asia/Tehran"
+XKBLAYOUT="ir,us"

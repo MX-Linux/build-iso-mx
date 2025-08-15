@@ -1,0 +1,788 @@
+
+The Tao of Programming Translated by Geoffrey James
+
+BOOK 1 The Silent Void
+
+Thus spake the Master Programmer:
+
+"When you have learned to snatch the error code from the trap frame,
+it will be time for you to leave."
+1.1
+Something mysterious is formed, born in the silent void. waiting
+alone and unmoving, it is at once still and yet in constant motion.
+It is the source of all programs. I do not know its name, so I will
+call it the Tao of Programming.
+
+    If the Tao is great, then the operating system is great.  If the
+    operating system is great, then the compiler is great.  If the
+    compiler is great, then the application is great.  The user is
+    pleased, and there is harmony in the world.
+
+The Tao of Programming flows far away and returns on the wind of
+morning.
+1.2
+The Tao gave birth to machine language. Machine language gave birth
+to the assembler.
+
+The assembler gave birth to the compiler. Now there are ten thousand
+languages.
+
+Each language has its purpose, however humble. Each language
+expresses the Yin and Yang of software. Each language has its place
+within the Tao.
+
+But do not program in COBOL if you can avoid it.
+1.3
+In the beginning was the Tao. The Tao gave birth to Space and Time.
+
+Therefore Space and Time are the Yin and Yang of programming.
+
+Programmers that do not comprehend the Tao are always running out of
+time and space for their programs. Programmers that comprehend the
+Tao always have enough time and space to accomplish their goals.
+
+How could it be otherwise?
+1.4
+The wise programmer is told about Tao and follows it. The average
+programmer is told about Tao and searches for it. The foolish
+programmer is told about Tao and laughs at it.
+
+If it were not for laughter, there would be no Tao.
+
+The highest sounds are hardest to hear. Going forward is a way to
+retreat. Great talent shows itself late in life. Even a perfect
+program still has bugs.
+BOOK 2 The Ancient Masters
+
+Thus spake the Master Programmer:
+
+"After three days without programming, life becomes meaningless."
+2.1
+The programmers of old were mysterious and profound. We cannot
+fathom their thoughts, so all we do is describe their appearance.
+
+    Aware, like a fox crossing the water.  Alert, like a general on
+    the battlefield.  Kind, like a hostess greeting her guests.
+    Simple, like uncarved blocks of wood.  Opaque, like black pools
+    in darkened caves.
+
+Who can tell the secrets of their hearts and minds?
+
+The answer exists only in Tao.
+2.2
+The Grand Master Turing once dreamed that he was a machine. When he
+awoke, he exclaimed:
+
+"I don't know whether I am Turing dreaming that I am a machine, or a
+machine dreaming that I am Turing!"
+2.3
+A programmer from a very large computer company went to a software
+conference and then returned to report to his manager, saying: "What
+sort of programmers work for other companies? They behaved badly and
+were unconcerned with appearances. Their hair was long and unkempt
+and their clothes were wrinkled and old. They crashed our
+hospitality suite and they made rude noises during my presentation."
+
+The manager said: "I should have never sent you to the conference.
+Those programmers live beyond the physical world. They consider life
+absurd, an accidental coincidence. They come and go without knowing
+limitations. Without a care, they live only for their programs. Why
+should they bother with social conventions?
+
+They are alive within the Tao."
+2.4
+A novice asked the Master: "Here is a programmer that never designs,
+documents or tests his programs. Yet all who know him consider him
+one of the best programmers in the world. Why is this?"
+
+The Master replied: "That programmer has mastered the Tao. He has
+gone beyond the need for design; he does not become angry when the
+system crashes, but accepts the universe without concern. He has
+gone beyond the need for documentation; he no longer cares if anyone
+else sees his code. He has gone beyond the need for testing; each of
+his programs are perfect within themselves, serene and elegant,
+their purpose self-evident. Truly, he has entered the mystery of
+Tao."
+BOOK 3 Design
+
+Thus spake the Master Programmer:
+
+"When a program is being tested, it is too late to make design
+changes."
+3.1
+There once was a man who went to a computer trade show. Each day as
+he entered, the man told the guard at the door:
+
+"I am a great thief, renowned for my feats of shoplifting. Be
+forewarned, for this trade show shall not escape unplundered."
+
+This speech disturbed the guard greatly, because there were millions
+of dollars of computer equipment inside, so he watched the man
+carefully. But the man merely wandered from booth to booth, humming
+quietly to himself.
+
+When the man left, the guard took him aside and searched his
+clothes, but nothing was to be found.
+
+On the next day of the trade show, the man returned and chided the
+guard, saying: "I escaped with a vast booty yesterday, but today
+will be even better." So the guard watched him ever more closely,
+but to no avail.
+
+On the final day of the trade show, the guard could restrain his
+curiosity no longer. "Sir Thief," he said, "I am so perplexed, I
+cannot live in peace. Please enlighten me. What is it that you are
+stealing?"
+
+The man smiled. "I am stealing ideas," he said.
+3.2
+There once was a Master Programmer who wrote unstructured programs.
+A novice programmer, seeking to imitate him, also began to write
+unstructured programs. When the novice asked the Master to evaluate
+his progress, the Master criticized him for writing unstructured
+programs, saying, "What is appropriate for the Master is not
+appropriate for the novice. You must understand Tao before
+transcending structure."
+3.3
+There was once a programmer who was attached to the court of the
+warlord of Wu. The warlord asked the programmer: "Which is easier to
+design: an accounting package or an operating system?"
+
+"An operating system," replied the programmer.
+
+The warlord uttered an exclamation of disbelief. "Surely an
+accounting package is trivial next to the complexity of an operating
+system," he said.
+
+"Not so," said the programmer, "When designing an accounting
+package, the programmer operates as a mediator between people having
+different ideas: how it must operate, how its reports must appear,
+and how it must conform to the tax laws. By contrast, an operating
+system is not limited by outside appearances. When designing an
+operating system, the programmer seeks the simplest harmony between
+machine and ideas. This is why an operating system is easier to
+design."
+
+The warlord of Wu nodded and smiled. "That is all good and well, but
+which is easier to debug?"
+
+The programmer made no reply.
+3.4
+A manager went to the Master Programmer and showed him the
+requirements document for a new application. The manager asked the
+Master: "How long will it take to design this system if I assign
+five programmers to it?"
+
+"It will take one year," said the Master promptly.
+
+"But we need this system immediately or even sooner! How long will
+it take if I assign ten programmers to it?"
+
+The Master Programmer frowned. "In that case, it will take two
+years."
+
+"And what if I assign a hundred programmers to it?"
+
+The Master Programmer shrugged. "Then the design will never be
+completed," he said.
+BOOK 4 Coding
+
+Thus spake the Master Programmer:
+
+"A well-written program is its own Heaven; a poorly-written program
+is its own Hell."
+4.1
+A program should be light and agile, its subroutines connected like
+a string of pearls. The spirit and intent of the program should be
+retained throughout. There should be neither too little nor too
+much. Neither needless loops nor useless variables; neither lack of
+structure nor overwhelming rigidity.
+
+A program should follow the "Law of Least Astonishment". What is
+this law? It is simply that the program should always respond to the
+users in the way that least astonishes them.
+
+A program, no matter how complex, should act as a single unit. The
+program should be directed by the logic within rather than by
+outward appearances.
+
+If the program fails in these requirements, it will be in a state of
+disorder and confusion. The only way to correct this is to rewrite
+the program.
+4.2
+A novice asked the Master: "I have a program that sometimes runs and
+sometimes aborts. I have followed the rules of programming, yet I am
+totally baffled. What is the reason for this?"
+
+The Master replied: "You are confused because you do not understand
+Tao. Only a fool expects rational behavior from his fellow humans.
+Why do you expect it from a machine that humans have constructed?
+Computers simulate determinism; only Tao is perfect.
+
+The rules of programming are transitory; only Tao is eternal.
+Therefore, you must contemplate Tao before you receive
+Enlightenment."
+
+"But how will I know when I have received Enlightenment?" asked the
+novice.
+
+"Your program will run correctly," replied the Master.
+4.3
+The Master was explaining the nature of Tao to one of his novices.
+
+"The Tao is embodied in all software -- regardless of how
+insignificant," said the Master.
+
+"Is the Tao in a hand-held calculator?" asked the novice.
+
+"It is," came the reply.
+
+"Is the Tao in a video game?" asked the novice.
+
+"It is even in a video game," said the Master.
+
+"Is the Tao in the DOS for a personal computer?" asked the novice.
+
+The Master coughed and shifted his position slightly. "The lesson is
+over for today," he said.
+4.4
+Prince Wang's programmer was coding software. His fingers danced
+upon the keyboard. The program compiled without and error message,
+and the program ran like a gentle wind.
+
+"Excellent!" the Prince exclaimed. "Your technique is faultless!"
+
+"Technique?" said the programmer, turning from his terminal, "What I
+follow is Tao -- beyond all techniques! When I first began to
+program, I would see before me the whole problem in one mass. After
+three years, I no longer saw this mass. Instead, I used subroutines.
+But now I see nothing. My whole being exists in a formless void. My
+senses are idle. My spirit, free to work without a plan, follows its
+own instinct. In short, my program writes itself. True, sometimes
+there are difficult problems. I see them coming, I slow down, I
+watch silently. Then I change a single line of code and the
+difficulties vanish like puffs of idle smoke. I then compile the
+program. I sit still and let the joy of the work fill my being. I
+close my eyes for a moment and then log off."
+
+Prince Wang said, "Would that all of my programmers were as wise!"
+BOOK 5 Maintenance
+
+Thus spake the Master Programmer:
+
+"Though a program be but three lines long, someday it will have to
+be maintained."
+5.1
+    A well-used door needs no oil on its hinges.  A swift-flowing
+    stream does not grow stagnant.  A deer blends perfectly into the
+    forest colors.  Software rots if not used.
+
+These are great mysteries.
+5.2
+A manager asked a programmer how long it would take him to finish
+the program on which he was working. "I will be finished tomorrow,"
+the programmer promptly replied.
+
+"I think you are being unrealistic," said the manager, "Truthfully,
+how long will it take?"
+
+The programmer thought for a moment. "I have some features that I
+wish to add. This will take at least two weeks," he finally said.
+
+"Even that is too much to expect," insisted the manager, "I will be
+satisfied if you simply tell me when the program is complete."
+
+The programmer agreed to this.
+
+Several years later, the manager retired. On the way to his
+retirement luncheon, he discovered the programmer asleep at his
+terminal. He had been programming all night.
+5.3
+A novice programmer was once assigned to code a simple financial
+package.
+
+The novice worked furiously for many days, but when his Master
+reviewed his program, he discovered it contained a screen editor, a
+set of generalized graphics routines, and an artificial intelligence
+interface, but not the slightest hint of anything financial.
+
+When the Master asked about this, the novice became indignant.
+"Don't be so impatient," he said, "I'll put in the financial stuff
+eventually."
+5.4
+    Does a good farmer neglect a crop he has planted?  Does a good
+    teacher overlook even the most humble student?  Does a good
+    father allow a single child to starve?  Does a good programmer
+    refuse to maintain his code?
+BOOK 6 Management
+
+Thus spake the Master Programmer:
+
+"Let the programmers be many and the managers few -- then all will
+be productive."
+6.1
+    When managers hold endless meetings, the programmers write
+    games.  When accountants speak of quarterly profits, the
+    development budget is about to be cut.  When senior scientists
+    talk blue sky, the clouds are about to roll in.
+
+Truly, this is not the Tao of Programming.
+
+    When managers make commitments, game programs are ignored.  When
+    accountants make long-range plans, harmony and order are about
+    to be restored.  When senior scientists address the problems at
+    hand, the problems will soon be solved.
+
+Truly, this is the Tao of Programming.
+6.2
+    Why are programmers non-productive? Because their time is wasted
+    in meetings.  Why are programmers rebellious? Because the
+    management interferes too much.  Why are the programmers
+    resigning one by one? Because they are burnt out.  Having worked
+    for poor management, they no longer value their jobs.
+6.3
+A manager was about to be fired, but a programmer who worked for him
+wrote a new program that became popular and sold well. As a result,
+the manager retained his job.
+
+The manager tried to give the programmer a bonus, but the programmer
+refused it, saying, "I wrote the program because I thought it was an
+interesting concept, and thus I expect no reward."
+
+The manager upon hearing this remarked, "This programmer, though he
+holds a position of small esteem, understands well the proper duty
+of an employee. Let us promote him to the exalted position of
+management consultant!"
+
+But when told this, the programmer once more refused, saying, "I
+exist so that I can program. If I were promoted, I would do nothing
+but waste everyone's time. Can I go now? I have a program that I am
+working on."
+6.4
+A manager went to his programmers and told them: "As regards to your
+work hours: you are going to have to come in at nine in the morning
+and leave at five in the afternoon." At this, all of them became
+angry and several resigned on the spot.
+
+So the manager said: "All right, in that case you may set your own
+working hours, as long as you finish your projects on schedule." The
+programmers, now satisfied, began to come in at noon and work to the
+wee hours of the morning.
+BOOK 7 Corporate Wisdom
+
+Thus spake the Master Programmer:
+
+"You can demonstrate a program for a corporate executive, but you
+can't make him computer literate."
+7.1
+A novice asked the Master: "In the East, there is a great
+tree-structure that men call 'Corporate Headquarters'. It is bloated
+out of shape with vice presidents and accountants. It issues a
+multitude of memos, each saying 'Go Hence!' or 'Go Hither!' and
+nobody knows what is meant. Every year new names are put onto the
+branches, but all to no avail. How can such an unnatural entity
+exist?"
+
+The Master replied: "You perceive this immense structure and are
+disturbed that it has no rational purpose. Can you not take
+amusement from its endless gyrations? Do you not enjoy the
+untroubled ease of programming beneath its sheltering branches? Why
+are you bothered by its uselessness?"
+7.2
+In the East there is a shark which is larger than all other fish. It
+changes into a bird whose wings are like clouds filling the sky.
+When this bird moves across the land, it brings a message from
+Corporate Headquarters. This message it drops into the midst of the
+programmers, like a seagull making its mark upon the beach. Then the
+bird mounts on the wind and, with the blue sky at its back, returns
+home.
+
+The novice programmer stares in wonder at the bird, for he
+understands it not. The average programmer dreads the coming of the
+bird, for he fears its message. The Master Programmer continues to
+work at his terminal, unaware that the bird has come and gone.
+7.3
+The Magician of the Ivory Tower brought his latest invention for the
+Master Programmer to examine. The Magician wheeled a large black box
+into the Master's office while the Master waited in silence.
+
+"This is an integrated, distributed, general-purpose workstation,"
+began the Magician, "ergonomically designed with a proprietary
+operating system, sixth generation languages, and multiple state of
+the art user interfaces. It took my assistants several hundred man
+years to construct. Is it not amazing?"
+
+The Master Programmer raised his eyebrows slightly. "It is indeed
+amazing," he said.
+
+"Corporate Headquarters has commanded," continued the Magician,
+"that everyone use this workstation as a platform for new programs.
+Do you agree to this?"
+
+"Certainly," replied the Master. "I will have it transported to the
+Data Center immediately!" And the Magician returned to his tower,
+well pleased.
+
+Several days later, a novice wandered into the office of the Master
+Programmer and said, "I cannot find the listing for my new program.
+Do you know where it might be?"
+
+"Yes," replied the Master, "the listings are stacked on the platform
+in the Data Center."
+7.4
+The Master Programmer moves from program to program without fear. No
+change in management can harm him. He will not be fired, even if the
+project is cancelled. Why is this? He is filled with Tao.
+BOOK 8 Hardware and Software
+
+Thus spake the Master Programmer:
+
+"Without the wind, the grass does not move. Without software
+hardware is useless."
+8.1
+A novice asked the Master: "I perceive that one computer company is
+much larger than all others. It towers above its competition like a
+giant among dwarfs. Any one of its divisions could comprise an
+entire business. Why is this so?"
+
+The Master replied, "Why do you ask such foolish questions? That
+company is large because it is large. If it only made hardware,
+nobody would buy it. If it only made software, nobody would use it.
+If it only maintained systems, people would treat it like a servant.
+But because it combines all of these things, people think it one of
+the gods! By not seeking to strive, it conquers without effort."
+8.2
+A Master Programmer passed a novice programmer one day.
+
+The Master noted the novice's preoccupation with a hand-held
+computer game.
+
+"Excuse me," he said, "may I examine it?"
+
+The novice bolted to attention and handed the device to the Master.
+"I see that the device claims to have three levels of play: Easy,
+Medium, and Hard," said the Master. "Yet every such device has
+another level of play, where the device seeks not to conquer the
+human, nor to be conquered by the human."
+
+"Pray, Great Master," implored the novice, "how does one find this
+mysterious setting?"
+
+The Master dropped the device to the ground and crushed it with his
+heel. Suddenly the novice was enlightened.
+8.3
+There was once a programmer who wrote software for personal
+computers. "Look at how well off I am here," he said to a mainframe
+programmer who came to visit. "I have my own operating system and
+file storage device. I do not have to share my resources with
+anyone. The software is self-consistent and easy-to-use. Why do you
+not quit your present job and join me here?"
+
+The mainframe programmer then began to describe his system to his
+friend, saying, "The mainframe sits like an ancient Sage meditating
+in the midst of the Data Center. Its disk drives lie end-to-end
+like a great ocean of machinery. The software is as multifaceted as
+a diamond, and as convoluted as a primeval jungle. The programs,
+each unique, move through the system like a swift-flowing river.
+That is why I am happy where I am."
+
+The personal computer programmer, upon hearing this, fell silent.
+But the two programmers remained friends until the end of their
+days.
+8.4
+Hardware met Software on the road to Changtse. Software said: "You
+are Yin and I am Yang. If we travel together, we will become famous
+and earn vast sums of money." And so they set forth together,
+thinking to conquer the world.
+
+Presently, they met Firmware, who was dressed in tattered rags and
+hobbled along propped on a thorny stick. Firmware said to them: "The
+Tao lies beyond Yin and Yang. It is silent and still as a pool of
+water. It does not seek fame; therefore, nobody knows its presence.
+It does not seek fortune, for it is complete within itself. It
+exists beyond space and time."
+
+Software and Hardware, ashamed, returned to their homes.
+BOOK 9 Epilogue
+
+Thus spake the Master Programmer:
+
+"Time for you to leave."
+(II, 9)
+A corporate executive came to visit the development center. Like a
+general reviewing his troops, he walked the long corridors, stopping
+here and there to talk with the people that he met. Eventually, he
+wandered into the office of a programmer, who as it happened was
+deep in concentration, debugging the operating system.
+
+The executive glanced about the room and noticed a statue of a pig
+that was perched upon the programmers terminal. "I have always been
+fascinated by the curios and mementos that programmers collect,
+"said the executive, "they always seem to have some interesting tale
+behind them. For example, what is the meaning of that sculpture
+there?" He pointed at the statue.
+
+The programmer looked up from his terminal, blinked, and then stared
+at the statue as if he were seeing it for the first time. "It's a
+pig," he said.
+(III, 2)
+The greatest mistake made in Computer/Human interface is the denial
+of the computer. Systems that are backfitted to previous conceptions
+of the universe are always limited by what has gone before.
+Computers should not simulate reality - they should transcend it.
+(III, 4)
+Never make a technical decision based upon the politics of the
+situation. Never make a political decision based upon technical
+issues. The only place where these realms meet is in the minds of
+the unenlightened.
+(III, 7)
+This is the meaning of the famous parable about Master Ninjei - he
+could not teach the secret of leadership because his would-be
+students believed too strongly in the myth of their own power. When
+an organization is led well, the employees do not even know that
+they are being led. When the project is finished, they say to
+themselves: "look at what we have accomplished by our own efforts!"
+(III, 8)
+The worth of a program cannot be judged by the size of its brochures
+or by the number of full page adds that appear in popular computer
+magazines. The louder the noise, the less likely it is that the
+program will be useful. Truly excellent programs need no
+advertising; word of mouth is sufficient.
+(IV, 2)
+Thus spake the master: "Any program no matter how small, contains
+bugs."
+
+The novice did not believe the masters words. "What if the program
+were so small that it performed but a single function?" he asked.
+
+"Such a program would have no meaning," said the master, "but if
+such a one existed, the operating system would fail eventually,
+producing a bug."
+
+But the novice was not satisfied. "What if the operating system did
+not fail?" he asked.
+
+"There is no operating system that does not fail," said the master,
+"but if such a one existed, the hardware would fail eventually,
+producing a bug."
+
+The novice was still not satisfied. "What if the hardware did not
+fail?" he asked.
+
+The master gave a great sigh. "There is no hardware that does not
+fail," he said, "but if such a one existed the user would want the
+program to do something different, and this too is a bug.
+
+A program without bugs would be an absurdity, a nonesuch. If there
+were a program without any bugs the world would cease to exist."
+(IV, 3)
+There are legends to the effect that the Ivory Tower was manned by a
+legion of fanatical devotees who were persuaded to commit software
+piracy, murder, and various unethical acts in return for machine
+time on a Cray-2.
+(V, 2)
+I programmed three days
+And heard no human voices
+But the hard disk sang.
+(V, 5)
+I programmed all night.
+Through the window, on my screen,
+The rising sun shined.
+(V, 9)
+The computer center is empty,
+Silent except for the whine of the cooling fans.
+I walk the rows of CPUs,
+My skin prickling with magnetic flux.
+I open a door, cold and hard,
+And watch the lights dancing on the panels.
+A machine without soul, men call it,
+But its soul is the sweat of my comrades,
+Within it lie the years of our lives,
+Disappointment, friendship, sadness, joy,
+The algorithmic exaltations,
+The long nights filled with thankless toil,
+I hear the echoes of sighs and laughter,
+And in the darkened offices
+The terminals shine like stars.
+Computer Parables By Geoffrey James, 1989.
+(I, 10) The Diagram.
+The master programmer asked a novice programmer to draw a picture of
+a computer system. First the novice drew a picture of the software,
+but that did not show the hardware. Then he drew a picture of the
+hardware, but that did not show the users. Then he drew a picture of
+the users, but that did not show the purpose. Then he drew a picture
+of the purpose, but that did not show the software. Finally he gave
+up in disgust, saying to the master: "That system is too complex for
+any one diagram. It cannot be understood all at the same time."
+
+The master, hearing this, laughed for a moment and then began to
+weep. When asked why, he replied: "You think that the computer
+system is complex, but it is less than a single nangate compared to
+a grasshopper's eye. How much more complex are the systems of the
+Earth by which Life is maintained. And the Earth herself is but a
+single planet among the billions of worlds of space."
+
+The novice said: "I still don't understand why you laugh and cry at
+the same time."
+
+"Is it not obvious? Here we are, ready to go to war because of the
+difference between capitalism and communism. Consider - economic
+theories are, at best, incomplete diagrams of an insignificant
+aspect of a vast and incomprehensible universe. And yet some men are
+willing to destroy the Earth because they disagree on some abstract
+point of doctrine. Is this not worthy of laughter, is this not
+worthy of tears?"
+(II, 3) Two Old Men.
+Two old men were sitting on a park bench, talking of old times.
+
+"When I was a young man," the first said, "I was in the Navy and had
+a girl in every port. When I grew older, I was a salesman and had a
+girl in every town. When I grew to middle age, I bought the services
+of many a beautiful prostitute. Now I am filled with sorrow that I
+soon will die and never again taste the delights of a woman's
+flesh."
+
+"My life has been different," the second said, "When we first
+married, my wife and I made love twice an evening, lost in the
+passion of a first love. As we grew older, we made love less often,
+but each caress was filled with lingering delight. When we grew to
+middle age, we made love seldom, but it was as if our souls had
+become a single being. Now I am filled with joy that I shall love
+her through the endless eons of Death."
+
+[another quote:
+If you want endless repetition, be with a lot of people;
+If you want infinite variety, be with only one.]
+(II, 6) The Onboard System.
+There was once a warship equipped with a sophisticated computer. One
+day, the ship shot down an airliner. A representative of the navy
+said: "Our system is too advanced to make mistakes. Even though the
+system had never been tested, it was not the system that erred - it
+was one of the junior officers."
+
+A programmer heard this and could not believe his ears. "Just so
+might a murderer say, "I am blameless, for it was not I who slew,
+but my hand.' A computer system consists of three parts: the
+hardware, the software, and the human. If the human errs, the system
+has failed."
+(III, 1) Two Students.
+There was once a student who in his free time dressed in the armored
+battlegear of old. Then he would gather with others of like mind and
+together they would imitate the lords and ladies of ancient days.
+
+A second student, a computer science major (as it happened), asked
+the first student why he went about in fancy dress. The first
+student replied: "The twentieth century is bland and colorless. You
+spend your hours amidst cold machines. I seek the beauty and romance
+of past times."
+
+The computer science major chuckled softly and led the first student
+into the data center. "Here are the machines that you despise. Are
+they not as bright as swords? Are they not safe within their armored
+metal casings? In three hundred years, children will pretend they
+are the computer scientists of old."
+(III, 5) The Working Father.
+A child was learning about computer graphics at school. When he came
+home he discovered his father typing away at a portable computer.
+"What are you doing?" asked the child.
+
+The father didn't want to be disturbed. "I'm working!" he barked.
+
+The child stared crestfallen at the floor. "I didn't know you could
+use a computer for work," he said.
+(III, 7) The Electronic Mail System {Flame Wars}.
+An executive, thinking to make his staff more productive, installed
+an electronic mail system.
+
+Two weeks later, he had the system disabled. When asked why, the
+executive said: "Whenever a small disagreement occurred between two
+employees, the first would send a mail message. The second would
+read it, write a response, and send a copy to his manager. The first
+employee would write yet another response and copy the entire
+building. Soon messages were buzzing about the building like a swarm
+of frightened hornets. Nobody was getting any work done. When my
+employees are mature enough to deal with the new technology, I will
+let them use the electronic mail system again." 
+(IV, 2) Two Artists.
+Two artists were speaking to one another about their craft.
+
+"I make my own pigments," said the first, "I dig minerals from the
+earth and pound them into powder. I mix it with my spit and save it
+in a clay pot. When I paint, I use the bark of trees that I felled
+with my own axe. When I finish a work of art, I know that it is
+mine."
+
+"I write my own graphics programs," said the second, "I salvage
+subroutines and algorithms from dusty stacks of magazines. I shape
+my curves with mathematical formulæ that I have entered on my own
+keyboard. When I finish a work of art, I know that it is mine."
+(IV, 4) Two Computer Users.
+In an office there were two computer users. The first user said: "I
+cannot bear this machine a moment longer. When I enter a command it
+does not obey. First it acts in one way and then in another. Truly I
+think it hates me, because it always seems to break when I need it
+most."
+
+The second user said: "I sit before my computer like a king upon his
+throne. I issue a command and wait in silence to see what happens.
+When my wishes are fulfilled, I am pleased. When my wishes are
+thwarted, I try a different command. I treat my computer as a slave;
+I do not expect it to be as wise as myself."
+(IV, 7) The Programmer's Wife.
+There was once a programmer who invented many things, but his ideas
+were always stolen. The programmer's wife became exasperated and
+asked: "Why do you never take credit for your ideas?"
+
+The programmer blinked as if awakening from a dream. Then he said:
+"When I am programming, I am at a nexus. My thoughts become
+concrete. My ideas transform illusion into reality. The structure of
+existence is remade before my very eyes. I become a vessel for the
+creative force of the universe. I am carried aloft as if on the
+wings of dragons. Why should I care if nobody knows my name?"
+(IV, 11) The Sages.
+The great sages of history descended from heaven to search for a
+worthy successor. They immediately fell to arguing about the kind of
+man they should seek.
+
+Buddha, sitting cross legged beneath a tree, said: "Of a certainty,
+we must look for a monk. Only a monk can understand the transitory
+nature of the universe."
+
+Confucius stroked his thin beard. "Monks are concerned only with
+their own advancement. We should seek a politician, who can make
+laws that will bring order to society."
+
+Moses crossed his arms over his burly chest. "Politicians are ruled
+by the love of power. Better that we seek a lawyer, who can
+interpret the law."
+
+Jesus gave a deep sigh. "Lawyers are often merciless. We should find
+some great preacher who can educate the masses."
+
+Mohammed's eyes flashed fire. "Talk! Always talk! We need a warrior
+who will force holiness on mankind."
+
+Lao Tse was standing to one side, taking no part in the argument.
+The other sages appealed to him for a judgement. "What manner of man
+should we seek?" they asked.
+
+Lao Tse said nothing, but led them along a winding path.
+
+The path became a road and the road became a highway. They
+approached a city. Glaring lights and garish signs hid the horizon.
+Wires crossed overhead like black webs. Automobiles sped past like
+insane metal insects. The sages held their hands over their ears as
+the harpy screams of jets broke through the brown and poisonous
+clouds.
+
+At last they came to a building. Within the building they saw a man
+sitting before a computer screen.
+
+The sages looked at Lao Tse in disbelief. "A programmer? Have you
+gone mad?" they asked.
+
+Lao Tse smiled. "Please look more closely. This man sees nothing but
+the screen in front of him. Surrounded by his computers, he knows
+only the reality that he has created and yet realizes that it is
+only illusion. He has gone beyond technology; he has transcended the
+machine."

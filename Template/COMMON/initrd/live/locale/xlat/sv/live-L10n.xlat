@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Anpassa terminal för en %s tangentlayout"
+_Localizing_console_and_timezone_="Lokalisera terminal och tidszon"
+_Recreate_symlink_X_="Återskapa symbolisk länk %s"
+_Setting_hostname_to_X_="Aktivera värdnamn till %s"
+_Setting_locale_to_X_="Aktivera lokalisering till %s"
+_Setting_timezone_and_localtime_to_X_="Aktivera tidszon och lokaltid till %s"
+_Unknown_time_zone_X_="Okänd tidszon %s"

@@ -1,0 +1,12 @@
+   1)  Par défaut
+   2)  persist_all     Sauvegarder root dans la RAM, sauvegarder home sur le disque (sauvegarder root à l'extinction)
+   3)  persist_root    Sauvegarder root et home dans la RAM et sauvegardés à l'extinction
+   4)  persist_static  Sauvegarder root et home sur le disque avec home séparé sur le disque
+   5)  p_static_root   Sauvegarder root et home ensemble sur le disque
+   6)  persist_home    Persistance du répertoire personnel uniquement
+   7)  frugal_persist  Frugal avec root dans la RAM et home sur le disque
+   8)  frugal_root     Frugal avec root et home dans la RAM et sauvegardés à l'extinction
+   9)  frugal_static   Frugal avec root sur le disque et home séparé sur le disque
+  10)  f_static_root   Frugal avec root et home ensemble sur le disque
+  11)  frugal_home     Frugal avec la persistance du répertoire personnel uniquement
+  12)  frugal_only     Seulement Frugal , pas de persistance

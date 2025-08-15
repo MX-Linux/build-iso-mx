@@ -1,0 +1,12 @@
+   1)  Pré-definição
+   2)  persist_all     Guardar a raiz na RAM, guardar a pasta pessoal no disco (guardar a raiz ao encerrar)
+   3)  persist_root    Gravar root e home na RAM e depois gravar ao encerrar
+   4)  persist_static  Gravar root e home em disco com home separada em disco
+   5)  p_static_root   Gravar root e home juntas em disco
+   6)  persist_home    Persistência apenas em home
+   7)  frugal_persist  Frugal com root na RAM  e home no disco
+   8)  frugal_root     Frugral com root e home em RAM e depois gravar ao encerrar
+   9)  frugal_static   Frugal com root no disco e home separada no disco
+  10)  f_static_root   Frugral com root e home juntas no disco
+  11)  frugal_home     Frugal com persistência apenas em home
+  12)  frugal_only     Apenas frugal, sem persistência

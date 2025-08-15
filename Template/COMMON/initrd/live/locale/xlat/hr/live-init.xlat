@@ -1,0 +1,8 @@
+_Bad_fstab_option_X_="Loša fstab opcija %s"
+_Configuring_X_file_with_Y_="Konfiguriram %s datoteku pomoću %s"
+_Creating_file_X_="Stvaram datoteku %s"
+_Directory_not_found_X_="Direktorij nije nađen %s"
+_Invalid_X_option_Y_="Neispravna %s opcija %s"
+_Localizing_menus_to_X_in_Y_="Lokaliziram izbornike u %s u %s"
+_Mounting_all_devices_="Montiranje svih uređaja"
+_Unknown_menu_localization_language_X_="Nepoznati jezik lokalizacije izbornika %s"

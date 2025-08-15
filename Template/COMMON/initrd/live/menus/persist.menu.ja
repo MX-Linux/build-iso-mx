@@ -1,0 +1,12 @@
+   1)  既定
+   2)  persist_all     root をRAMに保存し、home をディスクに保存 (シャットダウン時に root 保存)
+   3)  persist_root    root と home を RAM へ保存した後でシャットダウン
+   4)  persist_static  root と home をディスク上に保存し、home を別のディスク上に保存
+   5)  p_static_root   root と home を同一のディスクに保存
+   6)  persist_home    home パーシステンスのみ
+   7)  frugal_persist  RAMは root で、ディスク上のホームでフルーガル
+   8)  frugal_root     RAMは root で、ディスク上のホームでフルーガル、その後保存してシャットダウン
+   9)  frugal_static   ディスク上の root と別のディスク上の home をフルーガル
+  10)  f_static_root   ディス上の root と home を共にフルーガル
+  11)  frugal_home     hone のパーシステンスのみフルーガル
+  12)  frugal_only     フルーガルのみ、パーシステンスなし

@@ -1,0 +1,8 @@
+COUNTRY="Polski"
+WM_LANG="pl"
+KEYBOARDS="pl,us"
+KEYTABLE="pl"
+LANG="pl_PL.UTF-8"
+MIRROR="pl"
+TZ="Europe/Warsaw"
+XKBLAYOUT="pl,us"

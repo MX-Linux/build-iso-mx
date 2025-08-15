@@ -1,0 +1,5 @@
+_Already_saved_X_seconds_ago_="Schon gespeichert vor %s Sekunden"
+_Possibly_save_persistent_information_="Persistent Informationen wenn irgend möglich speichern"
+_Save_new_autosave_selection_="Neue Autosave-Auswahl speichern"
+_Save_new_passwords_="Neue Passwörter speichern"
+_Wont_autosave_within_X_seconds_of_a_previous_save_="Autosave nicht möglich innerhalb %s Sekunden nach einer früheren Speicherung"

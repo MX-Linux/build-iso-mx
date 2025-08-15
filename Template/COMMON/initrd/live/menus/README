@@ -1,0 +1,17 @@
+Each menu has a .data file and a .menu files.  For historical
+reasons each line in the .menu files must begin with at least
+one space.  I use vim for creating pairs of .data .menu files
+from a single list.
+
+I use these commands to add the numbers to the .data and .menu
+file:
+
+    %s/^/\=printf('%d:', line('.'))
+    %s/^/\=printf('%2d) ', line('.'))
+
+I then add the zero (0) entry manually.  For menus that need
+to have more than one column I use visual block mode.  I first
+delete and put (p) all the text in visual block mode to pad
+each line with spaces so they are all the same length.
+
+This was fairly quick and painless.  YMMVG.

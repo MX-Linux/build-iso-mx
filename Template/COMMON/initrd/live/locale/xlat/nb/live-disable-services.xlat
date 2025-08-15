@@ -1,0 +1,8 @@
+_Customizing_services_="Tilpasser tjenester"
+_Disabling_NFS_server_X_="Slår av NFS-tjener %s"
+_Disabling_X_service_="Slår av tjenesten %s" 
+_Disabling_X_services_Y_="Slår av %s tjenester %s"
+_Disabling_more_services_X_="Slår av flere tjenester %s"
+_Disabling_network_services_X_="Slår av nettverkstjenester %s"
+_Disabling_some_services_X_="Slår av noen tjenester %s"
+_Enabling_X_service_="Slår på tjenesten %s"

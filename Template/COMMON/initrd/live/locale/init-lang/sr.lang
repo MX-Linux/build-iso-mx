@@ -1,0 +1,8 @@
+COUNTRY="Српски"
+WM_LANG="sr"
+KEYBOARDS="sr,us"
+KEYTABLE="sr"
+LANG="sr_RS.UTF-8"
+MIRROR="gr"
+TZ="Europe/Belgrade"
+XKBLAYOUT="rs,us"

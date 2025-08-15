@@ -1,0 +1,10 @@
+#!/bin/bash
+
+PATH=/sbin:/bin/:/usr/sbin:/usr/bin:/live/bin
+my_dir=${0%/*}
+err_file=/live/config/tsplash/errors
+tty=10
+
+pgrep -x tsplash >/dev/null && exit 0
+
+openvt -c $tty $my_dir/tsplash "$@" 2>>$err_file

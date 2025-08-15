@@ -1,0 +1,16 @@
+   1)  Parazgjedhje
+   2)  checkmd5        Kontrollo pacenueshmëri të medias live
+   3)  checkfs         Kontrollo sisteme kartelash LiveUSB dhe vazhdueshmërie ext2/3/4
+   4)  toram           Kopjo në RAM sistemin e ngjeshur të kartelave
+   5)  i915_invert     Invert video on some Intel graphics systems
+   6)  no_i915_invert  Disable Intel graphics invert
+   7)  from=usb        Përfundo nisjen nga një LiveUSB
+   8)  from=hd         Përfundo nisjen nga një HD
+   9)  hwclock=ask     Lejojeni sistemin të ndihmojë në përcaktimin e rregullimeve të sahatit
+  10)  hwclock=utc     Sahati hardware përdor UTC (sisteme vetëm Linux)
+  11)  hwclock=local   Sahati i sistemit përdor kohën vendore (sisteme Windows)
+  12)  password        Ndryshoni fjalëkalimet para nisjes
+  13)  nostore         Çaktivizo veçorinë Depozitë-LiveUSB (vetëm LiveUSB)
+  14)  dostore         Aktivizo veçorinë Depozitë-LiveUSB (vetëm LiveUSB)
+  15)  savestate       Ruaj ca kartela nëpër rinisje (vetëm LiveUSB)
+  16)  nosavestate     Mos ruaj kartela nëpër rinisje (vetëm LiveUSB)

@@ -1,0 +1,8 @@
+COUNTRY="Svenska"
+WM_LANG="sv"
+KEYBOARDS="se,us"
+KEYTABLE="se-latin1"
+LANG="sv_SE.UTF-8"
+MIRROR="se"
+TZ="Europe/Stockholm"
+XKBLAYOUT="se,us"

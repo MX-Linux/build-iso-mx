@@ -1,0 +1,284 @@
+#!/bin/bash
+
+#==============================================================================
+# Set the console font size based on how many characters fit across the screen.
+# For many cases this makes the look of the display independent of the
+# resolution of the console screen.  Since the resolution can jump dramatically
+# when udev runs and a  modesetting driver kicks in, basing the font size on
+# the number of characters works very well.
+#
+# In addition, we set the our selection in /etc/default/console-setup. This
+# means that the console-setup.sh script will use our selection instead of
+# clobbering it and our selection should also carry over to during an install.
+#
+# This is called from splash-all when it is in --auto mode which happens when
+# it is called from a fbcondecor.rules uedev rule.  Udev will often set a new
+# framebuffer and the muck up the font.  So we immediately add the decoration
+# and then fix the font.  We need to set the decoration first in order to know
+# how many pixels we have to work with.
+#
+# This is called *again* by /etc/init.d/keyboard-setup.sh which runs right
+# after udev runs.  This routine *needs* to run to get the fonts right but
+# the udev rule may not always kick in (for example if "nomodeset" is used).
+# We run from the udev rule to minimize the time we expose the user to the
+# wrong font and then we run from keyboard-setup to be sure we run at all.
+#==============================================================================
+
+ME=${0##*/}
+
+DEF_SCREEN_WIDTH=120
+FONT_DIRS="/usr/share/consolefonts /live/locale/fonts"
+CONF_FILE="/etc/default/console-setup"
+LOG_FILE="/live/config/font"
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+
+set_console_font() {
+    local cmd_width  lang  AUTO  label
+
+    # Get parameters from "cmdline"
+    if [ "$1" = "--auto" ]; then
+        [ -z "$DEBUG" ] && AUTO=true
+        label=$2
+        local param val
+        for param in $(cat /live/config/proc-cmdline /live/config/cmdline 2>/dev/null); do
+            val=${param#*=}
+            case $param in
+                    lang=*)      lang=$val  ;;
+                conwidth=*) cmd_width=$val  ;;
+            esac
+        done
+    else
+        cmd_width=$1
+        lang=$2
+    fi
+
+    local code
+    case ${lang%%_*} in
+                     kk|ky|tj) code='CyrAsia'  ;;
+                        ru|uk) code='CyrKoi'   ;;
+                  bg|mk|ru|sr) code='CyrSlav'  ;;
+      bs|hr|cs|hu|pl|ro|sk|sl) code='Lat2'     ;;
+        af|sq|ast|da|nl|et|fr) code='Lat15'    ;;
+    'fi'|de|is|id|pt|es|sv|tr) code='Lat15'    ;;
+                        lt|lv) code='Lat7'     ;;
+                           el) code='Greek'    ;;
+                            *) code='Uni2'     ;;
+    esac
+
+    # allow "conwidth=aa,bb" and we get the "bb".  This allows a different
+    # conwidth for the initrd ("aa") and for the booted system ("bb").
+    local width=${cmd_width##*,}
+    : ${width:=$DEF_SCREEN_WIDTH}
+
+    local dir fdir
+    for dir in $FONT_DIRS; do
+        test -d $dir || continue
+        fdir=$dir
+        break
+    done
+    [ -n "$fdir" ] || error "could not find a font directory"
+
+    # The two font dirs and the extension stuff below allows the same code
+    # to work early in the initrd and late while the real system is booting.
+    # The busybox "setfont" doesn't like gzipped fonts so they are not
+    # gzipped in the initrd.  This actually makes the initrd.gz *smaller*.
+    local ext=.psf.gz
+    case $fdir in
+        /live/*) ext=.psf ;;
+    esac
+
+
+
+    local file font face size
+    while true; do
+        # Silently give up on bad input
+        case $width in
+            [1-9][0-9]|[1-9][0-9][0-9]) ;;
+            off) break ;;
+              *) error "bad conwidth parameter %s" $cmd_width
+                break ;;
+        esac
+
+        test -e /dev/fb0 || break
+
+        local name=Terminus
+
+        local pixel_width=$(get_fbcondecor_width --tty=1)
+
+        [ -z "$pixel_width" ] && break
+
+        # Make sure we have at least 80 chars per line
+        local min_width=${MIN_SCREEN_WIDTH:-80}
+        [ $width -lt $min_width ] && width=$min_width
+
+        local cmd_size=$((pixel_width / width))
+
+        say " req. width: $width"
+        say "pixel width: $pixel_width"
+        say " font width: $cmd_size"
+
+        # Convert font parameters to parts of the font name
+
+        case $cmd_size in
+                            [1-7]) size=12x6       ;;
+                             [89]) size=16         ;;
+                               10) size=20x10      ;;
+                               11) size=22x11      ;;
+                            1[23]) size=24x12      ;;
+                            1[45]) size=28x14      ;;
+                          1[6789]) size=32x16      ;;
+                     [23456][0-9]) size=32x16      ;;
+        esac
+
+        # Now try to find an existing font file that matches what we want
+
+        local try font_file
+        for face in ${name}Bold VGA $name; do
+            #say $face$size
+            try=$code-$face$size
+            font_file=$fdir/$try$ext
+            #say $font_file
+            test -e $font_file || continue
+            font=$try
+            break
+        done
+
+        break
+    done
+
+    # If we didn't find a font, fall back to VGA16 so we still
+    # get the right unicode chars for the chosen language
+    if [ -z "$font" ]; then
+        font=$code-VGA16
+        file=$fdir/$font$ext
+        face="VGA"
+        size="8x16"
+        test -e $file || return 2
+    fi
+
+    say "       font: $font"
+
+    setfont $fdir/$font$ext
+    local cols=$(stty size | cut -d" " -f2)
+    say "   num cols: $cols"
+
+    # only edit conf_file in auto mode
+    [ "$AUTO" ] || return
+
+    if [ -n "$LOG_FILE" -a -d "$(dirname $LOG_FILE)" ]; then
+        local start_t=$(cut -d" " -f22 /proc/$$/stat |  sed -r 's/(..)$/.\1/')
+        printf "%10s: %4s %5s: %18s: %s\n" "$start_t" "$width" "$pixel_width" "$label" "$font" >> $LOG_FILE
+        #printenv >> $LOG_FILE
+        #echo >> $LOG_FILE
+    fi
+
+    local conf_file=$CONF_FILE
+
+    test -w $conf_file || return
+
+    #--- Now record the font in the conf_file ---
+
+    # See if both lines already exist in the file (usual case)
+    # We try to minimize the number of times we write to the file
+    if grep -q "^\s*FONTFACE=" $conf_file && grep -q "^\s*FONTSIZE=" $conf_file; then
+        # if so then only edit the conf_file at most once
+        local expr
+        grep -q "^\s*FONTFACE=\"$face\"" $conf_file \
+            || expr="$expr -e s/^\s*(FONTFACE=).*/\1\"$face\"/"
+
+        grep -q "^\s*FONTSIZE=\"$size\""  $conf_file \
+            || expr="$expr -e s/^\s*(FONTSIZE=).*/\1\"$size\"/"
+
+        [ ${#expr} -gt 0 ] && sed -r -i $expr $conf_file
+    else
+        add_or_replace  "^\s*FONTFACE="  "FONTFACE=\"$face\""  $conf_file create
+        add_or_replace  "^\s*FONTSIZE="  "FONTSIZE=\"$size\""  $conf_file create
+    fi
+}
+
+#------------------------------------------------------------------------------
+# This version uses the program "fbcondecor_ctl" or fbcondecor_ctl.static" to
+# find out the width of the active text area of the current theme in pixels.
+# This is the best way to do it but it requires that program which is not in
+# initrd ATM.  So similar code in the initrd assumes the default theme is
+# being used.
+#------------------------------------------------------------------------------
+get_fbcondecor_width() {
+    local tty_arg=$1  res
+    local fbsize_file=/sys/class/graphics/fb0/virtual_size
+    read res 2>/dev/null <$fbsize_file
+    [ -z "$res" ] && return
+    local width
+    local name=fbcondecor_ctl prog
+    for prog in $name $name.static; do
+        which $prog &>/dev/null || continue
+        width=$($prog $tty_arg -c getcfg 2>/dev/null | sed -nr "s/^twidth:\s+//p")
+        break
+    done
+    [ ${width:-0} -eq 0 ] && width=${res%%,*}
+    printf "%s\n" "$width"
+}
+
+# NOT USED NOW since setting theme via boot param is not enabled
+get_fbcondecor_theme() {
+
+    local boot_param=${1:-$SPLASH_PARAM}
+    local param theme
+    for param in ${boot_param//,/ }; do
+        case $param in
+          t=*|theme=*) theme=${param#*=} ;;
+        esac
+    done
+    test -d /etc/$theme/ || theme=default
+    test -d /etc/$theme/ || return 1
+    echo $theme
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Either replace an existing line or add a new line if an existing line that
+# sets the variable we want to set is missing.  If the "create" flag is given
+# then we will create the file if it doesn't already exist.
+#------------------------------------------------------------------------------
+add_or_replace() {
+    local where=$1  line=$2  file=$3  create=$4
+
+    if ! test -e "$file"; then
+        [ "$create" ] || return
+        mkdir -p $(basename $file)
+        echo "$line" > $file
+        return
+    fi
+
+    if grep -q "$where" "$file"; then
+        # Don't over-write the same string
+        grep -q "^$line" "$file" && return
+        # Edit the existing line
+        sed -i -r "/$where/ s|.*|$line|" $file
+    else
+        # Add it under the top line of the file
+         sed -i "1 a$line" $file
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Print out some info about what is happening if we are NOT in --auto mode.
+#------------------------------------------------------------------------------
+say() {
+    [ "$AUTO" ] && return
+    local fmt=$1  ;  shift
+    printf "$fmt\n" "$@"
+}
+
+#------------------------------------------------------------------------------
+# Print out the reason we are stopping if NOT in --auto mode.
+#------------------------------------------------------------------------------
+error() {
+    [ "$AUTO" ] && exit 3
+    local fmt=$1  ;  shift
+    printf "$ME error: $fmt\n" "$@" >&2
+    exit 3
+}
+
+set_console_font "$@"

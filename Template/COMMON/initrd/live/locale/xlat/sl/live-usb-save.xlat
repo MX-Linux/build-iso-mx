@@ -1,0 +1,3 @@
+_Could_not_find_UUID_of_boot_device_for_remounting_="Ne najdem UUID zagonske naprave, da bi jo ponovo priklopil"
+_Could_not_find_boot_device_for_remounting_="Nisem našel zagonske naprave za ponovni priklop"
+_Could_not_remount_boot_device_="Nisem mogel ponovno priklopiti zagonske naprave"

@@ -1,0 +1,156 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-L10n
+# Required-Start:    udev
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: live-L10n
+# Description: Sets timezone, hostname, and console fonts.  Runs update-menus and update-locale
+### END INIT INFO
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+case "$1" in
+   start)         ;;
+    stop) exit 0  ;;
+       *) echo "Usage: $0 {start|stop}" >&2
+          exit 1  ;;
+esac
+
+# For debugging
+: ${CMDLINE:=$(cat /live/config/proc-cmdline /live/config/cmdline /live/config/cmdline2)}
+
+for param in $CMDLINE; do
+    case $param in
+        noloadkeys)    NO_LOAD_KEYS=true                   ;;
+            lang=*)    CMD_LANG=${param#*=}; MUST_RUN=true ;;
+        hostname=*)    CMD_HOST=${param#*=}; MUST_RUN=true ;;
+              tz=*)      CMD_TZ=${param#*=}; MUST_RUN=true ;;
+         confont=*)    CMD_FONT=${param#*=}; MUST_RUN=true ;;
+          conkbd=*)    CMD_KEYS=${param#*=}; MUST_RUN=true ;;
+    esac
+done
+
+test -e /etc/localtime || MUST_RUN=true
+
+[ "$MUST_RUN" ] || exit 0
+
+# FIXME: check to see if any of these are needed
+umask 022
+# Ignore these signals: INT, TERM, SEGV
+trap "" 2 3 11
+
+# . /usr/share/antiX/lib/live-init-utils.sh
+. /live/lib/live-init-utils.sh
+
+start_init_logging
+load_translation
+
+
+# Start block of code that is sent to the log file
+main() {
+    echo_script "$_Localizing_console_and_timezone_" $0
+
+    #-jbb: for debugging
+    unset COUNTRY WM_LANG KEYBOARDS KEYTABLE LANG MIRROR TZ XKBLAYOUT CONSOLE_FONT
+
+    # Read in: COUNTRY WM_LANG KEYBOARDS KEYTABLE LANG MIRROR TZ XKBLAYOUT CONSOLE_FONT
+    [ "$CMD_LANG" ] && get_init_lang $CMD_LANG "error"
+
+    # CMD_TZ overrides value from LANG file above
+    # Only set timezone via explicit boot parameter after the first time.
+    TZ=${CMD_TZ:-$TZ}
+
+    local lt_file=/etc/localtime
+    [ "$TZ" ] && if first_write $lt_file || [ "$CMD_TZ" ]; then
+
+        # Check for valid tz string
+        local dest=/usr/share/zoneinfo/$TZ
+        if [ -e $dest ]; then
+            echo_live "$_Setting_timezone_and_localtime_to_X_" "$(pquote $TZ)"
+            echo $TZ > /etc/timezone
+
+            # If it is a symlink or doesn't exist make a symklink ...
+            if  ! test -e "$lt_file"; then
+                ln -sf $dest $lt_file
+
+            elif test -L "$lt_file"; then
+                rm -f $lt_file
+                ln -sf $dest $lt_file
+
+            # ... otherwise copy over a real file
+            elif test -f $lt_file; then
+                cp -f $(readlink -f $dest) $lt_file
+            fi
+        else
+            error "$_Unknown_time_zone_X_" "$(pquote $TZ)"
+        fi
+    fi
+
+    # If /etc/localtime doesn't exist then make it a symlink using the
+    # name in /etc/timezone
+    if ! test -e $lt_file; then
+        local tz=$(cat /etc/timezone 2>/dev/null | head -n1)
+        local dest=/usr/share/zoneinfo/$tz
+        if [ -n "$tz" -a -e $dest ]; then
+            echo_live "$_Recreate_symlink_X_" "$(pquote $lt_file)"
+            ln -sf $dest $lt_file
+        fi
+    fi
+
+    if [ "$CMD_HOST" ]; then
+        echo_live "$_Setting_hostname_to_X_" "$(pquote $CMD_HOST)"
+        echo "$CMD_HOST" > /etc/hostname
+        hostname -F /etc/hostname
+    fi
+
+    if [ "$LANG" ]; then
+        echo_live "$_Setting_locale_to_X_" "$(pquote $LANG)"
+
+        export PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+        update-locale "LANG=$LANG"
+        #export locale
+        #sed -i '/^export LANG=/d' /etc/skel/.profile
+        #echo "export LANG=$LANG" >>/etc/skel/.profile
+        # update fluxbox/icewm/jwm menus for locale
+        update-menus
+    fi
+
+    KEYTABLE=${CMD_KEYS:-$KEYTABLE}
+    if [ -n "$KEYTABLE" -a -z "$NO_LOAD_KEYS" ]; then
+        # echo_live "$_Configuring_console_for_a_X_keymap_" "$(pquote $KEYTABLE)"
+        # install keymap and set console font
+        rm -f /etc/console/*
+        #/usr/sbin/install-keymap "$KEYTABLE"
+        loadkeys -q "$KEYTABLE"
+    fi
+
+    #[ -n "$CMD_FONT" ] && set_console_font "$CMD_LANG" "$CMD_FONT"
+}
+
+add_or_replace() {
+    local where=$1  line=$2  file=$3  create=$4
+
+    if ! test -e "$file"; then
+        [ "$create" ] && echo "$line" > $file
+        return
+    fi
+
+    if grep -iq "$where" "$file"; then
+        # Don't over-write the same string
+        grep -q "^$line" "$file" && return
+        # Edit the existing line
+        sed -i -r "/$where/I s|.*|$line|" $file
+    else
+        # Add it under the top line of the file
+         sed -i "1 a$line" $file
+    fi
+}
+
+
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE
+exit 0

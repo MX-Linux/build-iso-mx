@@ -1,0 +1,7 @@
+#!/bin/bash
+
+PATH=/sbin:/bin/:/usr/sbin:/usr/bin:/live/bin
+
+tty=10
+
+chvt $tty

@@ -1,0 +1,757 @@
+******* PRELIMINARY *******
+
+=============================
+antiX/MX Live Boot Parameters
+=============================
+The boot menus in the legacy bootloader provide a convenient GUI for
+setting some of the options documented here.  Use the F12 key in the
+bootloader to see what boot options are selected by your current menu
+choices.  Many of the advanced features of the Live system only work on
+a live-usb (or a frugal install).
+
+
+BOOT OPTIONS
+------------
+These options control how the Live media boots.  In particular the
+control where we look for the linuxfs file.  The location of this
+file will be used for other Live features such as persistence and
+remastering.
+
+The Boot Device
+---------------
+The primary job of Live initrd is to find the compressed file system
+called a Isquashfs file.  For antiX and MX this file is normally named
+linuxfs.  We need to find the device this file is on and find the file
+on that device.
+
+Normally we scan all cdrom (and dvd) and usb devices for that file.
+This default behavior can be modified with the following options.  The
+easiest way to specify the boot device is the "from" option which
+specifies what type of device to boot from:
+
+    from=<hd|usb|cd|all>
+
+Valid values "cd hd usb".  More than one is allowed.  The default is
+"usb,cd" so by default we will only look at cdrom/dvd devices and usb
+devices for the boot directory.
+
+You can also specify a device more specifically but giving a device name
+(like "sda1"), a partition label, or a partition UUID.
+
+    bdev=*
+
+The name of the boot device.  For example "bdev=sda1".
+
+    blab=*
+
+The partition label of the boot device.
+
+    buuid=*
+
+The UUID of the boot device.  Wildcard characters such as "*" are allowed
+which can be useful if you don't want to type in the entire URL.
+
+The Boot Directory
+^^^^^^^^^^^^^^^^^^
+
+    bdir=*
+
+By default, we look for the "linuxfs" file and and persistence files in
+the "/antiX" directory on the boot device.   If you want to boot more
+than one Live system on the same device or if you want to do a frugal
+install, you should change that directory and use the "bdir" parameter
+to point to the new directory.  The leading slash is optional.
+
+    sq=*
+
+Specify the linuxfs file plus the boot directory all at once.  The
+default is "/antiX/linuxfs".  The leading slash is optional.
+
+
+X-Windows Options
+-----------------
+
+These options affect X-windows.  They will all be carried over when you
+do an install.  The various keyboards options are carried over in the
+file "/etc/defaults/keyboard".  The X-Windows options are carried over
+in the file "/etc/X11/xorg.conf".  The two main boot parameters far
+controlling X-Windows are "xorg=*" and "nomodeset".
+
+    xorg=*
+
+This parameter allows you to set the video driver and screen resolution.
+
+Keyboard Options
+^^^^^^^^^^^^^^^^
+A rather complete list of keyboard options and variants is usually available at
+"/usr/share/X11/xkb/rules/xorg.lst"
+
+    kbd=*
+
+Set the keyboard layout.  This is usually one or more 2-letter country
+codes separated by commas.  For example: "kbd=gr,us".  This will allow
+users to quick switch between the US and the Greek keyboard layouts.
+
+    kbopt=*
+
+Keyboard options.  These give special meaning to certain keys or key
+combinations.  For example "kbopt=ctrl:nocaps" turns the Caps Lock key
+into an extra Control key.
+
+    kbvar=*
+
+Keyboard variant.  These are variants to the keyboard layout.  For
+example "kbvar=dvorak" will give you a Dvorak layout when you use the
+"us" layout.
+
+Video Options
+^^^^^^^^^^^^^
+These options affect the X-windows video.
+
+    fontsize=*
+
+Adjust the size of the font in X-windows.  This does the same thing as
+setting DPI (see below) but the scale is relative to the default font
+size.  So setting fontsize=1 does nothing.  Setting fontsize=1.1 makes
+the fonts 10% larger and so on.
+
+    dpi=*
+
+DPI stands for "dots per inch".  It controls the size of most fonts.  A
+larger DPI value will give you larger fonts and as smaller value will
+give you smaller fonts.  The default is "96".  This setting is stored in
+the Display Manager  configuration file.  On <antiX this is /etc/slim.conf.
+
+
+Miscellaneous Options
+---------------------
+
+    md5|checkmd5
+
+Check the md5sum of the three primary files needed to boot a live
+system: "linuxfs", "vmlinuz", and "initrd.gz".  If this test passes then
+your boot media should be good although this won't necessarily catch
+intermittent problems.
+
+    checkfs
+
+Check the ext2/3/4 file systems that are invovled in the live boot
+process.
+
+    nocheckfs
+
+The live-usb, like an installed system, will periodically check
+its own file system based the time since the last check and/or the
+number of mounts since the last check.  Use this option to turn this
+feature off.
+
+    toram
+
+Copy the entire "linuxfs" file into RAM.  This takes up RAM.  The amount
+of RAM used will be about the same as the size of the .iso file used to
+create the LiveCD or live-usb.  It will also take some time when you
+first boot to copy the file into RAM.  But after this, the system will
+run very fast.  You can also eject the LiveCD (or remove the live-usb
+while the system is running.
+
+    norepo
+
+Don't localize the Debian antiX/MX repositories based on timezone.
+
+    norepo=aa,bb,cc
+
+Don't localize the antiX/MX repositories to "aa", "bb", or 'cc".  Instead,
+localize to the next closest repository.  Codes:
+
+    au1   Melbourne
+    au2   Trasmania
+    at    Vienna
+    be    Brussels
+    bg    Sofia
+    br    Manaus
+    ca    Halifax
+    ch    Zurich
+    cn    Beijing
+    cz    Prague
+    de    Germany
+    dk    Denmark
+    ec    Ecuador
+    es    Spain
+    fr    France
+    gb    United Kingdom
+    ge    Georgia
+    gr    Greece
+    hk    Hong Kong
+    hu    Hungary
+    id    Indonesia
+    in    India
+    it    Italy
+    jp    Japan
+    ke    Kenya
+    kz    Kazakhstan
+    la    Los Angeles, USA
+    lt    Lithuania
+    my    Malaysia
+    nl    The Netherlands
+    ny    United States, Rochester NY
+    nz    New Zealand
+    ph    Phillipines
+    pk    Pakistan
+    pl    Poland
+    ru    Russia
+    se    Sweden
+    sg    Singapore
+    si    Slovenia
+    sk    Slovakia
+    th    Thailand
+    tr    Turkey
+    tw    Taiwan
+    ua    Ukraine
+    ut    Utah, USA
+    uy    Uruguay
+    vn    Vietnam
+    za    South_Africa
+
+
+Disable Services
+-----------------
+
+    disable=*
+
+For faster booting and to lower resources consumption you can disable
+some system services and some Live features using the "disable=*" boot
+option.  The default value for antiX is "disable=lx" which is explained
+below.  Live features, whether enabled or not, do not carry over to
+installed systems.  Likewise, services disabled with the "disable=*" are
+not disabled automatically on installed systems.  Some of these can
+replace a boot parameter (such as "l" for "lean")  In those cases the
+boot parameter that is replaced is listed after the disable letter.
+
+A list of actual services that have been disabled is available in the
+file "/etc/live/config/disabled".  You can enable and disable services
+after you boot with the "services" command.
+
+    a                disable acpid service
+    A                Enable acpid service
+    B                Enable bootclean.sh service (disabled by default)
+    c                disable connmand service
+    d [nodbus]       disable dbus service
+    F 		      Enabe fbcondecor splash on all virtual consoles
+    g                disable gpm service (mouse on virtual consoles)
+    i                disable ifplugd service
+    l [lean]         disable "lean" services (see below)
+    L                Enabled syslogd service
+    m [mean]         disable "mean" services (see below)
+    n                disable nfs service
+    N                Enable ntpd service (disbabled by default)
+    P                Enable pamd service (disabled by default)
+    r [norepo]       don't localize repos based on timezone
+    s [nosavestate]  don't save state on live-usb systems
+    S [savestate]    DO save state on live-usb systems
+    v                disable VirtualBox services
+    V                Don't blacklist fb modules, nvidiafb, etc.
+      [vboxdecor]    Enable fbcondecor in Virtual Box
+    x [Xtralean]     disable "Xtra-lean" services (see below)
+    Y                Enable Plymouth (disabled by default)
+
+Note 1: Virtual Box services are enabled automatically when run
+on Virtual Box and disabled automatically when not.
+
+Note 2: If a laptop is detected then acpid and wicd are excluded
+from the list of lean services.  They can still be disabled on with "a"
+and "w".
+
+Lean Services (l):
+
+    acpi-support   cpufrequtils   loadcpufreq    rsyslog
+    acpid          cron           nfs-common     saned
+    bluetooth      cups           rpcbind        smartmontools
+    bootlogs       irqbalance     rsync          ssh
+
+Xtralean Services (x):
+
+    cryptdisks           mountnfs-bootclean.sh
+    cryptdisks-early     pppd-dns
+    hwclock.sh           ufw
+    lm-sensors           urandom
+
+Mean Services (m):
+
+    avahi-daemon               nfs-kernel-server
+    dnsmasq                    ntp
+    ifplugd                    pppd-dns
+    mountnfs-bootclean.sh      resolvconf
+    mountnfs.sh                rpcbind
+    network-manager            smbd
+    networking                 ufw
+    nfs-common
+
+
+Personalization
+---------------
+
+These options let you customize or personalize your system.  They will
+all be carried over to the hard drive when you install.
+
+    desktop=*
+
+This option sets the default window manager and desktop icon manager (if
+any).  For example: "desktop=rox-icewm" will set the window manager to
+be IceWM and will use Rox to handle desktop icons.  The only other icon
+manager available is SpaceFM.  So "desktop=space-fluxbox" will use
+Fluxbox as the window manager and use SpaceFM to handle desktop icons.
+
+    desktheme=[dark|light]
+
+Use a [dark|light] theme for the wallpaper and window decorations.
+
+    hostname=*
+
+Set the hostname of the system.  The default hostname is "antiX1".
+
+    hwclock=[utc|local|ask]
+
+Assume the hardware clock is set to UTC, or localtime or have the system
+help you guess what it is set to based on your timezone.  Normally
+Windows machine have the hardware clock set to localtime while
+Linux-only machines have it set to UTC.  The Live system will not change
+your hardware clock but it will read it and use it to figure out what
+time it is.
+
+    lang=*
+
+In antiX and MX this option sets more than just the language.  It also
+sets the keyboard layout, the Debian mirror, the antiX/MX mirror and the
+timezone.  If you set any of these others explicitly then that setting
+will over-ride the value set via "lang".
+
+    mirror=*
+
+Set the country of the Debian mirror.  Also set the antiX/MX mirror to
+the one closest to that country.  Usually this option is set to a
+2-letter country code such as "mirror=gr".
+
+    tz=*
+
+Set the timezone.  Example: "tz=America/Denver".  Some languages, such
+as en_US (United States English) cover more than one timezone so setting
+the "lang" may not set the correct timezone.
+
+
+Loading Modules
+---------------
+
+One of the primary tasks of the live-initrd is to mount the device that
+holds the "linuxfs" file which contains the final file system.  Modules
+(also called drivers) sometimes need to be loaded to allow the kernel to
+talk to certain types of hardware.  Most of the time this is taken care
+of automatically but if you have very old or unusual hardware, there
+might be a glitch.
+
+    load=*
+
+Load one or more specific modules, separated by commas.  You need to
+know the name of the module or modules you need for this to be useful.
+
+    load=all
+
+Load all modules in the initrd that are not hardware specific.  This is
+a shotgun approach just in case there is a module that is available in
+the initrd that needs to be manually loaded for your system to boot.
+
+    noload
+
+Don't automatically load the standard list of modules.
+
+    blacklist=x,y,z
+
+Don't load modules x or y or z.
+
+
+Other Booting options
+---------------------
+
+These options affect the boot process but the don't fit into any of the
+categories above.
+
+    fromiso=*
+
+Use this to boot from a iso file.  This feature is deprecated because it
+defaults some of the more advanced features of the Live system but is
+supported due to popular (or otherwise) demand.  This can be abbreviated
+as "iso=*".
+
+    try=*
+
+The maximum number of seconds to try finding the boot directory.  The
+default is 15 seconds.  This replaces "rootdelay" which is no longer
+used.
+
+=head2 Debugging
+
+Sometimes booting problems can be tracked down to a missing driver or a
+driver that is not getting loaded.  These two boot parameters can be
+helpful in tracking down such problems.
+
+    bp=*
+
+Set one or more breakpoints in the live-init script separated by commas.
+Use "bp=ask" to get a list of breakpoints to choose from.  The meanings
+may change with different versions so use "bp=ask" to be sure.  The "b9"
+breakpoint does the same thing as the "bash" breakpoint.
+
+     1) before welcome
+     2) before coldplug
+     3) before looking for linuxfs file
+     4) after mounting boot device
+     5) after mounting persistence device
+     6) after mounting aufs
+     7) after prepare switch_root
+     8) before running live init.d scripts
+     9) right before starting init
+     e) On possibly fatal error
+    b8) Bash shell before running live init.d scripts
+    b9) Bash shell before the system starts
+
+    verb=*
+
+Control how much gets printed out during the early boot process.  The
+default level is "verb=5".  Lower numbers print less, higher numbers
+print more.  Usually "6" or "7" will show you more info without being
+too obnoxious.  The full output is available in the file
+/var/log/live/initrd.log.  A partial version of the log file is
+available at /init.log from within most breakpoints.
+
+
+Live-usb Special Features
+-------------------------
+
+We provide many special features that only work on LiveUSBs or Frugal
+installs because these features take advantage of the ability to write
+to a usb drive or an internal hard drive or solid state drive.
+
+NOTE: A live-usb that was created with the "dd" command has a read-only
+file system so it is treated just like a Live-cd.  So the term live-usb
+below applies only to live systems that were built on a read-write file
+system, be it a usb stick, an external drive, or an internal drive.  We
+highly recommend you use the live-usb-maker(-gui) tool to create antiX
+and MX live-usbs.
+
+Persistence
+^^^^^^^^^^^
+
+These options enable and control Live persistence which allows you to make
+changes that will persist across reboots.  These options are normally used on
+LiveUSBs but if you specify a persistence device (or use the default LiveCD
+persistence device) then you can make use persistence on a LiveCD.  In this
+case, the changes will have to be saved on some other device that allows for
+read-write access.
+
+If you enable persistence on a LiveCD and and device with the label
+antiX-Persist is not found then we will give you a list of partitions to
+choose from and offer to give that device the label "antiX-Persist".  If a
+form of persistence is "required" but the persistence file is not found then
+we will offer to create it for you.  We do not offer to create a persistence
+file if it is merely "requested" with one exception.  If root persistence is
+required and home persistence is requested and neither "rootfs" nor "homefs"
+persistence files exist then we will offer to create both a "rootfs" file and
+a "homefs" file.
+
+Persistence/Frugal Options
+
+The following cheat codes are available in the "F5 Persist" menu in the
+legacy bootloader.  They are provided so you don't have to understand
+the more flexible "persist=*" and "frugal=*" parameters.  This first
+group enable persistence but not frugal:
+
+  persist_all       persist=root!,home!        required root and home persistence
+  persist_root      pesist=root!               required root persistence
+  persist_static    persist=root!,home!,static required home and static root persistence
+  persist_home      persist=home!              required home persistence
+  p_static_root     persist=root!,static       required static root persistence
+
+This second group enable frugal and persistence:
+
+  frugal_persist    frugal=root!,home!         required root nad home persistence
+  frugal_root       frugal=root!               required root persistence
+  frugal_static     frugal=root!,home!,static  required home and static root persistence
+  frugal_home       frugal=home!               required home persistence
+  f_static_root     persist=root!,static       required static root persistence
+  frugal_only       frugal                     no persistence
+
+
+The main persistence Option
+---------------------------
+
+    persist=*
+
+This is the main option for enabling persistence.  It provides more
+flexibility than the convenience parameters listed above.  The
+"frugal=*" option works exactly the same way so once you understand
+"persist=*" you also understand "frugal=*".
+
+    auto,a
+
+Automatically create "rootfs" and/or "homefs" files if they don't already
+exist and they are required.  Normally, we will prompt the user for size and
+file system type.
+
+    hd
+
+Only look on internal hard drives for the persistence device.  This is
+analogous to "from=hd" for finding the boot device.
+
+    home!|h!
+
+Enable and require home persistence.  The exclamation point means this form of
+persistence is required.  A non-fatal error will be thrown if it cannot be
+enabled.
+
+    home|h
+
+Request home persistence but don't require it.  We will try to enable home
+persistence but if we can't then this fact is briefly noted and the boot
+continues normally.
+
+    root!|r!
+
+Enable and require root persistence.  The exclamation point means this form of
+persistence is required.  A non-fatal error will be thrown if it cannot be
+enabled.
+
+    root|r
+
+Request root persistence but don't require it.  We will try to enable root
+persistence but if we can't then this fact is briefly noted and the boot
+continues normally.
+
+    static|s
+
+If root persistence is enabled then use the static version of root persistence.
+Normally, dynamic root persistence is used.
+
+    usb
+
+Only look on usb partitions for the persistence device.  This is analogous to
+"from=usb" for finding the boot device.
+
+
+The Persistence Device
+----------------------
+
+Just like the boot device can be specified generally with the "from=*" option
+and more specifically with options like "bdev=*", the same choices are
+available for specifying the persistence device.
+
+On a live-usb or a frugal install, the default persistence device is the boot
+device which is what you would expect.  Normally the persistence files will sit
+alongside the "linuxfs" file that we are booting from.
+
+On a LiveCD the default persistence device is whatever device has the disk
+label "antiX-Persist".  If you specify a persistence device with one of the
+three options below then the defaults are ignored.
+
+
+    pdev=*
+
+The name of the persistence device.  For example "pdev=sdb2".
+
+    plab=*
+
+The partition label of the persistence device.
+
+    puuid=*
+
+The UUID of the persistence device.  Like with "buuid=*" this parameter
+accepts wildcards like "*" so you don't have to type in the entire UUID.
+
+
+Other Persistence Options
+-------------------------
+
+These options don't fit into any of the previous categories.
+
+    ptry=*
+
+How many seconds to wait for the persistence device to appear.  This is only
+relevant if the peristence device is different from the boot device.  The
+default is 10 seconds.
+
+
+Remastering (live-usb Only)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+These two options affect remastering.  Normally, remastering is done
+automatically whenever there is a "linuxfs.new" file in the same directory as
+the "linuxfs" file.
+
+    noremaster
+
+Disable remastering even when a "linuxfs.new" file is found.
+
+    rollback
+
+Roll back to the previous version of "linuxfs".   If you remaster and
+for some reason things go horribly wrong, then use this feature to get
+back to the state right before you did the remaster.
+
+
+Frugal Install
+--------------
+
+Automatically do a frugal install from a LiveCD or live-usb to a hard
+drive or a usb drive.  Persistence files can also be created
+automatically so you can literally create and boot into an installed
+system in just a minute or two (depending on the speed of your
+hardware).
+
+There are two modes of operation that are triggered by the same "frugal"
+boot parameter: install mode and boot mode.  Normally the frugal device
+is a partition  with the label "antiX-Frugal".  If such a device is not
+found then you will be given a list of partitions to choose from.  Once
+you have selected a device, you will be given an option to have it give
+the "antiX-Frugal" label.  If an antiX frugal install has not already
+been done on the device you selected then an frugal install will be
+performed.
+
+The next time you boot with the frugal option, we will automatically
+boot from the "antiX-Frugal" device into the frugal system that was
+installed. Again, if a frugal install is not found on that device, we
+will automatically create one.
+
+If persistence is requested and the persistence files are not found then
+we will offer to create them after we do the install.  If you want to
+force a persistence file to be created in a later boot then "require"
+that form of persistence with an exclaimation point.
+
+    frugal=root     (requested)
+    frugal=root!    (required)
+    frugal
+
+Enable frugal mode.  Either boot into the existing frugal system or
+create a new one if it does not already exist.
+
+    frugal=*
+
+A contraction of "frugal persist=*".   It is common to add persist
+options when enabling frugal mode so you can add the persist options
+directly to the frugal boot parameter. Example: "frugal=root,home".
+
+
+The Frugal Device
+-----------------
+Just like you can select the boot device and the persistence device with
+device name, label, or uuid, you can do the same with the frugal device.
+If you specify the frugal device this way and it is not found then we
+will give you a list of devices to choose from, just like with the
+"frugal" parameter, but we will "not" offer to label the device you have
+selected.
+
+    fdev=*
+
+The name of the frugal device.
+
+    flab=*
+
+The partition label of the frugal device.
+
+    fuuid=*
+
+The UUID of the frugal partition.
+
+Miscellaneous live-usb Options
+------------------------------
+Most of these options take advantage of the read-write file system on a
+live-usb and save extra information directly to the live-usb file
+system.  Most of them also work on a frugal install.
+
+    checkfs
+
+Perform file system check on the "live-usb".  This won't check the file system
+of a LiveCD.  Will also check the file system of the persistence device (if
+different from the boot device) and the file systems on the persistence files
+"rootfs" and "homefs" if they exist and are enabled.  It will only check the
+following types of file systems: ext2, ext3, and ext4.
+
+    gfxsave
+    gfxsave=*
+
+Set the bootloader current bootloader settings as the defaults.  Valid
+values: "custom", "menus", "both", and "reset".  Plain "gfxsave" means
+"gfxsave=both".
+
+    dostore
+
+Enable the live-usb-Storage feature which creates a "live-usb-Storage/"
+directory in the user's home directory that gives direct access to any
+extra storage space on the live-usb file system.  This option is enabled
+by default and it is sticky.  Once it is enabled it will stay enabled
+until you disable it with the "nostore" option.
+
+    nostore
+
+Disable the live-usb-Storage feature.  This is also sticky.  Once you
+turn the storage feature off it will stay off until you turn it back on
+again with "dostore".
+
+    savestate
+
+Enable saving "state" files across reboots.  This is enabled by default
+and sticky.
+
+During the first live boot the directory "/antiX/state" is created and
+populated with two files: "general-state-files" and
+"machine-state-files".  These files contain lists of files to be saved
+directly on the live-usb across reboots.  This provides some persistence
+even if no form of persistence is enabled.  For example, if you use
+"wicd" to connect to a wireless network then this feature will remember
+your wireless passwords across reboots.
+
+General State Files are shared between machines but Machine State Files
+are only restored to the machine they were saved on.  This allows you to
+use the same live-usb on different computers even if some of those
+computers require hardware specific settings.
+
+    nosavestate
+
+Disable the save state feature.  This is also sticky so once you disable
+saving state it will stay disabled until you enable it again with
+"savestate".
+
+=================
+Live Mount Points
+=================
+
+/live/aufs
+    The union filesystem used for the main filesystem (same as /)
+
+/live/aufs-ram
+    The RAM portion of the union filesystem
+
+/live/bios-dev
+    Our best guess of where the legacy bootloader lives.
+    Used for encryption and frugal installs
+
+/live/boot-dev
+    The device the linuxfs lives on
+
+/live/frugal
+    Used temporarily for frugal install.  Becomes boot-dev
+
+/live/iso-dev
+    The device the .iso file lives in for "fromiso"
+
+/live/iso-file
+    Where the iso file is mounted for "fromiso"
+
+/live/linux
+    Where linuxfs file is mounted for union filesystem
+
+/live/persist-root
+    Where rootfs is mounted for static root persistence
+
+/live/to-ram
+    Tmpfs for "toram" copy of linuxfs et al.
+
+/live/wrapper
+    Was used to support old Mepis iso that had an extra
+    layer of file-within-file.

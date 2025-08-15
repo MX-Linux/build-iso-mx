@@ -1,0 +1,49 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-static-shutdown
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Default-Start:     
+# Default-Stop:      0 1 6
+# Short-Description:
+# Description:       delete files from rootfs when static persist
+### END INIT INFO
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+LIST_FILE=/usr/share/excludes/static-root-delete.list
+if [ -e "/usr/local/share/excludes/static-root-delete.list" ]; then
+	LIST_FILE=/usr/local/share/excludes/static-root-delete.list
+fi
+
+main() {
+    case $1 in
+        start)                               ;;
+         stop) do_stop                       ;;
+            *) echo "Usage: $0 {start|stop}" ;;
+    esac
+    exit 0
+}
+
+do_stop() {
+    . /live/lib/live-init-utils.sh
+    #load_translation
+    echo_script "clean up static rootfs" $0
+
+    delete_static_rootfs
+
+    #-jbb if which auplink 2>/dev/null; then
+    #-jbb     echo_live "Cleaning aufs"
+    #-jbb     auplink /live/aufs flush
+    #-jbb fi
+}
+
+delete_static_rootfs() {
+    test -e /live/config/static-rootfs || return
+    echo_live "Delete files from static root"
+    echo rm -rf $(grep -v "^\s*#" $LIST_FILE | sed -r -e 's/\s+#.*//' | grep "/[a-zA-Z0-9]")
+}
+
+main "$@"

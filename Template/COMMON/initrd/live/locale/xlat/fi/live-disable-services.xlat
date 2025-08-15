@@ -1,0 +1,8 @@
+_Customizing_services_="Mukautetaan palveluita"
+_Disabling_NFS_server_X_="Kytkee NFS-palvelimen pois päältä %s"
+_Disabling_X_service_="Poistetaan käytöstä palvelu %s"
+_Disabling_X_services_Y_="Kytkee pois %s palvelut %s"
+_Disabling_more_services_X_="Kytkee pois lisää palveluja %s"
+_Disabling_network_services_X_="Kytkee pois verkkopalvelut %s"
+_Disabling_some_services_X_="Kytkee pois joitakin palveluja %s"
+_Enabling_X_service_="Otetaan käyttöön palvelu %s"

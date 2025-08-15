@@ -1,0 +1,636 @@
+#!/bin/bash
+#------------------------------------------------------------------------------
+# unpack-initrd
+#
+# Copyright 2016 -- 2019  Paul Banham <antiX@operamail.com>
+#
+# Thanks to fehlix for help with the microcode!
+#
+# See (in Linux source tree):
+#  Documentation/x86/boot.txt
+#  Documentation/x86/microcode.txt
+#------------------------------------------------------------------------------
+
+     VERSION="3.13"
+VERSION_DATE="Fri Apr  2 08:35:35 PM MDT 2021"
+
+ME=${0##*/}
+
+INITRD_FILE="/live/boot-dev/antiX/initrd.gz"
+INITRD_DIR="./initrd"
+REPACK_ARGS="-o -H newc --owner root:root --quiet"
+UNPACK_ARGS="-idum --quiet"
+
+ BZ2_MAGIC="5a42"
+GZIP_MAGIC="8b1f"
+ LZ4_MAGIC="2204"
+LZIP_MAGIC="5a4c"
+LZMA_MAGIC="005d"
+  XZ_MAGIC="37fd"
+ZSTD_MAGIC="b528"
+
+CPIO_MAGIC="3730"
+
+MICROCODE_FNAME=".microcode"
+ COMPRESS_FNAME=".compress"
+
+DEFAULT_COMPRESS="gzip"
+
+MAX_PREAMBS=10
+
+BLOCK_SIZE=512
+
+MAX_XTRA_SIZE=20
+INITRD_XTRA_DIR=
+
+usage() {
+    local ret=${1:-0}
+
+    cat <<Usage
+Usage:  $ME [options]
+
+Unpack and repack the live initrd.gz for antiX and MX.  Also unpack
+and repack Debian initramfs files.  Supports the following forms of
+compression: bz2, gzip, lz4, lzip, lzma, xz, zstd (assuming the
+associated (de)compression tool is available.  Also supports microcode
+preambles.
+
+Options:
+  -C  --clear            Delete directory before unpacking
+  -c  --compress=<prog>  Use <prog> to recompress the initrd
+  -d  --dir=<dir>        Unpack in <dir> instead of $INITRD_DIR
+  -f  --file=<file>      Unpack <file> instead of:
+                            $INITRD_FILE
+      --from=<file>      Same as --file
+  -l  --level=<N>        Set compression level: 1 (fastest) -- 9 (best)
+                         (only applies to certain compression methods)
+  -h  --help             Show this usage
+  -n  --no-md5           Don't make a .md5 file in --repack mode
+  -N  --no-microcode     Do not repack microcode
+  -p  --pretend          Show commands without running them
+  -r  --repack           Repack the initrd file
+  -s  --silent           Only show error messages
+  -t  --template         Remove binaries and modules when repacking
+  -q  --quiet            Say very little
+  -V  --verbose          Show commands in addition to running them
+  -v  --version          Show the version then exit
+  -x  --xtra=<dir>       Copy files under <dir> into main file system
+Usage
+
+    exit $ret
+}
+
+#------------------------------------------------------------------------------
+# Process a single command line argument with possibly a parameter
+#------------------------------------------------------------------------------
+eval_argument() {
+    local arg=$1 val=$2
+        case $arg in
+             -clear|C) DO_CLEAR=true                   ;;
+          -compress|c) COMPRESS_PROG=$val              ;;
+          -compress=*) COMPRESS_PROG=$val              ;;
+               -dir|d) INITRD_DIR=$val                 ;;
+               -dir=*) INITRD_DIR=$val                 ;;
+              -help|h) usage                           ;;
+             -level|l) COMP_LEVEL=$val                 ;;
+             -level=*) COMP_LEVEL=$val                 ;;
+              -file|f) INITRD_FILE=$val                ;;
+              -file=*) INITRD_FILE=$val                ;;
+              -from|f) INITRD_FILE=$val                ;;
+              -from=*) INITRD_FILE=$val                ;;
+      -no-microcode|N) NO_MICROCODE=true               ;;
+            -no-md5|n) NO_MD5=true                     ;;
+           -pretend|p) PRETEND=true                    ;;
+            -repack|r) REPACK=true                     ;;
+            -silent|s) SILENT=true                     ;;
+          -template|t) TEMPLATE=true                   ;;
+             -quiet|q) QUIET=true                      ;;
+           -verbose|V) VERBOSE=true                    ;;
+           -version|v) show_version                    ;;
+              -xtra|x) XTRA_DIR=$val                   ;;
+              -xtra=*) XTRA_DIR=$val                   ;;
+                    *) fatal "Unknown parameter -$arg" ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+# Which options need to be followed by a parameter
+#------------------------------------------------------------------------------
+takes_param() {
+    case $1 in
+     -compress|c) return 0 ;;
+          -dir|d) return 0 ;;
+         -from|f) return 0 ;;
+         -file|f) return 0 ;;
+        -level|l) return 0 ;;
+         -xtra|x) return 0 ;;
+    esac
+    return 1
+}
+
+#------------------------------------------------------------------------------
+# Start reading here
+#------------------------------------------------------------------------------
+main() {
+    local SHIFT  SHORT_STACK="CcdhlfNnprsqVvx"
+
+    local COMPRESS_PROG COMP_LEVEL DO_CLEAR NO_MD5 NO_MICROCODE
+    local PRETEND QUIET REPACK VERBOSE SILENT
+
+    read_params "$@"
+    shift $SHIFT
+    [ $# -gt 0 ] && fatal "Unexpected arguments: %s" "$*"
+
+    # FIXME: restrict comp_level based on compression program
+    case $COMP_LEVEL in
+           "") ;;
+        [0-9]) COMP_LEVEL="-$COMP_LEVEL" ;;
+       1[0-9]) COMP_LEVEL="-$COMP_LEVEL" ;;
+            *) fatal "Compression level must be 0 -- 19";;
+    esac
+
+    if [ "$REPACK" ]; then
+        ssay "Repack: %s --> %s" "$(pq ${INITRD_DIR%/}/)" "$(pq $INITRD_FILE)"
+        repack_initrd "$INITRD_FILE" "$INITRD_DIR"
+    else
+        ssay "Unpack: %s --> %s" "$(pq $INITRD_FILE)" "$(pq ${INITRD_DIR%/}/)"
+        unpack_initrd "$INITRD_FILE" "$INITRD_DIR"
+    fi
+
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+# Unpack an initrd file.  If there are multiple microcode preambles then we
+# call microcode_and_unpack() recursively.
+#------------------------------------------------------------------------------
+unpack_initrd() {
+    local file=$1  dir=$2
+
+    [ -n "$XTRA_DIR" ] && warn "Xtra dir %s ignored during unpack" "$(pqw "$XTRA_DIR")"
+    [ -n "$TEMPLATE" ] && warn "Template mode ignored during unpack"
+
+    test -e "$file" || fatal "File %s not found" "$file"
+    test -r "$file" || fatal "Cannot read file %s" "$file"
+
+    if test -d "$dir"; then
+        if ! is_empty_dir "$dir"; then
+            if [ "$DO_CLEAR" ]; then
+                qsay "Clearing %s" "$(pq $dir)"
+                cmd rm -rf "$dir"
+            elif [ "$PRETEND" ]; then
+                :
+            else
+                fatal "The target directory %s is not empty" "$dir"
+            fi
+        fi
+    else
+        test -e "$dir"  && fatal "%s is not a directory" "$dir"
+    fi
+
+    local magic=$(get_magic_num $file)
+    local compress
+
+    case $magic in
+         $BZ2_MAGIC) compress=bzip2        ;;
+        $GZIP_MAGIC) compress=gzip         ;;
+         $LZ4_MAGIC) compress=lz4          ;;
+        $LZIP_MAGIC) compress=lzip         ;;
+        $LZMA_MAGIC) compress=lzma         ;;
+          $XZ_MAGIC) compress=xz           ;;
+        $ZSTD_MAGIC) compress=zstd         ;;
+        $CPIO_MAGIC) compress=cpio         ;;
+                  *) fatal "Unknown file format %s" $magic ;;
+    esac
+
+    cmd mkdir -p "$dir" || fatal "Could not make directory %s" "$dir"
+
+    case $compress in
+        cpio) microcode_and_unpack "$file" "$dir"             ;;
+           *) simple_unpack        "$file" "$dir" "$compress" ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+# Will be called recursively if there is more than one microcode preamble.
+#
+# $offset_blocks is how many cpio blocks we have already processed.  Assumes an
+# uncompressed cpio archive starts at $offset_blocks + 1.  Every uncompressed
+# archive, except the last archive in the file, will be treated as microcode.
+#------------------------------------------------------------------------------
+microcode_and_unpack() {
+    local file=$1  dir=$2  offset_blocks=${3:-0}  depth=${4:-1}
+
+    # Limit recursion in case something goes horribly wrong
+    [ "$depth" -ge "$MAX_PREAMBS" ] && fatal "Exceeded the maximum number of preambles %s" "$(pqw $MAX_PREAMBS)"
+
+    local cpio_blocks=$(get_cpio_blocks "$file" $offset_blocks)
+    [ -z "$cpio_blocks"    ] && fatal "Unable to get length of cpio archive"
+    [ "$cpio_blocks" = '0' ] && fatal "Stuck at zero length cpio archive"
+
+    local preamb_offset=$((offset_blocks + cpio_blocks))
+
+    # size checks and display
+    local total_size=$(stat -c %s "$file")
+    local cpio_size=$((cpio_blocks * $BLOCK_SIZE))
+    local human_size=$(get_human_size "$cpio_size")
+
+    # Total number of bytes until the next archive.  Use bytes so we can
+    # compare with "stat" output.
+    local preamb_size=$(( (offset_blocks + cpio_blocks) * $BLOCK_SIZE ))
+
+    if [ "$preamb_size" -gt "$total_size" ]; then
+        warn "The cpio archive is incomplete"
+        return
+
+    elif [ "$preamb_size" -eq "$total_size" ]; then
+
+        # This is the final archive and it is not compressed so we unpack it
+        # anyway as per the spec.
+        cmd_dd if="$file" bs=$BLOCK_SIZE skip=$offset_blocks | simple_unpack - "$dir" "cpio"
+        return
+    fi
+
+    #-- must be: [ "$preamb_size" -lt "$total_size" ]
+    # so we save this preamble and look for what follows it
+
+    local mc_file="$dir/$MICROCODE_FNAME"
+
+    qsay "Microcode %s (%s) -->> %s"  "$depth"  "$(nq $human_size)"  "$(pq $MICROCODE_FNAME)"
+
+    # Append this cpio archive to the .microcode file
+    dd_append "$file" "$offset_blocks" "$cpio_blocks" "$mc_file"
+
+    # What's the next archive?
+    local magic_2=$(get_magic_num "$file" "$preamb_size")
+
+    local compress
+    case $magic_2 in
+
+                 # Recurse to strip off and save multiple preambles
+    $CPIO_MAGIC) microcode_and_unpack "$file" "$dir" "$preamb_offset" $((depth + 1))
+                 return            ;;
+
+     $BZ2_MAGIC) compress=bzip2    ;;
+    $GZIP_MAGIC) compress=gzip     ;;
+     $LZ4_MAGIC) compress=lz4      ;;
+    $LZIP_MAGIC) compress=lzip     ;;
+    $LZMA_MAGIC) compress=lzma     ;;
+      $XZ_MAGIC) compress=xz       ;;
+    $ZSTD_MAGIC) compress=zstd     ;;
+              *) fatal "Unknown file format %s" $magic_2 ;;
+    esac
+
+    cmd_dd if="$file" bs=$BLOCK_SIZE skip=$preamb_offset | simple_unpack - "$dir" "$compress"
+}
+
+#------------------------------------------------------------------------------
+# Unpack a (usually) compressed cpio archive.  Use "cat" if there was no
+# compression.
+#------------------------------------------------------------------------------
+simple_unpack() {
+    local file=$1  dir=$2  prog=$3  args="--stdout --decompress"
+
+    qsay "Unpack %s archive" "$(pq $prog)"
+    need_prog "$prog"
+
+    case $prog in
+        cpio) prog=cat;  args= ;;
+    esac
+
+    cmd $prog $args "$file" | (cmd cd "$dir" && cmd cpio $UNPACK_ARGS) || fatal "Unpack failed"
+    echo "$prog" | cmd write_file $dir/$COMPRESS_FNAME
+}
+
+#------------------------------------------------------------------------------
+#  Repack a cpio archive, prepend with .microcode file and use compression in
+# the .compress file (unless overridden).
+#------------------------------------------------------------------------------
+repack_initrd() {
+    local file=$1  dir=$2
+    test -e "$dir" || fatal "The directory %s does not exist" "$dir"
+    test -d "$dir" || fatal "%s is not a directory" "$dir"
+
+    [ -n "$XTRA_DIR" -a $(id -u) -ne 0 ] && fatal  "Must be root to use --xtra option"
+
+    local mc_file="$dir/$MICROCODE_FNAME";
+    local prog=${COMPRESS_PROG:-$(cat "$dir/$COMPRESS_FNAME" 2>/dev/null)}
+
+    if [ -z "$prog" ]; then
+        prog=$DEFAULT_COMPRESS
+        qsay "Did not find file %s.  Will use %s compression" "$(pq $COMPRESS_FNAME)" "$(pq $prog)"
+    else
+        qsay "Using %s compression" "$(pq $prog)"
+    fi
+
+    local args="-c $COMP_LEVEL"
+
+    # Don't let user run just any program that was in .compress file
+    # And clear out compression args if "cat" is used.
+    case $prog in
+        gzip|bzip2|lz4)          ;;
+     lzma|xz|lzip|zstd)          ;;
+                   cat) args=    ;;
+
+        *) fatal "Refusing to run unrecognized program %s" "$prog"  ;;
+    esac
+
+    need_prog "$prog"
+
+    local targ_dir=$(dirname "$file")
+    cmd mkdir -p "$targ_dir"
+
+    if [ -z "$NO_MICROCODE" -a -e "$mc_file" ]; then
+        qsay "Found %s archive" "$(pq 'microcode')"
+        cmd cp "$mc_file" "$file"
+    else
+        # Since we always append we must erase an existing file
+        cmd rm -f "$file"
+    fi
+
+    local INITRD_XTRA_DIR="$dir/live/xtra"
+    if [ -n "$XTRA_DIR" ]; then
+        test -d "$XTRA_DIR" || fatal "Xtra dir %s is not a directory" "$(pqw "$XTRA_DIR")"
+        local xtra_size=$(du -scm "$XTRA_DIR" | tail -n1 | cut -f1)
+        [ $xtra_size -gt $MAX_XTRA_SIZE ] && fatal "Size of xtra directory %s is too large" "$(nqw $xtra_size MiB)"
+        qsay "Bind mount xtra dir %s" "$(pq "$XTRA_DIR")"
+        trap on_exit  EXIT
+        mkdir -p "$INITRD_XTRA_DIR"
+        mount --bind "$XTRA_DIR" "$INITRD_XTRA_DIR"
+        mountpoint -q "$INITRD_XTRA_DIR" || fatal "Failed to bind mount xtra directory"
+    fi
+    local excluder=exclude_files
+    [ "$TEMPLATE" ] && excluder=exclude_files_and_template
+    # Create the cpio archive, ignore our two meta-data files and then compress
+    (cd "$dir" && cmd find . | $excluder | cmd cpio $REPACK_ARGS) \
+        | cmd $prog $args | cmd append_file "$file"
+
+    [ "$NO_MD5" ] && return
+
+    on_exit
+
+    # Create .md5 file
+    local fname=$(basename $file)
+    (cd "$targ_dir" && cmd md5sum "$(basename "$fname")" | cmd write_file "$fname.md5")
+}
+
+#------------------------------------------------------------------------------
+# Exclude commmon editor backup files, git stuff and my Private directory
+#------------------------------------------------------------------------------
+exclude_files() {
+    grep -E -v \
+        -e '^\./\.(compress|microcode)$' \
+        -e '^\./Private/'   \
+        -e '^\./Private$'   \
+        -e '^\./\.git'      \
+        -e '/\.[^/]*\.swp$' \
+        -e '/\.[^/]*~$'
+}
+
+#------------------------------------------------------------------------------
+# Do the normal exclude and then also exclude modules, binaries, binary libs
+#
+#------------------------------------------------------------------------------
+exclude_files_and_template() {
+    exclude_files | grep -E -v \
+        -e '^\./bin/ntfs-3g|eject|cryptsetup)'  \
+        -e '^\./lib/modules'                    \
+        -e '^\./lib/x86_64-linux-gnu'           \
+        -e '^\./lib.*/(lib|ld).*\.so'
+}
+
+#------------------------------------------------------------------------------
+# Get then number of cpio blocks from cpio archive, that may be offset in the
+# original file by $offset blocks.  Thanks fehlix!
+#------------------------------------------------------------------------------
+get_cpio_blocks() {
+    local file=$1  offset=${2:-0}
+
+    cmd_dd if="$file" bs=$BLOCK_SIZE skip=$offset | cpio -t 7>&1 1>/dev/null 2>&7 | grep -o "^[0-9]\+"
+}
+
+#------------------------------------------------------------------------------
+# Display first 2 bytes of a file as hex with an optional offset
+#------------------------------------------------------------------------------
+get_magic_num() {
+    local file=$1 offset=${2:-0}
+    dd status=none if=$file bs=1 count=2 skip=$offset | od -An -x | tr -d ' '
+}
+
+#------------------------------------------------------------------------------
+# Look for non-hidden files in the directory
+#------------------------------------------------------------------------------
+is_empty_dir() {
+    local dir=$1
+    test -d "$dir" || return 0
+    local cnt=$(ls "$dir" | grep -v "^lost+found$" | wc -l)
+    [ $cnt -eq 0 ]
+    return $?
+}
+
+#------------------------------------------------------------------------------
+# Convenience routine
+#------------------------------------------------------------------------------
+cmd_dd() { cmd dd status=none "$@" ; }
+
+#------------------------------------------------------------------------------
+# Copy from $from starting at block offset $offset to file $to.  This is only
+# used now for appending to the .microcode file.
+#------------------------------------------------------------------------------
+dd_append() {
+    local from=$1 offset=$2  count=$3  to=$4
+    cmd_dd if="$from" bs=$BLOCK_SIZE skip=$offset count=$count oflag=append conv=notrunc of="$to"
+}
+
+#------------------------------------------------------------------------------
+# Redirecting to 6 means we can still use this inside of functions where the
+# stdout is captured or used.
+#------------------------------------------------------------------------------
+cmd() {
+    [ "$PRETEND$VERBOSE" ] && echo "$@" >&6
+    [ "$PRETEND" ] && return 0
+    "$@"
+}
+
+#------------------------------------------------------------------------------
+# Used instead of ">" so we can use cmd() to enable pretend mode
+#------------------------------------------------------------------------------
+write_file() { cat > "$1" ; }
+
+#------------------------------------------------------------------------------
+# Used instead of ">>" so we can use cmd() to enable pretend mode
+#------------------------------------------------------------------------------
+append_file() {  cat >> "$1" ; }
+
+#------------------------------------------------------------------------------
+# Error out if $prog is not on the PATH
+#------------------------------------------------------------------------------
+need_prog() {
+    local prog=$1
+    which $prog &>/dev/null || fatal "Could not find program %s" "$prog"
+}
+
+#------------------------------------------------------------------------------
+# Convert bytes to a more human-readable form.  Assumes reasonable limits for
+# microcode preambles.
+#------------------------------------------------------------------------------
+get_human_size() {
+    local n=$1  meg=$((1024 * 1024))
+
+    if [ $n -le $meg ]; then
+        echo "$((n / 1024))K"
+
+    elif [ $n -le $(( 10 * meg)) ]; then
+        echo "$(awk "BEGIN{printf \"%2.1f\", ($n / $meg)}")M"
+
+    else
+        echo "$((n / meg))M"
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Show version information and then exit
+#------------------------------------------------------------------------------
+show_version() {
+    local fmt="%20s version %s (%s)\n"
+    printf "$fmt" "$ME"        "$VERSION"      "$VERSION_DATE"
+    exit 0
+}
+
+#-------------------------------------------------------------------------------
+# Send "$@".  Expects
+#
+#   SHORT_STACK               variable, list of single chars that stack
+#   fatal(msg)                routine,  fatal("error message")
+#   takes_param(arg)          routine,  true if arg takes a value
+#   eval_argument(arg, [val]) routine,  do whatever you want with $arg and $val
+#
+# Sets "global" variable SHIFT to the number of arguments that have been read.
+#-------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-}
+        shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal "Suspicious argument after -$arg: $val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+    done
+}
+
+#------------------------------------------------------------------------------
+# Display the message unless --silent
+#------------------------------------------------------------------------------
+ssay() {
+    [ "$SILENT" ] && return
+    local fmt=$1; shift
+    printf "$m_co$fmt$nc_co\n" "$@"
+}
+
+#------------------------------------------------------------------------------
+# Display the message unless --silent or --quiet
+#------------------------------------------------------------------------------
+qsay() {
+    [ "$QUIET$SILENT" ] && return
+    local fmt=$1; shift
+    printf "$m_co$fmt$nc_co\n" "$@"
+}
+
+#------------------------------------------------------------------------------
+# Display error message on stderr and exit
+#------------------------------------------------------------------------------
+fatal() {
+    local fmt=$1; shift
+    printf "$ME$err_co fatal error:$warn_co $fmt\n" "$@" >&2
+    exit 2
+}
+
+#------------------------------------------------------------------------------
+# Display warning on stderr but don't exit
+#------------------------------------------------------------------------------
+warn() {
+    local fmt=$1; shift
+    printf "$ME$warn_co warning:$m_co $fmt\n" "$@" >&2
+}
+
+#------------------------------------------------------------------------------
+# Convenience routines for "quoting" text using color
+#------------------------------------------------------------------------------
+pq()   { echo "$hi_co$*$m_co"      ;}
+nq()   { echo "$num_co$*$m_co"     ;}
+nqw()  { echo "$num_co$*$warn_co"  ;}
+pqw()  { echo "$hi_co$*$warn_co"   ;}
+
+
+#------------------------------------------------------------------------------
+# Define color variables.  These are globals but are lower case in order to
+# be less obtrusive.
+#------------------------------------------------------------------------------
+set_colors() {
+   local e=$(printf "\e")
+
+         black="$e[0;30m" ;    blue="$e[0;34m" ;    green="$e[0;32m" ;    cyan="$e[0;36m" ;
+           red="$e[0;31m" ;  purple="$e[0;35m" ;    brown="$e[0;33m" ; lt_gray="$e[0;37m" ;
+       dk_gray="$e[1;30m" ; lt_blue="$e[1;34m" ; lt_green="$e[1;32m" ; lt_cyan="$e[1;36m" ;
+        lt_red="$e[1;31m" ; magenta="$e[1;35m" ;   yellow="$e[1;33m" ;   white="$e[1;37m" ;
+         nc_co="$e[0m"    ;   brown="$e[0;33m" ;
+
+           m_co=$cyan
+          hi_co=$white
+          err_co=$red
+         bold_co=$yellow
+         warn_co=$yellow
+          num_co=$magenta
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+on_exit() {
+    local dir=$INITRD_XTRA_DIR
+    [ -z "$dir" ] && return
+    test -d "$dir" || return
+
+    qsay "Unmount xtra dir %s" "$(pq "$XTRA_DIR")"
+
+    mountpoint -q "$dir" && umount "$dir"
+    rmdir -p --ignore-fail-on-non-empty "$dir"
+}
+
+set_colors
+
+# Note: see redirection in cmd() above
+main "$@" 6>&1
+

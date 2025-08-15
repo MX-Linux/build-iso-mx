@@ -1,0 +1,12 @@
+   1)  Padrão
+   2)  persist_all     Salva o root na memória RAM, salva a home no disco (salva o root no desligamento)
+   3)  persist_root    Salva o root e a home na memória RAM e salva no desligamento
+   4)  persist_static  Salva o root e a home no disco, com a home separados no disco
+   5)  p_static_root   Salva o root e a home juntos no disco
+   6)  persist_home    Persistência apenas da home
+   7)  frugal_persist  Frugal com o root na memória RAM e a home no disco
+   8)  frugal_root     Frugal com o root e a home na memória RAM e salva as alterações no desligamento
+   9)  frugal_static   Frugal com o root no disco e a home separada no disco
+  10)  f_static_root   Frugal com o root e a home juntos no disco
+  11)  frugal_home     Frugal com persistência apenas da home
+  12)  frugal_only     Apenas frugal, sem a persistência

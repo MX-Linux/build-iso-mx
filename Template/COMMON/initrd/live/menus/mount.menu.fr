@@ -1,0 +1,3 @@
+   1)  Par défaut
+   2)  automount       Monter les périphériques automatiquement lors de leurs branchement
+   3)  noautomount     Désactiver le montage - et le montage automatique - additionnel quelconque

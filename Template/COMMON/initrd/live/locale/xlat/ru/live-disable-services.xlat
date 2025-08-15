@@ -1,0 +1,8 @@
+_Customizing_services_="Настройка служб"
+_Disabling_NFS_server_X_="Отключение NFS сервера %s"
+_Disabling_X_service_="Отключение службы %s"
+_Disabling_X_services_Y_="Отключение %s служб %s"
+_Disabling_more_services_X_="Отключение других служб %s"
+_Disabling_network_services_X_="Отключение сетевых служб %s"
+_Disabling_some_services_X_="Отключение некоторых служб %s"
+_Enabling_X_service_="Включение %s служб"

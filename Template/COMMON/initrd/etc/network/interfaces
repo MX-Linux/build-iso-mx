@@ -1,0 +1,21 @@
+#------------------------------------------------------------------------------
+# /etc/network/interfaces
+#
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Used by ceni but not by wicd
+#------------------------------------------------------------------------------
+
+auto lo
+iface lo inet loopback
+
+allow-hotplug eth0
+iface eth0 inet dhcp
+
+allow-hotplug eth1
+iface eth1 inet dhcp
+
+allow-hotplug eth2
+iface eth2 inet dhcp
+
+allow-hotplug eth3
+iface eth3 inet dhcp

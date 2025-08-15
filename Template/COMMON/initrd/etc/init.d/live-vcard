@@ -1,0 +1,648 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:         live-vcard
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: select a video card
+# Description:       present menu to select a video card
+### END INIT INFO
+
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/live/bin
+
+test -d /live/config/tsplash && DO_TSPLASH=true
+
+ VCARD_CONF_FILE="/live/config/vcard-cmd"
+XORG_BUS_ID_FILE="/etc/X11/xorg-bus-id"
+    DISABLE_FILE="/lib/modprobe.d/video-card-disable.conf"
+    #DISABLE_FILE="/live/test/video-card-disable.conf"
+VIDEO_TWEAKS_FILE="/live/config/video-tweaks"
+
+# Save machine-state file from previous boots
+  VCARD_MODE_FILE="/var/lib/live-mstate/vcard-mode"
+
+. /live/lib/live-init-utils.sh
+start_init_logging
+# FIXME: load_translation
+
+bar80="--------------------------------------------------------------------------------"
+
+main() {
+    case $1 in
+        start) do_start  ;;
+         stop)           ;;
+            *)  echo "Usage: $0 {start|stop}" ;  exit 1 ;;
+    esac
+}
+
+do_start() {
+    # for testing
+
+    local vcard_mode=${VCARD_MODE:-$(cat $VCARD_CONF_FILE 2>/dev/null)}
+
+    # Default to saved command
+    local saved_mode=$(cat $VCARD_MODE_FILE 2>/dev/null)
+    : ${vcard_mode:=$saved_mode}
+
+    # Then default to "on"
+    : ${vcard_mode:=on}
+
+    tsplash_only_clear
+    echo_script "Video card selection" $0
+
+    save_vcard_mode "$vcard_mode" "$saved_mode"
+    saved_mode=$vcard_mode
+
+    # sanity check
+    case $vcard_mode in
+             off) return           ;;
+              on)                  ;;
+            menu) DO_FORCE=true    ;;
+           clear) DO_CLEAR=true    ;;
+               *) echo_live "Uknown vcard mode %s" "$(pquote "$vcard_mode")"
+                  return           ;;
+    esac
+
+    local LSPCI_GRAPHICS=$(lspci_graphics -nn)
+    local card_cnt=$(echo "$LSPCI_GRAPHICS" | wc -l)
+    local intel_cnt=$(echo "$LSPCI_GRAPHICS" | grep " \[8086:" |  wc -l)
+    echo_plural "$card_cnt"  "Found %s Video device"       "Found %s Video devices"
+    echo_plural "$intel_cnt" "Found %s Intel Video device" "Found %s Intel Video devices"
+
+    if [ $intel_cnt -eq 1 -a $card_cnt -eq 2 ]; then
+        #if check_switcheroo; then
+            echo_live "Detected possible Hybrid Graphics"
+            video_tweak "Detected possible Hybrid Graphics"
+            IS_HYBRID=true
+        #else
+        #    echo_live "Switcheroo not found"
+        #fi
+    fi
+
+    local id_card  bus_id=$(cat $XORG_BUS_ID_FILE 2>/dev/null)
+
+    if [ -n "$bus_id" ]; then
+        id_card=$(get_card "$bus_id")
+
+        if [ -z "$id_card" ]; then
+            echo_live "Found stored bus-id %s but did not find associated card" "$(pquote $bus_id)"
+            clear_bus_id
+        else
+            echo_live "Currently selected video card"
+            echo_live '  %s' "$(pquote "$id_card")"
+            XORG_BUS_ID=$bus_id
+        fi
+    fi
+
+    if [ "$DO_CLEAR" ]; then
+        clear_bus_id
+        clear_disable
+        return 0
+
+    elif force; then
+        echo_live "Video Card Menu forced"
+
+    else
+        if [ "$IS_HYBRID" ]; then
+            disable_non_intel
+            clear_bus_id
+            return 0
+
+        elif [ $card_cnt -lt 2 ]; then
+            echo_live "Less than two video cards found"
+            return 0
+
+        elif [ -n "$XORG_BUS_ID" ]; then
+            echo_live "Found existing bus-id file"
+            return 0
+
+        elif [ -e "DISABLE_FILE" ]; then
+            echo_live "Found existing disable drivers file"
+            return 0
+        fi
+    fi
+
+    set_colors
+
+    echo
+    tsplash_clear
+
+    echo "$m_co$bar80$nc_co"
+
+    video_card_menu "$LSPCI_GRAPHICS"
+
+    bus_id=
+    case $NEW_BUS_ID in
+        quit)  say "Not selecting a video card"                     ;;
+        delete:$XORG_BUS_ID_FILE) clear_bus_id                      ;;
+        delete:$DISABLE_FILE)     clear_disable                     ;;
+        delete-all)               clear_bus_id ; clear_disable      ;;
+            [0-9]*) bus_id=$NEW_BUS_ID                              ;;
+                 *) fatal "internal menu error on %s" "$NEW_BUS_ID" ;;
+    esac
+
+    # If the choose delete or quit/disable then remember that decision by
+    # setting the rememebered state to "off"
+    case $NEW_BUS_ID in
+        quit|delete:*) save_vcard_mode 'off' "$saved_mode" ;;
+    esac
+
+
+    if [ -n "$bus_id" ]; then
+        local new_card=$(get_card "$bus_id")
+
+        if [ -z "$new_card" ]; then
+            echo_live "Cound not find card with bus-id %s" "$(pquote $bus_id)"
+        else
+            echo_live "Newly selected video card"
+            echo_live '  %s' "$(pquote "$new_card")"
+            setting_bus_id $bus_id
+            disable_other_drivers "$bus_id"
+        fi
+    fi
+
+    #. the "Enter" key
+    local enter="Enter"
+
+    #. Press <Enter> to continue
+    local prompt=$(printf "Press <%s> to continue" "$(cq "$enter")")
+
+    printf "$m_co%s$nc_co" "$prompt"
+
+    local xxx
+    read xxx
+
+    echo >> $INIT_LOG_FILE
+    echo "$m_co$bar80$nc_co"
+    echo
+
+    if tsplash_enabled; then
+        #/live/bin/tell-tsplash alert "$(printf "Using card %s" "$new_card")"
+        tsplash-on
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Select a video card bus_id based on the names
+#------------------------------------------------------------------------------
+video_card_menu() {
+
+    local disp_fmt="$green %2s)$m_co %s$nc_co"
+    local cnt=1  bus_id  text  data  disp
+    while read bus_id text; do
+        [ -z "$bus_id" ] && continue
+        data="${data}$cnt:$bus_id\n"
+        disp="${disp}$(printf "$disp_fmt" "$cnt" "$text")\n"
+        cnt=$((cnt + 1))
+        # echo "id: $id   text: $text"
+    done<<Lspci_nn
+$(munge_lspci "$LSPCI_GRAPHICS")
+Lspci_nn
+
+    local file bold_fmt="$green %%2s)${yellow} %s$nc_co"
+    local del_fmt=$(printf "$bold_fmt"       "Delete file %s")
+    local del_all_fmt=$(printf "$bold_fmt"   "Delete all %s files")
+    local quit_fmt=$(printf "$bold_fmt"      "Quit/disable")
+
+    local found_cnt=0
+    for file in $DISABLE_FILE $XORG_BUS_ID_FILE; do
+        test -e $file || continue
+        data="${data}$cnt:delete:$file\n"
+        disp="$disp$(printf "$del_fmt" "$cnt" "$(pq "$file")")\n"
+        cnt=$((cnt + 1))
+        found_cnt=$((found_cnt + 1))
+    done
+
+    if [ $found_cnt -gt 1 ]; then
+        data="${data}$cnt:delete-all\n"
+        disp="$disp$(printf "$del_all_fmt" "$cnt" "$(pq "$found_cnt")")\n"
+        cnt=$((cnt + 1))
+    fi
+
+    data="${data}0:quit\n"
+    disp="$disp$(printf "$quit_fmt" "0")\n"
+
+    local new_bus_id  title="Please select a video card to use"
+    my_select_2 "$title" new_bus_id "0" "$data" "$disp"
+
+    NEW_BUS_ID=$new_bus_id
+}
+
+#------------------------------------------------------------------------------
+# Remove class description, shorten some of the text, and removed the pci-id
+#------------------------------------------------------------------------------
+munge_lspci() {
+    echo "$1" | sed -r -n "s/^([0-9a-f:.]+) [^:]+: /\1 /pi"  | shorten_lspci
+}
+
+shorten_lspci() {
+    sed -r -e "s/Advanced Micro Devices, Inc\./AMD/" \
+        -e "s/ \[AMD\/ATI\]//" -e "s/\[AMD\]//" \
+        -e "s/(NVIDIA|Intel) Corporation/\1/" \
+        -e "s/ \[[0-9a-f]{4}:[0-9a-f]{4}\]//i"
+}
+
+#------------------------------------------------------------------------------
+# Find the text description of a pci card based on the bus id
+#------------------------------------------------------------------------------
+get_card() {
+    local bus_id=$1
+    echo "$LSPCI_GRAPHICS" | sed -n "s/^$bus_id //p" \
+        | sed -r "s/^[^:]*: //" | shorten_lspci
+}
+
+#------------------------------------------------------------------------------
+# Run lspci with then 4 different graphics classes.  For my slow code that
+# gets the graphics drivers this provides a big speed-up.
+#------------------------------------------------------------------------------
+lspci_graphics() {
+    #lspci "$@"
+    local file  dir=/live/boot-dev/test
+    case $1 in
+        -nn) file=$dir/lspci-nn ;;
+    -nk|-kn) file=$dir/lspci-nk ;;
+    esac
+
+    if [ -n "$file" ] && test -e $file; then
+        #echo "found $file" >&2
+        cat $file
+        return
+    fi
+
+    lspci -D -d::0300 "$@"
+    lspci -D -d::0301 "$@"
+    lspci -D -d::0302 "$@"
+    lspci -D -d::0390 "$@"
+}
+
+#------------------------------------------------------------------------------
+# Disable modeset for non-intel video drivers
+#------------------------------------------------------------------------------
+disable_non_intel() {
+    disable_other_drivers "$(echo "$LSPCI_GRAPHICS" | grep " \[8086:" | cut -d" " -f1)"
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+disable_other_drivers() {
+    my_id=$1
+
+    find_other_graphics_drivers "$my_id"
+    local to_disable=$(set_minus "$OTHER_DRIVERS" "$MY_DRIVERS")
+    # echo "my drivers:"
+    # echo "$MY_DRIVERS"
+    # echo "     other:"
+    # echo "$OTHER_DRIVERS"
+
+    if [ -z "$to_disable" ]; then
+        echo_live "Did not find any other video drivers to disable"
+        return
+    fi
+    disable_drivers "$to_disable"
+}
+
+#------------------------------------------------------------------------------
+# Uses grep but no tempfile or comm.
+#------------------------------------------------------------------------------
+set_minus() {
+    local a=$1  b=$2
+    local regex=$(echo "$b" | tr -s '\n '  '|'  )
+    echo "$a" | grep -vE "^(${regex%|})$"
+}
+
+#------------------------------------------------------------------------------
+# Find graphics drivers for all devices except the one given.
+#------------------------------------------------------------------------------
+find_other_graphics_drivers() {
+    local my_id=$1  line id  prev_id  drivers my_drivers
+    unset MY_DRIVERS  OTHER_DRIVERS
+
+    while read line; do
+        [ -z "$line" ] && continue
+
+        # If the line starts with a digit ...
+        if [ -z "${line##[0-9]*}" ]; then
+            id=$(echo "$line" | cut -d" " -f1)
+            [ -z "$id" ] && continue
+            if [ -z "$prev_id" ]; then
+                prev_id=$id
+                continue
+            fi
+
+            add_drivers "$my_id" "$prev_id" "$drivers"
+
+            prev_id=$id
+            drivers=
+
+        else
+            d=$(echo "$line" | sed -n -r "s/^(Kernel driver in use|Kernel modules): //p")
+            [ -n "$d" ] && drivers="$drivers$d\n"
+        fi
+    done<<Lspci_k
+$(lspci_graphics -nk)
+Lspci_k
+
+    if [ -n "$prev_id" -a -n "$drivers" ]; then
+        add_drivers "$my_id" "$prev_id" "$drivers"
+    fi
+    OTHER_DRIVERS=$(echo -e "$OTHER_DRIVERS" | tr -s ', ' '\n' | sort -u)
+       MY_DRIVERS=$(echo -e "$MY_DRIVERS"    | tr -s ', ' '\n' | sort -u)
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+add_drivers() {
+    local my_id=$1  prev_id=$2  drivers=$(echo "$3" | tr -s ', ' '\n')
+    #echo "$my_id  $prev_id"
+    if [ "$prev_id" = "$my_id" ]; then
+        MY_DRIVERS="$my_drivers$drivers\n"
+    else
+        OTHER_DRIVERS="$other_drivers$drivers\n"
+    fi
+}
+
+#------------------------------------------------------------------------------
+# create file to disable modesetting for the listed modules
+#------------------------------------------------------------------------------
+disable_drivers() {
+    local file="$DISABLE_FILE"
+    [ -z "$*" ] && return
+
+    echo_live "disabling modeset for %s" "$(pquote $*)"
+    echo_live "%s in file %s" "..." "$(pquote "$file")"
+    cat > $file <<No_Mode_Set
+#-----------------------------------------------------------------------------
+# file: $file
+# disble modesetting for the following modules
+#-----------------------------------------------------------------------------
+
+$(no_mode_set_lines $*)
+No_Mode_Set
+}
+
+#------------------------------------------------------------------------------
+# Helper for making the no-mode-set.conf file above
+#------------------------------------------------------------------------------
+no_mode_set_lines() {
+    local mod
+    for mod; do
+        echo "options $mod modeset=0"
+    done
+}
+
+#------------------------------------------------------------------------------
+#  Save the vcard=xxxx mode but only if it's "off" (for now)
+#------------------------------------------------------------------------------
+save_vcard_mode() {
+    local vcard_mode=$1  saved_mode=$2  file=$VCARD_MODE_FILE  new_save
+    [ "$vcard_mode" = "$saved_mode" ] && return
+
+    case $vcard_mode in
+        off) new_save=$vcard_mode ;;
+    esac
+    if [ -n "$new_save" ]; then
+        echo_live "Saving vcard mode %s in %s" "$(pquote $new_save)" "$(pquote $file)"
+        mkdir -p $(dirname $file)
+        echo $new_save > $file
+    else
+        echo_live "Removing file %s" "$(pquote $file)"
+        rm -f $file
+    fi
+}
+
+
+#------------------------------------------------------------------------------
+# Let people know if this is special hardware
+#------------------------------------------------------------------------------
+video_tweak() { echo "$*" >> $VIDEO_TWEAKS_FILE ; }
+
+#------------------------------------------------------------------------------
+# See if switcheroo is available to detech hybrid graphics
+#------------------------------------------------------------------------------
+check_switcheroo() {
+    #return 0
+    local umount  debug_dir="/sys/kernel/debug"
+    if ! mountpoint -q "$debug_dir"; then
+        mount -t debugfs debugfs "$debug_dir"
+        mountpoint -q "$debug_dir" || return 1
+        umount=true
+    fi
+
+    test -d $debug_dir/vgaswitcheroo
+    local ret=$?
+    [ "$umount" ] && umount $debug_dir
+    return $ret
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+setting_bus_id() {
+    local bus_id=$1
+    echo_live "Setting Xorg bus-id to  %s" "$(pquote $bus_id)"
+    echo "xorg=busid=$bus_id" >> /live/config/cmdline2
+}
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+clear_bus_id()  { clear_file "$XORG_BUS_ID_FILE" "bus-id"; }
+clear_disable() { clear_file "$DISABLE_FILE"     "disable drivers"; }
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+clear_file() {
+    local file=$1  type=$2
+    test -f "$file" || return
+    echo_live "Clearing %s file %s" "$(pquote $type)"  "$(pquote "$file")"
+    rm -f  "$file"
+}
+
+
+#==============================================================================
+# Code below taken from select-device-2 test script
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# my_select_2  title variable name default-entry-# data display
+#  "data" is $:value.  Display is whatever gets displayed
+#------------------------------------------------------------------------------
+my_select_2() {
+    local title=$1  var=$2  default=$3  data=$4  display=$5  enter="Enter"
+    local def_prompt=$(printf "Press <%s> to quit" "$(cq "$enter")")
+
+    local val input err_msg
+    while [ -z "$val" ]; do
+
+        echo -e "$hi_co$title$nc_co"
+        printf "$display" | sed -r -e "s/(^|\t)( ?[0-9]+)(\))/\t$green\2$white\3$cyan/g" -e "s/$/$nc_co/"
+        [ "$err_msg" ] && printf "$err_co%s$nc_co\n" "$err_msg"
+        [ "$default" ] && printf "$m_co%s$nc_co\n" "$def_prompt"
+        echo -n "$green>$nc_co "
+
+        #return
+
+        read input
+        err_msg=
+        [ -z "$input" -a -n "$default" ] && input=$default
+
+        if ! echo "$input" | grep -q "^[0-9]\+$"; then
+            err_msg="You must enter a number"
+            [ "$default" ] && err_msg="You must enter a number or press <enter>"
+            continue
+        fi
+
+        val=$(echo -e "$data" | sed -n "s/^$input://p")
+
+        if [ -z "$val" ]; then
+            err_msg=$(printf "The number <%s> is out of range" "$(pqe $input)")
+            continue
+        fi
+        echo $input >> $INIT_LOG_FILE
+        eval $var=\$val
+        break
+    done
+}
+
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+echo_plural() {
+    local cnt=$1
+    case $cnt in
+        1) echo_live "$2" "$(pquote $cnt)" ;;
+        *) echo_live "$3" "$(pquote $cnt)" ;;
+    esac
+}
+
+db_msg() { vmsg 5 "${green}db+:$hi_co $@" ;}
+err()    { vmsg 1 "$err_co$@"             ;}
+msg()    { vmsg 5 "$@"                    ;}
+msgN()   { vmsgN 5 "$@"                   ;}
+msg_nc() { vmsg 5 "$nc_co$@"              ;}
+warn()   { vmsg 3 "$warn_co$@"            ;}
+
+bq()     { echo "$yellow$*$m_co"          ;}
+cq()     { echo "$cheat_co$*$m_co"        ;}
+cqw()    { echo "$cheat_co$*$warn_co"     ;}
+cqe()    { echo "$cheat_co$*$err_co"      ;}
+dq()     { echo "$dev_co$*$m_co"          ;}
+dqe()    { echo "$dev_co$*$err_co"        ;}
+fq()     { echo "$from_co$*$m_co"         ;}
+fqe()    { echo "$from_co$*$err_co"       ;}
+mpq()    { echo "$mp_co$*$m_co"           ;}
+nq()     { echo "$num_co$*$m_co"          ;}
+nqw()    { echo "$num_co$*$warn_co"       ;}
+pq()     { echo "$hi_co$*$m_co"           ;}
+pqe()    { echo "$bold_co$*$err_co"       ;}
+pqw()    { echo "$hi_co$*$warn_co"        ;}
+pqh()    { echo "$m_co$*$hi_co"           ;}
+hq()     { echo "$hi_co$*$m_co"           ;}
+
+vmsg() {
+    local level=$1  fmt=$2
+    shift 2
+
+    msg=$(printf "$m_co$fmt$nc_co" "$@")
+
+    [ "$level" -le "$VERBOSE" ] && printf "$msg\n"
+    return 0
+}
+
+fatal() {
+    local fmt=$1 ; shift
+    printf "ERROR: $fmt\n" "$@" >&2
+    exit 3
+}
+
+vmsgN() {
+    local level=$1  fmt=$2
+    shift 2
+
+    msg=$(printf "$m_co$fmt$nc_co" "$@")
+
+    [ "$level" -le "$VERBOSE" ] && printf "$msg"
+    return 0
+}
+
+vmsg_if() {
+    local level=$1; shift
+    [ "$VERBOSE" -ge "$level" ] || return
+    vmsg $level "$@"
+}
+
+vmsg_nc() {
+    local level=$1; shift
+    vmsg $level "$nc_co$@"
+}
+
+say() {
+    local fmt=$1 ; shift
+    printf "$m_co$fmt$nc_co\n" "$@"
+}
+
+set_colors() {
+    local noco=$1  loco=$2
+
+    [ "$noco" ] && return
+
+    local e=$(printf "\e")
+     black="$e[0;30m";    blue="$e[0;34m";    green="$e[0;32m";    cyan="$e[0;36m";
+       red="$e[0;31m";  purple="$e[0;35m";    brown="$e[0;33m"; lt_gray="$e[0;37m";
+   dk_gray="$e[1;30m"; lt_blue="$e[1;34m"; lt_green="$e[1;32m"; lt_cyan="$e[1;36m";
+    lt_red="$e[1;31m"; magenta="$e[1;35m";   yellow="$e[1;33m";   white="$e[1;37m";
+     nc_co="$e[0m";
+
+    cheat_co=$white;      err_co=$red;       hi_co=$white;
+      cmd_co=$white;     from_co=$lt_green;  mp_co=$magenta;   num_co=$magenta;
+      dev_co=$magenta;   head_co=$yellow;     m_co=$lt_cyan;    ok_co=$lt_green;
+       to_co=$lt_green;  warn_co=$yellow;  bold_co=$yellow;
+
+    [ "$loco" ] || return
+
+    from_co=$brown
+      hi_co=$white
+       m_co=$nc_co
+     num_co=$white
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+tsplash_clear() {
+    tsplash_enabled || return
+
+    if [ -z "$TSPLASH_CLEARED" ]; then
+        clear
+        sleep .2
+        TSPLASH_CLEARED=true
+    fi
+    chvt 1
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+tsplash_only_clear() {
+    tsplash_enabled || return
+    if [ -z "$TSPLASH_CLEARED" -a -z "$NO_CLEAR" ]; then
+        clear
+        sleep .1
+        TSPLASH_CLEARED=true
+    fi
+}
+
+tsplash_enabled() { [ "$DO_TSPLASH" ] ; return $?; }
+force()           { [ "$DO_FORCE"   ] ; return $?; }
+
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE
+
+exit 0

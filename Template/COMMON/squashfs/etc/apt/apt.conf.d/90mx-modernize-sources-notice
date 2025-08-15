@@ -1,0 +1,8 @@
+// disable modernize-sources and missing signed-by "warnings":
+//
+// Notice: Some sources can be modernized. Run 'apt modernize-sources' to do so.
+// Notice: Missing Signed-By in the sources.list(5) entry for 'http://deb.debian.org/debian'
+//
+// file: /etc/apt/apt.conf.d/90mx-modernize-sources-notice
+//
+APT::Get::Update::SourceListWarnings::SignedBy "0";

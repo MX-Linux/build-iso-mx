@@ -1,0 +1,996 @@
+#!/live/bin/sh
+
+# This script plays some tricks in order to umount the aufs and associated
+# filesystems.  It also ejects the cd/dvd, if needed, and finally it either
+# turns the machine off or reboots depending on the runlevel when this script
+# is first called.
+#
+# TL;DR:  pivot_root, hijack init, kill almost all processes, umount almost
+#         all filesystems in reverse chronological order.
+#
+# Instructions: exec this script from inside the last /etc/init.d script and
+# use --umount:
+#
+#   targ=/live/bin/live-umount [ -x $targ ] \
+#       && exec $targ --umount </dev/console >/dev/console 2>&1
+#
+# The script grabs the runlevel Then we umount /live/aufs since this was a
+# convenience bind-mount anyway and it is going to be the target for our
+# pivot_root.  Then we pivot_root so what was /live becomes / and what was /
+# becomes /aufs.  Then we put a copy of ourselves in /sbin/init and call
+# "telinit u".  We do this in a chroot because we have already done the pivot.
+# You could make a bunch of top level symlinks to /aufs/* instead of the
+# chroot.  This cmmand causes init to load itself again.  When it does, it is
+# this program that gets loaded.  We detect that we are running as init because
+# our PID is 1.  In that case we just sleep forever and let the real work get
+# done by the previous invocation.
+#
+# That trick was needed in order for the init process to be free of the /aufs
+# so we can eventually umount the aufs.
+#
+# Then we move the standard system directories: /dev, /proc, /sys, and a few
+# others out of the aufs.  This serves the dual purpose of allowing us to
+# umount the aufs even if umounts in those directories fail and it also gives
+# us access to /proc, /sys, /dev.  These moves are what allow is to keep
+# our own process running because the moves disentangle us from the aufs.
+#
+# Next we check to see if a removeable media device is still mounted.  If so,
+# we assume it contains the boot media so we record the device name so we can
+# eject it later after we umount aufs.
+#
+# Then we kill all process that have a PID lower than our own.  We can't kill
+# init but we don't bother removing it from the list of proccesses to kill.
+# This step is needed to free up any dependence on the aufs.
+#
+# Then we umount everything except /dev /sys and /proc in strict reverse
+# chronological order.
+#
+# Finally we turn off swap and then eject the cd/dvd (if it was mounted when we
+# started and in that case we pause and wait for the user to hit <Enter>.
+
+# NOTE: start_t stands for "start-time".  I wanted to use stime but that is
+# already taken, see section about /proc/[pid/stat in man 5 proc.
+
+VERSION="0.91"
+VERSION_DATE="Sat May 11 02:09:10 MDT 2013"
+
+# Note: this does not start with "/live" because we have already pivoted
+SWAP_FILE="/boot-dev/swap-file"
+
+me=${0##*/}
+
+     NEW_ROOT=/live
+     OLD_ROOT=/aufs
+  BUSYBOX_BIN=$NEW_ROOT/bin
+   LOCALE_DIR=/locale
+ CMDLINE_FILE=/live/config/cmdline
+HIJACKED_INIT=/hijacked-init
+ PROTECT_LIST="^(/sbin/mount.ntfs|mount.ntfs|mount.fuse|mount.cifs|ntfs-3g|/sbin/mount.ntfs-3g|rpcbind|/sbin/wpa_supplicant)"
+   TARDY_LIST="^(acpid)$"
+BOOT_DEV_FILE=/config/boot-device
+    OMIT_FILE="/run/sendsigs.omit.d/$me.pid"
+
+   KILL_PROGS="wpa_supplicant"
+      V_LEVEL=6
+ BREAK_POINTS=0
+ SHOW_COMMAND=0
+
+      OUR_TTY=1
+
+HBAR="======================================================================"
+TBAR="----------------------------------------------------------------------"
+
+#------------------------------------------------------------------------------
+# Function: main
+#
+# Dispatch.  Note that only the init process has a pid of 1.
+#------------------------------------------------------------------------------
+main() {
+    [ $$ = 1 ] && do_init
+
+    local NO_PROMPT DO_PROMPT LANG TO_EJECT VERBOSE MSG_CO ME_CO FROM_FILE
+    local NO_CO HI_CO LO_CO ME VERBOSE_MODE SHOW ERROR_CNT=0
+
+    read_cmdline
+    set_color
+    # Best if the xlat name is hard coded
+    read_xlat live-umount $LANG
+
+    [ "$me" = 'shutdown' ] && do_shutdown
+
+    case $1 in
+     --run-scripts) do_scripts    ;;
+        --sendsigs) do_sendsigs   ;;
+        --umountfs) do_umountfs   ;;
+    --final-umount) final_umount  ;;
+                 *) err 'Expected --umountfs --sendsigs --run-scripts or --final-umount'
+    esac
+}
+
+do_scripts() {
+    PATH=$BUSYBOX_BIN:/bin
+    export PATH
+
+    breakpoint s1 "Before running scripts"
+
+    # run the brightness shutdown script when using sysvinit
+    if ! test -e /live/config/systemd; then
+        if test -x /etc/init.d/brightness; then
+            /etc/init.d/brightness stop
+        fi
+    fi
+
+    if test -e /live/config/remasterable; then
+        seed_file=$(cat /live/config/seed-file 2>/dev/null)
+        prep_seed_dev_random "$seed_file"
+    fi
+
+    # Make sure we have a fresh line to print out on
+    # echo
+    #find_mounted_cd $BOOT_DEV_FILE
+    local scripts=
+    [ -e /live/config/remasterable ] && scripts="$scripts live-usb-save"
+    [ -e /live/config/save-persist ] && scripts="$scripts persist-autosave"
+    [ -e /live/config/static-root  ] && scripts="$scripts live-static-shutdown"
+
+    # Only say we are running scripts if we actually run at least one script
+    [ "$scripts" ] || return
+
+    msg "${white}run-scripts"
+
+    run_scripts $scripts
+
+    #local protect_pids=$(pgrep -f "$PROTECT_LIST")
+    if false && [ -n "$protect_pids" ]; then
+        mkdir -p $(dirname $OMIT_FILE)
+        echo "$protect_pids" > $OMIT_FILE
+        msg 'Protecting:\n%s' "$white$(pgrep -l "$PROTECT_LIST")"
+    fi
+
+    breakpoint s2 "After running scripts"
+}
+
+#------------------------------------------------------------------------------
+# Function: do_sendsigs
+#
+# Kills all process except parent and process with with a higher pid.  Also
+# refrain from killing kernel threads and processes needed for keeping ntfs
+# partitions mounted.  This is used to replace the functionality of Debian's
+# sendsigs init script.
+#------------------------------------------------------------------------------
+do_sendsigs() {
+
+    PATH=$BUSYBOX_BIN:/bin
+    export PATH
+
+    if [ "$(pgrep "^acpid$")" ]; then
+        echo 'tell acpid to stop'
+        /etc/init.d/acpid stop
+    fi
+
+    msg "${white}sendsigs"
+
+    local try all_dead list pid start_t
+
+    local pppid=$(grep ^PPid: /proc/$PPID/status | cut -f2)
+
+    #BREAK_POINTS=
+
+    do_scripts
+
+    safe_get_start_t $pppid || return
+    start_t=$START_T
+
+    # vmsg 8 "$ME     my pid:$white $$"
+    # vmsg 8 "$ME parent pid:$white $PPID"
+    # vmsg 8 "$ME grandp pid:$white $pppid"
+    # vmsg 7 "$ME start time:$white $start_t"
+
+    msg  "$_Asking_most_remaining_processes_to_terminate_"
+
+    breakpoint 1 "Before terminating processes"
+
+    kill_most -TERM $start_t
+
+    breakpoint 2 "After terminating processes"
+
+    # wait 1/10th second
+    usleep 100000
+
+    # if list=$(pgrep "$TARDY_LIST"); then
+    #     msg "Killing known tardy processes: %s" "$white$(echo $list)"
+    #     kill -KILL $list
+    # fi
+
+    if ! list=$(proc_list $start_t); then
+        msg  "$_Almost_all_processes_terminated_immediately_"
+        return
+    fi
+
+    vmsg 7 "$ME: remaining pids:$white $list"
+
+    vmsgN 4  "$_X_Waiting_for_termination_Y_" "$ME:" ""
+
+    # You have no chance to survive make your time
+    local all_dead
+    for try in $(seq 1 10); do
+        if list=$(proc_list $start_t); then
+            vmsgN 4  "."
+            usleep 500000
+        else
+            all_dead=1
+            break
+        fi
+    done
+    vmsg 4 "$nc done"
+
+    if [ "$all_dead" ]; then
+        msg  "$_All_processes_ended_within_X_second_s_"  $(( (try + 1)/ 2))
+        return
+    fi
+
+    if [ $V_LEVEL -ge 6 ]; then
+        echo "> ps no (threads)"
+        ps_no_kthreads
+    fi
+
+    msg  "$_Killing_remaining_processes_"
+    kill_most -KILL $start_t
+
+    breakpoint 3 "After killing processes"
+
+    list=$(proc_list $start_t) || return
+
+    echo "> ps (no threads)"
+    ps_no_kthreads
+    err  "$_Unable_to_kill_X_" "$white $(echo $list)"
+}
+
+#------------------------------------------------------------------------------
+# Function: do_umountfs
+#
+# This is the ringleader.  It does almost all of the processing needed to
+# cleanly umount our Live system.
+#------------------------------------------------------------------------------
+do_umountfs() {
+
+    msg "${white}umountfs"
+
+    PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:$BUSYBOX_BIN
+
+    # err "test error system"
+
+    vmsg 7 $HBAR
+    #msg "doing final umounts"
+
+    [ -n "$FROM_FILE" ] && vmsg 5 "Read parameters from$white $CMDLINE_FILE"
+
+    vmsg 8 'Current bootcodes:'
+    vmsg 8 "    $white$CMDLINE"
+
+    cd $NEW_ROOT
+
+    # Get the runlevel before we pivot
+    local runlevel=$(runlevel | cut -d" " -f2)
+
+    PATH=$BUSYBOX_BIN:/bin
+    export PATH
+    hash -r
+
+    vmsg 8 "runlevel:$white $runlevel"
+
+    breakpoint 4 "Before pivot"
+    sync
+
+    # undo previous bind mount
+    umount ./aufs
+
+    vmsg 7 "$ME pivot_root:$white $PWD $OLD_ROOT"
+
+    # pivot so what was / ---> /aufs and /live ---> /
+    $BUSYBOX_BIN/pivot_root . aufs
+
+    mkdir -p /live /dev /sbin /etc
+    cp $OLD_ROOT/etc/fstab /etc
+
+    # Ensure #!/live/bin/sh still works
+    ln -sf /bin /live/bin
+
+    # Copy ourselves to run as the init program when it restarts
+    cp /bin/$me /sbin/init
+
+    rm -f $HIJACKED_INIT
+    # Use chroot to run "telinit u" in old environment
+    chroot $OLD_ROOT /sbin/telinit u
+
+    wait_for_init
+
+    # Move standard mounts out of aufs and up here where we can use them
+    vmsg 7 "$ME Move some mountpoints out of aufs"
+    for dir in sys proc dev media run tmp; do
+        mountpoint -q $OLD_ROOT/$dir || continue
+        mkdir -p /$dir
+        mount --move $OLD_ROOT/$dir /$dir
+    done
+
+    breakpoint 5 "After pivot"
+
+    exec /bin/$me --final-umount
+    final_umount
+}
+
+final_umount() {
+
+    read_cmdline
+
+    [ -n "$DB_PLUS" ] && battery-status
+
+    breakpoint 6 "Start final umount"
+
+    [ -z "$NO_PROMPT" ] && find_mounted_cd $BOOT_DEV_FILE
+
+    kill_procs_fast
+
+    breakpoint 7 "After killing processes"
+
+    if grep -q "^$SWAP_FILE" /proc/swaps; then
+        msg  "$_Disable_live_swapfile_"
+        swapoff "$SWAP_FILE"
+    fi
+
+    msg  "$_Unmount_most_filesystems_"
+    kill_specific_progs $KILL_PROGS
+    umount_most
+
+    breakpoint 8 "After unmounting most filesystems"
+
+    msg  "$_Disable_swap_"
+    swapoff -a
+
+    breakpoint 9 "After disabling swap"
+
+    shutdown_or_reboot $runlevel
+}
+
+read_cmdline() {
+    if [ -r $CMDLINE_FILE ]; then
+        CMDLINE=$(cat $CMDLINE_FILE /proc/cmdline)
+        FROM_FILE=true
+    else
+        CMDLINE=$(cat /proc/cmdline)
+    fi
+
+    local param value
+    for param in $CMDLINE; do
+        value=${param#*=}
+        case $param in
+             uverb=*)      VERBOSE=$value      ;;
+                 db+)      DB_PLUS=true        ;;
+             ushow=*)         SHOW=$value      ;;
+               ubp=*) BREAK_POINTS=$value      ;;
+              lang=*)         LANG=$value      ;;
+            noprompt)    NO_PROMPT=true        ;;
+              prompt)    DO_PROMPT=true        ;;
+        nocolor|noco)        NO_CO=true        ;;
+       lowcolor|loco)        LO_CO=true        ;;
+
+        console=tty*)    CONSOLE_TTY=${value##*tty} ;;
+        esac
+    done
+
+    case $CONSOLE_TTY in
+        [0-9]|1[0-0]) OUT_TTY=$CONSOLE_TTY ;;
+    esac
+
+    case $VERBOSE in
+        [0-9]|[0-9][0-9]) V_LEVEL=$VERBOSE;;
+    esac
+
+    case $SHOW in
+        [0-9]|[0-9][0-9]) SHOW_COMMAND=$SHOW;;
+    esac
+
+    if [ "$V_LEVEL" -ge 7 -o "$SHOW_COMMAND" -gt 0 ]; then
+        DO_PROMPT=true
+        VERBOSE_MODE=true
+    fi
+}
+
+do_shutdown() {
+    umask 022
+    mkdir -p /proc /sys /dev
+
+    mount -t proc   proc        /proc
+    mount -t sysfs  sys         /sys
+    mount -t devtmpfs devtmpfs  /dev
+    #exec < /dev/console > /dev/console
+
+    breakpoint s "Start shutdown mode"
+
+    shutdown_or_reboot 6
+}
+
+#------------------------------------------------------------------------------
+# Function: do_init
+#
+# Just sleep forever.  We hijack the init process in order to pull it out of
+# the aufs so we can cleanly umount the aufs.  You cannot kill init, the best
+# you can do is restart it.  We replace /sbin/init with a copy of ourselves
+# then use "telinit u" to restart the init process and then we finally end up
+# here doing nothing with pid 1.
+#------------------------------------------------------------------------------
+do_init() {
+    PATH=$BUSYBOX_BIN:/bin
+    export PATH
+
+    touch $HIJACKED_INIT
+
+    while true; do sleep 100; done
+}
+
+#------------------------------------------------------------------------------
+# Function: wait_for_init
+#
+# Wait until we've hijacked the init process.  This ensures that init is
+# harmless and is not spawning new processes.  Note that the argument for
+# usleep is in microseconds (millionths of a second).
+#------------------------------------------------------------------------------
+wait_for_init() {
+
+    [ -e $HIJACKED_INIT ] && return
+    usleep 10000
+    [ -e $HIJACKED_INIT ] && return
+
+    vmsgN 8 'Wait for init '
+    for i in $(seq 1 30); do
+        usleep 100000
+        vmsgN 8 ". "
+        [ -e $HIJACKED_INIT ] || continue
+        vmsg 8
+        return
+    done
+    vmsg 8
+    err 'Unable to restart init'
+}
+
+#------------------------------------------------------------------------------
+# Function: proc_list <start_t>
+#
+# List all pids except:
+#    init (pid=1)
+#    <protect_pid> or higher
+#    kernel threads
+#    processes used for keeping ntfs mounted
+#
+# Use pgrep to ignore process by name to avoid killing processes needed to
+# keep ntfs partitions mounted.
+#
+# Return success if the list is non-empty.
+#------------------------------------------------------------------------------
+proc_list() {
+    local pid start_t ret=1 top_start_t=$1
+    local pid
+    while read pid; do
+        [ $pid -eq 1  -o $pid -eq $$ ] && continue
+        is_zombie_or_kthread $pid      && continue
+        start_t=$(get_start_t $pid)    || continue
+        [ -n "$start_t" ]              || continue
+        [ $start_t -ge $top_start_t ]  && continue
+
+        echo -n "$pid "
+        ret=0
+
+    done <<Proc_List
+$(pgrep -v "$PROTECT_LIST")
+Proc_List
+    return $ret
+}
+
+#------------------------------------------------------------------------------
+# Function: start_t <pid>
+#
+# Get the start_time of a procces.  On my system this is in hundredths of a
+# sceond since the system started.  It is a long long int which means it has
+# at least 64 bits and thus can keep track of times greater than the age of
+# the Universe.
+#
+# See man 5 proc
+#------------------------------------------------------------------------------
+get_start_t() { cut -d" " -f22 /proc/$1/stat 2>/dev/null; }
+
+#------------------------------------------------------------------------------
+# Function: safe_get_start_t <pid>
+#
+# Like get_start_t returns the start-time of a process.  This one handles the
+# error detection and reporting and is mainly for use outside of loops.
+# On success sets START_T to the start time for the process.
+#------------------------------------------------------------------------------
+safe_get_start_t() {
+    _safe_get_start_t $1 && return 0
+
+    err "Unable to find start_t for pid $pid.  Can't kill processes"
+    return 1
+}
+
+_safe_get_start_t() {
+    local start_t pid=$1
+    START_T=
+    [ -z "$pid" ]               && return 1
+    start_t=$(get_start_t $pid) || return 1
+    [ -z "$start_t" ]           && return 1
+    START_T=$start_t
+    vmsg 8 "$ME$cyan start_t:$white $start_t"
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Function: is_zombie_or_kthread <pid>
+#
+# This one also returns true for zombies which is a very good thing to do.
+# We can't kill zombies (they are already dead) so we don't want them to
+# show up on our list of processes.
+# The 2nd line is probably not needed but it makes very little difference
+# in the speed.
+#------------------------------------------------------------------------------
+is_zombie_or_kthread() {
+    local len=$(wc -c /proc/$pid/cmdline 2>/dev/null) || return 0
+    [ -z "$len" ]                                     && return 0
+    [ "${len%% *}" = 0 ]
+}
+
+#------------------------------------------------------------------------------
+# Function: kill_most <signal> <start_t>
+#
+# Send <signal> to all process with start-time before <start_t>  except
+#    init (pid=1)
+#    kernel threads
+#    processes needed to keep ntfs filesystems mounted
+#------------------------------------------------------------------------------
+kill_most() {
+    local sig=$1 start_t=$2
+    local list=$(proc_list $start_t) || return 1
+    vmsg 7 "$ME$cyan kill$green $sig$white $list"
+    kill $sig $list 2>/dev/null
+    return 0
+}
+
+kill_procs_fast() {
+    safe_get_start_t $$ || return 1
+    local list start_t=$START_T
+    #local list start_t=5000000
+    proc_list $start_t &>/dev/null || return
+
+    msg  "$_Kill_any_remaining_processes_"
+    kill_most -KILL $start_t
+    list=$(proc_list $start_t) || return
+
+    echo "> ps (no threads)"
+    ps_no_kthreads
+    err "Unable to kill$white $list"
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+kill_specific_progs() {
+    local prog
+    for prog; do
+        local pids=$(pgrep -l $prog)
+        [ -z "$pids" ] && continue
+
+        #msg 'pkill %s'  "$white$pids"
+        pkill $prog
+
+        sleep .01
+
+        msg 'pkill -9 %s'  "$white$pids"
+        pkill -9 $prog
+    done
+}
+
+#------------------------------------------------------------------------------
+# Function: mountpoint_list
+#
+# List mountpoints in reverse chronological order and exclude system mps that
+# we don't want to or need to umount: /sys /proc /dev /dev/*
+#
+# Return success if the list is non-empty.
+#------------------------------------------------------------------------------
+mountpoint_list() {
+    local ret=1
+    local read dev mp type opts other
+    while read dev mp type opts other; do
+
+        case $type in
+            tmpfs|devtmpfs) case $mp in
+                                /aufs*)          ;;
+                                     *) continue ;;
+                            esac ;;
+        esac
+
+        case $mp in
+            /|/dev|/dev/*|/proc|/proc/*|/sys|/sys/*|/run|/run/*) continue;;
+        esac
+        ret=0
+        echo -n "$mp "
+    done << Read_Mounts
+$(tac /proc/mounts)
+Read_Mounts
+    return $ret
+}
+
+#------------------------------------------------------------------------------
+# Function: umount_most
+#
+# Umount all mounted file systems (EXCEPT / /dev /dev/* /proc and /sys) in
+# exact reverse chronological order.
+#------------------------------------------------------------------------------
+umount_most() {
+    local try list mp dev
+
+    # This seems to be required to umount some loop devices
+    if [ $V_LEVEL -ge 9 ]; then
+        echo 'losetup >'
+        losetup
+    else
+        losetup >/dev/null 2>/dev/null
+    fi
+
+    for try in $(seq 1 3); do
+        list=$(mountpoint_list) || return
+        vmsg 7 "umounting$white $list"
+        vmsgN 7 "          "
+
+        for mp in $list; do
+            vmsgN 7 "$nc$mp "
+            umount $mp
+        done
+        vmsg 7
+
+    done
+    echo "> ps no (threads)"
+    ps_no_kthreads
+    echo "> lsof"
+    lsof
+    echo "> df -h"
+    df -h
+    err  "$_Failed_to_umount_some_filesystems_"
+}
+
+#------------------------------------------------------------------------------
+# Function: find_mounted_cd <file>
+#
+# Read boot device from <file>.  If it is a cdrom device and if it is still
+# mounted then set TO_EJECT to the name of the device for ejection after
+# all devices have been unumounted.
+#------------------------------------------------------------------------------
+find_mounted_cd() {
+
+    local dev BOOT_DEV file=$1
+    if test -r $file; then
+        dev=$(cat $file 2>/dev/null)
+    else
+        eval $(grep ^BOOT_DEV= /live/config/initrd.out)
+        dev=$BOOT_DEV
+    fi
+
+    vmsg 7 "boot_dev:$white $dev"
+
+    [ -n "$dev" ] || return
+
+    # Make sure it is cdrom not a usb or hd drive
+    case $(stat -c %t $dev) in
+        b) ;;
+        *) return ;;
+    esac
+
+    # Make sure it is still mounted
+    grep -q "^$dev " /proc/mounts || return
+
+    TO_EJECT=$dev
+    vmsg 7 "to_eject:$white $TO_EJECT"
+}
+
+#------------------------------------------------------------------------------
+# Function: eject_cd <device>
+#
+# Eject <device> with variable levels of verboseness
+#------------------------------------------------------------------------------
+eject_cd() {
+    local dev=$1 verbose
+    [ $V_LEVEL -ge 8 ] && verbose=-v
+
+    vmsg 7 "eject$white $dev"
+    eject -p $verbose $dev
+}
+
+#------------------------------------------------------------------------------
+# Function: shutdown_or_reboot <runlevel>
+#
+#
+#------------------------------------------------------------------------------
+shutdown_or_reboot() {
+    local runlevel=$1  command=poweroff
+    [ "$runlevel" = 6 ] && command=reboot
+
+    [ "$ERROR_CNT" -gt 0 ] \
+        && plural $ERROR_CNT "$green$me:$red umount or kill error%s %have occurred.$nc"
+
+    [ -n "$VERBOSE_MODE" ] \
+        && vmsg 1 "${green}Use$white <Shift><PgUp>$green and$white <Shift><PgDn>$green for scrolling"
+
+    # The echos ensure the strings that follow get translated
+    local cmd_msg
+    case $command in
+          reboot) cmd_msg=$(echo  "$_reboot_")   ;;
+        poweroff) cmd_msg=$(echo  "$_poweroff_") ;;
+               *) cmd_msg=$command           ;;
+    esac
+    msg  "$_Ready_to_X_" "$white$cmd_msg"
+
+    # Wait a minute for the user then shutdown/reboot no matter what
+    (   sleep 60;
+        # Disable kernel messages
+        echo 0 0 0 0  > /proc/sys/kernel/printk
+        exec $command -f -n
+    ) &
+
+    if [ -n "$TO_EJECT" ]; then
+        eject_cd $TO_EJECT
+        wait_for_user
+
+    elif [ -n "$DO_PROMPT" -o -n "$DB_PLUS" ]; then
+
+        [ -n "$OUR_TTY" ] && chvt $OUR_TTY
+        printf "${cyan}======== Press$magenta ENTER$cyan key to $command ========"
+        #read x </dev/console
+        read x
+    fi
+
+    # Disable kernel messages
+    echo 0 0 0 0  > /proc/sys/kernel/printk
+    exec $command -f -n
+}
+
+#------------------------------------------------------------------------------
+# Function: wait_for_user
+#
+# Issue a prompt and then wait for the user to hit <Enter>.
+#------------------------------------------------------------------------------
+wait_for_user() {
+
+    [ -n "$OUR_TTY" ] && chvt $OUR_TTY
+    stty sane
+    printf "$rev_cyan%s %s$nc"  "$_Please_remove_the_disc_close_the_tray_" \
+         "$_and_press_ENTER_to_continue_"
+    read x
+}
+
+run_scripts() {
+    local script full now last_time=$(get_time)
+    for script; do
+        full=/live/etc/init.d/$script
+        test -x $full || continue
+        $full stop
+
+        #[ "$DB_PLUS" ] || continue
+
+        now=$(get_time)
+
+        #. "seconds" as in seconds per minute
+        vmsg 6 "$ME$white %25s$cyan @$magenta %s$cyan %s" $script $(get_seconds $((now - last_time)))  "$_seconds_"
+        last_time=$now
+    done
+}
+
+get_time() { cut -d" " -f22 /proc/self/stat 2>/dev/null ;}
+
+get_seconds() {
+    local dt=${1:-$(get_time)}
+    printf "%03d" $dt | sed -r 's/(..)$/.\1/'
+}
+#------------------------------------------------------------------------------
+# Function: read_xlat <program-name> <language>
+#
+# Source the files
+#    $LOCALE_DIR/xlat/en/$PROGRAM.xlat
+#    $LOCALE_DIR/xlat/$LANG/$PROGRAM.xlat
+#
+# These contain the translations used in wait_for_user()
+#------------------------------------------------------------------------------
+read_xlat() {
+    local prog=$1 lang=$2 locale_dir=$LOCALE_DIR
+    [ -d $locale_dir ] || locale_dir=/live$locale_dir
+    local xdir=$locale_dir/xlat fdir=$locale_dir/fonts
+
+    local xlat=$xdir/en/$prog.xlat
+    if [ -r $xlat ]; then
+        vmsg 9 "Found:$white $xlat"
+        . $xlat
+    else
+        vmsg 4 "Could not find:$white $xlat"
+    fi
+
+    [ "$lang" ] || return
+
+    lang=$(echo $lang | sed 's/_.*//')
+
+    vmsg 9 "Looking for:$white $lang/$prog.xlat"
+
+    xlat=$xdir/$lang/$prog.xlat
+
+    vmsg 9 "Found:$white $lang/$prog.xlat"
+    [ -r "$xlat" ] || return
+    . $xlat
+
+    local font=$fdir/$lang
+    [ -e "$font" ] && setfont $font -C $(tty)
+}
+
+#------------------------------------------------------------------------------
+# Function: breakpoint <breakpoint> <blurb>
+#
+# Open a limited shell if <breakpoint> is in the comma separated BREAK_POINTS
+# list.  Always do so if "A" is in the list.  Also do so if "a" is in  the list
+# and <breakpoint> is in [e234].
+#
+# But first call show_cmd().
+#------------------------------------------------------------------------------
+breakpoint() {
+
+    #[ "$DB_PLUS" ] && echo "@bp$1 $2"
+
+    show_cmd "$@"
+
+    case ,$BREAK_POINTS, in
+        *,$1,*) ;;
+         *,A,*) ;;
+         *,a,*) ;;
+
+         # This is not used ATM, see line above
+         *,a,*) case $1 in
+                   [e12345789s])    ;;
+                          *) return ;;
+                esac   ;;
+             *) return ;;
+    esac
+
+    [ -n "$OUR_TTY" ] && chvt $OUR_TTY
+
+    echo "$green$TBAR$nc"
+    echo "$green==>$cyan limited shell @ breakpoint [$red$1$cyan]$white $2"
+    echo "$green    Use the$white exit$green command or hit$white Ctrl-d$green to continue"
+    export PS1="${green}ubp $red$1$cyan>$nc "
+    OPATH=$PATH PATH=$BUSYBOX_BIN setsid cttyhack bash </dev/console >/dev/console 2>&1
+    echo
+}
+
+
+#------------------------------------------------------------------------------
+# Fill a seed file with random numbers to have entropy on next boot
+#------------------------------------------------------------------------------
+prep_seed_dev_random() {
+    local i  file=$1  cnt=${2:-32}
+    [ -z "$file" ]   && return
+    test -e "$file"  || touch $file 2>/dev/null
+    test -w "$file"  || return
+    # A random seed is used to start the random number generator differently each boot
+    msg  "$_Saving_random_seed_"
+    dd if=/dev/urandom bs=1 count=512 2>/dev/null > $file
+    chmod 600 $file 2>/dev/null
+}
+
+#------------------------------------------------------------------------------
+# Function: show_cmd <breakpoint> <blurb>
+#
+# Execute a command depending on value of $V_LEVEL.  Only execute the
+# command if <breakpoint> is not in the $skip list associated with the command.
+#------------------------------------------------------------------------------
+show_cmd() {
+    [ "$1" = e ] && return
+    local cmd show
+    case $SHOW_COMMAND in
+        1) cmd=ps_no_kthreads ; show=a          ;;
+        2) cmd="free -m"      ; show=a          ;;
+        3) cmd=lsof           ; show=a          ;;
+        4) cmd="df -h"        ; show=a          ;;
+        5) cmd="df -ha"       ; show=a          ;;
+        *) return                               ;;
+    esac
+
+    case ,$show, in
+        *,$1,*) ;;
+         *,a,*) ;;
+             *) return ;;
+    esac
+
+    vmsg 5 "$cyan[$magenta$1$cyan] $2:"
+    echo "> $cmd"
+    $cmd
+}
+
+ps_no_kthreads() {
+    local pid user time cmnd start_t
+    local format="%6s %12s %s\n"
+    printf "$format" PID START_T CMD
+    local pid user time cmnd
+    while read pid user time cmnd; do
+        is_zombie_or_kthread $pid   && continue
+        start_t=$(get_start_t $pid) || continue
+
+        printf "$format" $pid $start_t "$cmnd"
+
+    done <<Ps_No_Kthreads
+$($BUSYBOX_BIN/ps)
+Ps_No_Kthreads
+}
+
+#------------------------------------------------------------------------------
+# Function: vsg <level> [-n] <message1> <message2> ...
+#
+# Echo message to stdout if <level> is less than or equal to $V_LEVEL.
+# if the 2nd parameter is -n then we don't echo a newline.
+#------------------------------------------------------------------------------
+vmsg() {
+    local level=$1 fmt=$2
+    shift 2
+    [ "$level" -le "$V_LEVEL" ] || return
+    printf "$MSG_CO$fmt$nc\n" "$@"
+}
+
+vmsgN() {
+    local level=$1 fmt=$2
+    shift 2
+    [ "$level" -le "$V_LEVEL" ] || return
+    printf "$MSG_CO$fmt$nc" "$@"
+}
+
+pmsg() { msg "$(plural "$@")"; }
+msg()  { vmsg 5 "$ME $@" ; }
+
+show_err() { vmsg 1 "$green$me: ${red}Error:$white $@"; }
+
+err() {
+    show_err "$@"
+    breakpoint e "On Error"
+    DO_PROMPT=true
+    VERBOSE_MODE=true
+    ERROR_CNT=$((ERROR_CNT + 1))
+}
+
+plural() {
+    local n=$1 str=$2
+    case $n in
+        1) local s=  ies=y   are=is  have=has  were=was;;
+        *) local s=s ies=ies are=are have=have were=were;;
+    esac
+    echo "$str" | sed -e "s/%s/$s/g" -e "s/%ies/$ies/g" -e "s/%are/$are/g" \
+        -e "s/%have/$have/" -e "s/%n/$n/g" -e "s/%were/$were/g"
+}
+
+set_color() {
+
+    e=$(printf "\e")
+    rev_cyan="$e[0;7m"
+    nc="$e[0m"
+
+    [ "$NO_CO" ] && return
+    shade=1
+    [ "$LO_CO" ] && shade=0
+
+    rev_cyan="$e[0;7;36m"
+        cyan="$e[$shade;36m"
+         red="$e[0;31m"
+       green="$e[$shade;32m"
+      yellow="$e[$shade;33m"
+     magenta="$e[$shade;35m"
+       white="$e[1;37m"
+
+    ME_CO=$nc
+    [ "$V_LEVEL" -ge 6 ] && MSG_CO=$cyan
+    [ "$V_LEVEL" -ge 6 ] && ME_CO=$green
+    ME="$ME_CO$me:$MSG_CO"
+}
+
+
+main "$@"

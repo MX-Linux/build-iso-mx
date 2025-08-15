@@ -1,0 +1,8 @@
+COUNTRY="United States"
+WM_LANG="es"
+KEYBOARDS="es,us"
+KEYTABLE="es"
+LANG="es_US.UTF-8"
+MIRROR="us"
+TZ="America/Los_Angeles"
+XKBLAYOUT="es,us"

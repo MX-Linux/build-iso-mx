@@ -1,0 +1,3 @@
+   1)  Alapértelmezett
+   2)  automount       Eszközök automatikus csatolása csatlakoztatáskor
+   3)  noautomount     Az összes extra és automatikus csatolás letiltása

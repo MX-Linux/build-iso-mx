@@ -1,0 +1,8 @@
+COUNTRY="Österreichisch-Deutsch"
+WM_LANG="de"
+KEYBOARDS="at,us"
+KEYTABLE="de-latin1-nodeadkeys"
+LANG="de_AT.UTF-8"
+MIRROR="at"
+TZ="Europe/Vienna"
+XKBLAYOUT="at,us"

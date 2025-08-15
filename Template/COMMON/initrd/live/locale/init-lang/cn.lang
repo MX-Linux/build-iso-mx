@@ -1,0 +1,8 @@
+COUNTRY="Chinese"
+WM_LANG="cn"
+KEYBOARDS="cn,us"
+KEYTABLE="us"
+LANG="zh_CN.UTF-8"
+MIRROR="hk"
+TZ="Asia/Macau"
+XKBLAYOUT="cn,us"

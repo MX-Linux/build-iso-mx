@@ -1,0 +1,8 @@
+COUNTRY="Suomalainen"
+WM_LANG="fi"
+KEYBOARDS="fi,us"
+KEYTABLE="fi-latin1"
+LANG="fi_FI.UTF-8"
+MIRROR="fi"
+TZ="Europe/Helsinki"
+XKBLAYOUT="fi,us"

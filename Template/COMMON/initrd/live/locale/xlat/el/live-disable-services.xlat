@@ -1,0 +1,8 @@
+_Customizing_services_="Προσαρμογή των υπηρεσιών"
+_Disabling_NFS_server_X_="Απενεργοποίηση NFS server %s"
+_Disabling_X_service_="Απενεργοποίηση υπηρεσιών %s"
+_Disabling_X_services_Y_="Απενεργοποίηση %s υπηρεσιών %s"
+_Disabling_more_services_X_="Απενεργοποίηση περισσότερες υπηρεσίες %s"
+_Disabling_network_services_X_="Απενεργοποίηση δικτύου %s"
+_Disabling_some_services_X_="Απενεργοποίηση μερικών υπηρεσιών %s"
+_Enabling_X_service_="Ενεργοποίηση των υπηρεσιών %s"

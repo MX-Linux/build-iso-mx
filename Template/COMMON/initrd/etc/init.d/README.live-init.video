@@ -1,0 +1,114 @@
+On most newer systems that support kms (Kernel Mode Setting) video
+driver, X will start up just fine with no /etc/X11/xorg.conf file.
+
+Some older systems need the "vesa" driver specified in xorg.conf or
+they will default to the "fbdev" driver which usually offers
+unacceptably low resolution when boot Legacy.
+
+We try to provide a "safe video" mode that should get to X even it
+there is a problem with the default video driver.  This used to be
+easy but has been getting harder.  The trick now is to disable any
+kms video drivers in order to free up the hardware so we can specify
+the vesa driver in xorg.conf.  X will not start if a modesetting
+(kms) driver is loaded with modesetting enabled.
+
+We had to revamp this recently (Sept 2019) because some kms modules
+seem to be not respecting the "nomodeset" boot parameter, at least
+on some hardware which totally breaks our old safe video mode.
+
+Overview
+--------
+
+Type-0 hardware: no kernel driver
+---------------------------------
+Some ancient systems have video hardware that has no specific
+hardware video driver.  For these systems we try to make an
+xorg.conf file that specifies the vesa driver so we don't end
+up with the fbdev driver which fixes the X resolution to the
+resolution of the virtual consoles which defaults to 1024x768,
+
+Type-1 Hardware: non-kms kernel driver
+-------------------------------------
+These systems are rare now.  We had a list of about 10 such drivers
+but the list has been reduced to just the drivers "sis_agp" and
+"via_agp".  These systems should work fine with no xorg.conf file
+but we can also specify the "vesa" driver without causing problems
+because these non-kms drivers do not exclude vesa when they load (I
+think).
+
+Type-2 Hardware: kms (modesetting) kernel driver
+------------------------------------------------
+This is by far the most prevalent situation now it usually works
+great OOTB with no xorg.conf.  When it doesn't work then in safe
+video mode we need to disable the modesetting feature of the kms
+driver, or prevent it from loading in order to fall back to the vesa
+driver.  The "nomodeset" cheat used to do for all modesetting
+drivers but it seems to often not work now.
+
+So now to disable mode-setting we find all mode-setting drivers that
+would be loaded for this hardware.  If they have a "modeset" option
+then we set it to "0", otherwise we "nuke" the module by moving it
+out of the normal /lib/modules/$(uname -r)/ tree and rerun depmod so
+the kernel will not load it.  This could also be done with the
+module_blacklist= boot option but that needs to be specified at
+boot-time which is inconvenient.
+
+So our safe video mode will disable mode-setting (one way or
+another) and then make a default xorg.conf file specifying either
+the fbdev or vesa driver.   When booting Legacy, the vesa driver
+should be used but, unfortunately, vesa no longer works on some
+systems when booting via UEFI.  So if we boot via UEFI then we
+use the fbdev driver as the default safe xorg driver.  This has
+the downside that the resolution is fixed but when booting UEFI
+the resolution usually starts out high so using fbdev is not the
+catastrophe it usually is when booting Legacy.
+
+Special Cases
+-------------
+We also try to handle a number of special cases that have cropped up
+over the years.  It is possible that some of these have been fixed
+by upstream and we no longer need to do them but we don't have easy
+access to variety of video hardware needed for testing.
+
+These are the various special cases we handle now but some may
+be eliminated soon if we determine they are not needed.
+
+ A) Use sismedia xorg driver when hardware for the sis_agp kernel
+    module is detected.
+
+ B) Don't make a default xorg.conf file when openchrome xorg driver
+    exists and a chrome GPU is detected.
+
+ C) Use uxa acceleration for pre-Sandybridge Intel
+ 
+
+ Outline of Operation
+ ---------------------
+Safe video mode is enabled with the "xorg=safe" cheat along
+with some variations.  Specifying "xorg=nuke" will also enable
+safe video mode but will nuke all kms modules (supported by
+the hardware) instead of trying to disable modeset first.
+
+You can also specify an option xorg driver as in "xorg=safe,vesa"
+which will use the vesa driver for safe mode even if we are booting
+via UEFI.
+
+Our video hardware detection always runs because if no video
+hardware driver is available (for the hardware) then we need to make
+a default xorg.conf with either the vesa or fbdev driver.
+
+We detect drivers for the hardware by reading all of the "modalias"
+files under /sys/devices and feed their contents to the modprobe
+program with the --all and --show-depends options so it lists all
+the modules that would normally be automatically loaded for this
+hardware.  We then grep the list of all video modules.  After that
+we separate out the kms from the non-kms video drivers.  We do it in
+this order because it is assumed that reading all of the modalias
+files is expensive.  Here, on decent hardware it takes 0.5 seconds
+the first time, 0.2 seconds the 2nd time then goes down to 0.06
+seconds.
+
+We use a combination of "lspci -n" and the found modules (supported
+by the hardware) to determine what special case tweaks are needed.
+
+WORK IN PROGRESS

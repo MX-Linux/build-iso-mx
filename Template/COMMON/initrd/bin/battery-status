@@ -1,0 +1,12 @@
+#!/bin/sh
+
+for file in $(grep -l Battery /sys/class/power_supply/BAT*/type 2>/dev/null); do
+    dir=$(dirname $file)
+    read charge 2>/dev/null < $dir/charge_now
+    read full   2>/dev/null < $dir/charge_full
+    read status 2>/dev/null < $dir/status
+    percent="??"
+    [ -n "$charge" -a -n "$full" ] && percent=$((100 * charge / full))
+    num=${dir##*[a-zA-Z]}  
+    echo "battery-$num: $status, $percent%"
+done

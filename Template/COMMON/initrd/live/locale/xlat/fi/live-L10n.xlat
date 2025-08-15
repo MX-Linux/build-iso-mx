@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Konfiguroidaan konsolia näppäimistöasettelulle %s"
+_Localizing_console_and_timezone_="Lokalisoidaan konsolia ja aikavyöhykettä"
+_Recreate_symlink_X_="Tee uudelleen symbolinen linkki %s"
+_Setting_hostname_to_X_="Asetetaan verkkonimeksi %s"
+_Setting_locale_to_X_="Asetetaan sijainniksi %s"
+_Setting_timezone_and_localtime_to_X_="Asetetaan aikavyöhyke ja kellonaika %s"
+_Unknown_time_zone_X_="Tuntematon aikavyöhyke %s"

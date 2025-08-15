@@ -1,0 +1,8 @@
+#!/bin/sh
+
+: ${CHDIR:=/live/aufs}
+path=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+
+[ $# -gt 0 ] || exit
+
+env PATH=$path chroot $CHDIR "$@"

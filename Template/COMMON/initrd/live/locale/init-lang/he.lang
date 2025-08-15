@@ -1,0 +1,8 @@
+COUNTRY="Hebrew"
+WM_LANG="en"
+KEYBOARDS="il,us"
+KEYTABLE="us"
+LANG="he_IL.UTF-8"
+MIRROR="us"
+TZ="Asia/Jerusalem"
+XKBLAYOUT="il,us"

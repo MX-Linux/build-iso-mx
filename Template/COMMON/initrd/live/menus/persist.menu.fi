@@ -1,0 +1,12 @@
+   1)  Oletus
+   2)  persist_all     Tallenna root-juuri keskusmuistiin, tallenna kotikansio levylle (tallenna root-juuri sammutuksen yhteydessä)
+   3)  persist_root    Tallenna root-juuri ja kotikansio keskusmuistiin ja tallennus sammutettaessa
+   4)  persist_static  Tallenna root-juuri ja kotikansio levylle erillisen kotikansion kanssa
+   5)  p_static_root   Tallenna root-juuri ja kotikansio levylle yhdessä
+   6)  persist_home    Vain kotikansion persistenssi-tilavaraus
+   7)  frugal_persist  Frugal root-juuren kanssa keskusmuistissa ja kotikansio levyllä
+   8)  frugal_root     Frugal root-juuren kanssa ja kotikansio keskusmuistissa, tallennus sammuttaessa
+   9)  frugal_static   Frugal root-juuren kanssa levyllä sekä kotikansio erillisenä levyllä
+  10)  f_static_root   Frugal root-juuren kanssa ja kotikansio levyllä yhdessä
+  11)  frugal_home     Frugal vain kotikansion persistenssi-tilavarauksen kanssa
+  12)  frugal_only     Ainoastaan Frugal, ei persistenssi-tilavarausta

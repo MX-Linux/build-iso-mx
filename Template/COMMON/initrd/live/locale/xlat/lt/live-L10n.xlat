@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Konfigūruojamas pultas, skirtas %s klaviatūros išdėstymui"
+_Localizing_console_and_timezone_="Lokalizuojamas pultas ir laiko juosta"
+_Recreate_symlink_X_="Iš naujo sukurti simbolinę nuorodą %s"
+_Setting_hostname_to_X_="Nustatomas kompiuterio pavadinimas į %s"
+_Setting_locale_to_X_="Nustatoma lokalė į %s"
+_Setting_timezone_and_localtime_to_X_="Nustatoma laiko juosta ir vietinis laikas į %s"
+_Unknown_time_zone_X_="Nežinoma laiko juosta %s"

@@ -1,0 +1,8 @@
+COUNTRY="Magyar"
+WM_LANG="hu"
+KEYBOARDS="hu,us"
+KEYTABLE="hu"
+LANG="hu_HU.UTF-8"
+MIRROR="hu"
+TZ="Europe/Budapest"
+XKBLAYOUT="hu,us"

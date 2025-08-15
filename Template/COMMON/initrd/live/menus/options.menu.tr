@@ -1,0 +1,16 @@
+   1)  Öntanımlı
+   2)  checkmd5        Canlı ortamın doğruluğunu denetle
+   3)  checkfs         LiveUSB ve kalıcı ext2/3/4 dosya sistemlerini kontrol et
+   4)  toram           Sıkıştırılmış dosya sistemini RAM 'a kopyala
+   5)  i915_invert     Bazı Intel grafik sistemlerinde videoyu evirin
+   6)  no_i915_invert  Intel grafik evirmeyi devre dışı bırak
+   7)  from=usb        Canlı-USB 'den önyüklemeyi bitir
+   8)  from=hd         Sabit sürücüden önyüklemeyi bitir
+   9)  hwclock=ask     Sistemin saat ayarını belirlemesine yardımcı olun
+  10)  hwclock=utc     Donanım saati UTC kullanıyor (Yalnızca linux sistemler)
+  11)  hwclock=local   Donanım saati yerel zamanı kullanıyor (Windows sistemler)
+  12)  password        Önyüklemeden önce parolaları değiştir
+  13)  nostore         LiveUSB Depolama özelliğini devre dışı bırak (Sadece LiveUSB)
+  14)  dostore         LiveUSB Depolama özelliğini etkinleştir (sadece LiveUSB)
+  15)  savestate       Yeniden başlatma sırasında bazı dosyaları kaydet (sadece  CanlıUSB)
+  16)  nosavestate     Yeniden başlatma sırasında dosyaları kaydetme (sadece  CanlıUSB)

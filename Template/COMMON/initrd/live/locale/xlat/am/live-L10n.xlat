@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="console ማሰናጃ ለ %s ቁልፍ ካርታ"
+_Localizing_console_and_timezone_="console እና የ ሰአት ክልል ማሰናጃ"
+_Recreate_symlink_X_="እንደገና መፍጠሪያ symlink %s"
+_Setting_hostname_to_X_="የ ጋባዥ ስም ማሰናጃ ለ: %s"
+_Setting_locale_to_X_="ቋንቋ ማሰናጃ ለ: %s"
+_Setting_timezone_and_localtime_to_X_="የ ሰአት ክልል እና የ አካባቢ ሰአት ማሰናጃ ወደ %s"
+_Unknown_time_zone_X_="ያልታወቀ የ ሰአት ክልል %s"

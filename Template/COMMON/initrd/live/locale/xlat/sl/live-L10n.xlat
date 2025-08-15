@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Konfiguriranje konzole za razpored tipk %s"
+_Localizing_console_and_timezone_="Lokalizacija konzole in časovnega pasu"
+_Recreate_symlink_X_="Ponovno ustvari posredno povezavo %s"
+_Setting_hostname_to_X_="Nastavitev imena gostitelja na %s"
+_Setting_locale_to_X_="Nastavljam lokalne nastavitve na %s"
+_Setting_timezone_and_localtime_to_X_="Nastavitev časovnega pasu in lokalnega časa na %s"
+_Unknown_time_zone_X_="Neznan časovni pas %s"

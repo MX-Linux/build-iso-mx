@@ -1,0 +1,5 @@
+_Already_saved_X_seconds_ago_="Már mentve %s másodperccel ezelőtt"
+_Possibly_save_persistent_information_="Lehetőleg mentse az adatmegőrzési információt"
+_Save_new_autosave_selection_="Mentse az új automatikus mentés kiválasztást"
+_Save_new_passwords_="Mentse az új jelszavakat"
+_Wont_autosave_within_X_seconds_of_a_previous_save_="Nem ment automatikusan, egy előző mentés utáni %s másodpercben"

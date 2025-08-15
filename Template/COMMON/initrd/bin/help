@@ -1,0 +1,93 @@
+#!/bin/sh
+
+EXCLUDE="\[|ash|addgroup|adduser|bbconfig|busybox|chpassed|conspy|cryptpw|"
+EXCLUDE=$EXCLUDE"cttyhack|delgroup|deluser|false|gfxsave.sh|login|"
+EXCLUDE=$EXCLUDE"mdev|mkpasswd|non-live-cmdline|passwd|pipe_progress|"
+EXCLUDE=$EXCLUDE"pivot_root|ret|sulogin|switch_root|test-|tsplash|"
+EXCLUDE=$EXCLUDE"vlock|xargs|yes|true|printf|"
+EXCLUDE=$EXCLUDE"auto-load-modules|bb-chroot|killall5|umount-|live-chroot|"
+EXCLUDE=$EXCLUDE"load-live-modules|usb-report.sh|usb2-re-enable"
+
+main() {
+    local dir=${1:-/bin}
+    set_color
+
+    echo -e "$white\nAvailable commands:"
+    printf "$green"
+    column $(list_execs $dir)
+    printf "$NC"
+    echo -e "\nUse $(aq Shift+PgUp) and $(aq Shift+PgDn) to scroll"
+    echo "For many commands the $(gq --help) option gives more info.  Example:  $(gq ls --help)"
+
+}
+
+aq() { echo -n "$amber$*$NC" ;}
+gq() { echo -n "$green$*$NC" ;}
+
+
+column() {
+    local swidth=$(stty size | cut -d" " -f2)
+    local item width max_width=0
+
+    for item; do
+        width=$(echo "$item" | wc -m)
+        [ $max_width -lt $width ] && max_width=$width
+    done
+    max_width=$((max_width + 1))
+    local cnt=0 cols=$(( (swidth -1) / max_width))
+
+    # for item; do
+    #     printf "%-${max_width}s" "$item"
+    #     cnt=$(((cnt + 1) % cols))
+    #     [ $cnt = 0 ] && echo
+    # done
+    # [ $cnt = 0 ] || echo
+
+    rows=$(($# / cols + 1))
+    for row in $(seq 1 $rows); do
+        cnt=0
+        for item; do
+            cnt=$((cnt + 1))
+            [ $(((rows + cnt - row) % rows)) = 0 ] || continue
+            #printf "%4s" $cnt
+            printf "%-${max_width}s" "$item"
+        done
+        echo
+    done
+
+}
+
+list_execs() {
+    local dir=$1 name file
+    for name in $(ls $dir); do
+        file="$dir/$name"
+        [ -d $file ] && continue
+        [ -x $file ] || continue
+        echo $name | egrep -q "^($EXCLUDE)" && continue
+        echo $name
+    done
+}
+
+set_color() {
+    local e=$(printf "\e")
+
+         black="$e[30m";        red="$e[31m";      green="$e[32m";
+         amber="$e[33m";       blue="$e[34m";    magenta="$e[35m";
+          cyan="$e[36m";    lt_grey="$e[0;37m";
+
+          grey="$e[1;30m";    rose="$e[1;31m";  lt_green="$e[1;32m";
+        yellow="$e[1;33m";  violet="$e[1;34m";      pink="$e[1;35m";
+       lt_cyan="$e[1;36m";   white="$e[1;37m";
+
+            NC="$e[0m";
+
+      black_bg="$e[40m";     red_bg="$e[41m";    green_bg="$e[42m";
+      amber_bg="$e[43m";    blue_bg="$e[44m";  magenta_bg="$e[45m";
+       cyan_bg="$e[46m";   white_bg="$e[47m"
+           rev="$e[7m";  under_line="$e[4m";         bold="$e[1m"
+
+    clear="$e[2;J"; cursor_off="$e[?25l"; cursor_on="$e[?25h"
+
+}
+
+main "$@"

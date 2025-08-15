@@ -1,0 +1,19 @@
+#!/bin/sh
+
+main() {
+    local line action modalias seqnum
+    netlink-raw | while read line; do
+        case $line in
+              ACTION=*)   action=${line#*=} ; continue ;;
+            MODALIAS=*) modalias=${line#*=} ; continue ;;
+              SEQNUM=*)   seqnum=${line#*=}            ;;
+                     *)                       continue ;;
+        esac
+        if [ "$action" = "add" -a ${#modalias} -gt 0 ]; then
+            printf "%s %s: %s\n"  "$action" "$seqnum" "$modalias"
+        fi
+        unset action modalias seqnum
+    done
+}
+
+main "$@"

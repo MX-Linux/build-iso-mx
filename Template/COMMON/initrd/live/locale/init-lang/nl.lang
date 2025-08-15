@@ -1,0 +1,8 @@
+COUNTRY="Nederlands"
+WM_LANG="nl"
+KEYBOARDS="nl,us"
+KEYTABLE="us"
+LANG="nl_NL.UTF-8"
+MIRROR="nl"
+TZ="Europe/Amsterdam"
+XKBLAYOUT="nl,us"

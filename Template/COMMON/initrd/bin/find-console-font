@@ -1,0 +1,55 @@
+#!/bin/bash
+
+find_console_font() {
+    local lang=$1  cmd_size=$2  dir=$3  ext=${4:-.psf}
+    
+    local name=Terminus
+
+    #dir=~/Projects/antiX/Live-initrd/live/locale/fonts
+
+    # Note, always round down to make max-size easier to find
+    local size size2
+    case $cmd_size in
+              [1-7]) size=12x6                ;;
+               [89]) size=16                  ;;
+                 10) size=20x10               ;;
+                 11) size=22x11               ;;
+              1[23]) size=24x12               ;;
+              1[45]) size=28x14               ;;
+            1[6789]) size=32x16               ;;
+       [23456][0-9]) size=32x16               ;;
+    esac
+
+    local code
+    case ${lang%%_*} in
+                     kk|ky|tj) code='CyrAsia'  ;;
+                        ru|uk) code='CyrKoi'   ;;
+                  bg|mk|ru|sr) code='CyrSlav'  ;;
+      bs|hr|cs|hu|pl|ro|sk|sl) code='Lat2'     ;;
+        af|sq|ast|da|nl|et|fr) code='Lat15'    ;;
+    'fi'|de|is|id|pt|es|sv|tr) code='Lat15'    ;;
+                        lt|lv) code='Lat7'     ;;
+                           el) code='Greek'    ;;
+                            *) code='Uni2'     ;;
+    esac
+
+    local try font f_size f_face file
+    for f_size in $size $size2; do
+        for f_face in ${name}Bold VGA $name; do
+            #echo $f_face$f_size
+            try=$code-$f_face$f_size
+            file=$dir/$try$ext
+            test -e $file || continue
+            font=$try
+            break
+        done
+        [ "$font" ] && break
+    done
+
+    [ "$font" ] || return
+
+    echo "$font"
+}
+
+
+find_console_font "$@"

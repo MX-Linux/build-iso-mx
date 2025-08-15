@@ -1,0 +1,8 @@
+COUNTRY="Русская"
+WM_LANG="ru"
+KEYBOARDS="us,ru"
+KEYTABLE="ru"
+LANG="ru_RU.UTF-8"
+MIRROR="ru"
+TZ="Europe/Moscow"
+XKBLAYOUT="us,ru"

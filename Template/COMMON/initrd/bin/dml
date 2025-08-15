@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if test -L /bin/dmesg; then
+    dmesg | less
+else
+    dmesg --color=always | less -R
+fi

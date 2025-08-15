@@ -1,0 +1,406 @@
+#!/bin/bash
+
+ME=${0##*/}
+
+usage() {
+    cat <<Usage
+Usage: $ME module-1 module-2 ...
+    Remove the named modules from under the /lib/modules/\$VERSION
+    directory and put them under /lib/modules/\$VERSION-nuked. Then
+    run depmod.  This ensures the nuked modules cannot be loaded.
+    ** sigh **
+
+Abbreviations:
+    KMS         All KMS modules appropriate for this hardware
+    ALL-KMS     All KMS modules
+
+Options:
+    -d  --dir <directory>   Work on /lib/modules/... under <directory>
+    -h  --help              Show this usage
+    -k  --kernel <version>  Use <version> as the kernel version
+    -l  --list              List KMS video modules and nuked modules
+    -p  --pretend           Don't actually do anything
+    -q  --quiet             Print less
+    -u  --undo              Restore nuked modules
+    -U  --update            Undo nuked modules and nuke given modules
+    -v  --verbose           Print commands to screen
+    -W  --no-wrap           Don't wrap lines in list output
+
+Note:
+    Command line modules given with --undo will be the only ones un-nuked.
+    Command line modules given with --update will be nuked and the
+    existing nuked modules (not on the command line) will be un-nuked.
+Usage
+    exit 0
+}
+
+main() {
+    local TOP_DIR  K_VERSION=$(uname -r)
+    local short_stack="dhklpquvW"  MODE=normal
+    local NEED_DEPMOD  FOUND  FOLD=cat
+
+    [ $# -eq 0 ] && usage
+
+    while [ $# -gt 0 -a -n "$1" -a -z "${1##-*}" ]; do
+        local arg=${1#-} ; shift
+
+        #--- unstack stacked single-letter options ---
+        case $arg in
+            [$short_stack][$short_stack]*)
+                if echo "$arg" | grep -q "^[$short_stack]\+$"; then
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    continue
+                fi;;
+        esac
+
+        case $arg in
+                -dir|d) need_param  "-$arg" "$@"
+                         TOP_DIR=${1%/} ; shift      ;;
+               -help|h) usage                        ;;
+               -list|l) MODE=list                    ;;
+             -kernel|k) need_param "-$arg" "$@"
+                         K_VERSION=$1   ; shift      ;;
+            -pretend|p) PRETEND=true                 ;;
+              -quiet|q) QUIET=true                   ;;
+               -undo|u) MODE=undo                    ;;
+             -update|U) MODE=update                  ;;
+            -verbose|v) VERBOSE=true                 ;;
+            -no-wrap|W) NO_WRAP=true                 ;;
+                     -) break                        ;;
+
+             *) fatal "Unknown parameter %s" "-arg$" ;;
+        esac
+    done
+
+
+    [ -z "$NO_WRAP" ] && which fold &>/dev/null && FOLD="fold -s"
+
+    local module modules
+    # Convert commas to spaces then expand abbreviations
+    for module in ${*//,/ }; do
+        case $module in
+            ALL-KMS) module=$(all_kms_modules)      ;;
+                KMS) module=$(hw_kms_modules)       ;;
+        esac
+        modules="$modules${modules:+ }${module//_/-}"
+    done
+
+    local modu_dir="$TOP_DIR/lib/modules/$K_VERSION"
+    local nuke_dir="$modu_dir-nuked"
+
+    # Check for root if root is needed
+    # OTOH, root is not needed if we are working on a copy we created
+    if [ $(id -u) -ne 0 -a -z "$PRETEND" -a "$MODE" != 'list' ]; then
+        test -w "$modu_dir" || fatal "$ME must be run as root"
+    fi
+
+    case $MODE in
+          list) list_modules "$nuke_dir" ;  exit 0                 ;;
+        normal) nuke_modules "$modu_dir" "$nuke_dir"  "$modules"   ;;
+          undo) undo_modules "$modu_dir" "$nuke_dir"  "$modules"   ;;
+        update) do_update    "$modu_dir" "$nuke_dir"  "$modules"   ;;
+             *) fatal "Unknown internal mode %s" "$MODE"           ;;
+    esac
+
+    [ "$NEED_DEPMOD" ] || exit 0
+
+    local t1=$(centi_seconds)
+    cmd depmod --basedir "${TOP_DIR:-/}" $K_VERSION
+    qsay "The depmod command took %s seconds" "$(nqm $(delta_seconds $t1))"
+}
+
+#------------------------------------------------------------------------------
+# Restore nuked modules and replace them with the new ones from the modules
+# list.  Try to be clever and only move modules if we have to so we can avoid
+# doing a needless but expensive depmod.
+#
+# NOTE: we only need one call to set_minus() since the find command won't
+# find modules that were already nuked.  I don't know which was is more
+# efficient.
+#------------------------------------------------------------------------------
+do_update() {
+    local modu_dir=$1  nuke_dir=$2  modules=$3
+
+    # An update with no modules given is an undo
+    if [ -z "$modules" ]; then
+        undo_modules "$modu_dir" "$nuke_dir"
+        return
+    fi
+
+    local nuked=$(find_modules "$nuke_dir")
+
+    #compact_list nuked $nuked
+    #compact_list "to nuke" $modules
+
+    local real_nuke=$(set_minus "$modules" "$nuked")
+    local real_undo=$(set_minus "$nuked"   "$modules")
+
+    #compact_list "real nuke" $real_nuke
+    #compact_list "real undo" $real_undo
+
+    [ -n "$real_nuke" ] && nuke_modules "$modu_dir"  "$nuke_dir"  "$real_nuke"
+    [ -n "$real_undo" ] && undo_modules "$modu_dir"  "$nuke_dir"  "$real_undo"
+}
+
+#------------------------------------------------------------------------------
+# Find name of all modules under given directory or find "named" modules under
+# the directory if find_expr is given.
+#
+# NOTE: this is never called with a find_expr.
+#------------------------------------------------------------------------------
+find_modules() {
+    local from_dir=$1  find_expr=$2
+
+    test -d "$from_dir" || return
+
+    if [ -z "$find_expr" ]; then
+        find "$from_dir/"  -type f -name "*.ko*" -printf "%f\n"
+    else
+        find "$from_dir/"  -type f $find_expr  -printf "%f\n"
+    fi | sed -r -e "s/_/-/g" -e "s/\.ko(|\.[[:alpha:]]+)$//" | sort
+}
+
+#------------------------------------------------------------------------------
+# Move a list of modules to the -nuked directory
+#------------------------------------------------------------------------------
+nuke_modules() {
+    move_modules "$@"
+    compact_list "Nuked modules" $FOUND
+}
+
+#------------------------------------------------------------------------------
+# Move modules from the "-nuked" directory to the normal one.
+# Note we swap source and destition for the move
+#------------------------------------------------------------------------------
+undo_modules() {
+    move_modules "$2"  "$1"  "$3"  'undo'
+    compact_list "Un-nuked modules" $FOUND
+}
+
+#------------------------------------------------------------------------------
+# Move files from under one directory to the same location nnder a different
+# directory.  If undo is set then we will move ALL modules if none are in
+# the list and we will also remove empty directories.
+#------------------------------------------------------------------------------
+move_modules() {
+    local from_dir=$1  to_dir=$2 modules=$3  undo=$4
+
+    # Bail early if no modules are specified unless "undo"
+    # We will move all modules when we undo and none are specified
+    [ -z "$modules" -a -z "$undo" ] && return
+    test -d "$from_dir"             || return
+
+    local file  name  dest  found
+    while read file; do
+        test -f "$file" || continue
+        name=$(basename "$file")
+        name=${name%.ko*}
+        found="$found${found:+ }$name"
+        dest=$to_dir/${file#from_dir/}
+        cmd mkdir -p $(dirname "$dest")
+        cmd mv "$file" "$dest"
+        # Only remove directory when we undo the nuke
+        [ -n "$undo" ] && cmd rmdir -p --ignore-fail-on-non-empty "$(dirname "$file")"
+    done <<Copy_Loop
+$(find "$from_dir/"  -type f $(find_expr "$modules"))
+Copy_Loop
+
+    [ -n "$found" ] && NEED_DEPMOD=true
+    FOUND=$found
+}
+
+#------------------------------------------------------------------------------
+# Create a "find" expression give a list of module names
+#------------------------------------------------------------------------------
+find_expr() {
+    local find_expr
+    # Convert - and _ to a regular expression and build find arguments
+    for module in $(echo $modules | sed "s/[_-]/[_-]/g"); do
+        find_expr="$find_expr${find_expr:+ -o} -name $module.ko*"
+    done
+    echo $find_expr
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+list_modules() {
+    local nuke_dir=$1
+    unset QUIET
+
+    #kms_modules_regex
+    #echo
+
+    pretty_list "ALL KMS modules" $(all_kms_modules)
+    echo
+    pretty_list "KMS modules for this hardware" $(hw_kms_modules)
+
+    test -d "$nuke_dir" || return 0
+    local found=$(find_modules "$nuke_dir")
+    [ -n "$found" ] || return 0
+    echo
+    pretty_list "Currently nuked modules" $found
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Create a list of modules with label on separate line
+#------------------------------------------------------------------------------
+pretty_list() {
+    local lab=$1 ; shift
+    [ "$QUIET" ] && return
+    printf "$m_co$lab$nc_co\n"
+    echo "$@" | $FOLD
+}
+
+#------------------------------------------------------------------------------
+# Create a list of modules with label on the same line.  Don't print anything
+# if the list is empty.
+#------------------------------------------------------------------------------
+compact_list() {
+    local lab=$1 ; shift
+    [ "$QUIET" ] && return
+    [ -n "$*"  ] || return
+    printf "$m_co$lab:$nc_co $*\n" | $FOLD
+}
+
+#------------------------------------------------------------------------------
+# Lines in the first argument that aren't in the second.  First convert spaces
+# to newlines.
+#------------------------------------------------------------------------------
+old_set_minus() {
+    local a=$1  b=$2 temp_file=$(tempfile minus-XXXXXX)
+    echo "$b" | tr -s ' '  '\n' | sed "/^$/d" | sort > $temp_file
+    echo "$a" | tr -s ' '  '\n' | sed "/^$/d" | sort | comm -23 - $temp_file
+    rm $temp_file
+}
+
+#------------------------------------------------------------------------------
+# Uses grep but no tempfile or comm.
+#------------------------------------------------------------------------------
+set_minus() {
+    local a=$1  b=$2
+    local regex=$(echo "$b" | tr -s '\n '  '|'  )
+    echo "$a" | grep -vE "^(${regex%|})$"
+}
+
+#------------------------------------------------------------------------------
+# List all KMS modules that can be used by the hardware
+#------------------------------------------------------------------------------
+hw_kms_modules() {
+    local kms_modules_regex=$(kms_modules_regex)
+    find /sys/devices -name modalias -print0 | xargs -0 sort -u \
+        | tr '\n' '\0' | xargs -0 modprobe -a -D -q 2>/dev/null | sort -u \
+        | sed -n -r "s/^insmod [^ ]*\/($kms_modules_regex)\.ko(|\.[[:alpha:]]+)[[:space:]]*$/\1/p"
+
+}
+
+#------------------------------------------------------------------------------
+# Create a regular expression for all modules that depend on drm.ko
+#------------------------------------------------------------------------------
+kms_modules_regex() {
+    all_kms_modules | sed -e "s/[_-]/[_-]/" | sed "/^$/d" | tr '\n' '|' | sed "s/|$//"
+}
+
+#------------------------------------------------------------------------------
+# Create a list of all modules that depend on drm.ko
+#------------------------------------------------------------------------------
+all_kms_modules() {
+    grep -E "drm\.ko(|\.[[:alpha:]]+)" /lib/modules/$(uname -r)/modules.dep \
+        | sed -r -e "s/:.*//"  \
+        -e "s|.*/||"        \
+        -e "s/\.ko(|\.[[:alpha:]]+)$//"
+        | grep -v -E "^(drm|drm_kms_helper|ttm)$"   \
+        | sort -u
+}
+
+#------------------------------------------------------------------------------
+# Get time since kernel started in 1/100ths of a second
+#------------------------------------------------------------------------------
+centi_seconds() { cut -d" " -f22 /proc/self/stat; }
+
+#------------------------------------------------------------------------------
+# Produce a delta-t in seocnds
+#------------------------------------------------------------------------------
+delta_seconds() {
+    local dt=$(($(centi_seconds) - $1))
+    printf "%03d" $dt | sed -r 's/(..)$/.\1/'
+}
+
+#------------------------------------------------------------------------------
+# Display a formated message
+#------------------------------------------------------------------------------
+say() {
+    local fmt=$1 ; shift
+    printf "$m_co$fmt$nc_co\n" "$@"
+}
+
+#------------------------------------------------------------------------------
+# Display message only if in VERBOSE mode
+#------------------------------------------------------------------------------
+vsay() { [ "$VERBOSE" ] && say "$@" ; }
+
+#------------------------------------------------------------------------------
+# Display message only if not in QUIET mode
+#------------------------------------------------------------------------------
+qsay() { [ "$QUIET" ] || say "$@" ; }
+
+#------------------------------------------------------------------------------
+# Perform the passed in command unless PRETEND.  If PRETEND or VERBOSE then
+# display the command
+#------------------------------------------------------------------------------
+cmd() {
+    [ -n "$VERBOSE" ] && echo ">> $*"
+    [ -z "$PRETEND" ] && "$@"
+}
+
+#------------------------------------------------------------------------------
+# Make sure there are at least 2 input paramters and make sure the 2nd one
+# does not start with a "-".
+#------------------------------------------------------------------------------
+need_param() {
+    [ $# -lt 2 ] && fatal "A parameter is required after option %s" "$1"
+    [ -n "$2" -a -z "${2##-*}" ] && fatal "Suspicious parameter after option %s" "$1"
+}
+
+#------------------------------------------------------------------------------
+# Send error message to stderr and then exit
+#------------------------------------------------------------------------------
+fatal() {
+    local fmt=$1 ; shift
+    printf "${err_co}Error:$warn_co $fmt$nc_co\n" "$@" >&2
+    exit 3
+}
+
+nqm() { echo "$num_co$*$m_co" ; }
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+set_colors() {
+    local noco=$1  loco=$2
+
+    [ "$noco" ] && return
+
+    local e=$(printf "\e")
+     black="$e[0;30m";    blue="$e[0;34m";    green="$e[0;32m";    cyan="$e[0;36m";
+       red="$e[0;31m";  purple="$e[0;35m";    brown="$e[0;33m"; lt_gray="$e[0;37m";
+   dk_gray="$e[1;30m"; lt_blue="$e[1;34m"; lt_green="$e[1;32m"; lt_cyan="$e[1;36m";
+    lt_red="$e[1;31m"; magenta="$e[1;35m";   yellow="$e[1;33m";   white="$e[1;37m";
+     nc_co="$e[0m";
+
+    cheat_co=$white;      err_co=$red;       hi_co=$white;
+      cmd_co=$white;     from_co=$lt_green;  mp_co=$magenta;   num_co=$magenta;
+      dev_co=$magenta;   head_co=$yellow;     m_co=$lt_cyan;    ok_co=$lt_green;
+       to_co=$lt_green;  warn_co=$yellow;  bold_co=$yellow;
+
+    [ "$loco" ] || return
+
+    from_co=$brown
+      hi_co=$white
+       m_co=$nc_co
+     num_co=$white
+}
+
+set_colors
+main "$@"

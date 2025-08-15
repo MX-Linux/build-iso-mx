@@ -1,0 +1,5 @@
+_Already_saved_X_seconds_ago_="%s秒之前已儲存"
+_Possibly_save_persistent_information_="可能保存持久性信息"
+_Save_new_autosave_selection_="儲存新的自動保存選擇"
+_Save_new_passwords_="儲存新密碼"
+_Wont_autosave_within_X_seconds_of_a_previous_save_="在上次保存後%s秒內不會自動保存。"

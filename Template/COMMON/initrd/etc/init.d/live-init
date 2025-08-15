@@ -1,0 +1,1277 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-init
+# Required-Start:    checkroot checkroot-bootclean
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: live-init
+# Description: localize /etc/skel, create /home/demo, customize X, mirrors, set default desktop
+### END INIT INFO
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/live/bin
+
+MAKE_FSTAB="make-fstab"
+test -e "/live/bin/make-fstab" && MAKE_FSTAB="/live/bin/make-fstab"
+
+     AUTOMOUNT=
+ FOUND_VDRIVER=
+ VERSION_FILES="/etc/antix-version /live/boot-dev/version"
+
+  NON_KMS_MODULES_REGEX="i810|sis[_-]agp|via[_-]agp"
+
+XORG_DRIVER_DIR="/usr/lib/xorg/modules/drivers"
+
+#See: https://en.wikipedia.org/wiki/List_of_Intel_graphics_processing_units
+
+UXA_PCI_ID="0042|0046|1132|1240|2562|2572|2582|258a|2592|2772|2776|2782
+2792|27a2|27a6|27ae|2972|2973|2982|2983|2992|2993|29a2|29a3
+29b2|29b3|29c2|29c3|29d2|29d3|2a02|2a03|2a12|2a13|2a42|2a43
+2e12|2e13|2e22|2e23|2e32|2e33|2e42|2e43|2e92|2e93|3577|3582
+358e|7121|7123|7125|7800|a001|a002|a011|a012"
+
+SKYLAKE_FLICKER_FILE="/etc/modprobe.d/skylake-flicker-fix.conf"
+I915_POWER_SAVE_FILE="/etc/modprobe.d/i915-power-saving.conf"
+    I915_INVERT_FILE="/lib/modprobe.d/i915-invert.conf"
+
+AUTOMOUNT_CMD="/usr/local/bin/automount-antix"
+
+NETWORK_IF_FILE="/etc/network/interfaces"
+
+LIVE_MNT_DIR="/media"
+SPLASH_PROGRAMS="/sbin/splash-all /sbin/splash-term /usr/local/bin/splash-select /usr/bin/splash-select /etc/udev/rules.d/*-fbcondecor.rules"
+
+SWAP_FILE="/live/boot-dev/swap-file"
+
+DEFAULT_VDRIVER="vesa"
+UEFI_VDRIVER="fbdev"
+
+VIDEO_TWEAKS_FILE="/live/config/video-tweaks"
+XORG_BUS_ID_FILE="/etc/X11/xorg-bus-id"
+
+if test -e /live/config/uefi; then
+    UEFI_BOOT=true
+    DEFAULT_VDRIVER=$UEFI_VDRIVER
+fi
+
+
+#-jbb For testing can set CMDLINE=xxx in environment
+: ${CMDLINE:=$(cat /live/config/proc-cmdline /live/config/cmdline /live/config/cmdline2)}
+
+for param in $CMDLINE; do
+    value=${param#*=}
+    case "$param" in
+            noloadkeys) NO_LOAD_KEYS=true                           ;;
+             desktop=*)  CMD_DESKTOP=$value                         ;;
+                 dpi=*)      CMD_DPI=$value                         ;;
+                sdpi=*)     CMD_SDPI=$value                         ;;
+                udpi=*)     CMD_UDPI=$value                         ;;
+                 kbd=*)      CMD_KBD=$value ;          DO_XKBD=true ;;
+               kbopt=*)   XKBOPTIONS=$value ;          DO_XKBD=true ;;
+               kbvar=*)   XKBVARIANT=$value ;          DO_XKBD=true ;;
+                lang=*)     CMD_LANG=$value ;          DO_XKBD=true ;;
+                  tz=*)       CMD_TZ=$value                         ;;
+              mirror=*)   CMD_MIRROR=$value                         ;;
+
+              failsafe)   XORG_ARGS=safe${XORG_ARGS:+,}$XORG_ARGS   ;;
+                xorg=*)   XORG_ARGS=$XORG_ARGS${XORG_ARGS:+,}$value ;;
+                noxorg)   NO_XORG=true                              ;;
+automount=off|amnt=off)                          AUTOMOUNT_OFF=true ;;
+           noautomount)                          AUTOMOUNT_OFF=true ;;
+        automount|amnt)                              AUTOMOUNT=true ;;
+          automount=on)                              AUTOMOUNT=true ;;
+    automount=*|amnt=*)     CMD_MOUNT=$value ;       AUTOMOUNT=true ;;
+               mount=*)     CMD_MOUNT=$value                        ;;
+               fstab=*)     CMD_FSTAB=$value                        ;;
+           desktheme=*)    DESK_THEME=$value                        ;;
+                norepo)       NO_REPO=true                          ;;
+              norepo=*)   IGNORE_REPO=$value                        ;;
+           deskdelay=*) DESKTOP_DELAY=$value                        ;;
+             nomodeset)    NO_MODESET=true    ; VBOX_DECOR=true     ;;
+            fontsize=*)     FONT_SIZE=$value                        ;;
+        skylakeflicker)   FIX_SKYLAKE=true                          ;;
+                 issue)   FORCE_ISSUE=true                          ;;
+             vboxdecor)    VBOX_DECOR=true                          ;;
+         i915powersave) ENABLE_I915_POWER_SAVE=true                 ;;
+           nomicrocode) NO_MICRO_CODE=true                          ;;
+         live_swap=off)      NO_SWAP=true                           ;;
+       live_swap=force)   FORCE_SWAP=true                           ;;
+     live_swap=all-off)      NO_SWAP=true  ; NO_SWAP_FILE=true      ;;
+
+           i915_invert)     I915_INVERT=true                        ;;
+        no_i915_invert)  NO_I915_INVERT=true                        ;;
+
+                nuke=*)  NUKE_MODS="$NUKE_MODS $value"              ;;
+                nonuke)  NO_NUKE=true                               ;;
+    esac
+done
+
+umask 022
+
+. /live/lib/live-init-utils.sh
+
+start_init_logging
+load_translation
+
+main() {
+    case "$1" in
+        start) do_start ;;
+         stop) exit 0   ;;
+            *) echo "Usage: $0 {start|stop}"
+               exit 1   ;;
+    esac
+}
+
+#----- Main code starts here --------------------------------------------------
+
+do_start() {
+    echo_script "$_Localizing_configuring_X_Windows_" $0
+
+    local mc_file=/sys/devices/system/cpu/microcode/reload
+
+    if [ -z "$NO_MICRO_CODE" -a -e "$mc_file" ]; then
+        echo_live "$_Load_microcode_"
+        echo 1 > $mc_file
+    fi
+
+    get_init_param DISTRO ""
+    get_init_param DISTRO_BASE ""
+
+    # Try really hard to get the distro name
+    if [ ${#DISTRO} = 0 ]; then
+        local vfile
+        for vfile in $VERSION_FILES; do
+            test -r $vfile || continue
+            DISTRO=$(sed 's/[-_ ].*//' $vfile | head -n1)
+            [ ${#DISTRO} -gt 0 ] && break
+        done
+    fi
+
+    local initrd_release=/etc/initrd_release
+    [ -r $initrd_release ] || initrd_release=/etc/initrd-release
+    if [ ${#DISTRO} = 0 -a -r $initrd_release ]; then
+        DISTRO=$(sed -n "/^NAME=/{s///; s/[\x22']//g; s/[[:space:]]*$//; p;q}" $initrd_release)
+    fi
+
+    if [ -z "$DISTRO_BASE" ] && [ -n "$DISTRO" ] ; then
+       [ -z "${DISTRO##*antiX*}" ] && DISTRO_BASE="antiX"
+       [ -z "${DISTRO##*MX*}"    ] && DISTRO_BASE="MX"
+    fi
+    [ -z "$DISTRO_BASE" ] && DISTRO_BASE="$DISTRO"
+
+    write_issue_file "$DISTRO" "$FORCE_ISSUE"
+
+    which X &>/dev/null && HAVE_X=true
+
+    local user_automount
+    [ -n "$HAVE_X" -a -e $AUTOMOUNT_CMD -a -z "$CMD_FSTAB" ] && user_automount=true
+
+    create_fstab "${DISTRO_BASE:=$DISTRO}" "$user_automount"  "$CMD_FSTAB" "$CMD_MOUNT"
+
+    #-jbb: for debugging
+    unset COUNTRY WM_LANG KEYBOARDS KEYTABLE LANG MIRROR TZ XKBLAYOUT CONSOLE_FONT
+
+    get_init_lang "$CMD_LANG" error
+    [ "$NO_REPO" ] || localize_repo "$CMD_MIRROR" "$CMD_TZ" "$MIRROR" "$TZ"
+    localize_skel $WM_LANG
+
+    local dpi DPI_OUT
+
+    # Always create keyboard file in non-persistent system even with no X
+    # Unless NO_LOAD_KEYS
+    [ -z "$NO_LOAD_KEYS" ] && set_keyboard "${DISTRO_BASE:=$DISTRO}"
+
+    if [ -e /live/config/virtualbox -a -z "$VBOX_DECOR" ]; then
+        echo_live "$_Disabling_splash_fbcondecor_inside_of_Virtual_Box_"
+        rm -f $SPLASH_PROGRAMS
+    fi
+
+    if ! test -e $NETWORK_IF_FILE && test -e /live$NETWORK_IF_FILE; then
+        echo_live "$_Creating_missing_X_file_" "$(pquote $NETWORK_IF_FILE)"
+        cp /live$NETWORK_IF_FILE $NETWORK_IF_FILE
+    fi
+
+    [ "$ENABLE_I915_POWER_SAVE" ] && enable_i915_power_save $I915_POWER_SAVE_FILE
+
+    if [ "$I915_INVERT" ] ; then
+        do_i915_invert $I915_INVERT_FILE
+
+    elif [ "$NO_I915_INVERT" -a -e "$I915_INVERT_FILE" ] ; then
+        echo_live "$_Removing_X_" "$(pquote $I915_INVERT_FILE)"
+        rm -r $I915_INVERT_FILE
+    fi
+
+    if [ "$FIX_SKYLAKE" ]; then
+        skylake_flicker_fix $SKYLAKE_FLICKER_FILE
+    else
+        rm -f $SKYLAKE_FLICKER_FILE
+    fi
+
+    fix_cache_apt_archive_partial
+
+    #==========================================================================
+    #==========================================================================
+    # new safe video code starts here
+    #==========================================================================
+    #==========================================================================
+
+    # Undo previous nuking (this is the slow way)
+    # We also perform the manual nuke here
+    if [ -d "/lib/modules/$(uname -r)-nuked" -o -n "$NUKE_MODS" ]; then
+        nuke-modules --update $NUKE_MODS
+    fi
+
+    if [ -n "$HAVE_X" ]; then
+
+        # Always delete an previously auto-generated xorg.conf file
+        local xorg=/etc/X11/xorg.conf
+        if test -f $xorg && grep -q "^#\s*Generated by\s*make-xorg-conf" $xorg; then
+            echo_live "$_Removing_previous_auto_generated_X_file_" $(pquote xorg.conf)
+            rm -f $xorg
+        fi
+        test -f $xorg && NO_XORG=true
+
+       # Old cruft
+        if [ ${#FONT_SIZE} -gt 0 ]; then
+            font_size_to_dpi $FONT_SIZE
+            dpi=$DPI_OUT
+        elif [ ${#CMD_DPI} -gt 0 ]; then
+            check_dpi $CMD_DPI
+            dpi=$DPI_OUT
+        fi
+        set_server_dpi ${CMD_SDPI:-$dpi}
+
+    elif [ -n "$XORG_ARGS" ]; then
+        # People should not set xorg= if there is not X installed
+        live_echo "Could not find X server.  Ignoring xorg arguments."
+    fi
+
+    # Don't bother with any of this if we aren't making an xorg.conf file
+    if [ -n "$HAVE_X" -a -z "$NO_XORG" ]; then
+
+        # Parse the xorg= parameters.  Ignore resolutions.
+        local param
+        for param in ${XORG_ARGS//,/ }; do
+            case $param in
+                     safe) SAFE_VIDEO=true                      ;;
+                     nuke) SAFE_VIDEO=true ; NUKE_VIDEO=true    ;;
+                  busid=*) XORG_BUS_ID=${param#*=}              ;;
+            *[0-9]x[0-9]*)                                      ;;
+                        *) XORG_DRIVER=$param                   ;;
+            esac
+        done
+
+        remember_xorg_bus_id "$XORG_BUS_ID_FILE"
+
+       echo_live "$_Scanning_for_hardware_specific_video_modules_"
+
+        # We use this twice so calcuation it once
+        KMS_MODULES_REGEX=$(kms_modules_regex)
+
+        local hw_video_modules=$(hw_video_modules)
+        local hw_kms_modules=$(hw_kms_modules "$hw_video_modules")
+
+        if [ "$hw_kms_modules" ]; then
+            #. Found <KMS> video module(s) <module-name(s)>
+            echo_live "$_Found_X_video_module_s_Y_" KMS "$(pquote $(echo $hw_kms_modules))"
+
+            if [ "$SAFE_VIDEO" ]; then
+                # If "nomodeset" was given then let's rely on it to work properly
+                [ -z "$NO_MODESET" ] && do_safe_video "$NUKE_VIDEO" "$hw_kms_modules"
+            else
+                # May set XORG_DRIVER
+                detect_uxa_hardware "$hw_kms_modules"
+            fi
+
+        elif [ "$hw_video_modules" ]; then
+            echo_live "$_Found_X_video_module_s_Y_" "non-KMS" "$(pquote $(echo $hw_video_modules))"
+            video_tweak "non-kms video driver: $(echo $hw_video_modules)"
+            # May set XORG_DRIVER
+            [ -z "$SAFE_VIDEO" ] && detect_sisimedia_driver "$hw_video_modules"
+
+        else
+            # We get here if there is no hardware specific video driver so we want to
+            # create a default xorg.conf file to avoid fbdev in Legacy boot mode
+            video_tweak "No kernel video driver"
+
+            if [ -z "$XORG_DRIVER" -a -z "$SAFE_VIDEO" ]; then
+                if have_chrome_gpu_and_driver; then
+                    echo_live "$_Letting_X_server_default_to_X_driver_" "$(pquote openchrome)"
+                elif test -e /live/config/virtualbox; then
+                    echo_live "$_No_default_X_in_Virtual_Box_" "$(pquote xorg.conf)"
+                elif [ -z "$XORG_DRIVER" ]; then
+                    echo_live "$_Forcing_X_server_to_use_X_driver_" "$(pquote $DEFAULT_VDRIVER)"
+                    XORG_DRIVER=$DEFAULT_VDRIVER
+                fi
+            fi
+        fi
+
+        # Set driver to "vesa" or "fbdeb" but let user over-ride
+        [ "$SAFE_VIDEO" ] && : ${XORG_DRIVER:=$DEFAULT_VDRIVER}
+
+        [ -n "$XORG_DRIVER$XORG_BUS_ID" ] && make_xorg "$XORG_DRIVER" "$XORG_BUS_ID"
+
+    fi
+
+    # End of new safe video code
+    #==========================================================================
+    #==========================================================================
+
+    # Find the "default" user.  This is usually "demo" but can vary on snapshots
+    # and such.  First check the default user for SLiM, Slimski and lightdm.
+    # Then get more desparate.
+
+    unset DEF_USER USER_HOME
+
+    if ! find_def_user ${DISTRO_BASE:=$DISTRO}; then
+        echo_live "$_No_default_user_found_on_the_system_"
+        return
+    fi
+
+    echo_live "$_Found_default_user_X_"  "$(pquote $DEF_USER)"
+
+    create_home "$DEF_USER" "$USER_HOME"
+
+    # Don't bother with desktop stuff on systems without X
+    #--------------------------------------------------------------------------
+    [ "$HAVE_X" ] || return
+    #--------------------------------------------------------------------------
+
+    set_default_desktop    "$CMD_DESKTOP"      $DEF_USER $USER_HOME
+    set_desktop_theme      "$DESK_THEME"       $DEF_USER $USER_HOME
+    set_user_dpi           "${CMD_UDPI:-$dpi}" $DEF_USER $USER_HOME
+    set_user_desktop_delay "$DESKTOP_DELAY"    $DEF_USER $USER_HOME
+    if [ -n "$user_automount" ]; then
+        set_user_automount "$DEF_USER" "$USER_HOME" "$AUTOMOUNT" "$AUTOMOUNT_OFF" 'create'
+    else
+        set_user_automount "$DEF_USER" "$USER_HOME" "" 'true'
+    fi
+    #localize_firefox $LANG
+
+#===============================================================================
+#===== end of do_start() =======================================================
+#===============================================================================
+}
+
+#===============================================================================
+# FSTAB stuff
+#===============================================================================
+
+#------------------------------------------------------------------------------
+# Create fstab file.  Also enable automount stuff on antiX
+#------------------------------------------------------------------------------
+create_fstab() {
+    local distro=$1 user_automount=$2  cmd_fstab=$3  cmd_mount=$4
+    shift 1
+
+    #--- Create swap options ---
+
+    # first see if we should add a swap file
+    local swap_opts  remasterable  file=$SWAP_FILE
+    test -e /live/config/remasterable && remasterable=true
+    test -e /live/config/did-toram    && NO_SWAP_FILE=true
+    if [ -z "$NO_SWAP_FILE" -a -n "$remasterable" -a -w "$file" ]; then
+        if file -b "$file" | grep -q "^data$"; then
+            echo_live "$_Running_X_on_Y_" "$(pquote mkswap)" "$(pquote $file)"
+            chmod 0600 "$file"
+            chown root:root "$file"
+            mkswap --label 'live-swap-file' "$file"
+        fi
+        if file -b "$file" | grep -iq 'swap file'; then
+            swap_opts="$swap_opts --swap-file=$file"
+            DID_SWAP_FILE=true
+        fi
+    fi
+
+    # disable swap if encrypted or we have a swap file or user requested no swap
+    if [ -e /live/config/encrypted -o -n "$DID_SWAP_FILE" -o -n "$NO_SWAP" ]; then
+        # But "live_swap=force" overrides all of the above
+        [ -z "$FORCE_SWAP" ] && swap_opts="$swap_opts --no-swap"
+    fi
+
+    case $distro in
+        antiX) automount_and_fstab "$@" $swap_opts            ;;
+      MX|MX-*) add_fstab_swap $swap_opts                      ;;
+            *) error 'Unknown distro %s' "$(pquote $distro)"  ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+# Create an fstab that only has swap entries
+#------------------------------------------------------------------------------
+add_fstab_swap() {
+    echo_live 'Possibly adding swap partitions to fstab'
+    $MAKE_FSTAB --quiet --swap-only "$@"
+}
+
+#------------------------------------------------------------------------------
+# Configure automounting and automatically adding fstab entries based on the
+# make-fstab program.
+#------------------------------------------------------------------------------
+automount_and_fstab() {
+
+    #local user_automount=$1  automount=$AUTOMOUNT  automount_off=$AUTOMOUNT_OFF  cmd_mount=$CMD_MOUNT
+    local user_automount=$1  cmd_fstab=$2  cmd_mount=$3  ; shift 3
+
+    local fstab_rule=/etc/udev/rules.d/90-fstab-automount.rules
+
+    local        am_file=/etc/fstab.automount
+    local     mount_file=/etc/fstab.mount         # not used ATM
+    local        hp_file=/etc/fstab.hotplug
+    local  hp_state_file=$hp_file.state
+
+    #----- First, clean up for everyone -----
+    rm -f $am_file $hp_file
+
+    # Move the rules file out of the way for now so make-fstab is not called
+    # repeatedly when udev starts up.  It should get copied back by rc.local
+    # if it is needed.
+    if test -e $fstab_rule; then
+        local live_rule="/live$fstab_rule"
+        mkdir -p $(dirname $live_rule)
+        mv $fstab_rule $live_rule
+    fi
+
+    if [ -z "$cmd_mount" -a -e $mount_file ]; then
+        # Default to saved value
+        read cmd_mount 2>/dev/null <$mount_file
+    else
+        # save mount value if new or file does not exist
+        case $cmd_mount in
+            off|all|usb) echo $cmd_mount > $mount_file ;;
+        esac
+    fi
+
+    # Mount partitions while building fstab file
+    local mount_opt=
+    case $cmd_mount in
+        all)  echo_live "$_Mounting_all_devices_"
+              mount_opt="--mount=$cmd_mount" ;;
+
+        usb)  echo_Live "Mounting usb devices"
+              mount_opt="--mount=$cmd_mount" ;;
+
+        off|"") ;;
+
+        #. Invalid <mount/automount> option <invalid-option>
+        *) error "$_Invalid_X_option_Y_" 'mount=' "$(pquote $cmd_mount)" ;;
+    esac
+
+    # Remove fstab file that has no entries
+    if [ -e /etc/fstab  ]; then
+        grep -q -e ^/dev -e ^UUID= -e ^LABEL= /etc/fstab || rm /etc/fstab
+    fi
+
+    if [ -n "$user_automount" ]; then
+        $MAKE_FSTAB $mount_opt "$@"
+        return
+
+    elif [ -z "$cmd_fstab" -o "$cmd_fstab" = 'test' ]; then
+        # If no fstab is given (or "test") then have the "automount"
+        # and "noautomount" cheats control the behavior
+        cmd_fstab=
+        [ -n "$AUTOMOUNT" ]     && cmd_fstab=auto
+        [ -n "$AUTOMOUNT_OFF" ] && cmd_fstab=hotplug
+    fi
+
+    # The hp_state_file carries over "off" and "auto" settings
+    [ -z "$cmd_fstab" -a -e $hp_state_file ] && cmd_fstab=$(cat $hp_state_file 2>/dev/null)
+
+    # Remember "off" or "auto" for next time
+    case $cmd_fstab in
+        off|auto) echo $cmd_fstab > $hp_state_file ;;
+               *) rm -f $hp_state_file             ;;
+    esac
+
+    # If fstab is turned off then make a simple swap fstab and do nothing else
+    case $cmd_fstab in
+        off)
+            echo_live "$_Automount_disabled_"
+            #echo_live "Disabling fstab hotplugging (this will also disable automount)"
+            $MAKE_FSTAB $mount_opt "$@"
+            return ;;
+    esac
+
+    #----- fstab hotplugging will be enabled -----
+
+    echo_live "$_Enabling_fstab_hotplugging_"
+
+    # Create a small tmpfs for our mountpoints so they disappear automatically
+    # when the system shuts down
+
+    local live_mnt_dir=${LIVE_MNT_DIR:=/media}
+    if ! mountpoint $live_mnt_dir &>/dev/null; then
+        mkdir -p $live_mnt_dir
+        mount -t tmpfs -o size=1m tmpfs $live_mnt_dir
+    fi
+
+    # Create an fstab file with most existing partitions included
+    $MAKE_FSTAB $mount_opt "$@"
+
+    # Enable automount if requested to do so
+    case $cmd_fstab in
+              auto) echo_live "$_Automount_enabled_" ; touch $am_file   ;;
+        hotplug|"")                                                  ;;
+                 *) error "$_Bad_fstab_option_X_" $(pquote $cmd_fstab) ;;
+    esac
+
+    # NOTE: we are disabling with both the rules file and the .hotplug file
+    # Tell rc.local to enable fstab hotplugging by copying back the rules
+    # file and touching the .hotplug file
+    touch /live/config/fstab-hotplug
+}
+
+#-------------------------------------------------------------------------------
+# Localize files under /etc/skel based on the language set by the user
+#-------------------------------------------------------------------------------
+localize_skel() {
+    local lang=$1
+    [ "$lang" ] || return
+    local L10n_dir=/usr/share/antiX/localisation
+    local from=$L10n_dir/$lang
+    local dest=/etc/skel
+
+    # Silently skip systems which have no localisation directory
+    [ -d "$L10n_dir" ] || return
+
+    if ! [ -d $from ]; then
+        error "$_Unknown_menu_localization_language_X_" $(pquote $lang)
+        error "$_Directory_not_found_X_" $from
+        return
+    fi
+    #. Localizing menus to <language> in </etc/skel>
+    echo_live "$_Localizing_menus_to_X_in_Y_" $(pquote $0) $(pquote $dest)
+
+    # Basically a cp -a but make all top level files and directories hidden
+    for file in $(ls $from); do
+       if [ -d $from/$file ]; then
+           mkdir -p /$dest/.$file
+           cp -a $from/$file/* $dest/.$file
+       else
+           rm -rf $dest/.$file
+           cp -a $from/$file $dest/.$file
+       fi
+    done
+}
+
+#------------------------------------------------------------------------------
+# Set default X keyboard settings based on language or cheats
+#------------------------------------------------------------------------------
+set_keyboard() {
+    local distro=$1
+    local kb_file=/etc/default/keyboard
+
+    local xkb_opts_antiX="grp:lalt_lshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+    local    xkb_opts_MX="grp:rctrl_rshift_toggle,terminate:ctrl_alt_bksp,grp_led:scroll"
+
+    local default_xkb_opts="$xkb_opts_antiX"
+    case "$distro" in
+        antiX) default_xkb_opts="$xkb_opts_antiX" ;;
+      MX|MX-*) default_xkb_opts="$xkb_opts_MX"    ;;
+    esac
+
+    first_write $kb_file || [ "$DO_XKBD" ] || return
+
+    XKBLAYOUT=${CMD_KBD:-$XKBLAYOUT}
+    #[ "$XKBLAYOUT"  ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-layout)  $(pquote $XKBLAYOUT)
+    #[ "$XKBMODEL"   ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-model)   $(pquote $XKBMODEL)
+    #[ "$XKBVARIANT" ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-variant) $(pquote $XKBVARIANT)
+    #[ "$XKBOPTIONS" ] && echo_live "$_Setting_X_to_Y_" $(pquote xkb-options) $(pquote $XKBOPTIONS)
+
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-layout)  $(pquote ${XKBLAYOUT:=us})
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-model)   $(pquote ${XKBMODEL:=pc105})
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-variant) $(pquote ${XKBVARIANT})
+    echo_live "$_Setting_X_to_Y_" $(pquote xkb-options) $(pquote ${XKBOPTIONS:=$default_xkb_opts})
+
+    cat > $kb_file <<Keyboard_Out
+# KEYBOARD CONFIGURATION FILE
+
+# Consult the keyboard(5) manual page.
+
+XKBMODEL="${XKBMODEL:=pc105}"
+XKBLAYOUT="${XKBLAYOUT:=us}"
+XKBVARIANT="${XKBVARIANT}"
+XKBOPTIONS="${XKBOPTIONS:=$default_xkb_opts}"
+
+BACKSPACE="guess"
+Keyboard_Out
+
+    # feh: need re-set console keyboard for password prompt
+    echo_live "CONSOLE KEYMAP: $(pquote $kb_file)"
+    # suppress "ugly" warnings due to an old, known but never fixed German keysym issue
+    setupcon -k 2>&1 | grep -v 'Unknown X keysym "dead_belowmacron"'
+}
+
+#------------------------------------------------------------------------------
+# Set the Debian and antiX/MX repo locations based on timezone
+#------------------------------------------------------------------------------
+localize_repo() {
+    local mirror=$1  tz=$2  lang_mirror=$3  lang_tz=$4
+
+    if [ -n "$mirror" -a -n "${mirror##[a-zA-Z][a-zA-Z]}" ]; then
+        error "$_Bad_mirror_code_X_expected_two_letters_" $(pquote $mirror)
+        mirror=
+    fi
+
+    case $tz in
+        */UTC|UTC) tz=$lang_tz ;;
+    esac
+
+    local args=$mirror         # cheat mirror=xx overides all else
+    : ${args:=$tz}             # next come tz=xxx/yyy cheat (or via tz menu)
+    : ${args:=$lang_tz}        # The lang based timezone
+    : ${args:=$lang_mirror}    # The lang based mirror should never be needed
+
+    case $args in
+        */UTC|UTC) return ;;
+    esac
+
+    if [ ${#IGNORE_REPO} -gt 0 ] && localize-repo --help | grep -q -- --ignore; then
+        : ${args:=default}
+        args="--ignore=$IGNORE_REPO --random $args"
+    fi
+
+    [ "$args" ] || return
+
+    sources_dir=/etc/apt/sources.list.d
+    first_write $sources_dir || [ "$mirror" -o "$tz" -o "${IGNORE_REPO}" ] || return
+
+    #. Localizing source repos using <timezone|country-code>
+    echo_live "$_Localizing_source_repos_using_X_" "$(wq $args)"
+
+    localize-repo --quiet $args
+}
+
+#------------------------------------------------------------------------------
+# Fix the ownership and permissions on the /var/cache/apt/archives/partial/
+# directory and everything below
+#------------------------------------------------------------------------------
+fix_cache_apt_archive_partial() {
+    local dir=/var/cache/apt/archives/partial  owner="_apt:root"  perms="700"
+    mkdir -p $dir
+    [ "$(stat --format %U:%G $dir)" == "$owner" ] || chown -R $owner $dir
+    [ "$(stat --format %a    $dir)" == "$perms" ] || chmod    $perms $dir
+}
+
+#------------------------------------------------------------------------------
+# Fix the console flickering problem on some skylake cpus
+#------------------------------------------------------------------------------
+skylake_flicker_fix() {
+    local file=$1
+    echo_live "$_Creating_file_X_" $(pquote $file)
+    cat > $file <<Skylake_Fix
+#-----------------------------------------------------------------------------
+# fix flickering on skylake hardware with some kernels -----------------------
+#-----------------------------------------------------------------------------
+# This file is created automatically on skylake hardware by the antiX/MX
+# live boot system.
+#
+# This solves a flickering problem that was introduced around kernel 4.5
+# and still exists in 4.7 with the modesetting driver.
+
+options i915 enable_rc6=0
+Skylake_Fix
+}
+
+#------------------------------------------------------------------------------
+# Create modprobe.d file for inverting i915 video
+#------------------------------------------------------------------------------
+do_i915_invert() {
+    local file=$1
+    echo_live "$_Creating_file_X_" $(pquote $file)
+    mkdir -p "$(dirname "$file")"
+    cat > "$file" <<I915_Invert
+#-----------------------------------------------------------------------------
+# Invert video on some i915 hardware
+# file: $file
+#
+# This file was created by the antiX/MX live system because of the
+# "i915_invert" boot parameter.
+#-----------------------------------------------------------------------------
+
+options i915 invert_brightness=1
+I915_Invert
+}
+
+#------------------------------------------------------------------------------
+# Uncomment payload of i915 power savings file
+#------------------------------------------------------------------------------
+enable_i915_power_save() {
+    local file=$1
+    test -e $file || return
+    sed -r -i "s/^#\s*(options\s+i915\s+)/\1/" $file
+}
+
+#==============================================================================
+#==============================================================================
+# More new safe video code
+#==============================================================================
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Find kms drivers for this hardware plus hard-coded non-kms video drivers
+#------------------------------------------------------------------------------
+hw_video_modules() {
+   local video_modules_regex="$KMS_MODULES_REGEX|$NON_KMS_MODULES_REGEX"
+
+    find /sys/devices -name modalias -print0 | xargs -0 sort -u \
+        | tr '\n' '\0' | xargs -0 modprobe -a -D -q 2>/dev/null | sort -u \
+        | sed -n -r "s/^insmod [^ ]*\/($video_modules_regex)\.ko(|\.[[:alpha:]]+)[[:space:]]*$/\1/p"
+}
+
+#------------------------------------------------------------------------------
+# List all KMS modules that can be used by the hardware
+#------------------------------------------------------------------------------
+hw_kms_modules() {
+    local hw_modules=$1
+    echo "$hw_modules" | grep -E "($KMS_MODULES_REGEX)"
+}
+
+#------------------------------------------------------------------------------
+# Create a regular expression for all modules that depend on drm.ko
+#------------------------------------------------------------------------------
+kms_modules_regex() {
+    all_kms_modules | sed -e "s/[_-]/[_-]/"  | tr '\n' '|' | sed "s/|$//"
+}
+
+#------------------------------------------------------------------------------
+# Create a list of all modules that depend on drm.ko
+#------------------------------------------------------------------------------
+all_kms_modules() {
+    grep -E "drm\.ko(|\.[[:alpha:]]+)" /lib/modules/$(uname -r)/modules.dep \
+        | sed -r -e "s/:.*//" \
+        -e "s|.*/||" \
+        -e "s/\.ko(|\.[[:alpha:]]+)$//" \
+        | grep -v -E "^(drm|drm_kms_helper|ttm)$" \
+        | sort -u
+}
+
+#------------------------------------------------------------------------------
+# For every given module either set modeset=0 or nuke it if it does not have
+# a modeset= option.
+#------------------------------------------------------------------------------
+do_safe_video() {
+    local nuke_mode=$1  mod_list=$2
+
+    if [ "$nuke_mode" ]; then
+        nuke_modules $mod_list
+        return
+    fi
+
+    local mod nuke_list no_mode_set
+    for mod in $mod_list; do
+        if modinfo -p $mod |grep -q  "^modeset:"; then
+            no_mode_set="$no_mode_set $mod"
+        else
+            nuke_list="$nuke_list $mod"
+        fi
+    done
+    [ -n "$nuke_list" ] && video_tweak "Nuke modules $nuke_list"
+    nuke_modules     $nuke_list
+    no_mode_set_mods $no_mode_set
+}
+
+#------------------------------------------------------------------------------
+# create file to disable modesetting for the listed modules
+#------------------------------------------------------------------------------
+no_mode_set_mods() {
+    local file=/lib/modprobe.d/no-mode-set.conf
+    [ -z "$*" ] && return
+
+    echo_live "$_disabling_modeset_for_X_" "$(pquote $*)"
+    cat > $file <<No_Mode_Set
+#-----------------------------------------------------------------------------
+# file: $file
+# disble modesetting in the following modules
+#-----------------------------------------------------------------------------
+
+$(no_mode_set_lines $*)
+No_Mode_Set
+}
+
+#------------------------------------------------------------------------------
+# Helper for making the no-mode-set.conf file above
+#------------------------------------------------------------------------------
+no_mode_set_lines() {
+    local mod
+    for mod; do
+        echo "options $mod modeset=0"
+    done
+}
+
+#------------------------------------------------------------------------------
+# Acutally remove these modules from the trree
+#------------------------------------------------------------------------------
+nuke_modules() {
+    [ -z "$*" -o -n "$NO_NUKE" ] && return
+    nuke-modules $*
+}
+
+
+#===== Various Video Tweaks ===================================================
+
+#------------------------------------------------------------------------------
+# Tweak the acceleration for i915 graphics drivers.   This works around bugs
+# in the driver.
+#------------------------------------------------------------------------------
+detect_uxa_hardware()  {
+    local video_modules=$1
+    case $video_modules in *i915*) ;; *) return ;; esac
+
+    [ "$(uname -m)" =  x86_64 ] || return
+
+    local pci_id_regex=$(echo $UXA_PCI_ID | tr '\n' '|')
+    lspci -n | cut -d" " -f3 | egrep -q "^8086:(${pci_id_regex%|})" || return
+
+    have_X_driver intel || return
+
+    video_tweak "pre-sandybridge UXA acceleration"
+
+    #. Forcing <acceleration-type> acceleration on <cpu-type>
+    echo_live "$_Forcing_X_acceleration_on_Y_" $(pquote uxa) $(pquote pre-sandybridge)
+
+    : ${XORG_DRIVER:=uxa}
+}
+
+#------------------------------------------------------------------------------
+# Detect hardware support for sisimedia driver.  If it is found then set xorg
+# boot param so we create an xorg.conf file that uses that driver
+#------------------------------------------------------------------------------
+detect_sisimedia_driver() {
+    local video_modules=$1  sisi_driver=sisimedia
+    case $video_modules in *sis[_-]apg*) ;; *) return ;; esac
+
+    #. Found <type> kernel modules ...
+    echo_live "$_Found_X_kernel_modules_" sis-apg
+
+    have_X_driver $sisi_driver || return
+    #. Found <driver-name> video driver
+    echo_live "$_Found_X_video_driver_" $sisi_driver
+
+    video_tweak "Use $sisi_driver xorg driver"
+
+    # Use the "sisimedia" driver unless another was specified
+    : ${XORG_DRIVER:=$sisi_driver}
+}
+
+#------------------------------------------------------------------------------
+# Do we have a chrome gpu and the openchrome driver?
+#------------------------------------------------------------------------------
+have_chrome_gpu_and_driver() {
+    have_X_driver openchrome || return 1
+    lspci -n | cut -d" " -f3 | egrep -q "^1106:(1122|3344|3a01|5122|7122)" || return 1
+    video_tweak "Chrome GPU and openchrome driver"
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Does this X driver exist?
+#------------------------------------------------------------------------------
+have_X_driver() {
+    test -e $XORG_DRIVER_DIR/${1}_drv.so
+    return $?
+}
+
+#------------------------------------------------------------------------------
+# Let people know if this is special hardware
+#------------------------------------------------------------------------------
+video_tweak() { echo "$*" >> $VIDEO_TWEAKS_FILE ; }
+
+
+#------------------------------------------------------------------------------
+# Save the xorg bus-id (for card selection in a machine-state file
+#------------------------------------------------------------------------------
+remember_xorg_bus_id() {
+    local file=$1  bus_id=$XORG_BUS_ID
+    if [ -z "$bus_id" ]; then
+        if test -r $file; then
+            bus_id=$(cat $file 2>/dev/null)
+            [ -n "$bus_id" ] && echo_live "$_Restore_xorg_bus_id_X_from_file_Y_" "$(pquote $bus_id)" "$(pquote $file)"
+        fi
+
+    elif [ -r $file ]; then
+        local new_id=$(cat $file 2>/dev/null)
+        if [ "$bus_id" != "$new_id" ]; then
+            echo "$bus_id" > $file
+            echo_live "$_Upate_xorg_bus_id_to_X_in_file_Y_" "$(pquote $bus_id)" "$(pquote $file)"
+        fi
+    else
+        echo_live "$_Save_xorg_bus_id_X_in_file_Y_" "$(pquote $bus_id)" "$(pquote $file)"
+        echo "$bus_id" > $file
+    fi
+    XORG_BUS_ID=$bus_id
+}
+
+#------------------------------------------------------------------------------
+# A simple wrapper for make-xorg-conf
+#------------------------------------------------------------------------------
+make_xorg() {
+    local file=/etc/X11/xorg.conf  driver=$1  bus_id=$2
+
+    [ -z "$*" ] && return
+
+    bus_id=${bus_id:+busid=$bus_id}
+
+    #. Configuring <xorg.conf> file with <driver>
+    echo_live "$_Configuring_X_file_with_Y_" "$(pquote $file)" "$(pquote $driver $bus_id)"
+
+    backup_file $file
+    /sbin/make-xorg-conf --output=$file $driver $bus_id
+    sync
+    sleep 1  # *** sigh ***
+}
+
+# End of new safe video code
+#==============================================================================
+#==============================================================================
+
+
+#------------------------------------------------------------------------------
+# Scale the height and width of conky to according to the dpi being used.  If
+# we don't do this then conky messes up because the font size gets scaled by
+# dpi but the height and width don't.
+#------------------------------------------------------------------------------
+scale_conky() {
+    local dpi=${1%.*}  user=$2  home=$3
+    local file=/$home/.conkyrc  def_width=180  def_gheight=30
+    [ "$dpi" ] || return
+    test -w $file || return
+    head $file | egrep -iq "^\s*(#|--+)\s*Standard\s*antiX\s*.conkyrc" || return
+
+    local width=$((dpi * $def_width / 96 ))
+    # Don't make conky smaller than the default size
+    if [ $width -lt $def_width ]; then
+        dpi=96
+        width=$def_width
+    fi
+    echo_live "$_Setting_Conky_width_to_X_" $(pquote $width)
+    local gwidth=$((width - 10))
+    #local gheight=$((dpi * def_gheight / 96))
+    # Grow the height of the graphs much more slowly than the width because we
+    # can run out of vertical space for high dpis.
+    local gheight=$(((def_gheight + def_gheight * dpi / 96) / 2))
+
+    su -c "sed -i -r -e 's/^\s*(maximum_width\s+)[0-9].*/\1$width/' \
+        -e 's/^(\s*maximum_width\s*=\s*)[0-9]+,.*/\1$width,/'  \
+        -e 's/(graph\s+([a-z0-9]+\s+)?)[0-9]+\s*,\s*[0-9]+/\1$gheight,$gwidth/' $file" $user
+}
+
+#------------------------------------------------------------------------------
+# Allow users to set dpi indirectly via a fontsize boot parameter
+#------------------------------------------------------------------------------
+font_size_to_dpi() {
+    local size=$1
+    local bad=$(echo $size | sed -r 's/^([0-9]+(\.[0-9]*)?|\.[0-9]+)//')
+    if [ ${#bad} -gt 0 ]; then
+        #. Invalid <option-name> boot parameter <bad-parameter>
+        error "$_Invalid_X_boot_parameter_Y_" "$(pquote fontsize)" $(pquote $size)
+        return 1
+    fi
+    local begin=BEGIN
+    DPI_OUT=$(awk "$begin{ printf \"%.0f\n\", $size * 96; }")
+}
+
+#------------------------------------------------------------------------------
+# DPI Sanity check
+#------------------------------------------------------------------------------
+check_dpi() {
+    local dpi=$1
+    [ "$dpi" ] || return 1
+    local bad=$(echo $dpi | sed -r 's/^([0-9]+(\.[0-9]*)?|\.[0-9]+)//')
+    if [ ${#bad} -gt 0 ]; then
+        error "$_Invalid_X_boot_parameter_Y_" "$(pquote dpi)" $(pquote $dpi)
+        return 1
+    fi
+
+    DPI_OUT=$dpi
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Set the dpi in slim conf files and in lightdm conf file
+#------------------------------------------------------------------------------
+set_server_dpi() {
+    local dpi=$1
+    [ ${#dpi} -gt 0 ] || return
+
+    echo_live "$_Setting_X_to_Y_" "$(pquote server dpi)" $(pquote $dpi)
+
+    local file
+    for file in /etc/slim.conf /etc/slimski.local.conf /usr/share/slim/themes/antiX/slim-install.conf /usr/share/slimski/themes/antiX/slimski-install.local.conf; do
+        [ -e $file ] || continue
+        # remove existing dpi argument and add a new one
+        sed -i -e "/^xserver_arguments/ s/-dpi\s+[0-9]+\s*//p" \
+        -e "s/^(xserver_arguments\s+)/\1-dpi $dpi /" $file
+    done
+
+    file=/etc/lightdm/lightdm.conf
+    [ -e $file ] && sed -i -r "s/^#?\s*(xserver-command=X).*/\1 -dpi $dpi/" $file
+}
+
+#------------------------------------------------------------------------------
+# Set the dpi in the user's .Xresources file
+#------------------------------------------------------------------------------
+set_user_dpi() {
+    local dpi=$1  user=$2  home=$3
+
+    [ ${#dpi} -gt 0 ] || return
+    echo_live "$_Setting_X_to_Y_" "$(pquote user dpi)" $(pquote $dpi)
+
+    add_or_edit "^[ !]*Xft.dpi:" "Xft.dpi: $dpi" $home/.Xresources $user create
+
+    scale_conky "$dpi" "$user" $home
+}
+
+#------------------------------------------------------------------------------
+# Set the desktop delay used by desktop-session.  Hopefully, this code is no
+# longer needed.
+#------------------------------------------------------------------------------
+set_user_desktop_delay() {
+    local delay=$1  user=$2  home=$3
+    [ ${#delay} -gt 0 ] || return
+
+    local ds_conf=$home/.desktop-session/desktop-session.conf
+    test -e $ds_conf || return
+    local bad=$(echo $delay | sed -r 's/^([0-9]+(\.[0-9]*)?|.[0-9]+)//')
+
+    if [ ${#bad} -gt 0 ]; then
+        error "$_Bad_desktop_delay_parameter_X_" $(pquote $delay)
+        return
+    fi
+    echo_live "$_Setting_desktop_delay_to_X_" $(pquote $delay)
+    su -c "sed -r -i 's/^\s*(STARTUP_DELAY=).*/\1$delay/' $ds_conf" $user
+}
+
+#------------------------------------------------------------------------------
+# Set automounting mode via users .desktop-session/automount.conf file (sigh)
+#------------------------------------------------------------------------------
+set_user_automount() {
+    local  user=$1  home=$2  on=$3  off=$4  create=$5
+
+    local file=$home/.desktop-session/automount.conf
+    if [ "$on" ]; then
+        echo_live "$_Automount_enabled_"
+        add_or_edit "^automount=" 'automount=TRUE' "$file"  "$user"  "$create"
+
+    elif [ "$off" ]; then
+        # ugh
+        [ -n "$create" ] && echo_live "$_Automount_disabled_"
+        add_or_edit "^automount=" 'automount=FALSE' "$file" "$user" "$create"
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Write the /etc/issue file (which gets displayed at console login) according
+# to what this distro is and what programs (cli-installer antiX-cli-cc) are
+# available.
+#------------------------------------------------------------------------------
+write_issue_file() {
+    local distro=${1:-Linux}  force=$2  file=${3:-/etc/issue}
+    [ "$force" -o ! -e $file ] || return
+
+    local pretty_name  installer=cli-installer  cli_cc=antiX-cli-cc
+    read pretty_name 2>/dev/null </live/config/pretty-name
+    : ${pretty_name:=$distro}
+
+    which $installer &>/dev/null || installer=
+    which $cli_cc    &>/dev/null || cli_cc=
+
+    local issue_co=$CYAN  bold_co=$YELLOW  nc_co=$NO_COLOR
+
+    echo_live "$_Creating_issue_file_for_X_" "$(pquote "$pretty_name")"
+
+    (   imsg "Welcome to %s! Powered by %s" "$(iq $pretty_name)" "$(iq Debian)."
+        if [ -n "$installer" ]; then
+            echo
+            if test -e /live/config/persist-root; then
+                imsg "For command line install, login as %s." "$(iq root)"
+            else
+                imsg "For command line install, login as %s (password=%s)." "$(iq root)" "$(iq root)"
+            fi
+            imsg "Enter the command %s.  Follow the instructions." "$(iq $installer)"
+        fi
+        if [ -n "$cli_cc" ]; then
+            imsg "Use the command %s for easy access to many commands." "$(iq $cli_cc)"
+        fi
+
+    ) > $file
+}
+
+#------------------------------------------------------------------------------
+# Convenience routine to colorize the issue file
+#------------------------------------------------------------------------------
+imsg() {
+    local fmt=$1
+    shift
+    printf "$issue_co$fmt$nc_co\n" "$@"
+}
+
+iq() { echo "$bold_co$*$issue_co" ; }
+
+#-------------------------------------------------------------------------------
+# DEFAULT USER stuff
+#-------------------------------------------------------------------------------
+
+find_def_user() {
+    local distro=$1
+    USER_HOME=  DEF_USER=
+
+    case $distro in
+        MX|MX-*) valid_user $(mx_user) && return 0
+                 valid_user $(ax_user) && return 0 ;;
+
+              *) valid_user $(ax_user) && return 0
+                 valid_user $(mx_user) && return 0 ;;
+    esac
+
+    local uid
+    for uid in $(cut -d: -f3 /etc/passwd | sort -n); do
+        [ -z "$uid" ]     && continue
+        [ $uid -lt 1000 ] && continue
+        valid_user $(getent passwd $uid | cut -d: -f1) && return 0
+    done
+
+    return 1
+}
+
+#------------------------------------------------------------------------------
+# Get default user from slim.conf, slimski.local.conf and lightdm.conf
+#------------------------------------------------------------------------------
+ax_user() {
+    if [ -f /etc/slimski.local.conf ]; then
+        sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slimski.local.conf 2>/dev/null | tail -n1 ;
+    elif [ -f /etc/slim.conf ]; then
+        sed -r -n 's/^\s*default_user\s+([^\s]+)/\1/p' /etc/slim.conf 2>/dev/null | tail -n1 ;
+    fi
+}
+mx_user() { sed -r -n 's/^\s*autologin-user=([^\s]+)/\1/p' /etc/lightdm/lightdm.conf 2>/dev/null | tail -n1 ; }
+
+#------------------------------------------------------------------------------
+# A valid user must:
+#    be a user
+#    have a uid >= 1000
+#    have a /bin/*sh login shell
+#    have a home directory under /home/
+#
+# Return results in DEF_USER and USER_HOME
+#------------------------------------------------------------------------------
+valid_user() {
+    local user=$1
+    [ -z "$user" ] && return 1
+
+    #echo "try: $user"
+    local ent=$(grep "^$user:.*:/home/.*:\(/usr\)\?/bin/.*sh$" /etc/passwd)
+    local uid=$(echo $ent | cut -d: -f3)
+    [ -z "$uid" ] && return 1
+    [ $uid -lt 1000 ] && return 1
+
+    USER_HOME=$(echo $ent | cut -d: -f6)
+    DEF_USER=$user
+    #echo "found: $user"
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Create the user's home directory and populate it from /etc/skel IF NEEDED!
+#------------------------------------------------------------------------------
+create_home() {
+    local user=$1 home=$2 permission
+
+    if [ "$(ls -A $home 2>/dev/null)" ]; then
+        return
+        # These don't run but they don't leave the .pot file either
+        echo_live "$_Files_already_exist_under_X_" $(pquote $home)
+        echo_live "$_Not_creating_or_populating_X_" $(pquote $home)
+    fi
+
+    echo_live "$_Populating_X_directory_" $(pquote $home)
+    mkdir -p $home
+    cp -a /etc/skel/* /etc/skel/.[!.]* $home 2>/dev/null # Avoid error msgs for ".../* not found"
+
+    local uid_gid=$(getent passwd $user | cut -d: -f3,4)
+    chown -R $uid_gid $home
+    #set permissions to adduser defaults, or 0700 if adduser not defined
+    #get permissions from adduser.conf
+    permission=$(grep ^DIR_MODE /etc/adduser.conf 2>/dev/null |cut -d= -f2)
+    if [ -z $permission ]; then
+    	permission="0700"
+    fi
+    chmod "$permission" $home
+
+}
+
+#------------------------------------------------------------------------------
+# On live-usb system we save the last deskop session on shutdown and then
+# restore it here.
+#------------------------------------------------------------------------------
+set_default_desktop() {
+    local desktop=$1  user=$2  home=$3
+    [ "$desktop" ] || return
+
+    local file=$home/.desktop-session/default-desktop
+    local slimski_file=$home/.config/slimski.lastused
+    echo_live "$_Setting_X_to_Y_" desktop $(pquote $desktop)
+    su -c "mkdir -p $(dirname $file)" $user
+    su -c "mkdir -p $(dirname $slimski_file)" $user
+    echo $desktop | su -c "tee $file" $user >/dev/null
+    echo $desktop | su -c "tee $slimski_file" $user >/dev/null
+}
+
+#------------------------------------------------------------------------------
+# The user can select a desktop theme via the desktheme= cheat.
+#------------------------------------------------------------------------------
+set_desktop_theme() {
+    local theme=$1  user=$2  home=$3
+    [ "$theme" ] || return
+
+    echo_live "$_Setting_desktop_theme_to_X_" $(pquote $theme)
+    set-desktop-theme --root $theme
+    su -c "set-desktop-theme --dir $home $theme" $user
+}
+
+#-------------------------------------------------------------------------------
+# UTILITIES
+#-------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Always copy to $file$ext2 so this has the most recent backup.
+# Only move to $file$ext1 if it does not already exist so this will
+# contain the earliest (oldest) backup.
+#------------------------------------------------------------------------------
+backup_file() {
+    local file=$1 ext1=${2:-.old} ext2=${3:-save}
+
+    test -e $file || return
+    cp -f $file $file$ext2
+    test -e $file$ext1 && return
+    mv -f $file $file$ext1
+}
+
+#------------------------------------------------------------------------------
+# Add a line to a file or edit an existing line.
+#------------------------------------------------------------------------------
+add_or_edit() {
+    local where=$1  line=$2  file=$3  user=$4  create=$5
+
+    if ! test -e "$file"; then
+        [ "$create" ] && echo "$line" | su -c "tee $file" $user
+
+    elif grep -q "^$line" $file; then
+        :
+
+    elif grep -iq "$where" "$file"; then
+        su -c "sed -i -r '/$where/I s|.*|$line|' $file" $usere
+
+    else
+        su -c "sed -i '1 i$line' $file" $user
+    fi
+}
+
+#==============================================================================
+#==============================================================================
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE
+
+exit 0

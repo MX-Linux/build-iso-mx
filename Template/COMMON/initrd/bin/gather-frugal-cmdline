@@ -1,0 +1,40 @@
+#!/bin/bash
+
+gather_frugal_cmdline() {
+    local p out value
+    for p in $(cat /live/config/proc-cmdline /live/config/cmdline 2>/dev/null) $*; do
+        value=${p#*=}
+        case $p in
+                frugal=*) p=persist=$value      ;;
+          frugal_persist) p=persist_all         ;;
+             frugal_root) p=persist_root        ;;
+           frugal_static) p=persist_static      ;;
+             frugal_home) p=persist_home        ;;
+        esac
+        case $p in
+
+   bdir=*|bdev=*|blab=*|buuid=*)                ;;
+   fdir=*|fdev=*|flab=*|fuuid=*)                ;;
+                         frugal)                ;;
+                    frugal_only)                ;;
+                  menus|menus=*)                ;;
+                     bp=*|upb=*)                ;;
+              gfxsave|gfxsave=*)                ;;
+            bootsave|bootsave=*)                ;;
+                       grubsave)                ;;
+                   BOOT_IMAGE=*)                ;;
+          savestate|nosavestate)                ;;
+                nostore|dostore)                ;;
+           md5|checkmd5|checkfs)                ;;
+              automount|mount=*)                ;;
+                    noautomount)                ;;
+                        fstab=*)                ;;
+                      hwclock=*)                ;;
+                      desktop=*)                ;;
+                              *) out=$out${out:+ }$p ;;
+        esac
+    done
+    echo $out
+}
+
+gather_frugal_cmdline "$@"

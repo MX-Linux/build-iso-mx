@@ -1,0 +1,4 @@
+#!/bin/bash
+
+/live/bin/printf "\e[2;J" > /dev/tty10
+

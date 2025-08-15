@@ -1,0 +1,16 @@
+1:default
+2:checkmd5:checkmd5
+3:checkfs:checkfs
+4:toram:toram
+5:i915_invert:i915_invert
+6:no_i915_invert:no_i915_invert
+7:from=usb:from=usb
+8:from=hd:from=hd
+9:hwclock=ask:hwclock=ask
+10:hwclock=utc:hwclock=utc
+11:hwclock=local:hwclock=local
+12:password:password
+13:nostore:nostore
+14:dostore:dostore
+15:savestate:savestate
+16:nosavestate:nosavestate

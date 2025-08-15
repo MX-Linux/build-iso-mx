@@ -1,0 +1,8 @@
+COUNTRY="Português-Brasil"
+WM_LANG="pt_BR"
+KEYBOARDS="br,us"
+KEYTABLE="br-abnt2"
+LANG="pt_BR.UTF-8"
+MIRROR="br"
+TZ="America/Sao_Paulo"
+XKBLAYOUT="br,us"

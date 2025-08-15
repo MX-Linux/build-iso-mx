@@ -1,0 +1,8 @@
+COUNTRY="Hrvatski"
+WM_LANG="hr"
+KEYBOARDS="hr,us"
+KEYTABLE="croat"
+LANG="hr_HR.UTF-8"
+MIRROR="hr"
+TZ="Europe/Zagreb"
+XKBLAYOUT="hr,us"

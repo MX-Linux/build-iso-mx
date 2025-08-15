@@ -1,0 +1,8 @@
+COUNTRY="Română"
+WM_LANG="ro"
+KEYBOARDS="ro,us"
+KEYTABLE="ro"
+LANG="ro_RO.UTF-8"
+MIRROR="ro"
+TZ="Europe/Bucharest"
+XKBLAYOUT="ro,us"

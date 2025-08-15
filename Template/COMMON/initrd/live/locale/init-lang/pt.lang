@@ -1,0 +1,8 @@
+COUNTRY="Português"
+WM_LANG="pt"
+KEYBOARDS="pt,us"
+KEYTABLE="pt-latin1"
+LANG="pt_PT.UTF-8"
+MIRROR="pt"
+TZ="Europe/Lisbon"
+XKBLAYOUT="pt,us"

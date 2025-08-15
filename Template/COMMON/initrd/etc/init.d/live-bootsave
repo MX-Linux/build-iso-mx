@@ -1,0 +1,267 @@
+#!/live/bin/sh
+
+#==============================================================================
+# Update the bootloader configurations to save the current boot parameters
+# as weill as parameters selected by the text menus.
+#
+# The actual saving is done by grub2-save and gfxsave.
+#
+# The tricky part is if encryption or frugal were used then we need to mount
+# the BIOS boot partition and update the bootloaders there.
+#==============================================================================
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/live/bin
+
+BOOT_UUID_FNAME="bios-dev-uuid"
+
+. /live/lib/live-init-utils.sh
+
+start_init_logging
+
+main() {
+    case $1 in
+        start) do_start                      ;;
+         stop)                               ;;
+            *) echo "Usage: $0 {start|stop}" ;;
+    esac
+
+    [ -n "$ROOT_MP" ] && umount $ROOT_MP
+
+    exit 0
+}
+
+do_start() {
+
+    : ${CMDLINE:=$(cat /live/config/proc-cmdline /live/config/cmdline)}
+    local gfx_cmd boot_save  vga_cmd  vga_ask
+    for param in $CMDLINE; do
+        local value=${param#*=}
+        case $param in
+            gfxsave=*) gfx_cmd=$value  ; grub_save=true ;;
+                vga=*) vga_cmd=$value                  ;;
+              gfxsave) gfx_cmd=both    ; grub_save=true ;;
+             bootsave) boot_save=true  ; grub_save=true ;;
+             grubsave) grub_save=true                   ;;
+        esac
+    done
+
+    case $vga_cmd in
+        ask+save) gfx_cmd=both ; vga_ask=true ;;
+             ask)                vga_ask=true ;;
+    esac
+
+    echo_script "Possibly saving boot parameters" $0
+    get_real_vga_code "$vga_ask" "$gfx_cmd"
+
+    . $INITRD_OUT
+
+    [ -n "$gfx_cmd$boot_save$grub_save" ] || return
+
+    if ! [ -e /live/config/remasterable ]; then
+        echo_live "Can't update %s on read-only boot media" "$(pquote gfxboot)"
+        return 1
+    fi
+
+    # Start with the default mountpoint at /live/boot-dev
+    BOOT_LOADER_MP=$BOOT_MP
+
+    # Change to /live/bios if needed (changed the called scripts)
+    local uuid_file="$SQFILE_DIR/$BOOT_UUID_FNAME"
+    if ! mount_boot_partition "$uuid_file"; then
+        error "Could not mount the BIOS boot partition"
+        exit 1
+    fi
+
+    test -d /live/config/tsplash && DO_TSPLASH=true
+    tsplash_alert "Save boot parameters"
+
+    if [ -n "$gfx_cmd" ]; then
+        local script=/live/bin/gfxsave
+        local dir=$BOOT_LOADER_MP/boot
+        local env="GFX_LOG_FILE=/var/log/live/gfxsave.log VERBOSE=7"
+        #echo $script $dir $gfx_cmd
+        env $env $script "$dir" $gfx_cmd
+    fi
+
+    if [ -n "$boot_save" ]; then
+        #echo grub2-save $BOOT_LOADER_MP
+        grub2-save $BOOT_LOADER_MP
+    fi
+
+    if [ -n "$grub_save" ]; then
+        which live-grubsave >/dev/null && live-grubsave
+    fi
+
+    sync
+
+    #[ -n "$TO_UMOUNT" ] && umount "$TO_UMOUNT"
+
+}
+
+#------------------------------------------------------------------------------
+# Mount out bios/boot partition if we were encrypted or frugal
+#------------------------------------------------------------------------------
+mount_boot_partition() {
+    local uuid_file=$1
+
+    # If there is no uuid file then proceed as normal
+    test -r "$uuid_file" || return 0
+
+    echo "uuid file: $uuid_file"
+
+    local boot_uuid=$(cat $uuid_file | head -n1 2>/dev/null)
+    echo "boot uuid; $boot_uuid"
+    mount_boot_dev "$boot_uuid" $BIOS_MP || return 1
+}
+
+#------------------------------------------------------------------------------
+# Use hwinfo --framebuffer to get a list of vga codes and their resolution and
+# depth.  Find the current resolution and depth in that list to find the current
+# vga code we actually want to save as a boot parameter.
+
+# NOTE: we only check for the "true" vga code when saving when either "vga=ask"
+# or "vga=ask+save" was used.  Therefore we still miss the case where someone
+# uses a non-standard vga=code and gets the VGA menu.  Perhaps we should always
+# run this code?
+#------------------------------------------------------------------------------
+get_real_vga_code() {
+    local vga_ask=$1  gfx_save=$2 local
+    hwinfo=/usr/sbin/hwinfo
+
+    test -x $hwinfo    || return
+    [ -n "$vga_ask" ]  || return
+    [ -n "$gfx_save" ] || return
+
+    local sdir=/sys/class/graphics/fb0
+    test -d $sdir || return 1
+
+    local cur_res=$(cat $sdir/virtual_size   2>/dev/null)
+    local cur_bpp=$(cat $sdir/bits_per_pixel 2>/dev/null)
+    cur_res=${cur_res/,/x}
+
+    [ -z "$cur_res" -o -z "$cur_bpp" ] && return 1
+
+    echo_live "Probing to find selected vga code.  Please be patient ..."
+    echo_live "current resolution %s" "$(pquote "$cur_res @ $cur_bpp")"
+
+    local depth
+    case $cur_bpp in
+        32) cur_bpp=24 ;;
+    esac
+
+    local all_modes=$($hwinfo --framebuffer | sed -n "s/^\s*Mode //p")
+    if [ -z "$all_modes" ]; then
+        echo_live "No vga modes were found"
+        return 1
+    fi
+
+    local mode_line=$(echo "$all_modes" | grep " $cur_res .* $cur_bpp bits")
+    if [ -z "$mode_line" ]; then
+        echo_live "Could not find mode with depth %s" "$(pquote $cur_bpp)"
+        mode_line=$(echo "$all_modes" | grep " $cur_res " | tail -n1)
+    fi
+
+    if [ -z "$mode_line" ]; then
+        echo_live "Could not find a vga mod with resolution %s" "$(pquote $cur_res)"
+        return 1
+    fi
+    local hex_code=$(echo "$mode_line" | cut -d: -f1)
+    if [ -z "$hex_code" ]; then
+        echo_live "Could not extract the hex vga mode"
+        return 1
+    fi
+
+    echo_live "Found hex code %s" "$(pquote $hex_code)"
+
+    local dec_code=$((hex_code))
+
+    echo_live "Using boot parameter %s" "$(pquote vga=$dec_code)"
+    local p_cmdline=/live/config/proc-cmdline
+    sed -r "s/(^| )(vga=)[^ ]*/\1\2$dec_code/" $p_cmdline > $p_cmdline.2
+    CMDLINE=$(cat $p_cmdline.2 /live/config/cmdline 2>/dev/null)
+
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# This gets the current vga code directly using "hwinfo --vbe" but it can
+# take 20 seconds or longer to run so we replaced it with the less direct
+# method above.
+#------------------------------------------------------------------------------
+old_get_real_vga_code() {
+    local vga_ask=$1  gfx_save=$2
+    local hwinfo=/usr/sbin/hwinfo
+    test -x $hwinfo    || return
+    [ -n "$vga_ask" ]  || return
+    [ -n "$gfx_save" ] || return
+
+    echo_live "Probing to find selected vga code.  Please be patient ..."
+    local vga_hex=$($hwinfo --vbe | sed -n "s/^\s*Current VESA Mode:\s*//p")
+    if [ -z "$vga_hex" ]; then
+        echo_live "No vga code was found!"
+        return
+    fi
+    echo_live "Found hex code %s" "$(pquote $vga_hex)"
+    local vga_dec=$(($vga_hex % 0x1000 + 0x200))
+    echo_live "Using boot parameters %s" "$(pquote vga=$vga_dec)"
+    local p_cmdline=/live/config/proc-cmdline
+    sed -r "s/(^| )(vga=)[^ ]*/\1\2$vga_dec/" $p_cmdline > $p_cmdline.2
+    CMDLINE=$(cat $p_cmdline.2 /live/config/cmdline 2>/dev/null)
+}
+
+
+#------------------------------------------------------------------------------
+# Mount boot device for case of frugal install or encrypted
+# Set BOOT_LOADER_MP to the mount point
+#------------------------------------------------------------------------------
+mount_boot_dev() {
+    uuid=$1  mp=$2
+
+    debug "uuid=$uuid  mp=$mp"
+
+    if [ -z "$uuid" ]; then
+        echo_live "Could not find UUID of boot device for remounting"
+        return 1
+    fi
+
+    local boot_dev=$(blkid -U $uuid)
+    debug "boot_dev: $boot_dev"
+    if [ -z "$boot_dev" ]; then
+        echo_live "Could not find boot device for remounting"
+        return 1
+    fi
+
+    local existing_mp=$(grep "^$boot_dev " /proc/mounts | cut -d" " -f2)
+    debug "existing_mp=$existing_mp"
+    if [ -n "$existing_mp" ]; then
+        BOOT_LOADER_MP=$existing_mp
+        return 0
+    fi
+
+    echo_cmd mkdir -p $mp
+    echo_cmd mount UUID=$uuid $mp
+    if ! grep -q "^$boot_dev $mp " /proc/mounts; then
+        echo_live "Could not remount boot device"
+        return 1
+    fi
+    TO_UMOUNT="$mp"
+
+    BOOT_LOADER_MP=$mp
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Display a message on the tsplash screen
+#------------------------------------------------------------------------------
+tsplash_alert() {
+    [ "$DO_TSPLASH" ] || return
+    /live/bin/tell-tsplash alert "$*"
+}
+
+
+debug() { return; echo "db: $*"; }
+
+echo_cmd() { echo " > $*" >/dev/null ; "$@" ; }
+
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE
+
+exit 0

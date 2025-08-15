@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Configurazione del terminale secondo la tastiera %s in corso"
+_Localizing_console_and_timezone_="Localizzazione del fuso orario e del terminale"
+_Recreate_symlink_X_="Ricrea link sinbolico %s"
+_Setting_hostname_to_X_="Impostazione hostname su %s"
+_Setting_locale_to_X_="Impostazione locale su %s"
+_Setting_timezone_and_localtime_to_X_="Impostazione fuso orario e ora locale su %s"
+_Unknown_time_zone_X_="Fuso orario sconosciuto %s"

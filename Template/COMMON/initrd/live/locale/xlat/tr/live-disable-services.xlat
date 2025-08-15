@@ -1,0 +1,8 @@
+_Customizing_services_="Özelleştirme hizmetleri"
+_Disabling_NFS_server_X_="%s NFS sunucusu devre dışı bırakılıyor"
+_Disabling_X_service_="%s hizmeti devre dışı bırakılıyor"
+_Disabling_X_services_Y_="%s servisleri %s devre dışı bırakılıyor"
+_Disabling_more_services_X_="Daha çok %s hizmeti devre dışı bırakılıyor"
+_Disabling_network_services_X_="%s ağ hizmeti devre dışı bırakılıyor"
+_Disabling_some_services_X_="Bazı %s hizmetleri devre dışı bırakılıyor"
+_Enabling_X_service_="%s hizmeti etkinleştiriliyor"

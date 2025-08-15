@@ -1,0 +1,18 @@
+#!/bin/sh
+
+prog=${1:-/bin/sh}
+
+[ $# -gt 0 ] && shift
+
+mkdir -p /live/sys /live/proc /live/dev
+
+mountpoint -q /live/sys  || mount --bind /sys  /live/sys
+mountpoint -q /live/proc || mount --bind /proc /live/proc
+mountpoint -q /live/dev  || mount --bind /dev  /live/dev
+
+chroot /live $prog "$@"
+
+umount /live/dev
+umount /live/sys
+umount /live/proc
+

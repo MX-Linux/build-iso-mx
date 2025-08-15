@@ -1,0 +1,764 @@
+#!/bin/bash
+
+#------------------------------------------------------------------------------
+# Saves boot parameters for a syslinux bootloader.
+# Uses gfxsave.cfg to figure out which ones go into Fn key menus.
+#------------------------------------------------------------------------------
+
+ME=${0##*/}
+
+VERSION="2.00.11"
+VERSION_DATE="Wed, 28 Dec 2022 22:12:28 +0000"
+
+GFX_SUFFIX=".def"
+
+VMLINUZ_REGEX="^vmlinuz(|-?[0-9]|-legacy|-modern)$"
+
+KERNEL_LAB_LOW="Legacy"
+KERNEL_LAB_HIGH="Modern"
+CUSTOM_LAB="custom"
+
+CPIO_LIST="top-cpio gfx-cpio gfx1-cpio"
+
+# Allow over-ride via environment
+: ${UNAME_R:=$(uname -r)}
+
+WORK_DIR=/live/temp/$ME
+
+main() {
+    local top_dir=${1%/boot}  gfx_cmd=$2
+    local GFX_MENU_CNT  DO_MENUS  DO_CUSTOM  DO_RESET
+
+    # Allow environment over-ride
+    : ${CMD_LINE:=$(cat /proc/cmdline)}
+
+    local PROC_CMDLINE=$CMD_LINE
+    # kernel built-in boot parameter
+    local CONF_CMDLINE=$(grep ^CONFIG_CMDLINE= /boot/config-$(uname -r) 2>/dev/null | cut -d\" -f2 | tail -1)
+    if [ -n "$CONF_CMDLINE" ]; then
+        vmsg 6 "Boot parameters built into the kernel:\n %s" "$(pq $CONF_CMDLINE)"
+    fi
+
+    CMD_LINE=""
+    local conf param x
+    for param in $PROC_CMDLINE; do
+        x=x
+        for conf in $CONF_CMDLINE; do
+            [ "$conf" = "$param" ] && x="" && break
+        done
+        [ -n "$x" ] &&  CMD_LINE="$CMD_LINE $param"
+    done
+
+    vmsg 6 "Current bootcodes:\n %s" "$(pq $CMD_LINE)"
+
+    case $VERBOSE in
+             [0-9]) ;;
+        [0-9][0-9]) ;;
+                 *) VERBOSE=5 ;;
+    esac
+
+    # Width of some printfs with no color codes
+    set_colors "$NO_COLOR" "$LO_COLOR"
+    bold "Update bootloader menu defaults (%s) cmd=%s" "$(pb v-$VERSION)" "$(pb $gfx_cmd)"
+
+    # mostly NOT USED
+    case $gfx_cmd in
+          save) DO_SAVE=true                         ;;
+         menus) DO_MENUS=true                        ;;
+        custom) DO_CUSTOM=true                       ;;
+          both) DO_MENUS=true ; DO_CUSTOM=true       ;;
+         reset) DO_RESET=true                        ;;
+             *)  fatal "Bad gfxsave parameter %s\nExpected %s" \
+            "$(pe $gfx_cmd)" "$(ec save menus custom both reset)" ;;
+    esac
+
+    case $gfx_cmd in
+        save|menus|custom|both) vmsg 6 "Current bootcodes:\n %s" "$(pq $CMD_LINE)" ;;
+    esac
+
+    # Do this once
+    create_boot_param_hash
+
+    local syslinux_dir=$top_dir/boot/syslinux
+    is_writable $syslinux_dir/ dir || return
+
+    # Defaults for single kernel
+    local conf_file="$syslinux_dir/syslinux.cfg"
+    local cpio_file="gfx-cpio"
+
+    # some have paths some don't.  Sorry.
+    local top_conf_file=$conf_file
+    local top_cpio_file=$syslinux_dir/top-cpio
+
+    # Marker is the label for the new entry.
+    # Normal_lab is the label for the entry above which we add the custom entry
+    local marker="custom"  normal_lab="live"  m_label="Custom_Boot"
+
+    #--------------------------------------------------------------------------
+    # See if this is a multi-kernel bootloader by looking for kernel*.cfg files
+    #--------------------------------------------------------------------------
+    local multi_kernel  multi_kernel_single_file  FIRST_LABEL="live"
+    local ker_configs=$(find $syslinux_dir -maxdepth 1 -name "kernel*.cfg")
+    if [[ -n $ker_configs ]]; then
+
+        # Get path to kernels from one of kernel*.cfg files
+        local k1_config=$(echo "$ker_configs" | head -n1)
+        [[ -z $k1_config ]] && fatal "First kernel config file is missing???"
+        vmsg 9 "Normal entry:\n%s" "$(pq "$(normal_entry "$k1_config")")"
+        local k_path=$(normal_entry "$k1_config" | sed -n "s/^\s*KERNEL\s*//p")
+        local kernel_dir=$top_dir$(dirname $k_path)
+        vmsg 8 "       kernel_dir: %s" "$(pq $kernel_dir)"
+
+        # Find the kernels there so we know which kernel*.cfg to modify
+        find_kernel "$kernel_dir"
+        vmsg 6 "   kernel version: %s  name: %s" "$(pq $UNAME_R)" "$(pq $VMLINUZ_NAME)"
+
+        # find the kernel*.cfg file that uses our vmlinuz file
+        conf_file=$(grep -l "/$VMLINUZ_NAME$" $ker_configs)
+        vmsg 7 "        conf file: %s" "$(pq $conf_file)"
+
+        # find the gfx-cpio file to modify from the kernel*.cfg file
+        cpio_file=$(sed -rn "0,/^UI/ s/^UI\s+gfxboot\s+([a-z0-9_-]+)\s+.*/\1/p" "$conf_file")
+        [[ -z $cpio_file ]] && fatal "Could not find gfx-cpio file in config file"
+        vmsg 7 "    gfx cpio file: %s" "$(pq $cpio_file)"
+
+        multi_kernel=true
+
+    #----- see if this is single-menu multi-kernel -----
+    elif grep -Eqi "^\s*LABEL\s+legacy" "$conf_file" && grep -Eqi "^\s*LABEL\s+modern" "$conf_file"; then
+
+        msg "single-menu multi-kernel"
+
+        local kernels=$(sed -rn "s/^\s*KERNEL\s+//Ip" "$conf_file" | sort -u)
+
+        local k_path=$(echo "$kernels" | head -n1)
+        local kernel_dir=$top_dir$(dirname $k_path)
+        vmsg 8 "       kernel_dir: %s" "$(pq $kernel_dir)"
+
+        # Find the kernels there so we know which kernel*.cfg to modify
+        find_kernel "$kernel_dir"
+        vmsg 6 "   kernel version: %s  name: %s" "$(pq $UNAME_R)" "$(pq $VMLINUZ_NAME)"
+
+        marker=$CUSTOM_LAB
+        normal_lab=$NORMAL_LAB
+        multi_kernel_single_file=true
+        m_label=$M_LABEL
+    fi
+
+    local GFX_CONFIG_FILE="$syslinux_dir/gfxsave.cfg"
+    [[ -r $GFX_CONFIG_FILE ]] || fatal "Could not find gfxsave config file %s"  "$GFX_CONFIG_FILE"
+
+    trap clean_up EXIT
+    local full_cpio="$syslinux_dir/$cpio_file"
+    mkdir -p "$WORK_DIR"
+
+    # Clean out so we don't confuse ourselves while testing
+    rm -rf $WORK_DIR/*
+
+    if [[ -n $DO_RESET && -n $multi_kernel ]]; then
+        local ker
+        for ker in $ker_configs; do
+            reset_conf_file "$ker" $FIRST_LABEL
+        done
+
+        local cpio  full
+        for cpio in $CPIO_LIST; do
+            full="$syslinux_dir/$cpio"
+            reset_cpio_file "$full"
+        done
+
+        reset_conf_file  "$top_conf_file"  none
+
+        exit 0
+
+    elif [[ -n $DO_RESET ]]; then
+        reset_cpio_file  "$syslinux_dir/$cpio_file"
+        reset_conf_file  "$conf_file" none
+
+        exit 0
+    fi
+
+    unpack_cpio "$full_cpio"  "$WORK_DIR/$cpio_file.dir"
+    # We need to know THE cpio when doing mulitple menus
+
+    local menu_dir="$WORK_DIR/the_cpio.dir"
+    ln -s "$WORK_DIR/$cpio_file.dir" "$menu_dir"
+
+    write_gfx_menu_defaults prep "$menu_dir" ""
+    local main_params=$(echo $(extra_cmdline_params))
+    vmsg 5 "     popup params: %s" "$(gq $ALL_MENU_PARAMS)"
+    vmsg 5 " main menu params: %s" "$(gq "$main_params")"
+
+    local desktop=$(echo "$CMD_LINE" | grep -Eo "\bdesktop=[^ ]+\b")
+    if [[ -n $desktop ]] && ! echo "$main_params $ALL_MENU_PARAMS" \
+        | grep -Eq "(^ )desktop=[^ ]*\b"; then
+        vmsg 5 "    skipped param: %s" "$(gq $desktop)"
+    fi
+
+    [[ -n $multi_kernel ]] && update_lang "$CMD_LINE_LANG" $CPIO_LIST
+
+    update_gfxmenus "$menu_dir"
+
+    repack_cpio "$full_cpio" "$menu_dir"
+
+    customize_conf_file "$conf_file" "$marker" "$m_label" "$normal_lab"  "$main_params"
+
+    [[ -n $multi_kernel ]] && reset_conf_file "$top_conf_file" "$USE_LAB"
+}
+
+#------------------------------------------------------------------------------
+# Find the vmlinuz file that matches $(uname -r).  Also figure out if this is
+# the legacy or modern kernel (but this is not needed).
+#------------------------------------------------------------------------------
+find_kernel() {
+    local dir=$1
+
+    [[ -d $dir ]] || fatal "Could not find kernel directory $dir"
+
+    local files=$(ls "$dir" | grep -E "$VMLINUZ_REGEX")
+    case $(echo "$files" | grep -c .) in
+        0) fatal "No vmlinuz files found in $dir"       ;;
+        1)  warn "Only one vmlinuz file found in $dir/" ;;
+    esac
+
+    # Now ensure they are kernels and get their version numbers
+    local vm_info=$(cd "$dir" && vmlinuz-version -nrt $files | sort -V)
+
+    case $(echo "$vm_info" | grep -c .) in
+        0) fatal "No kernels were found"       ;;
+        1) warn  "Only one kernel was found"   ;;
+    esac
+
+    local using_kernel=$(echo "$vm_info" | grep "^$UNAME_R\>" | cut -f2)
+
+    case $(echo "$using_kernel" | grep -c .) in
+        0) fatal "Kernel $UNAME_R was not found"        ;;
+        1)                                              ;;
+        *) fatal "More than one kernel version $UNAME_R" ;;
+    esac
+
+    VMLINUZ_NAME=$(echo "$using_kernel" | cut -f2)
+
+    if echo "$vm_info" | head -n1 | grep -q "^$UNAME_R\>"; then
+        KERNEL_LAB=$KERNEL_LAB_LOW
+    else
+        KERNEL_LAB=$KERNEL_LAB_HIGH
+    fi
+    LC_K_LAB=$(echo $KERNEL_LAB | tr 'A-Z' 'a-z')
+    CUSTOM_LAB="custom_$LC_K_LAB"
+    M_LABEL="Custom_${KERNEL_LAB}_Boot"
+    NORMAL_LAB=$LC_K_LAB
+    USE_LAB=$LC_K_LAB
+}
+
+#------------------------------------------------------------------------------
+# If a language was given then set the language in all the other menus to it.
+# If the unpack directory exists, we skip it.
+#------------------------------------------------------------------------------
+update_lang() {
+    local lang=$1 ; shift
+
+    if [[ -n $lang ]]; then
+        vbold 6 "Setting language to %s in all menus" "$(pb $lang)"
+    else
+        vbold 6 "Resetting  language in all menus"
+    fi
+    local fname  full  dir
+    for fname; do
+        full=$syslinux_dir/$fname
+
+        # silently ignore missing files
+        test -f $full || continue
+
+        dir=$WORK_DIR/$fname.dir
+        test -d $dir && continue
+        unpack_cpio "$full" "$dir"
+
+        if [[ -n $lang ]]; then
+            echo "$lang" > $dir/lang.def
+        else
+            rm -f $dir/lang.def
+        fi
+
+        repack_cpio "$full" "$dir"
+    done
+}
+
+#------------------------------------------------------------------------------
+# unpack a gfx cpio file
+#------------------------------------------------------------------------------
+unpack_cpio() {
+    local file=$1  dir=$2
+    [[ -r $file ]] || fatal "Could not find cpio file %s" "$file"
+    rm -rf $dir
+    mkdir -p $dir
+    [[ -d $dir ]] || fatal "Could not make cpio dir %s" "$dir"
+
+    vmsg 7 " unpack cpio file: %s" "$(cq $(basename $file))"
+    (cd "$dir" && cpio -idum --quiet) < $file
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# repack a gfx cpio file
+#------------------------------------------------------------------------------
+repack_cpio() {
+    local file=$1  dir=$2
+    [[ -d $dir ]] || fatal "Could not find cpio dir %s" "$dir"
+    vmsg 7 " repack cpio file: %s" "$(cq $(basename $file))"
+    (cd $dir && find . | cpio -o --quiet) > $file
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Make a poor man's hash of cmdline parameters using _DOT_ for "." and using
+# _DASH_ for "-".   Example: tz=America/Denver causes us to create a variable
+# named GFX_P_tz that contains "America/Denver".  If there is no "=" sign then
+# we create a GFX_F_$name variable that contains "true".
+#
+# We don't need all parameters, just the ones that go into our Fn key menus
+#------------------------------------------------------------------------------
+create_boot_param_hash() {
+    local param
+    for param in $CMD_LINE; do
+        case $param in
+            lang=*) CMD_LINE_LANG=${param#*=} ;;
+        esac
+        # only let through parameter names made of word chars so we can turn
+        # them into variables names.  This is a poor man's ash hash.
+
+        local nam=${param%%=*}  val=${param#*=}
+
+        nam=${nam//./_DOT_/}
+        nam=${nam//-/_DASH_}
+
+        # skip parameter names with non-word characters
+        [[ $nam =~ [^a-zA-Z0-9_] ]] && continue
+
+        case $param in
+            *=*) eval GFX_P_$nam=\$val  ;;
+              *) eval GFX_F_$param=true ;;
+        esac
+    done
+}
+
+#------------------------------------------------------------------------------
+# A wrapper for write_gfx_menu_defaults
+#------------------------------------------------------------------------------
+update_gfxmenus() {
+    local dir=$1
+
+    reset_cpio_dir "$dir"
+
+    if [[ $GFX_MENU_CNT -eq 0 ]]; then
+        vmsg 7 "No defaults were found to update"
+        return
+    fi
+
+    vmsg 7 "Found %s default setting(s) to update" "$(nq $GFX_MENU_CNT)"
+
+    # This time it's for real
+    write_gfx_menu_defaults write $dir
+}
+
+#------------------------------------------------------------------------------
+# This routine gets called twice.  First as prep to find the popup params
+# so we can find the parameters that go in the main menu.  Then a second
+# time (if we are updating menus) to actually update the menus.  I'm sure
+# all of this could be greatly improved.
+#------------------------------------------------------------------------------
+write_gfx_menu_defaults() {
+    GFX_MENU_CNT=0
+    ALL_MENU_PARAMS=
+
+    local type=$1  dir=$2
+
+    local type=$1  dir=$2  quiet write save
+    case $type in
+        write) write=true ; quiet=true ;;
+         prep) save=true               ;;
+            *) fatal "bad write_gfx_menu_defaults type %s" "$type" ;;
+    esac
+
+    # Read in data from our config file, one line at a time (no spaces
+    local m_config
+    for m_config in $(grep '^[A-Za-z]' $GFX_CONFIG_FILE); do
+        local title=$(echo "$m_config" | cut -d"|" -f1)
+        local fname=$(echo "$m_config" | cut -d"|" -f2)
+        local out=
+        local fields=$(echo $m_config | cut -d"|" -f3-30)
+        for field in ${fields//|/ }; do
+            eval local nam="\$GFX_P_$field"
+            [[ -n $nam ]] && out="$out${out:+ }$field=$nam"
+            eval local cmd="\$GFX_F_$field"
+            [[ -n $cmd ]] && out="$out${out:+ }$field"
+        done
+        local entry=$(echo "$out" | sed -r  \
+            -e 's/^ //'                     \
+            -e 's/_DOT_/./g'                \
+            -e 's/\<lang=//'                \
+            -e 's/_DASH_/-/g'               \
+            -e 's/\<tz=//')
+
+        [[ -n $out ]] || continue
+        local menu_file=$dir/$fname.men
+        if [[ -r $menu_file ]]; then
+            vmsg 8 "  found menu file: %s" "$(pq $(basename $menu_file))"
+            if ! grep -q '`'"$entry$" $menu_file; then
+                local found=
+                while [[ $entry =~ " " ]]; do
+                    # Strip off params from the end of the string
+                    entry=${entry% *}
+                    out=${out% *}
+                    grep -q '`'"$entry$" $menu_file || continue
+                    found=true
+                    break
+                done
+                if [[ -z $found ]]; then
+                    msg "Menu file %s does not contain <%s>.  Skipping." "$(pq $fname.men)"  "$(pq $entry)"
+                    continue
+                fi
+            fi
+        fi
+
+        : $((GFX_MENU_CNT += 1))
+        [[ -n $save ]] && ALL_MENU_PARAMS="$ALL_MENU_PARAMS ${out# }"
+        [[ -n $write ]] || continue
+
+        vmsg 7 "$(printf " %12s:$from_co %-14s $cheat_co%s\n" \
+            "$title" "$fname$GFX_SUFFIX" "$entry")"
+
+        echo "$entry" > $dir/$fname$GFX_SUFFIX
+    done
+}
+
+#------------------------------------------------------------------------------
+# print out the "normal" entry from a syslinxu .cfg file.
+#------------------------------------------------------------------------------
+normal_entry() {
+    local file=$1  label=${2:-live}
+    sed -n -r "/^\s*LABEL $label\s*$/I,/^\s*INITRD/I p" "$file"
+}
+
+#------------------------------------------------------------------------------
+# Set the "default $DEFAULT" and remove all custom entries if they exists.
+# if cmd_temp is given then we work directly on that file.
+#------------------------------------------------------------------------------
+reset_conf_file() {
+    local file=$1  default=$2  cmd_temp=$3
+
+    [[ -z $cmd_temp ]] && vmsg 7 "  reset conf file: %s" "$(pq $(basename "$file"))"
+    [[ -f $file ]] || fatal "Could not find conf file %s to reset" "$(pe $file)"
+
+    local temp=${cmd_temp:-$WORK_DIR/$(basename "$file")}
+    [[ -z $cmd_temp ]] && cp "$file" "$temp"
+
+    # Remove all default lines
+    sed -i -r "/^\s*default\>/Id" "$temp"
+
+    # Add a new default line if asked to
+    set_conf_default "$temp" "$default"
+
+    local marker
+    for marker in custom_legacy custom_modern custom; do
+        # Remove custom entry if it exists
+        grep -Eiq "^\s*LABEL\s+$marker\s*$" "$temp" || continue
+        vmsg 7 "  removing custom entry %s" "$(pq $marker)"
+        sed -i -r "/^\s*LABEL\s+$marker\s*$/I,/^\s*INITRD/Id" "$temp"
+    done
+
+    [[ -z $cmd_tmp ]] && cat -s "$temp" > "$file"
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+set_conf_default() {
+    local file=$1  default=$2
+    sed -i -r "/^default/I d" "$file"
+    if [[ -n $default && $default != none ]]; then
+        sed -i -r "/^\s*MENU\s+TITLE/i default $default\n" "$file"
+        vmsg 7 "   set default to: %s" "$(pq $default)"
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Clear out existing custom entry (if it exists) then add a new custom entry
+# and set the default to $marker.
+#------------------------------------------------------------------------------
+customize_conf_file() {
+    local file=$1  marker=$2  m_label=$3  normal_lab=$4 ; shift 4
+    local params=$*  basename=$(basename "$file")
+    vmsg 7 "   customize file: %s" "$(pq $(basename "$file"))"
+    [[ -f $file ]] || fatal "Could not find conf file %s to reset" "$(pe $file)"
+
+    local temp=$WORK_DIR/$(basename "$file")
+    cp "$file" "$temp"
+
+    # Set the default entry
+    set_conf_default "$temp" "$marker"
+
+    # Remove the previous custom entry if it exists
+    if grep -Eiq "^\s*LABEL\s+$marker\s*$" "$temp"; then
+        vmsg 7 "  removing custom entry %s" "$(pq $marker)"
+        sed -i -r "/^\s*LABEL\s+$marker\s*$/I,/^\s*INITRD/Id" "$temp"
+    fi
+
+    # make a copy of the "normal" entry, munge it, and then put it back into
+    # the file as a custom entry, directly above the "normal" entry
+    local normal_entry=$(normal_entry "$file" "$normal_lab")
+    [[ -z "$normal_entry" ]] && fatal "could not find <%s> label in %s" "$normal_lab" "$basename"
+
+    vmsg 9 "\nnormal entry:\n%s" "$(pq "$normal_entry")"
+
+    local custom_entry=$(echo "$normal_entry" | sed -r \
+        -e "s/^(\s*LABEL\s+).*/\1$marker/I" \
+        -e "s/^(\s*MENU LABEL\s+).*/\1$m_label/I" \
+        -e "s|^(\s*APPEND\s+).*|\1$params|I")
+
+    vmsg 8 "\ncustom entry:\n%s" "$(pq "$custom_entry")"
+
+    # The sed I'm using does not like actual new-line chars so I need to convert
+    # new-lines to "\n".
+    local entry_string=$(echo "$custom_entry"  | sed "s/$/\\\\n/" | tr -d "\n")
+    vmsg 10 "\nentry string:\n%s" "$(pq "$entry_string")"
+
+    sed -i -r "/^\s*LABEL\s+($normal_lab)/Ii $entry_string" "$temp"
+
+    cat -s "$temp" > "$file"
+}
+
+#------------------------------------------------------------------------------
+# Unpack a cpio file, reset the *.def files then repack it
+#------------------------------------------------------------------------------
+reset_cpio_file() {
+    local file=$1
+
+    # Silently ignore missing files
+    [[ -e $file ]] || return
+    local dir=$WORK_DIR/$(basename "$file").dir
+    unpack_cpio "$file" "$dir"
+    reset_cpio_dir "$dir"
+    repack_cpio "$file" "$dir"
+}
+
+#------------------------------------------------------------------------------
+# Remove the *.def files from a directory that match the filenames in our
+# config file.
+#------------------------------------------------------------------------------
+reset_cpio_dir() {
+    local dir=$1
+
+    [[ -z "$dir" ]] && return
+
+    local file  fcnt=0
+    for file in $(grep '^[A-Za-z]' $GFX_CONFIG_FILE | cut -d"|" -f2); do
+        local full=$dir/$file$GFX_SUFFIX
+        [[ -e $full ]] || continue
+        : $(( fcnt += 1 ))
+        rm -rf $full
+    done
+    vmsg 7 "Deleted %s $GFX_SUFFIX file(s)" "$(nq $fcnt)"
+}
+
+#------------------------------------------------------------------------------
+# Try to make a file or directory writable, if needed.  This is probably not
+# needed anymore but not having write permission was a big pain a while back.
+#------------------------------------------------------------------------------
+is_writable() {
+    local file=$1 type=$2
+
+    [[ -n $file ]] || return 1
+    [[ -e $file ]] || fatal  "Could not find %s %s" "$type" "$file"
+    [[ -w $file ]] || chmod u+w $file
+    [[ -w $file ]] || fatal "Cannot write to %s %s" "$type" "$file"
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Only echo cmdline params that *don't* match any of the names in menu_params.
+# Equal signs and values after equal signs are ignored.
+#------------------------------------------------------------------------------
+extra_cmdline_params() {
+    local param menu_params=$1
+    local tz
+    for param in $CMD_LINE; do
+        case $param in
+                        ubp=*) continue ;;
+                         bp=*) continue ;;
+            gfxsave|gfxsave=*) continue ;;
+          bootsave|bootsave=*) continue ;;
+                 BOOT_IMAGE=*) continue ;;
+        savestate|nosavestate) continue ;;
+              nostore|dostore) continue ;;
+             checkmd5|checkfs) continue ;;
+                  noautomount) continue ;;
+            automount|mount=*) continue ;;
+   i915_invert|no_i915_invert) continue ;;
+                    hwclock=*) continue ;;
+                    desktop=*) continue ;;
+            nouveau.modeset=0) continue ;;
+                 mk_swap_file) continue ;;
+               mk_swap_file=*) continue ;;
+                      vcard=*) continue ;;
+        esac
+        # paramters used by live grub-menu
+        case $param in
+                     grubsave) continue ;;
+                     kernel=*) continue ;;
+                      extra=*) continue ;;
+        esac
+        if [ -z "${param%%tz=*}" ] && [ -n "${param#tz=}" ] ; then
+           tz="${param#tz=}"
+           case $tz in
+                Africa/Addis_Ababa)               ;;  
+                Africa/Algiers)                   ;;  
+                Africa/Cairo)                     ;;  
+                Africa/Casablanca)                ;;  
+                Africa/Johannesburg)              ;;  
+                America/Anchorage)                ;;  
+                America/Argentina/Buenos_Aires)   ;;  
+                America/Bogota)                   ;;  
+                America/Caracas)                  ;;  
+                America/Chicago)                  ;;  
+                America/Denver)                   ;;  
+                America/Halifax)                  ;;  
+                America/La_Paz)                   ;;  
+                America/Lima)                     ;;  
+                America/Los_Angeles)              ;;  
+                America/Managua)                  ;;  
+                America/Mexico_City)              ;;  
+                America/New_York)                 ;;  
+                America/Phoenix)                  ;;  
+                America/Santiago)                 ;;  
+                America/Sao_Paulo)                ;;  
+                Asia/Almaty)                      ;;  
+                Asia/Baghdad)                     ;;  
+                Asia/Baku)                        ;;  
+                Asia/Bangkok)                     ;;  
+                Asia/Dhaka)                       ;;  
+                Asia/Dubai)                       ;;  
+                Asia/Hong_Kong)                   ;;  
+                Asia/Irkutsk)                     ;;  
+                Asia/Jerusalem)                   ;;  
+                Asia/Karachi)                     ;;  
+                Asia/Kolkata)                     ;;  
+                Asia/Krasnoyarsk)                 ;;  
+                Asia/Macau)                       ;;  
+                Asia/Seoul)                       ;;  
+                Asia/Taipei)                      ;;  
+                Asia/Tbilisi)                     ;;  
+                Asia/Tehran)                      ;;  
+                Asia/Tokyo)                       ;;  
+                Asia/Yakutsk)                     ;;  
+                Asia/Yekaterinburg)               ;;  
+                Asia/Yerevan)                     ;;  
+                Atlantic/Reykjavik)               ;;  
+                Australia/Adelaide)               ;;  
+                Australia/Brisbane)               ;;  
+                Australia/Darwin)                 ;;  
+                Australia/Sydney)                 ;;  
+                Etc/UTC)                          ;;  
+                Europe/Amsterdam)                 ;;  
+                Europe/Athens)                    ;;  
+                Europe/Belgrade)                  ;;  
+                Europe/Berlin)                    ;;  
+                Europe/Brussels)                  ;;  
+                Europe/Bucharest)                 ;;  
+                Europe/Dublin)                    ;;  
+                Europe/Helsinki)                  ;;  
+                Europe/Istanbul)                  ;;  
+                Europe/London)                    ;;  
+                Europe/Minsk)                     ;;  
+                Europe/Moscow)                    ;;  
+                Europe/Paris)                     ;;  
+                Europe/Rome)                      ;;  
+                Pacific/Auckland)                 ;;  
+                Pacific/Fiji)                     ;;  
+                Pacific/Honolulu)                 ;;  
+                Pacific/Tongatapu)                ;;  
+                *) echo "$param"                  ;;
+           esac
+        else
+            case " $ALL_MENU_PARAMS " in
+                *" ${param%%=*} "*) ;;
+                *" ${param} "*)     ;;
+                *) echo $param      ;;
+            esac
+        fi
+    done
+}
+
+#------------------------------------------------------------------------------
+# Utilities for displaying colored strings
+#------------------------------------------------------------------------------
+set_colors() {
+    local noco=$1  loco=$2
+
+    [[ -n $noco ]] && return
+
+    # Adjust this printf width for added color codes
+    MSG8_W=$((MSG8_W + 14))
+
+    local e=$(printf "\e")
+     black="$e[0;30m";    blue="$e[0;34m";    green="$e[0;32m";    cyan="$e[0;36m";
+       red="$e[0;31m";  purple="$e[0;35m";    brown="$e[0;33m"; lt_gray="$e[0;37m";
+   dk_gray="$e[1;30m"; lt_blue="$e[1;34m"; lt_green="$e[1;32m"; lt_cyan="$e[1;36m";
+    lt_red="$e[1;31m"; magenta="$e[1;35m";   yellow="$e[1;33m";   white="$e[1;37m";
+        nc="$e[0m";
+
+    cheat_co=$white;      err_co=$red;       hi_co=$yellow;      nc_co=$nc;
+      cmd_co=$white;     from_co=$lt_green;  mp_co=$magenta;   num_co=$lt_red;
+      dev_co=$magenta;   head_co=$yellow;     m_co=$lt_cyan;    ok_co=$lt_green;
+
+    [[ -z $loco ]] && return
+
+    from_co=$brown
+      hi_co=$white
+       m_co=$nc_co
+     num_co=$white
+    warn_co=$yellow
+}
+
+bold() { vbold 3 "$hi_co$@"    ; }
+warn() { vmsg  3 "$warn_co$@"  ; }
+msg()  { vmsg  5 "$@"          ; }
+
+vbold()  {
+    local level=$1  fmt=$2 ; shift 2
+    [[ $level -gt $VERBOSE ]] && return
+    printf "$hi_co$fmt$nc_co\n" "$@"
+    return 0
+}
+
+fatal() {
+    local fmt=$1 ; shift
+    printf "$err_co$fmt$nc_co\n" "$@"
+    exit 2
+}
+
+vmsg() {
+    local level=$1 fmt=$2 ; shift 2;
+    [[ $level -gt $VERBOSE ]] && return
+    printf "$m_co$fmt$nc_co\n" "$@"
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Convenience routines for putting colored text in colored strings
+#------------------------------------------------------------------------------
+cq() { echo "$cheat_co$*$m_co"   ; }
+ec() { echo "$cheat_co$*$err_co" ; }
+gq() { echo "$green$*$m_co"      ; }
+nq() { echo "$num_co$*$m_co"     ; }
+pb() { echo "$m_co$*$hi_co"      ; }
+pe() { echo "$m_co$*$err_co"     ; }
+pq() { echo "$cheat_co$*$m_co"   ; }
+
+clean_up() {
+    local dir=$WORK_DIR
+    [[ $dir =~ .. && -d $dir ]] || return
+    [[ $VERBOSE -le 5 ]] && rm -rf "$dir"
+}
+
+main "$@"

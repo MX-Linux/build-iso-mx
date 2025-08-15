@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="Configurar o console/terminal para um mapa de teclado %s"
+_Localizing_console_and_timezone_="Localizando console/terminal e fuso horário"
+_Recreate_symlink_X_="Criar o atalho ou link simbólico (symlink) %s"
+_Setting_hostname_to_X_="Configurar o nome de host (hostname ) para %s"
+_Setting_locale_to_X_="Configurar idioma/localização para %s"
+_Setting_timezone_and_localtime_to_X_="Configurar o fuso horário e a hora local para %s"
+_Unknown_time_zone_X_="Fuso horário %s não é conhecido"

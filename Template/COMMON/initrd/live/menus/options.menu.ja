@@ -1,0 +1,16 @@
+   1)  既定
+   2)  checkmd5        ライブメディアの整合性を確認
+   3)  checkfs         ライブUSBとパーシステンス ext2/3/4 ファイルシステムをチェック
+   4)  toram           圧縮ファイルを RAM へコピー
+   5)  i915_invert     一部のインテル・グラフィックシステムでビデオを反転
+   6)  no_i915_invert  インテル・グラフィックのインバートを無効化
+   7)  from=usb        ライブUSBからの起動完了
+   8)  from=hd         ハードドライブからの起動完了
+   9)  hwclock=ask     システムにクロック設定の決定を行わせます
+  10)  hwclock=utc     ハードウェア・クロックを世界標準時へ設定（Linux システムのみ)
+  11)  hwclock=local   ハードウェア・クロックは現地時間へ設定（Windows システム)
+  12)  password        起動前にパスワードを変更
+  13)  nostore         LiveUSBストレージ機能を無効化（LiveUSBのみ）
+  14)  dostore         LiveUSBストレージ機能を有効化（LiveUSBのみ）
+  15)  savestate       再起動時にファイルを保存（ライブUSBのみ）
+  16)  nosavestate     再起動時にファイルを保存しない（LiveUSBのみ）

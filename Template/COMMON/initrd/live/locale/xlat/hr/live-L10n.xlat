@@ -1,0 +1,6 @@
+_Configuring_console_for_a_X_keymap_="Konfiguriram konzolu za %s raspored tipkovnice"
+_Localizing_console_and_timezone_="Lokalizacija konzole i vremenske zone"
+_Setting_hostname_to_X_="Postavi ime računala na %s"
+_Setting_locale_to_X_="Postavi jezik na %s"
+_Setting_timezone_and_localtime_to_X_="Postavljanje vremenske zone i lokalnog vremene na %s"
+_Unknown_time_zone_X_="Nepoznata vremenska zona %s"

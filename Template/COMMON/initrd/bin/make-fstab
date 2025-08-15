@@ -1,0 +1,1035 @@
+#!/bin/sh
+
+#-----------------------------------------------------------------------
+# make-fstab: Create and update dynamic fstab entries.
+#
+# (C) 2016 -- 2019 Paul Banham <antiX@operamail.com>
+# License: GPLv3 or later
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# See LINUX ALLOCATED DEVICES for device numbers
+# https://www.kernel.org/doc/Documentation/devices.txt
+#-----------------------------------------------------------------------
+
+             ME=$(basename $0)
+
+        VERSION="2.4.03"
+   VERSION_DATE="Fri 18 December 2020 17:00:00 PM"
+
+ MAJOR_DEV_LIST="3,8,22,179,202,259"
+     LSBLK_ARGS="--pairs --noheadings --output=name,fstype,label,mountpoint,parttype,type,uuid"
+
+     SD_OPTIONS=noauto,exec
+   NTFS_OPTIONS=noauto,noexec,uid=1000,gid=users,dmask=002,fmask=113
+   VFAT_OPTIONS=noauto,uid=1000,gid=users,dmask=002,fmask=113
+     SR_OPTIONS=noauto,users,exec
+
+         MARKER="# Added by $ME"
+     OLD_MARKER="# Added by antiX"
+
+   FSTAB_FORMAT="%-42s %-43s %-10s %-30s  %s\n"
+
+         MP_DIR=/media
+      LOCK_FILE=/run/lock/fstab.lock
+     FSTAB_FILE=/etc/fstab
+       LOG_FILE=/var/log/live/make-fstab.log
+
+      SWAP_FILE=
+       USE_UUID=true
+
+      DO_ENCODE=
+    MP_USE_UUID=
+   MP_USE_LABEL=true
+       LAZYTIME=
+
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"; export PATH
+
+unset VERBOSE REPLACE SWAP_ONLY
+
+umask 022
+
+usage() {
+    local ret="${1:-0}"
+    cat << Usage
+Usage: $ME [options]
+Options:
+  -c --create             Force normal mode
+  -d --dirs=<options>     Create mountpoint directories based on:
+                          label|nolabel|uuid|nouuid|encode|noencode
+     --delete             Delete all our our entries from fstab
+  -D --debug              Add env info to log file in dynamic mode
+  -f --fstab=<file>       fstab file.  (default: /etc/fstab) but see below
+  -h --help               Show this usage
+  -i --install=<mntpnt>   Make an fstab for a system that is being installed
+  -l --log-file=<file>    Use <file> as the log file (default: make-fstab.log)
+  -L --lazytime           Use "lazytime" on ext4
+  -m --mount=[usb|all]    Mount these devices when building fstab
+  -M --mntpnt=<dir>       Directory where mountpoints are created
+  -n --no-log             Disable logging
+     --no-swap            Disable looking for swap partitions
+  -O --no-overwrite       Don't overwrite existing fstab file in install mode
+  -N --no-uuid            Don't use UUID in fstab entries
+  -q --quiet              Only print errors and warnings
+     --swap-file=<file>   Look for swapfile in this location
+  -s --swap-only          Only add swap partitions to fstab
+  -u --update             Force update mode
+  -v --verbose            Verbose mode: print more
+
+If called as a normal user then all input and output files default to
+the current working directory.  Device mountpoints are put in $MP_DIR
+
+Examples on a live system:
+
+    make-fstab
+        create an entry and dir for every partition and cdrom under /media
+
+    make-fstab --swap-only
+        only make swap partition entries
+
+Examples for installing:
+
+    make-fstab --install=/mnt/antiX
+        only make bare number of entries needed: swap, root, /home, /boot
+        (as needed).  Only add entries for partitions mounted at /mnt/antiX
+        or below.
+
+    make-fstab --install=/mnt/antiX --mntpnt=/mnt
+        and also add entries and dirs for everything else under /mnt.
+Usage
+
+    exit $ret
+}
+
+#------------------------------------------------------------------------------
+# Function: read_cmdline <args>
+#
+# Read and process all command line arguents in <args>.  Use $short_stack to
+# allow short options to stack: -v -D ==> -vD.
+#------------------------------------------------------------------------------
+read_cmdline() {
+
+    local arg  val  short_stack=cdDfhilmMnNOqsuv
+
+    while [ $# -gt 0 -a -z "${1##-*}" -a -n "$1" ]; do
+        arg=${1#-}; shift
+
+        # Allow short options to stack
+        case $arg in
+            [$short_stack][$short_stack]*)
+                if echo "$arg" | grep -q "^[$short_stack]\+$"; then
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    continue
+                fi;;
+        esac
+
+        # Deal with options that take a value
+        case $arg in
+        -swap-file|-dirs|-fstab|-log-file|-mntpnt|-mount|-install|[dfilmM])
+                [ $# -lt 1 ] && arg_fatal "Expected a parameter after: -$arg"
+                val=$1
+                [ -n "$val" -a -z "${val##-*}" ] \
+                    && arg_fatal "Suspicious argument after -$arg: $val"
+                shift           ;;
+
+            *=*) val=${arg#*=} ;;
+            *)   val="unknown" ;;
+        esac
+
+        case $arg in
+                           -create|c)   UPDATE_MODE=            ;;
+                             -delete)   DELETE_MODE=true        ;;
+                 -dirs=*|d=*|-dirs|d)      CMD_DIRS=$val        ;;
+                            -debug|D)         DEBUG=true        ;;
+               -fstab=*|f=*|-fstab|f)    FSTAB_FILE=$val        ;;
+                             -help|h)         usage             ;;
+           -install=*|i=*|-install|i)    INSTALL_MP=$val        ;;
+         -log-file=*|l=*|-log-file|l)      LOG_FILE=$val        ;;
+               -mount=*|m=*|-mount|m)     CMD_MOUNT=$val        ;;
+             -mntpnt=*|m=*|-mntpnt|m)    CMD_MP_DIR=$val        ;;
+                            -no-swap)       NO_SWAP=true        ;;
+                           -no-log|n)      LOG_FILE=            ;;
+                     -no-overwrite|O)  NO_OVERWRITE=true        ;;
+                          -no-uuid|N)      USE_UUID=            ;;
+                         -lazytime|L)      LAZYTIME=",lazytime" ;;
+                            -quiet|q)         QUIET=true        ;;
+                          -swap-file)     SWAP_FILE=$val        ;;
+                        -swap-file=*)     SWAP_FILE=$val        ;;
+                        -swap-only|s)     SWAP_ONLY=true        ;;
+                           -update|u)   UPDATE_MODE=true        ;;
+                          -verbose|v)       VERBOSE=true        ;;
+                                   *) arg_fatal "Unknown parameter: -$arg" ;;
+        esac
+    done
+
+    [ $# -eq 0 ] || arg_fatal "Extra command line parameters: $*"
+
+    case $CMD_MOUNT in
+        ""|all|usb)  ;;
+                 *)  arg_fatal "Unknown --mount parameter: $CMD_MOUNT"
+    esac
+}
+
+#------------------------------------------------------------------------------
+# Function: <main command-line-args>
+#------------------------------------------------------------------------------
+main() {
+
+    # Choose create/update mode based on environment variables
+    [ -n "$ID_FS_TYPE" -a -n "$DEVNAME" ] && UPDATE_MODE=true
+
+    # Override default with command line parameters
+    read_cmdline "$@"
+    [ $(uname -r | cut -d. -f1) -lt 4 ] && LAZYTIME=
+
+    MP_DIR=${CMD_MP_DIR:-$MP_DIR}
+
+    if [ "$INSTALL_MP" ]; then
+        UPDATE_MODE=
+        MARKER="#->"
+        DO_INSTALL=true
+        mountpoint "$INSTALL_MP" 1>/dev/null 2>/dev/null \
+            || arg_fatal "$INSTALL_MP is not a mountpoint"
+
+        INSTALL_MP=${INSTALL_MP%/}
+        REAL_MP_DIR=$INSTALL_MP$MP_DIR
+        FSTAB_FILE=$INSTALL_MP$FSTAB_FILE
+        mkdir -p $(dirname $FSTAB_FILE)
+
+        local ext
+        for ext in .1 .2 .3; do
+            rm -f $FSTAB_FILE$ext
+        done
+        [ -z "$NO_OVERWRITE" ] && rm -f $FSTAB_FILE
+
+        #mkdir -p $MP_DIR
+        MP_USE_UUID=true
+    else
+        REAL_MP_DIR=$MP_DIR
+    fi
+
+    # Make debugging easy for non-root users
+    if [ "$(whoami)" = "root" ]; then
+        AM_ROOT=true
+           SUDO=
+    else
+              SUDO=sudo
+        FSTAB_FILE=$(basename $FSTAB_FILE)
+            MP_DIR=$(basename $MP_DIR)
+       REAL_MP_DIR=$(basename $REAL_MP_DIR)
+         LOCK_FILE=$(basename $LOCK_FILE)
+          LOG_FILE=$(basename $LOG_FILE)
+    fi
+
+      HOTPLUG_FILE=$FSTAB_FILE.hotplug
+    AUTOMOUNT_FILE=$FSTAB_FILE.automount
+
+    [ "$LOG_FILE" ] && mkdir -p $(dirname $LOG_FILE)
+
+    if [ "$UPDATE_MODE" ]; then
+
+        [ "$DEVNAME" ]       || vamoose "no device name"
+        [ "$ID_FS_UUID" ]    || vamoose "$ACTION $DEVNAME: no filesystem uuid"
+        [ -e $HOTPLUG_FILE ] || vamoose "no fstab.hotplug file"
+
+        CMD_DIRS="$CMD_DIRS,$(cat $HOTPLUG_FILE 2>/dev/null)"
+
+        read_cmd_dirs "$CMD_DIRS"
+        lock_file $LOCK_FILE
+        do_update_mode
+
+    else
+
+        read_cmd_dirs "$CMD_DIRS"
+        lock_file $LOCK_FILE
+        do_create_mode
+
+        [ -n "$INSTALL_MP" ] || return
+
+        # Re-assemble fstab in "proper" order
+        local ext file
+        for ext in 1 2 3; do
+            file=$FSTAB_FILE.$ext
+            test -f $file || continue
+            cat $file >> $FSTAB_FILE
+            rm -f $file
+        done
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Function: read_cmd_dirs <argument>
+#
+# Process directives in <argument> for controlling how we create mountpoints.
+#------------------------------------------------------------------------------
+read_cmd_dirs() {
+    local arg
+    for arg in $(echo $1 | sed -r 's/,+/ /g'); do
+        case $arg in
+              label) MP_USE_LABEL=true ;;
+            nolabel) MP_USE_LABEL=     ;;
+               uuid)  MP_USE_UUID=true ;;
+             nouuid)  MP_USE_UUID=     ;;
+             encode)    DO_ENCODE=true ;;
+           noencode)    DO_ENCODE=     ;;
+                 "")                   ;;
+                  *) error "Unknown --dirs/fstab.hotplug parameters $arg"
+        esac
+    done
+}
+
+#------------------------------------------------------------------------------
+# Function: do_update_mode
+#
+# Act as a udev helper to add or remove entry and directory for one partition.
+#------------------------------------------------------------------------------
+do_update_mode() {
+
+    local dev="$DEVNAME" type="$ID_FS_TYPE" uuid="$ID_FS_UUID" label="$ID_FS_LABEL"
+
+    local act
+
+    if [ "$DO_ENCODE" ]; then
+        uuid=$ID_FS_UUID_ENC
+        label=$ID_FS_LABEL_ENC
+    fi
+
+    #[ "$DEBUG" ] && echo        >> $LOG_FILE
+    local pid=$$
+    local start_t=$(cut -d" " -f22 /proc/$pid/stat)
+    local   now_t=$(cut -d" " -f22 /proc/self/stat)
+    #log "update mode: "
+    #[ "$DEBUG" ] && date        >> $LOG_FILE
+    #[ "$DEBUG" ] && env | sort  >> $LOG_FILE
+
+    case "$ACTION" in
+
+    add)
+
+        [ "$type" ] || vamoose "no filesystem type"
+        # Remove the fstab entry if it was created by us
+        # (the egrep is 20x faster than remove_entry)
+        egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE && remove_entry "(UUID=$uuid|$dev)"
+
+        # Don't do anything if there is an fstab entry not created by us
+        egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE && vamoose "device $dev exists in fstab"
+
+        # Don't add an auto entry if the devices is already mounted
+        grep -q "^$dev " /proc/mounts  && vamoose "device $dev is already mounted"
+
+        case $type in
+     crypto_LUKS) return 0                                            ;;
+            swap) local mntpnt=swap                                   ;;
+               *) local mntpnt="$(unique_mp "$dev" "$uuid" "$label")" ;;
+        esac
+
+        [ "$mntpnt" ] || vamoose "problem creating a mountpoint for device $dev"
+
+        # Don't use a bogus uuid in first fstab field
+        [ "$ID_FS_UUID" != "$ID_FS_UUID_ENC" ] && uuid=
+
+        # Update fstab entry
+        write_hd_entry "$dev" "$mntpnt" "$type" "$uuid" "$label"
+
+        case $type in
+            swap) ;;
+               *) mkdir -p $mntpnt ;;
+        esac
+
+        case $type in
+            ntfs*)  chmod 0777 $mntpnt
+                    [ "$AM_ROOT" ] && chown root:users $mntpnt ;;
+        esac
+
+        if [ -e $AUTOMOUNT_FILE -a -n "$AM_ROOT" ]; then
+            case $type in
+                ntfs|exfat) ;;
+                         *) mount $mntpnt ; act="mount $mntpnt";;
+                esac
+        fi
+        ;;
+
+    remove)
+        # First unmount the device but it is probably already way too late
+        if grep -q "^$dev " /proc/mounts; then
+            #log "umount $dev"
+            umount -drf $dev 1>/dev/null 2>/dev/null
+            act="umount -drf $dev"
+            grep -q "^$dev " /proc/mounts && umount -l $dev 1>/dev/null 2>/dev/null
+        fi
+
+        # Get mountpoint(s) in fstab before removing entry
+        local mntpnts="$(egrep "^$dev |^UUID=$uuid " $FSTAB_FILE | awk '{print $2}')"
+
+        # Remove the entry if it was created by us
+        # (the egrep is 20x faster than remove_entry)
+        egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE && remove_entry "(UUID=$uuid|$dev)"
+
+        # Remove mountpoint directories associated this device (that we created)
+        local mntpnt
+        for mntpnt in $mntpnts; do
+
+            # Don't remove directories if they are mountpoints
+            mountpoint -q "$mntpnt" && continue
+
+            # Don't remove directories that are still in fstab
+            awk '{print $2}' $FSTAB_FILE | grep -q '^$mntpnt' && continue
+
+            vsay "Remove mountpoint directory $mntpnt"
+            rmdir "$mntpnt" 2>/dev/null
+        done
+        ;;
+    esac
+
+    local end_t=$(cut -d" " -f22 /proc/self/stat)
+    local dt1=$((now_t - start_t))
+    local dt2=$((end_t - now_t))
+    log "%-6s %12s %8s %16s  @%10d  %4d  %4d %s" "$ACTION" "$dev" "$type"  "$label" $start_t $dt1 $dt2 "$act"
+}
+
+#------------------------------------------------------------------------------
+# Function: do_create_mode
+#
+# Clear out dynamic entries from fstab.  Erase it completely and start over
+# if there are no remaining entries.  Then fill it with entries for all the
+# hard drives and cdrom/floppy drives.
+#------------------------------------------------------------------------------
+do_create_mode() {
+    MOUNTED_DEVS="$(grep ^/dev /proc/mounts | cut -d" " -f1,2)"
+
+    touch $FSTAB_FILE
+
+    # First remove dynamic entries
+    if grep -q "^\s*[^#\s]" $FSTAB_FILE; then
+        qsay "Remove all dynamic entries from %s" $FSTAB_FILE
+        sed -i -r "/^($MARKER|$OLD_MARKER)/{N;d;}" $FSTAB_FILE
+    fi
+
+    [ "$DELETE_MODE" ] && vamoose "after deleting our entries"
+
+    EXISTING_DEVS=$(egrep "^/dev|^UUID=" $FSTAB_FILE | cut -d" " -f1)
+    # Start over if no entries are left
+    if ! grep -q "^\s*[^#\s]" $FSTAB_FILE; then
+        qsay "Create new %s" $FSTAB_FILE
+        write_header > $FSTAB_FILE
+    fi
+
+    SD_CNT=0
+    write_hard_drive_entries "$DO_INSTALL" "$INSTALL_MP"
+    qsay "$(plural $SD_CNT "Put %n hard drive entr%ies into $FSTAB_FILE")"
+
+    [ -n "$SWAP_ONLY" ] && vamoose "Swap only"
+
+    # Don't add sr entries in --install mode unless a --mntpnt is given
+    [ -n "$DO_INSTALL" -a -z "$CMD_MP_DIR" ] && return
+
+    SR_CNT=0
+    write_cdrom_entries
+    qsay "$(plural $SR_CNT "Put %n removable entr%ies into $FSTAB_FILE")"
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+write_hard_drive_entries() {
+    # Don't do_install to /, hence $2, $2
+    local do_install=$2 install_mp=$2
+
+    if [ -z "$1"  -a -n "$SWAP_FILE" ] && add_swap_file "$SWAP_FILE"; then
+        SD_CNT=$((SD_CNT + 1))
+        [ "$SWAP_ONLY" ] && return
+    fi
+
+    local name
+    while read name; do
+
+        name="/dev/${name#/dev/}"
+        test -b $name || continue
+
+        # Major-number 8 = SCSI hard drive, major-number 3 = non-SCSI hard drive
+        case $(stat -c %t $name) in
+           3|8|16|b3|ca|fe|103) ;;
+            *) continue
+        esac
+
+        # Ignore devices handled by cdrom code below
+        case $name in
+            /dev/cdrom*|/dev/cdrw*|/dev/dvd*|/dev/fd[0-9]*) continue ;;
+            /dev/floppy*|/dev/scd[0-9]*|/dev/sr[0-9]*)      continue ;;
+        esac
+
+        local line val label= uuid= uuid_enc= label_enc= uuid_raw= label_raw= fstype=
+        while read line; do
+            val=${line#*=}
+            case $line in
+                 ID_FS_UUID_ENC=*)   uuid_enc=$val ;;
+                ID_FS_LABEL_ENC=*)  label_enc=$val ;;
+                     ID_FS_UUID=*)   uuid_raw=$val ;;
+                    ID_FS_LABEL=*)  label_raw=$val ;;
+                     ID_FS_TYPE=*)     fstype=$val ;;
+            esac
+        done <<BLKID
+$($SUDO blkid -o udev $name)
+BLKID
+        case $fstype in
+           crypto_LUKS|"") continue ;;
+        esac
+
+        if [ "$DO_ENCODE" ]; then
+            uuid=$uuid_enc
+            label=$label_enc
+        else
+            uuid=$uuid_raw
+            label=$label_raw
+        fi
+
+        vsay "raw label: <%s>  label_inc: <%s>" "$label_raw" "$label"
+
+        # this should always run
+        [ -z "$ENCODE_LABEL" ] && label=$label_raw
+
+        [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" | egrep -q "^$name$|^UUID=$uuid$" && continue
+
+        if [ "$fstype" = swap ]; then
+            [ "$NO_SWAP" ] && continue
+            write_hd_entry "$name" "" "$fstype" "$uuid" "$label" "$label" "$label_raw"
+            SD_CNT=$((SD_CNT + 1))
+            continue
+        fi
+
+        [ "$SWAP_ONLY" ] && continue
+
+        local mntpnt="$(echo "$MOUNTED_DEVS" | grep "^$name " | cut -d" " -f2 | head -n1)"
+
+        if [ "$do_install" ]; then
+
+            # Convert to mount point relative to install_mp
+            # We use sed here so non-matching mountpoints become empty
+            mntpnt=$(echo "$mntpnt" | sed -n -e "s=^$install_mp$=/=p" -e "s=^$install_mp==p")
+            if [ -z "$mntpnt" ]; then
+                # If not under install_mp then ignore it unless --mntpnt is given
+                [ -n "$CMD_MP_DIR" ] || continue
+                is_usb_or_removable $name && continue
+                mntpnt=$(unique_mp "$name" "$uuid" "$label")
+            fi
+        else
+            [ "$mntpnt" ] || mntpnt=$(unique_mp "$name" "$uuid" "$label")
+        fi
+
+        if [ -z "$mntpnt" ]; then
+            error "Problem finding mountpoint for device $name"
+            continue
+        fi
+
+        # Don't use a bogus UUID in first fstab field
+        [ "$uuid_raw" != "$uuid_enc" ] && UUID=
+
+        write_hd_entry "$name" "$mntpnt" "$fstype" "$uuid" "$label" "$label_raw"
+        SD_CNT=$((SD_CNT + 1))
+
+        # Only mkdir and automount if mntpnt is under REAL_MP_DIR
+        [ -z "${mntpnt##$REAL_MP_DIR/*}" ] || continue
+        vsay "mkdir $mntpnt"
+        mkdir -p $mntpnt
+
+        case "$fstype" in
+            ntfs*)  chmod 0777 $mntpnt
+                    [ "$AM_ROOT" ] && chown root:users $mntpnt ;;
+        esac
+
+        # New see if we also automount the device
+        [ -n "$CMD_MOUNT" ] || continue
+
+        if [ "$fstype" = ntfs-3g ]; then
+            qsay "Did not automount $fstype filesystem on $name"
+            continue
+        fi
+
+        # this test is redundant
+        mountpoint -q "$mntpnt" 2>/dev/null && continue
+
+        [ "$CMD_MOUNT" = usb ] && ! is_usb_or_removable $name && continue
+
+        qsay "Automount $name at $mntpnt"
+        [ "$AM_ROOT" ] || continue
+
+        case $fstype in
+             vfat) modprobe -q nls-cp437 2>/dev/null ;;
+            btrfs) modprobe -q $fstype   2>/dev/null ;;
+        esac
+        mount $mntpnt
+
+    done << List_Devs
+    $($SUDO blkid -o device -c /dev/null \
+    | sed -r 's/([a-z])([0-9])$/\10\2/' | sort | sed -r 's/([a-z])0([0-9])$/\1\2/')
+List_Devs
+}
+
+#------------------------------------------------------------------------------
+# Add a swap file
+#------------------------------------------------------------------------------
+add_swap_file() {
+    local file="$1"
+    test -w "$file" || return 2
+    file -b "$file" | grep -q "swap file" || return 3
+
+    [ "$MARKER" -a -z "$DO_INSTALL" ] && echo "$MARKER swap-file" >> $FSTAB_FILE
+    printf "$FSTAB_FORMAT" "$file" "none" "swap" "defaults" "0 0" >> $FSTAB_FILE
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Function: write_hd_entry <dev> <mntpnt> <type> <uuid>
+#
+# Add entry in the fstab for the hd device specified by the input parameters.
+# Adjust the options according to the type of filesystem and the location of
+# the mountpoint.  Used in both update-mode and create-mode.
+#------------------------------------------------------------------------------
+write_hd_entry() {
+    local dev="$1" mntpnt="$2" type="$3" uuid="$4" label="$5" label_raw="${6:-$5}"
+
+    vsay "write_hd_entry dev=$dev mntpnt=$mntpnt type=$type uuid=$uuid"
+
+    local options="$SD_OPTIONS"
+
+    case "$type" in
+        "")
+            return 0
+            ;;
+
+        ext4) options=$options$LAZYTIME                                    ;;
+        ext[234]|adfs|affs|btrfs|cifs|coda|cramfs|efs|exfat|hfs)           ;;
+        hfsplus|hpfs|jfs|minix|ncpfs|nfs|qnx4|romfs|sysv|ubifs|ufs|xfs)    ;;
+
+        reiserfs)
+            options=$options,notail
+            ;;
+
+        squashfs)
+            options=$options,ro
+            ;;
+
+        ntfs*)
+            options=$NTFS_OPTIONS
+            type=ntfs-3g
+            ;;
+
+        vfat|msdos)
+            options=$VFAT_OPTIONS
+            ;;
+
+        swap)
+            options=defaults
+            mntpnt=swap
+            ;;
+
+        #LVM2_member|linux_raid_member|crypt*)
+        *)
+            qsay "Ignore %s filesystem on device %s" "$type" $dev
+            return 0
+            ;;
+    esac
+
+    # If mntpnt is under MP_DIR
+    [ -z "${mntpnt##$REAL_MP_DIR/*}" ] && options=$options,users
+
+    local ident="$dev"
+    [ -n "$USE_UUID" -a -n "$uuid" ] && ident="UUID=$uuid"
+
+    local marker="$MARKER $dev"
+    [ "$label_raw" ] && marker="$marker  label=$label_raw"
+
+    local fstab_file=$FSTAB_FILE dump_pass="0 0"
+    if [ "$DO_INSTALL" ]; then
+        if [ "${mntpnt##$INSTALL_MP$MP_DIR/*}" ]; then
+            options=defaults
+            [ $type = swap ] || dump_pass="1 2"
+            [ "$mntpnt" = "/" ] && dump_pass="1 1"
+        else
+            mntpnt=${mntpnt#$INSTALL_MP}
+        fi
+
+        local mp_dir=${CMD_MP_DIR:-//////}
+        # echo "mp_dir=$mp_dir    mntpnt=$mntpnt"
+        case $mntpnt in
+                        /) ;;
+                     swap) fstab_file=$FSTAB_FILE.2 ;;
+                $mp_dir/*) fstab_file=$FSTAB_FILE.3 ;;
+                        *) fstab_file=$FSTAB_FILE.1 ;;
+        esac
+        echo "$marker"                                                        >> $fstab_file
+    else
+        echo "$marker"                                                        >> $fstab_file
+    fi
+    printf "$FSTAB_FORMAT" "$ident" "$mntpnt" "$type" "$options" "$dump_pass" >> $fstab_file
+}
+
+#------------------------------------------------------------------------------
+# Function: write_cdrom_entries
+#
+# Add entries for existing cdrom and floppy disk devices to fstab.  This is
+# based on actual devices names which may be fragile but there seems to be
+# no perfect method.
+#------------------------------------------------------------------------------
+write_cdrom_entries() {
+    local marker mode real_dev mntpnt options
+
+    for dev in  /dev/cdrom* /dev/cdrw* /dev/dvd* /dev/fd[0-9]* \
+        /dev/floppy* /dev/scd[0-9]* /dev/sr[0-9]*; do
+
+        test -b $dev || continue
+
+        [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" | egrep -q "^$dev$" && continue
+
+        mode=,ro
+        type=auto
+        real_dev=$dev
+        options=$SR_OPTIONS
+
+        case "$dev" in
+            /dev/cdrw*)
+                type=iso9660
+                mode=,rw
+                real_dev=/dev/$(readlink $dev)
+                ;;
+            /dev/cdrom*)
+                type=iso9660
+                real_dev=/dev/$(readlink $dev)
+                ;;
+            /dev/dvdrw*)
+                type=udf
+                mode=,rw
+                real_dev=/dev/$(readlink $dev)
+                ;;
+            /dev/dvd*)
+                type=udf
+                real_dev=/dev/$(readlink $dev)
+                ;;
+            /dev/fd*)
+                mode=,rw
+                ;;
+            /dev/floppy*)
+                mode=,rw
+                real_dev=/dev/$(readlink $dev)
+                ;;
+        esac
+
+        local fstab_file=$FSTAB_FILE
+        if [ "$DO_INSTALL" ]; then
+            fstab_file=$FSTAB_FILE.3
+            mntpnt=$(unique_mp $dev)
+            mkdir -p $mntpnt
+            mntpnt=${mntpnt#$INSTALL_MP}
+        else
+            mntpnt=$(echo "$MOUNTED_DEVS" | grep "^$real_dev " | cut -d" " -f2 | head -n1)
+            if [ -z "$mntpnt" ]; then
+                mntpnt=$(unique_mp $dev)
+                mkdir -p $mntpnt
+            fi
+        fi
+
+        [ "$MARKER" -a -z "$DO_INSTALL" ] && echo "$MARKER $dev"              >> $fstab_file
+        printf "$FSTAB_FORMAT" "$dev" "$mntpnt" "$type" "$options$mode" "0 0" >> $fstab_file
+
+        SR_CNT=$((SR_CNT + 1))
+
+    done
+}
+
+#------------------------------------------------------------------------------
+# Function: cdrom_devices
+#
+# Semi-heuristic way to create a list of devices to be included in fstab as
+# cdrom-rom (and floppy) devices.  Currently not used.
+#------------------------------------------------------------------------------
+cdrom_devices() {
+
+    local dev real type major
+
+    for dev in $(find /dev -maxdepth 1 -type l); do
+        real=$(readlink -f $dev)
+        type=$(stat -c %F $real  2>/dev/null)
+        [ -z "$type" ]          && continue
+        [ -z "${type##block*}" ] || continue
+
+        major=$(stat -c %t $real 2>/dev/null)
+        case $major in
+            1|b) echo $dev
+        esac
+    done
+
+    for dev in $(find /dev -type b | egrep -v "/loop|/ram|/sd"); do
+        major=$(stat -c %t $dev 2>/dev/null)
+        case $major in
+            1|b) echo $dev
+        esac
+    done
+}
+
+#------------------------------------------------------------------------------
+# Function: remove_entry <sed_regex>
+#
+# Remove all of the dynamic entries from fstab that match sed_regex.
+#------------------------------------------------------------------------------
+remove_entry(){
+    # Remove comment line $1 and the following line from /etc/fstab
+    local targ="$(echo $1 | sed 's=/=\\/=g')"
+    sed -r -i "/^($MARKER|$OLD_MARKER)/{N;/$targ /d}" $FSTAB_FILE
+}
+
+
+#==============================================================================
+# 3 Functions to create a unique mountpoint
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Function: unique_mp <dev> <uuid> <label>
+#
+# Echo the name of the first valid mntpnt constructed from the input parameters.
+#------------------------------------------------------------------------------
+unique_mp() {
+    local i  dev="$1"  uuid="$2"  label="$3"
+
+    [ -n "$MP_USE_LABEL" -a -n "$label" ] && first_free_mp "$label" && return 0
+    [ -n "$MP_USE_UUID"  -a -n "$uuid"  ] && first_free_mp "$uuid"  && return 0
+
+    first_free_mp "${dev#/dev/}" && return 0
+}
+
+
+#------------------------------------------------------------------------------
+# Function: first_free_mp <subdir>
+#
+# Try to use <subdir> to form a valid mountpoint.  If <subdir> fails then
+# keep trying by append "-2" up to "-9".  On success echo the complete
+# mountpoint and return true otherwise echo nothing and return false.
+#------------------------------------------------------------------------------
+first_free_mp() {
+
+    local i  subdir="$1"
+
+    can_use_mp $subdir && return 0
+
+    for i in $(seq 2 9); do
+        can_use_mp "$subdir-$i" && return 0
+    done
+    return 1
+}
+
+#------------------------------------------------------------------------------
+# Function: can_use_mp <subdir>
+#
+# If /media is a valid new mountpoint then echo it and return true.
+# Otherwise don't echo anything and return false.
+#------------------------------------------------------------------------------
+can_use_mp() {
+
+    # Create trial mntpnt with bad chars converted to underscore
+    local mp="$REAL_MP_DIR/$(printf %s "$1" | sed -r s'=(\s|[_/])+=_=g')"
+
+    # If it is already in use return failure
+    mountpoint -q $mp && return 1
+
+    # If it is already in fstab return failure
+    awk '{print $2}' $FSTAB_FILE | grep -q "^$mp$" && return 1
+
+    # Success!
+    echo $mp
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# Function: is_usb_or_removable <device>
+#
+# Returns true if <device> is on a usb-bus or if <device> is considered to be
+# removable.  Not all usb devices are marked as removable and, in fact, not
+# all usb devices are marked as being on a usb bus.  This function seems to
+# tag the vast majority.
+#------------------------------------------------------------------------------
+is_usb_or_removable() {
+    local drive=$(get_drive $1)
+    local dir=/sys/block/$drive flag
+    read flag 2>/dev/null < $dir/removable
+    [ "$flag" = 1 ] && return 0
+    local devpath=$(readlink -f $dir/device)
+    [ "$devpath" ] || return 1
+    echo $devpath | grep -q /usb
+    return $?
+}
+
+get_drive() {
+    local drive part=${1##*/}
+    case $part in
+        mmcblk*) echo ${part%p[0-9]}                        ;;
+              *) drive=${part%[0-9]}  ; echo ${drive%[0-9]} ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+# Function: lock_file <file>
+#
+# File locking is essential since there can be overlapping calls to update the
+# fstab file when devices are plugged and unplugged.  This is trivial to do
+# with flock but just in case flock does not exist we offer a fallback method.
+#------------------------------------------------------------------------------
+lock_file() {
+
+    LOCK_FILE=$1
+    # Get voluntary lock on fstab file
+    if which flock 2>/dev/null 1>/dev/null; then
+
+        # Use flock which is safe and fast
+        exec 8> $LOCK_FILE
+        flock -x 8
+        FLOCKED=true
+        #trap unlock EXIT
+    else
+
+        # No flock so roll our own.  Collisions are unlikely but possible.
+        unset FLOCKED
+        while test -e $LOCK_FILE; do
+            read pid relax < $LOCK_FILE
+            [ "$pid" ] || break
+            test -d /proc/"$pid" >/dev/null 2>/dev/null || break
+            sleep .2
+        done
+
+        echo $$ > $LOCK_FILE
+        trap unlock EXIT
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Function: unlock
+#
+# Only needed when the flock program is not available.
+#------------------------------------------------------------------------------
+unlock() {
+    #[ "$FLOCKED" ] || rm -f $LOCK_FILE
+    rm -f $LOCK_FILE
+    return 0
+}
+
+write_header() {
+    cat <<HEADER
+# /etc/fstab: static file system information
+#
+# Created by $ME on $(date)
+
+HEADER
+    printf "$FSTAB_FORMAT" "# <file system>" "<mount point>" "<type>" "<options>" "<dump/pass>"
+    echo
+}
+
+#==============================================================================
+# Basic Output and Error Routines
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Function: error <format> <arg1> ...
+#
+# Create mesage with printf of the input arguments, send it to stderr and
+# report it in the log file.  Do not exit.  These are not neccessarily fatal
+# errors.
+#------------------------------------------------------------------------------
+error() {
+    local msg="$(printf "Error: $@")"
+    log "$msg"
+    echo "$ME $msg" >&2
+}
+
+#------------------------------------------------------------------------------
+# Function: arg_fatal <message>
+#
+# Echo <message> to stderr and then exit failure.  Do not log because failures
+# are due to improper command line arguments.
+#------------------------------------------------------------------------------
+arg_fatal() {
+    echo "$ME error: $*" >&2
+    exit 2
+}
+
+#------------------------------------------------------------------------------
+# Function: vamoose <format> <arg1> ...
+#
+# Use printf to construct a message from the arguments.  Send to the the log
+# file with a slight preamble and send it to stdout if in --verbose mode.
+# Then exit.
+#------------------------------------------------------------------------------
+vamoose() {
+    local msg="$(printf "Exit: $@")"
+    log "$msg"
+    [ "$VERBOSE" ] && echo "  $ME: $msg"
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+# Function: fsay <format> <arg1> ...
+#
+# Do nothing if not in --verbose mode.  In --verbose mode create a msssage from
+# the input parameters with printf.  Send it to the screen and the log file.
+# So --verbose will increase verbosity on the screen and in the log file.
+#------------------------------------------------------------------------------
+vsay() {
+    [ "$VERBOSE" ] || return
+    local msg="$(printf "$@")"
+    log "$msg"
+    echo "  $ME: $msg"
+}
+
+#------------------------------------------------------------------------------
+# Function: qsay <format> <arg1> ...
+#
+# Create a message from the input parameters with printf.  Always log the
+# message and send it to the screen unless --quiet was set.  Thus --quiet
+# reduces what is printed to the screen but does not change what gets logged.
+#------------------------------------------------------------------------------
+qsay() {
+    local msg="$(printf "$@")"
+    log "$msg"
+    [ "$QUIET" ] && return
+    echo "  $ME: $msg"
+}
+
+#------------------------------------------------------------------------------
+# Function: plural <N> <format-string>
+#
+# Convert the <format-string> to either singular or plural form depending on
+# the value of <N>.  Only works with English.   Cruder methods are required
+# if you want to internationalize.
+#------------------------------------------------------------------------------
+plural() {
+    local n="$1" str="$2"
+    case $n in
+        1) local s=  ies=y   are=is  have=has  were=was;;
+        *) local s=s ies=ies are=are have=have were=were;;
+    esac
+    echo "$str" | sed -e "s/%s/$s/g" -e "s/%ies/$ies/g" -e "s/%are/$are/g" \
+        -e "s/%have/$have/" -e "s/%n/$n/g" -e "s/%were/$were/g"
+}
+
+#------------------------------------------------------------------------------
+# Function: log <message>
+#
+# Append <message> to the log file.
+#------------------------------------------------------------------------------
+log() {
+    [ "$LOG_FILE" ] || return
+    local fmt="$1"
+    shift
+    printf  "$fmt\n" "$@" >> $LOG_FILE
+}
+
+main "$@"
+

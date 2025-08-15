@@ -1,0 +1,6 @@
+#!/bin/sh
+BIN=/bin
+
+[ "$ACTION" = add    -a "$MODALIAS" ] && $BIN/modprobe -q -b $MODALIAS
+[ "$ACTION" = remove -a "$MODALIAS" ] && $BIN/modprobe -q -r $MODALIAS
+$BIN/mdev $@

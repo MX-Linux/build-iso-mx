@@ -1,0 +1,8 @@
+COUNTRY="Egypt"
+WM_LANG="ar"
+KEYBOARDS="ar,us"
+KEYTABLE="ar"
+LANG="ar_EG.UTF-8"
+MIRROR="us"
+TZ="Africa/Cairo"
+XKBLAYOUT="ara,us"

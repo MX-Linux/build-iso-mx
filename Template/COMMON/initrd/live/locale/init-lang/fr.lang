@@ -1,0 +1,8 @@
+COUNTRY="Français"
+WM_LANG="fr"
+KEYBOARDS="fr,us"
+KEYTABLE="fr"
+LANG="fr_FR.UTF-8"
+MIRROR="fr"
+TZ="Europe/Paris"
+XKBLAYOUT="fr,us"

@@ -1,0 +1,398 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-disable-services
+# Required-Start:    checkfs checkroot-bootclean live-init
+# Required-Stop:
+# Should-Start:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: Disable services for LiveCD/USB
+# Description:       Temporarily disable services for LiveCD/USB
+### END INIT INFO
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+OUT_FILE=/live/config/disabled
+PAM_FILE=/etc/pam.d/login
+
+VBOX_SERVICES="
+virtualbox-guest-utils
+virtualbox-guest-x11
+"
+
+NFS_SERVICES="
+nfs-kernel-server
+"
+GPM_SERVICES="
+gpm
+"
+ELOGIND_SERVICES="
+elogind
+"
+
+LEAN_SERVICES="
+    acpi-fakekey
+    acpi-support
+    anacron
+    avahi-daemon
+    bluetooth
+    bootlogs
+    #cherokee
+    cpufrequtils
+    cron
+    cups
+    dundee
+    gpm
+    haveged
+    irqbalance
+    loadcpufreq
+    lvm2
+    mdadm
+    nfs-common
+    ntpsec
+    ofono
+    rpcbind
+    rsync
+    saned
+    smartmontools
+    ssh
+    stop-bootlogd
+    sudo
+    tlp
+    #transmission-daemon
+"
+
+ACPID_SERVICES="
+    acpid
+"
+
+XTRA_LEAN_SERVICES="
+    bootlogd
+    cryptdisks
+    cryptdisks-early
+    dns-clean
+    #eeepc-acpi-scripts
+    hdparm
+    hwclock.sh
+    hwclockfirst.sh
+    ifupdown-clean
+    lm-sensors
+    mountnfs-bootclean.sh
+    mountoverflowtmp
+    nfs-common
+    pcmciautils
+    policykit
+    pppd-dns
+    #svgalib-bin
+    ufw
+    urandom
+"
+
+MEAN_SERVICES="
+    avahi-daemon
+    connman
+    connman-vpn
+    dnsmasq
+    ifplugd
+    mountnfs-bootclean.sh
+    mountnfs.sh
+    network-manager
+    networking
+    nfs-common
+    nfs-kernel-server
+    ntp
+    pppd-dns
+    resolvconf
+    rpcbind
+    smbd
+    ufw
+    wpa-supplicant
+"
+
+NO_DBUS_SERVICES="
+    dbus
+"
+
+PATH=/live/bin:$PATH
+. /live/lib/live-init-utils.sh
+
+start_init_logging
+load_translation
+
+readlink /sbin/init | grep -q runit && RUNIT=true
+
+main() {
+
+    case $1 in
+        start) do_start  ;;
+         stop) do_stop   ;;
+            *) echo "Usage: $0 {start|stop}"
+               exit 1    ;;
+    esac
+}
+
+do_start() {
+    local must_run param val
+    : ${CMDLINE:=$(cat /live/config/proc-cmdline /live/config/cmdline /live/config/cmdline3 2>/dev/null)}
+
+    for param in $CMDLINE; do
+        val=${param#*=}
+        case "$param" in
+             disable=OFF)    exit 0                                 ;;
+               disable=*)    disable_param=$val    ;  must_run=true ;;
+                    lean)             LEAN=true    ;  must_run=true ;;
+                    mean)             MEAN=true    ;  must_run=true ;;
+                Xtralean)        XTRA_LEAN=true    ;  must_run=true ;;
+                  nodbus)          NO_DBUS=true    ;  must_run=true ;;
+                  nowicd)         CMD_WICD=no      ;  must_run=true ;;
+                    wicd)         CMD_WICD=yes     ;  must_run=true ;;
+                    db++)        DEBUGGING=true                     ;;
+        esac
+    done
+
+    if test -x /etc/init.d/nfs-kernel-server; then
+        DISABLE_NFS=true
+        NFS_REASON='no exports'
+
+        local file export_files="/etc/exports"
+        for file in /etc/exports.d/*.exports ; do
+            [ -f "$file" ] && export_files="$export_files $file"
+        done
+
+        [ -f /etc/exports ] && grep -q '^[[:space:]]*[^#]*/' $export_files && DISABLE_NFS=
+    fi
+
+    if [ -n "$disable_param" ]; then
+
+        # If the ## expression matches then the resulting string length is zero
+        [ -z "${disable_param##*[a]*}" ] &&    DISABLE_ACPID=true
+        [ -z "${disable_param##*[A]*}" ] &&     ENABLE_ACPID=true
+        [ -z "${disable_param##*[B]*}" ] && ENABLE_BOOTCLEAN=true
+        [ -z "${disable_param##*[c]*}" ] &&  DISABLE_CONNMAN=true
+        [ -z "${disable_param##*[d]*}" ] &&          NO_DBUS=true
+        [ -z "${disable_param##*[e]*}" ] &&      DISABLE_ELOGIND=true
+        [ -z "${disable_param##*[g]*}" ] &&      DISABLE_GPM=true
+        [ -z "${disable_param##*[i]*}" ] &&  DISABLE_IFPLUGD=true
+        [ -z "${disable_param##*[l]*}" ] &&             LEAN=true
+        [ -z "${disable_param##*[L]*}" ] &&    ENABLE_SYSLOG=true
+        [ -z "${disable_param##*[m]*}" ] &&             MEAN=true
+        [ -z "${disable_param##*[n]*}" ] &&      DISABLE_NFS=true
+        [ -z "${disable_param##*[n]*}" ] &&       NFS_REASON=n
+        [ -z "${disable_param##*[N]*}" ] &&      ENABLE_NTPD=true
+        [ -z "${disable_param##*[P]*}" ] &&       ENABLE_PAM=true
+        [ -z "${disable_param##*[v]*}" ] &&     DISABLE_VBOX=true
+        [ -z "${disable_param##*[w]*}" ] &&             WICD=no
+        [ -z "${disable_param##*[W]*}" ] &&             WICD=yes
+        [ -z "${disable_param##*[x]*}" ] &&        XTRA_LEAN=true
+        [ -z "${disable_param##*[Y]*}" ] &&  ENABLE_PLYMOUTH=true
+    fi
+
+    #[ -n "$LEAN" -o -n "$MEAN" ] && : ${WICD:=no}
+
+    # Prevent other messages stepping on ours
+    # sleep 2
+    echo_script "$_Customizing_services_" $0
+
+
+    case ${CMD_WICD:-$WICD} in
+        yes) echo_live "$_Enabling_X_service_" "$(pquote wicd)"
+             config_wicd yes ;;
+
+         no) echo_live "$_Disabling_X_service_" "$(pquote wicd)"
+             config_wicd no ;;
+    esac
+
+    if test -e /etc/init.d/virtualbox-guest-utils; then
+        if test -e /live/config/virtualbox; then
+            echo_live "$_Enabling_X_service_" "$(pquote Virtual Box)"
+            update-rc.d virtualbox-guest-utils defaults
+            test -e /etc/init.d/virtualbox-guest-x11 && update-rc.d virtualbox-guest-x11 defaults
+        else
+            echo_live "$_Disabling_X_service_" "$(pquote Virtual Box)"
+            update-rc.d virtualbox-guest-utils remove
+            test -e /etc/init.d/virtualbox-guest-x11 && update-rc.d virtualbox-guest-x11 remove
+        fi
+    fi
+
+    [ "$ENABLE_BOOTCLEAN" ] || disable_services 'checkroot-bootclean disable by default' 'checkroot-bootclean.sh'
+    [ "$ENABLE_NTPD"      ] || disable_services "ntpd disable by default" ntp
+    [ "$ENABLE_PAM"       ] || disable_pam_login
+    [ "$ENABLE_PLYMOUTH"  ] || disable_services 'plymouth' plymouth
+
+    # only exit early if "disable=OFF" is given (see above)
+    # [ -n "$must_run" -o -n "$DISABLE_NFS" ] || exit 0
+
+    if [ "$LEAN" ]; then
+
+        [ "$ENABLE_SYSLOG" ] || LEAN_SERVICES="$LEAN_SERVICES rsyslog"
+        [ "$ENABLE_ACPID" ]  || LEAN_SERVICES="$LEAN_SERVICES acpid"
+
+        echo_live "$_Disabling_some_services_X_" "$(paren L, lean)"
+        disable_services 'lean (l)' "$LEAN_SERVICES"
+    fi
+
+    if [ "$DISABLE_IFPLUGD" ]; then
+        echo_live "$_Disabling_X_services_Y_" "$(pquote ifplugd)" $(paren i)
+        disable_services 'ifplugd (i)' 'ifplugd'
+    fi
+
+    if [ "$DISABLE_ACPID" ]; then
+        echo_live "$_Disabling_X_services_Y_" "$(pquote acpid)" $(paren a)
+        disable_services 'acpid (a)' "$ACPID_SERVICES"
+    fi
+
+    if [ "$MEAN" ]; then
+        echo_live "$_Disabling_network_services_X_" "$(paren M, mean)"
+        disable_services 'mean (m)' "$MEAN_SERVICES"
+    fi
+
+    if [ "$XTRA_LEAN" ]; then
+        echo_live "$_Disabling_more_services_X_" "$(paren X, Xtralean)"
+        disable_services 'Xtralean (x)' "$XTRA_LEAN_SERVICES"
+    fi
+
+    if [ "$NO_DBUS" ]; then
+        echo_live "$_Disabling_X_services_Y_" 'debus' "$(paren D, nodbus)"
+        disable_services 'nodbus (d)' "$NO_DBUS_SERVICES"
+    fi
+
+    if [ "$DISABLE_VBOX" ]; then
+        echo_live "$_Disabling_X_services_Y_" 'Virtual Box' "$(paren v)"
+        disable_services 'vbox (v)' "$VBOX_SERVICES"
+    fi
+
+    if [ "$DISABLE_NFS" ]; then
+        echo_live "$_Disabling_NFS_server_X_" "$(paren $NFS_REASON)"
+        disable_services 'nfs (n)' "$NFS_SERVICES"
+    fi
+
+    if [ "$DISABLE_GPM" ]; then
+        echo_live "$_Disabling_X_services_Y_" $(pquote gpm) $(paren g)
+        disable_services 'gpm (g)' "$GPM_SERVICES"
+    fi
+
+    if [ "$DISABLE_CONNMAN" ]; then
+        echo_live "$_Disabling_X_services_Y_" $(pquote connman) $(paren c)
+        disable_services 'connman (c)' 'connman'
+    fi
+
+    if [ "$DISABLE_ELOGIND" ]; then
+        echo_live "$_Disabling_X_services_Y_" $(pquote elogind) $(paren e)
+        disable_services 'elogind (e)' 'elogind'
+    fi
+
+    [ "$OUT" ] && echo "$OUT" | tr "," "\n" > $OUT_FILE
+}
+
+#----------------------------------------------------------------------------
+# function disable_services "$name" "$services" [ "$rc_dirs" ]
+#
+# Temporarily disable services at boot-time by moving their /etc/rc?.d/
+# symlinks.  See also live-restore-services which is the script
+# that returns them to their proper place at the end of initialization.
+#
+# Move service symlinks out of various runlevels and into the matching
+# /etc/antiX-live/rc?.d  directory.
+#
+# If no rc_dirs are given then rc?.d is used.
+#----------------------------------------------------------------------------
+
+disable_services() {
+
+    local name=$1 services="$2" rc_dirs="${3:-rc?.d}"
+
+    local rc_dir dest service slink moved length
+
+    for rc_dir in /etc/$rc_dirs; do
+
+        dest=/live/config/disabled-rc.d/${rc_dir#/etc/}
+        mkdir -p $dest
+
+        for service in $services; do
+            # Use leading "#" as a comment (no space)
+            [ -z "${service###*}" ] && continue
+
+            [ -n "$RUNIT" ] && [ -d "/etc/sv/$service" ] \
+                && unlink "/etc/service/$service" 2>/dev/null
+
+            for slink in /$rc_dir/S*$service; do
+                [ -e "$slink" ] || continue
+                mv -f $slink $dest
+
+                # Only print out each service once
+                case ",$moved," in
+                    *,$service,*) continue ;;
+                esac
+
+                moved="$moved,$service"
+            done
+        done
+    done
+
+    OUT="$OUT${OUT:+,,}#----- $name -----$moved"
+
+    [ "$DEBUGGING" ] || return
+
+    local unused
+    for service in $services; do
+        case ",$moved," in
+            *,$service,*) continue ;;
+        esac
+        unused="$unused $service"
+    done
+    [ "$unused" ] && echo_live '  Unused: %s' "$AMBER$unused"
+}
+
+disable_pam_login() {
+    # Turn on (off) lastlog info in console login if root persistence is (not) enabled
+    # Lastlog info is not useful on non-persistent system
+
+    #egrep -q '^[[[:space:]]*session[[:space:]]+[^[:space:]]+[[:space:]]+pam_lastlog.so[[:space:]]+silent' $PAM_FILE
+    #local silent_pam=$?
+
+    if grep -q "^PERSISTENCE=.*root" /live/config/initrd.out; then
+        # On persistent systems enable lastlog but disable MOTD
+        sed -r -i \
+            -e 's/^\s*(session\s+[^\s]+\s+pam_lastlog.so).*/\1/'         \
+            -e 's/^\s*(session\s+[^\s]+\s+pam_(exec|motd).so.*)/#-- \1/' \
+            $PAM_FILE
+    else
+        # On non-persistent systems disable both lastlog and MOTD
+        sed -i -r \
+            -e 's/^\s*(session\s+[^\s]+\s+pam_lastlog.so).*/\1 silent/'  \
+            -e 's/^\s*(session\s+[^\s]+\s+pam_(exec|motd).so.*)/#-- \1/' \
+            $PAM_FILE
+    fi
+}
+
+do_stop() {
+
+    # Restore /etc/pam.d/login to its orignal state
+    # Allows caller to adjust $ROOT directory for making change under
+    # /mnt/antiX (or anywhere else)
+    sed -r -i \
+        -e 's/^\s*(session\s+[^\s]+\s+pam_lastlog.so).*/\1/'     \
+        -e '/session\s+[^\s]+\s+pam_(exec|motd).so/ s/^#-*\s*//' \
+        $ROOT$PAM_FILE
+}
+
+config_wicd() {
+    local state=$1  where="START_DAEMON=" file=/etc/default/wicd
+    local line="$where$state"
+
+    if ! test -e $file; then
+        echo "$line" > $file
+    elif grep -q "^$line" $file; then
+        return
+    elif grep -q "^$where" $file; then
+        sed -i "s/$where.*/$line/" $file
+    else
+        echo $line >> $file
+    fi
+}
+
+main "$@" 2>&1 | tee -a $INIT_LOG_FILE
+
+exit 0
+

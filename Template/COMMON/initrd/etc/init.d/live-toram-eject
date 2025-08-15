@@ -1,0 +1,49 @@
+#!/live/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          live-toram-eject
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Default-Start:     
+# Default-Stop:      0 1 6
+# Short-Description:
+# Description:       offer to eject LiveCD after toram
+### END INIT INFO
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+
+main() {
+    case $1 in
+        start) do_start                      ;;
+         stop)                               ;;
+            *) echo "Usage: $0 {start|stop}" ;;
+    esac
+    exit 0
+}
+
+do_start() {
+    #. /live/lib/live-init-utils.sh
+
+    test -e /live/config/toram-eject || return
+
+    local param runlevel=5
+    : ${CMDLINE:=$(cat /live/config/proc-cmdline /live/config/cmdline)}
+    for param in $CMDLINE; do
+        case $param in
+            [0-9]) runlevel=$param;;
+        esac
+    done
+
+    [ "$runlevel" = 3 ] || return
+
+    local toram_eject=$(which toram-eject 2>/dev/null)
+    [ "$toram_eject" ] || return
+
+    $toram_eject --cli
+}
+
+
+
+main "$@"

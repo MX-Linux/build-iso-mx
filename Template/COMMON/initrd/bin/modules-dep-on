@@ -1,0 +1,29 @@
+#!/bin/bash
+
+ME=${0##*/}
+
+usage() {
+    cat<<Usage
+Usage: $ME <module>
+
+List all modules that depend on the given module.
+
+Usage
+
+    exit 0
+}
+
+main () {
+    [ $# -eq 1 ] || usage
+    local mod=$(echo "$1" | sed -r -e "s/[_-]/[_-]/g; s/\.ko(|\.[[:alpha:]]+)$//")
+    grep -E ":.*$mod\.ko(|\.[[:alpha:]]+)" /lib/modules/$(uname -r)/modules.dep \
+    | sed -r -e "s/:.*//"           \
+    -e "s|.*/||"                    \
+    -e "s/\.ko(|\.[[:alpha:]]+)$//" \
+    | sort
+}
+
+main "$@"
+
+
+

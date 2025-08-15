@@ -1,0 +1,16 @@
+   1)  Alapértelmezett
+   2)  checkmd5        Ellenőrizze a Live adathordozó integritását
+   3)  checkfs         Ellenőrizze a LiveUSB és adatmegőrzési ext2/3/4 fájlrendszereket
+   4)  toram           Másolja a tömörített fájlrendszert a memóriába
+   5)  i915_invert     Kép invertálása néhány Intel grafikus rendszeren
+   6)  no_i915_invert  Intel grafika invertálásának letiltása
+   7)  from=usb        Indítás befejezése LiveUSB-ről
+   8)  from=hd         Indítás befejezése merevlemezről
+   9)  hwclock=ask     A rendszer segítsen eldönteni az óra beállítását
+  10)  hwclock=utc     A gép órája UTC időt használ (csak-Linux rendszerek)
+  11)  hwclock=local   A gép órája helyi időt használ (Windows rendszerek)
+  12)  password        Jelszó megváltoztatása indítás előtt
+  13)  nostore         LiveUSB-Tároló funkció letiltása (csak LiveUSB)
+  14)  dostore         LiveUSB-Tároló funkció engedélyezése (csak LiveUSB)
+  15)  savestate       Bizonyos fájlok mentése újraindítások közt (csak LiveUSB)
+  16)  nosavestate     Ne mentsen fájlokat az újraindítások közt (csak LiveUSB)

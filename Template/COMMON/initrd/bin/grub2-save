@@ -1,0 +1,288 @@
+#!/live/bin/sh
+
+ME=${0##*/}
+
+ ARCH_UNKNOWN="???"
+  ARCH_64_BIT="x64"
+  ARCH_32_BIT="386"
+     ARCH_PAE="pae"
+  ARCH_NO_PAE="non-pae"
+
+PATH=$PATH:bin:/live/bin
+
+CUSTOM_COMMENT="#--custom"
+DEFAULT_RESOLUTION="1024x768"
+DEFAULT_KERNEL="/antiX/vmlinuz"
+MENUS="menus"
+
+usage() {
+    local ret=${1:-0}
+
+    cat <<Usage
+Usage:  $ME [options] <file>
+
+Assume <file> is a grub.cfg file.  Update the entries with titles that contain
+"custom" or "menu" with all the /proc/cmdline boot parameters plus all the
+trailing options on our command line.
+
+First, make a backup of the file.  Then process the file by uncommenting
+any lines that start with "#--custom" and removing all lines that set the
+default entry.  Then create a new default entry that (eventually) points to
+the custom entry that was created.
+
+All entries that have "Custom" or "custom" in their title have their boot
+parameters updated.  In addition all entries that have the "menus" boot
+parameter also have their boot parameters updated.
+
+Exceptions: only add the "menus" option to entries that already have it.
+"menu".  Ignore any BOOT_IMAGE boot parameters and the "bootsave" and
+"gfxsave" parameters.  If there isa BOOT_IMAGE boot parameter then it
+is used in as the kernel in the custom entry we created/modify.
+Usage
+
+    exit $ret
+}
+
+main() {
+    local param file fnct=0 cheats
+
+    [ $# -eq 0 ] && usage
+
+    for param; do
+        case $param in
+           --cheats=*) cheats=${param#--cheats=}        ;;
+            -h|--help) usage                            ;;
+           -q|--quiet) QUIET=true                       ;;
+                   -*) fatal "Unknown argument: $param" ;;
+                    *) fcnt=$((fcnt + 1)); file=$param  ;;
+        esac
+    done
+
+    case $fcnt in
+        0) fatal "Expected one filename"            ;;
+        1)                                          ;;
+        *) fatal "Expected one filename. Got $fcnt" ;;
+    esac
+
+    test -d "$file" && file=${file%/}/boot/grub/grub.cfg
+    test -e "$file" || fatal "File $file does not exist"
+
+    : ${cheats:=$(gather_params)}
+    update_grub2 "$file" "$cheats"
+   
+}
+
+update_grub2() {
+    local file=$1
+    shift
+    local params="$*"
+
+    test -e $file || fatal "File $file does not exist"
+    test -w $file || fatal "Cannot write to file $file"
+
+    local bak_file=$(backup_name $file .bak)
+    cp $file $bak_file
+
+    # We can do this the easy way ...
+    local kernel=$(get_cmdline_vmlinuz)
+
+    # ... or the hard way
+    : ${kernel:=$(get_current_vmlinuz)}
+    : ${kernel:=$DEFAULT_KERNEL}
+
+    local resolution=$(get_fb_resolution)
+    # : ${resolution:=$DEFAULT_RESOLUTION}
+
+    local out line default_entry=0 entry_cnt=0 custom_cnt=0
+    local is_custom is_blank dyn=""
+    while read line; do
+
+        # Want to assume all lines we process are not zero-length
+        if [ -z "$line" ]; then
+
+            # Compress multiple blank lines into a single one
+            [ "$is_blank" ] && continue
+            is_blank=true
+            out="$out\n"
+            continue
+
+        else
+            is_blank=
+        fi
+
+        local arch=$(get_arch)
+
+        # Remove all lines that set the default
+        [ -z "${line##set default=*}" ] && continue
+
+        if [ -z "${line##menuentry *}" ]; then
+
+            # Add default line before first menuentry
+            [ $entry_cnt -eq 0 ] && out="${out}set default=%DEFAULT%\n\n"
+
+            # Determine custom entries from the title
+            is_custom=
+            [ -z "${line##*[Cc]ustom*}" ] && is_custom=true
+
+            # Re-write title of first custom entry and record its position
+            if [ "$is_custom" ]; then
+                custom_cnt=$((custom_cnt + 1))
+                if [ $custom_cnt -eq 1 ]; then
+                    #line="menuentry \"Custom $arch ($(date '+%e %B %Y'))\" {"
+                    # check for "dynamic" ("$kernel", "$intird" and/or "$kopts") parameter
+                    if [ -z "${line##*\"\$kernel\"*}" ]; then
+                       dyn="${dyn}${dyn:+ }"'"$kernel"'
+                    fi
+                    if [ -z "${line##*\"\$initrd\"*}" ]; then
+                       dyn="${dyn}${dyn:+ }"'"$initrd"'
+                    fi
+                    if [ -z "${line##*\"\$kopts\"*}" ]; then
+                       dyn="${dyn}${dyn:+ }"'"$kopts"'
+                    fi
+                    dyn="${dyn}${dyn:+ }"'--id=custom {'
+                    #line=$(echo "$line" | sed 's/"Custom".*/"Custom"" $arch ('"$(date '+%e %B %Y' )"')"/')
+                    line=$(echo "$line" | sed 's/"Custom".*/"Custom"/')
+                    line="$line"'"'" $arch ($(date '+%e %B %Y'))"'"'
+                    line="$line $dyn" 
+                    default_entry="custom"
+                fi
+            fi
+
+            entry_cnt=$((entry_cnt + 1))
+
+        # Fill in the first and only the first "custom" entry
+        elif [ -n "$is_custom" -a $custom_cnt -eq 1 ]; then
+
+            if [ -z "${line##linux *}" ]; then
+                #line=$(echo "$line" | sed -r "s|^(linux\s).*|\1$kernel $params|")
+				if [ -z "${line##*\$@*}" ]; then
+                    line=$(echo "$line" | sed -r "s|^(linux\s+[^ ]+).*|\1 $params \$@|")
+                else
+                    line=$(echo "$line" | sed -r "s|^(linux\s).*|\1$kernel $params|")
+                fi 
+
+            elif [ -n "$resolution" -a -z "${line##gfxpayload=*}" ]; then
+                line="gfxpayload=$resolution"
+            fi
+
+        # Add our parameters to every entry that already has the "menus" parameter
+        elif [ -z "${line##linux *}" ]; then
+
+            if echo "$line" | grep -q "\<menus\>"; then
+                #line=$(echo "$line" | sed -r "s|^(linux\s*[^ ]+).*|\1 $params $MENUS|")
+				if [ -z "${line##*/\$\{kernel\}*}" ]; then
+                    line=$(echo "$line" | sed -r "s|^(linux\s+[^ ]+).*|\1 $params $MENUS \$@|")
+                else
+					line=$(echo "$line" | sed -r "s|^(linux\s*[^ ]+).*|\1 $params $MENUS|")
+                fi 
+
+            fi
+
+        fi
+
+        out="$out$line\n"
+
+    # the sed uncomments our custom entry (if needed) and remove any existing default lines
+    done<<Read_File
+$(sed -e "s/^\s*$CUSTOM_COMMENT\s*//" -e "s/\s+$//" -e "/\s*(set\s+)?default\>.*/d" $file)
+Read_File
+
+    # Fill in the number for the first Custom entry as the default entry
+    # local tmp_file=$(backup_name $file .tmp)
+    echo -e "$out" | sed -r "s/(default=)%DEFAULT%/\1$default_entry/" > $file
+
+    printf "    Updated file %s\n" $file
+    printf "    With: %s\n" "$params"
+    printf "    Kernel: %s\n" $kernel
+    sleep 1
+    
+}
+
+gather_params() {
+    local p out
+    for p in $(cat /live/config/proc-cmdline /live/config/cmdline 2>/dev/null) $*; do
+        case $p in
+                  menus|menus=*) MENUS=$p ;;
+                     bp=*|upb=*)          ;;
+              gfxsave|gfxsave=*)          ;;
+            bootsave|bootsave=*)          ;;
+                   BOOT_IMAGE=*)          ;;
+          savestate|nosavestate)          ;;
+                nostore|dostore)          ;;
+           md5|checkmd5|checkfs)          ;;
+              automount|mount=*)          ;;
+                    noautomount)          ;;
+     i915_invert|no_i915_invert)          ;;
+                        fstab=*)          ;;
+                      hwclock=*)          ;;
+                      desktop=*)          ;;
+                   mk_swap_file)          ;;
+                 mk_swap_file=*)          ;;
+                        vcard=*)          ;;
+                       grubsave)          ;;
+                              *) out=$out${out:+ }$p ;;
+        esac
+    done
+    echo $out
+}
+
+get_current_vmlinuz() {
+    local initrd_file=/live/config/initrd.out
+    test -r $initrd_file                  || return 1
+
+    eval $(egrep -r "^(BOOT_MP|SQFILE_DIR)=" $initrd_file)
+    [ -z "$BOOT_MP" -o -z "$SQFILE_DIR" ] && return 2
+    test -d $SQFILE_DIR                   || return 3
+
+    local vmlinuz=$(vmlinuz-version --current $SQFILE_DIR/*)
+    [ -z "$vmlinuz" -o -n "${vmlinuz##$BOOT_MP*}" ] && return 4
+    echo ${vmlinuz#$BOOT_MP}
+}
+
+get_cmdline_vmlinuz() {
+    sed -rn "s/.*\<BOOT_IMAGE=([^ ]+).*/\1/p" /proc/cmdline
+}
+
+get_arch() {
+    case $(uname -m) in
+        x86_64) arch="$ARCH_64_BIT"  ;;
+          i686) arch="$ARCH_32_BIT"  ;;
+             *) arch="$ARCH_UNKNOWN" ;;
+    esac
+
+    if [ "$arch" = "$ARCH_32_BIT" ]; then
+        case $(uname -r) in
+            *[pP][aA][eE]) arch="$arch $ARCH_PAE"     ;;
+                        *) arch="$arch $ARCH_NO_PAE"  ;;
+        esac
+    fi
+    echo "$arch"
+}
+
+get_fb_resolution() {
+    local dir=/sys/class/graphics/fb0
+    local name rez
+    read name 2>/dev/null <$dir/name
+    read rez  2>/dev/null <$dir/virtual_size
+    #[ "$name" = "simple" ] || return 1
+    [ ${#rez} -gt 5 ]      || return 1
+    echo ${rez/,/x}
+    return 0
+}
+
+backup_name() {
+    local file=$1 ext=${2:-.bak}
+
+    [ -n "$file" ] || fatal "Can't make a backup name of an empty string"
+
+    local dir=$(dirname $file)  base=$(basename $file)
+    local new=${base%.*}
+    echo $dir/$new$ext
+}
+
+fatal() {
+    [ -z "$QUIET" ] && echo "$ME fatal error: $*"
+    exit 2
+}
+
+main "$@"

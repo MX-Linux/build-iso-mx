@@ -1,0 +1,7 @@
+_Configuring_console_for_a_X_keymap_="%s キーマップ用のコンソールを設定中"
+_Localizing_console_and_timezone_="コンソールとタイムゾーンの地域化"
+_Recreate_symlink_X_="%sのシンボリックリンクを作成"
+_Setting_hostname_to_X_="ホスト名を %s に設定"
+_Setting_locale_to_X_="ロケールを %s に設定"
+_Setting_timezone_and_localtime_to_X_="タイムゾーンと現地時間を %s に設定"
+_Unknown_time_zone_X_="不明なタイムゾーン %s"
