@@ -19,5 +19,5 @@ K_VERSION="6.15"
 
 ENABLE_LOCALES=Default
 THEME=mx
-ISO_FLAV=mxahs
+ISO_FLAV=mxahs-sysv
 ARCH=amd64
