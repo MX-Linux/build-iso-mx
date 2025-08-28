@@ -12,9 +12,9 @@ DISTRO_VERSION="25_ahs_sysvinit"
 
 # kernel
 # ahs
-K_REVISION="*"
+K_REVISION="*-liquorix"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="6.15"
+K_VERSION="6.*.*"
 #UNSIGNED="-unsigned"
 
 ENABLE_LOCALES=Default
