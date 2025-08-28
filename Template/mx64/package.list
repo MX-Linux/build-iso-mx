@@ -290,12 +290,8 @@ qpdfview-translations
 #qt5-style-plugins
 qt6-gtk-platformtheme
 qt6gtk2
-#qtchooser
-#qtcore4-l10n
-#rarian-compat
-#rdesktop
-#rtkit
-#scrollkeeper
+rtl8812au-dkms
+rtl8821cu-dkms
 sane-airscan
 seahorse
 sendemail

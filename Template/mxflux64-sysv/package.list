@@ -276,7 +276,8 @@ qt6-gtk-platformtheme
 readline-common
 rofi
 rofi-calc
-# roxterm
+rtl8812au-dkms
+rtl8821cu-dkms
 seahorse
 sendemail
 sensible-utils

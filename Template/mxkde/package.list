@@ -266,6 +266,8 @@ qt6-gtk-platformtheme
 qt6-image-formats-plugins
 qtvirtualkeyboard-plugin
 rdesktop
+rtl8812au-dkms
+rtl8821cu-dkms
 sddm
 sddm-theme-breeze
 sendemail
