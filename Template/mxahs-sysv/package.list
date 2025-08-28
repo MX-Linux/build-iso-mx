@@ -1,5 +1,5 @@
 #acpi-support-base
-advert-block-antix
+#advert-block-antix
 #aisleriot
 alsa-topology-conf
 alsa-ucm-conf
@@ -8,11 +8,11 @@ alsa-ucm-conf
 #apparmor
 #apparmor-profiles
 #apt-mx
-apt-notifier
+#apt-notifier
 aptitude
 aptitude-common
 #arandr
-arc-theme
+#arc-theme
 #arc-theme-hdpi
 #arc-theme-xhdpi
 aspell
@@ -21,7 +21,7 @@ asunder
 #b43-fwcutter
 baobab
 bash-config
-blackbird-gtk-theme
+#blackbird-gtk-theme
 #bleachbit
 blueman
 bluetooth
@@ -42,9 +42,9 @@ cdparanoia
 colord
 colord-data
 command-not-found
-compton
-compton-conf
-compton-conf-l10n
+#compton
+#compton-conf
+#compton-conf-l10n
 conky-all
 #consolekit
 #cryptsetup-modified-functions
@@ -58,7 +58,7 @@ desktop-defaults-mx-xfce
 dh-python
 #diffuse
 #disk-manager
-dnsutils
+#dnsutils
 #dukto
 #elogind
 #eudev
@@ -73,6 +73,7 @@ exo-utils
 featherpad
 feh
 flac
+flatpak
 #flashplugin-nonfree
 foliate
 fonts-vlgothic #Japanese
@@ -82,10 +83,10 @@ fonts-wqy-microhei #Chinese
 #fuseiso9660
 galculator
 #galternatives
-gcc-12-base:i386
-gconf-service
-gconf2
-gconf2-common
+gcc-14-base:i386
+#gconf-service
+#gconf2
+#gconf2-common
 gcr
 #gdebi
 #gdebi-core
@@ -108,7 +109,7 @@ gnome-mahjongg
 gnupg-agent
 #gottet
 gparted
-#greybird-gtk-theme
+greybird-gtk-theme
 #grub-customizer
 #gscan2pdf
 gsfonts
@@ -121,7 +122,7 @@ gstreamer1.0-pulseaudio
 gtk2-engines-murrine
 gtk2-engines
 #gtk3-nocsd
-gtkdialog
+#gtkdialog
 guvcview
 guvcview-modified-desktop-file
 gvfs
@@ -146,8 +147,8 @@ iptraf-ng
 java-common
 lame
 #lazpaint-qt5
-lbreakout2
-lbreakout2-data
+#lbreakout2
+#lbreakout2-data
 #leafpad
 libc6:i386
 libcanberra-gstreamer
@@ -218,7 +219,7 @@ mx-matcha-themes
 mx-docs
 #mx-findshares
 #mx-fluxbox
-mx-greybird-themes
+#mx-greybird-themes
 mx-installer
 mx-select-sound
 mx-sound-theme-borealis
@@ -230,7 +231,7 @@ mx-tour
 mx-usb-unmounter
 mx-viewer
 mx-welcome
-mx23-artwork
+mx25-artwork
 mythes-en-us
 nautilus-data
 #ndisgtk
@@ -287,13 +288,14 @@ qpdfview-translations
 #qt4-fsarchiver
 #qt5-style-plugins
 qt6-gtk-platformtheme
-#qt6gtk2
+qt6gtk2
 #qtchooser
 #qtcore4-l10n
 #rarian-compat
 #rdesktop
 #rtkit
 #scrollkeeper
+sane-airscan
 seahorse
 sendemail
 #shotwell
@@ -314,7 +316,7 @@ system-config-printer
 system-config-printer-udev
 #system-config-samba
 #systemd-sysv
-tango-icon-theme
+#tango-icon-theme
 thunar
 thunar-archive-plugin
 thunar-shares-plugin
@@ -346,11 +348,11 @@ vlc
 vlc-data
 vlc-l10n
 #vlc-nox
-volumeicon-alsa
+#volumeicon-alsa
 #webcamoid
-flatpak
 xdg-desktop-portal
 xdg-desktop-portal-gtk
+xdg-desktop-portal-xapp
 xdg-user-dirs-gtk
 #xf86-video-sis-antix
 xfburn
