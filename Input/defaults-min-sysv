@@ -1,0 +1,19 @@
+#----------------------------------------------------------------------
+# defaults file for build-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+DISTRO_VERSION="23.5_minimal_sysv"
+
+ARCH="amd64"
+ISO_FLAV="mxmin64-sysv"
+THEME="mxmin"
+
+ENABLE_LOCALES="default"
+
+COMPRESSION_TYPE="xz"
+COMPRESSION_TYPE_CODE="-comp xz -b 262144"
