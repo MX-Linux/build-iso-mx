@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="25_fluxbox_sysvinit"
+DISTRO_VERSION="25_fluxbox_sysvinit_beta1"
 
 # DE particular items
 

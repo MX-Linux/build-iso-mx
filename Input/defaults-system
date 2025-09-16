@@ -32,9 +32,9 @@ HOME_URL="https://mxlinux.org"
 CODE_NAME="Infinity"
 ASCII_CODE_NAME="Infinity"
 
-DISTRO_VERSION="25_alpha1"
+DISTRO_VERSION="25_beta1"
 DISTRO_NAME="MX"
-RELEASE_DATE="May xx, 2025"
+RELEASE_DATE="September 21, 2025"
 
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="trixie"
