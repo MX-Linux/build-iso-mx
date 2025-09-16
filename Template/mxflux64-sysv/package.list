@@ -272,7 +272,7 @@ qpdfview-ps-plugin
 qpdfview-translations
 # qt5-style-plugins
 qt6-gtk-platformtheme
-# qt6gtk2
+qt6gtk2
 readline-common
 rofi
 rofi-calc
