@@ -9,7 +9,8 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="25_fluxbox_beta1"
+DEFAULTDESKTOP="fluxbox"
+DISTRO_VERSION="$RELEASEVERSION_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 
 # DE particular items
 

@@ -7,7 +7,8 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="25_KDE_sysvinit_beta1"
+DEFAULTDESKTOP="KDE_sysvinit"
+DISTRO_VERSION="$RELEASEVERSION_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 
 # kernel
 # ahs
