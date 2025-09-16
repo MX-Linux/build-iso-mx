@@ -87,7 +87,7 @@ kde-config-gtk-style
 kde-config-screenlocker
 kde-config-sddm
 kde-config-updates
-kde-spectacle 
+kde-spectacle
 kde-standard
 kde-style-breeze
 kde-style-oxygen-qt6
@@ -134,12 +134,12 @@ kwin-wayland
 kwin-x11
 lame
 libbaloowidgets-bin
-libc6:i386 
+libc6:i386
 libcanberra-gstreamer
 libcanberra-gtk3-module
 libcanberra-pulse
 libffmpegthumbnailer4v5
-libgcc-s1:i386 
+libgcc-s1:i386
 libreoffice-base
 libreoffice-base-core
 libreoffice-calc
@@ -181,6 +181,7 @@ mx-welcome
 mx25-artwork
 mythes-en-us
 nvidia-detect
+okular
 okular-extra-backends
 open-vm-tools
 oxygen-icon-theme
