@@ -10,7 +10,7 @@
 #most items set in defaults-lcoal, 64 bit Xfce is default release of MX
 
 DEFAULTDESKTOP="Xfce"
-DISTRO_VERSION="$RELEASEVERSION_$DEFAULTDESKTOP$ALPHABETARCVERSION"
+DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 
 X_TERM_EMULATOR="/usr/bin/xfce4-terminal.wrapper"
 CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
