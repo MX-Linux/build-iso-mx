@@ -8,7 +8,7 @@
 #----------------------------------------------------------------------
 
 DEFAULTDESKTOP="Xfce_ahs_sysvinit"
-DISTRO_VERSION="$RELEASEVERSION_$DEFAULTDESKTOP$ALPHABETARCVERSION"
+DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 
 # kernel
 # ahs
