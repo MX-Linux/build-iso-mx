@@ -261,6 +261,7 @@ qml-module-qtquick-virtualkeyboard
 qml-module-qtquick-window2
 qml-module-qtquick-xmllistmodel
 qml-module-qtquick2
+qml6-module-qtqml-xmllistmodel
 qt-heif-image-plugin
 qt6-gtk-platformtheme
 qt6-image-formats-plugins
