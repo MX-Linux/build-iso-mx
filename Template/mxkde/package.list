@@ -87,10 +87,14 @@ kde-config-gtk-style
 kde-config-screenlocker
 kde-config-sddm
 kde-config-updates
+kde-servicemenu-checkhash-installdebs
+kde-servicemenu-extract-and-compress
+kde-servicemenu-rootactions
 kde-spectacle
 kde-standard
 kde-style-breeze
 kde-style-oxygen-qt6
+kde-thumbnailer-epub
 kdeconnect
 kded6
 kdegraphics-thumbnailers
