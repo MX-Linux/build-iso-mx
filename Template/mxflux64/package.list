@@ -203,7 +203,7 @@ lsb-base
 # luckybackup-data
 # lxappearance
 magnus
-mate-polkit
+# mate-polkit
 # matcha-themes
 # menulibre
 mesa-vulkan-drivers
@@ -263,7 +263,7 @@ plymouth
 plymouth-themes
 plymouth-themes-mx
 plymouth-x11
-# policykit-1-gnome
+policykit-1-gnome
 poppler-data
 poppler-utils
 pulseaudio-utils
