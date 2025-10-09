@@ -8,6 +8,7 @@ apt
 apt-utils
 arandr
 arc-theme
+audacious
 baobab
 base-files
 base-passwd
@@ -31,7 +32,7 @@ custom-toolbox
 dbus-user-session
 dconf-cli
 dconf-editor
-deadbeef
+# deadbeef
 debconf-i18n
 debianutils
 deb-installer
@@ -314,6 +315,7 @@ volumeicon-alsa
 # webcamoid
 whiptail
 wmalauncher
+wmusic
 xarchiver
 xdg-desktop-portal
 xdg-desktop-portal-gtk
