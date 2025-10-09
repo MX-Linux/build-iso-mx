@@ -285,6 +285,7 @@ sound-theme-freedesktop
 sox
 strawberry
 system-config-printer
+systemd-cryptsetup
 systemsettings
 thunderbird
 timeshift

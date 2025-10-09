@@ -292,6 +292,7 @@ system-config-printer
 system-config-printer-udev
 # system-config-samba
 system-keyboard-qt
+systemd-cryptsetup
 tango-icon-theme
 thunar
 thunar-archive-plugin

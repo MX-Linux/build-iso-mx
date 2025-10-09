@@ -312,7 +312,7 @@ sysbench
 system-config-printer
 system-config-printer-udev
 #system-config-samba
-#systemd-sysv
+systemd-cryptsetup
 #tango-icon-theme
 thunar
 thunar-archive-plugin
