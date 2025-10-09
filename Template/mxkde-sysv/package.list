@@ -36,7 +36,7 @@ digikam
 docbook-xsl
 dolphin
 drkonqi
-ffmpegthumbnailer
+#ffmpegthumbnailer
 ffmpegthumbs
 filelight
 flac
