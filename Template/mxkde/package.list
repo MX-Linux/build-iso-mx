@@ -1,3 +1,4 @@
+#ffmpegthumbnailer
 akonadi-contacts-data
 alsa-topology-conf
 alsa-ucm-conf
@@ -37,7 +38,6 @@ digikam
 docbook-xsl
 dolphin
 drkonqi
-#ffmpegthumbnailer
 ffmpegthumbs
 filelight
 flac
@@ -225,6 +225,7 @@ plymouth-x11
 polkit-kde-agent-1
 poppler-data
 poppler-utils
+power-profiles-daemon
 powerdevil
 powerdevil-data
 print-manager
