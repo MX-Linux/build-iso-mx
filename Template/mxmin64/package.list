@@ -24,6 +24,7 @@ pavucontrol
 pinentry-gtk2
 policykit-1-gnome
 ssh-askpass-gnome
+systemd-cryptsetup
 thunar
 thunar-archive-plugin
 thunar-volman
