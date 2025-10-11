@@ -1546,6 +1546,11 @@ Eth0_entry
         $SUDO rm -f $sqfs_dir/*.old
     fi
 
+#rename diverted files under /var/lib/dpkg-diverts-mx/ to drop .dpkg-dist extension
+	find $sqfs_dir/var/lib/dpkg-diverts-mx/ -type f -name '*.dpkg-dist' -print0 |	while IFS= read -r -d '' file; do
+    	$SUDO mv "$file" "${file%.dpkg-dist}"
+	done
+
     leave_stage
 }
 
