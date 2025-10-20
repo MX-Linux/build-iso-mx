@@ -3,3 +3,5 @@
 
 #the dbus versions are still launched...particularly usefull for 
 #network-manager
+
+##systemd-networkd-wait-online-service hangs if systemd-networkd is not actually in use, so disable
