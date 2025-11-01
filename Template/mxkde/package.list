@@ -1,4 +1,3 @@
-#ffmpegthumbnailer
 akonadi-contacts-data
 alsa-topology-conf
 alsa-ucm-conf
@@ -43,6 +42,7 @@ filelight
 flac
 flatpak
 foliate
+fonts-noto-color-emoji
 fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
 formatusb
