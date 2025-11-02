@@ -314,7 +314,7 @@ volumeicon-alsa
 # webcamoid
 whiptail
 wmalauncher
-wmusic
+# wmusic
 xarchiver
 xdg-desktop-portal
 xdg-desktop-portal-gtk
