@@ -7,7 +7,7 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="23.5_CLI"
+DISTRO_VERSION="25_CLI"
 
 ARCH="amd64"
 ISO_FLAV="mxcli64"

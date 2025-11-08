@@ -1,0 +1,56 @@
+1.
+
+mount latest debian iso file and copy the bootx64.efi and grubx64.efi files.  these are signed and will allow secure boot.
+
+2.  
+
+create a bootia32.efi file for 32 bit uefi.  this is not signed and will not boot with secure boot. (not tested yet)
+
+grub-mkstandalone -O i386-efi -o bootia32.efi --modules="part_gpt part_msdos fat ext2 iso9660 normal configfile linux multiboot echo search search_fs_uuid search_label search_fs_file all_video gfxterm"   "boot/grub/grub.cfg=grub.cfg" --compress=xz
+
+grub.cfg for the bootia32.efi files
+
+search --file --set=root /EFI/BOOT/bootia32.efi
+set prefix=($root)/boot/grub
+fi
+configfile ($root)/boot/grub/grub.cfg
+
+
+3.  make an efi-img file
+
+dd if=/dev/zero of=efi.img bs=1M count=8
+mkfs.vfat efi.img
+
+mount the image file and create directories
+
+sudo mkdir -p EFI/BOOT
+sudo mkdir -p boot/grub
+
+this is the grub.cfg in the efi.img file
+
+search --set=root --file /.disk/info
+set prefix=($root)/boot/grub
+configfile ($root)/boot/grub/grub.cfg
+
+
+copy the EFI files to EFI/BOOT
+copy the grub.cfg file to boot/grub
+
+unmount, put efi.img in the iso/boot/grub of the templates (Template/COMMON/iso in build-iso)
+
+4.  
+
+put EFI files in EFI/BOOT of the template (Template/COMMON/iso in build-iso)
+
+5. make a core.img for the recuse menus under syslinux.
+
+grub-mkimage -o core.img -O i386-pc -d /usr/lib/grub/i386-pc -p '($root)/boot/grub' -c grub.cfg biosdisk ext2 iso9660 fat part_gpt part_msdos normal search configfile test ls cat help all_video gfxmenu jpeg png gfxterm 
+
+different grub.cfg
+
+search --no-floppy --file --set=root /antiX/vmlinuz
+set prefix=($root)/boot/grub
+
+put core.img in boot/grub/i386-pc of the template (Template/COMMON/iso in build-iso)
+
+6.  copy all other modules and such from /usr/lib/grub into the Template/COMMON/iso /boot/grub folders

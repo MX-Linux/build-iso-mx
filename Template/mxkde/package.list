@@ -28,21 +28,21 @@ colord
 colord-data
 command-not-found
 conky-all
-conky-manager
 conky-toggle-mx
 cracklib-runtime
+dbus-user-session
 debconf-kde-helper
 dh-python
 digikam
 docbook-xsl
 dolphin
 drkonqi
-ffmpegthumbnailer
 ffmpegthumbs
 filelight
 flac
 flatpak
 foliate
+fonts-noto-color-emoji
 fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
 formatusb
@@ -57,7 +57,6 @@ gnupg-agent
 gsfonts
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
-hardinfo2
 heif-gdk-pixbuf
 heif-thumbnailer
 hicolor-icon-theme
@@ -87,10 +86,14 @@ kde-config-gtk-style
 kde-config-screenlocker
 kde-config-sddm
 kde-config-updates
-kde-spectacle 
+kde-servicemenu-checkhash-installdebs
+kde-servicemenu-extract-and-compress
+kde-servicemenu-rootactions
+kde-spectacle
 kde-standard
 kde-style-breeze
 kde-style-oxygen-qt6
+kde-thumbnailer-epub
 kdeconnect
 kded6
 kdegraphics-thumbnailers
@@ -127,6 +130,7 @@ ksudoku
 ktexteditor-data
 ktexteditor-katepart
 kwalletmanager
+kwin-addons
 kwin-common
 kwin-data
 kwin-style-breeze
@@ -134,12 +138,12 @@ kwin-wayland
 kwin-x11
 lame
 libbaloowidgets-bin
-libc6:i386 
+libc6:i386
 libcanberra-gstreamer
 libcanberra-gtk3-module
 libcanberra-pulse
 libffmpegthumbnailer4v5
-libgcc-s1:i386 
+libgcc-s1:i386
 libreoffice-base
 libreoffice-base-core
 libreoffice-calc
@@ -167,6 +171,7 @@ milou
 mx-apps-kde
 mx-cleanup
 mx-conky
+mx-conky-data
 mx-docs
 mx-installer
 mx-live-usb-maker
@@ -180,6 +185,7 @@ mx-welcome
 mx25-artwork
 mythes-en-us
 nvidia-detect
+okular
 okular-extra-backends
 open-vm-tools
 oxygen-icon-theme
@@ -219,6 +225,7 @@ plymouth-x11
 polkit-kde-agent-1
 poppler-data
 poppler-utils
+power-profiles-daemon
 powerdevil
 powerdevil-data
 print-manager
@@ -260,13 +267,15 @@ qml-module-qtquick-virtualkeyboard
 qml-module-qtquick-window2
 qml-module-qtquick-xmllistmodel
 qml-module-qtquick2
+qml6-module-qtqml-xmllistmodel
 qt-heif-image-plugin
 qt6-gtk-platformtheme
 qt6-image-formats-plugins
 qtvirtualkeyboard-plugin
 rdesktop
+rtl8812au-dkms
+rtl8821cu-dkms
 sddm
-sddm-modified-init
 sddm-theme-breeze
 sendemail
 signon-plugin-oauth2
@@ -277,6 +286,7 @@ sound-theme-freedesktop
 sox
 strawberry
 system-config-printer
+systemd-cryptsetup
 systemsettings
 thunderbird
 timeshift

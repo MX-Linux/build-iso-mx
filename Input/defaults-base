@@ -9,7 +9,7 @@
 
 #most defaults set from defaults-system
 
-DISTRO_VERSION="23_Base_RC1"
+DISTRO_VERSION="25_Base"
 
 # DE particular items
 
@@ -20,7 +20,7 @@ CURSOR_ICON_THEME="/usr/share/icons/DMZ-Black/cursor.theme"
 # options for building squashfs
 
 # lz4 is good for testing but large isos
-# options You need both 
+# options You need both
 # xz use -comp xz -Xbcj x86
 # xz use -comp xz -b 262144 #use for base
 # lz4 use -comp lz4 -Xhc

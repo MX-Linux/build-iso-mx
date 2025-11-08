@@ -1,0 +1,7 @@
+ca-certificates 
+zstd
+sysvinit-core
+#initscripts
+#elogind
+#libpam-elogind
+#systemd-standalone-sysusers

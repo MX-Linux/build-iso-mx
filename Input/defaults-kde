@@ -7,7 +7,8 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="25_KDE"
+DEFAULTDESKTOP="KDE"
+DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 
 # kernel
 # ahs

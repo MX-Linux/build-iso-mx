@@ -4,13 +4,11 @@ THEME_DIR=$(dirname $(readlink -f $0))
 source $THEME_DIR/../theme-functions.sh
 start_theme "$@"
 
-rm -R /etc/skel/.conky
 mkdir -p /etc/skel/.local/share/applications/
+copy_file conky.desktop  	/etc/skel/.config/autostart/
 copy_file grub                  /etc/default/
 copy_dir desktop-base/          /usr/share/desktop-base/	--create
-copy_dir conky/               	/etc/skel/.conky/          	--create
 copy_dir extra/               	/usr/share/fonts/extra       	--create
-copy_file conky.desktop  	/etc/skel/.config/autostart/
 copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/

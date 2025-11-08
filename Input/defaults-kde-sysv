@@ -1,0 +1,28 @@
+#----------------------------------------------------------------------
+# defaults file for build-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+DEFAULTDESKTOP="KDE_sysvinit"
+DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
+
+# kernel
+# ahs
+# K_REVISION="1-liquorix"
+# K_TEMPLATE="%V%G-%R-%A"
+# K_VERSION="6.12.8"
+#UNSIGNED="-unsigned"
+
+THEME="mxkde"
+ISO_FLAV="mxkde-sysv"
+ARCH="amd64"
+
+ENABLE_LOCALES="Default"
+
+# DE particular items
+X_TERM_EMULATOR="/usr/bin/konsole"
+

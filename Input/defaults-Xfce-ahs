@@ -8,13 +8,14 @@
 #----------------------------------------------------------------------
 
 
-DISTRO_VERSION="25_ahs"
+DEFAULTDESKTOP="Xfce_ahs"
+DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 
 # kernel
 # ahs
-K_REVISION="1-liquorix"
+K_REVISION="*-liquorix"
 K_TEMPLATE="%V%G-%R-%A"
-K_VERSION="6.12.8"
+K_VERSION="6.*.*"
 #UNSIGNED="-unsigned"
 
 ENABLE_LOCALES=Default

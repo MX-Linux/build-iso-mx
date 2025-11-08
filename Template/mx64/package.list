@@ -43,10 +43,10 @@ command-not-found
 #compton-conf
 #compton-conf-l10n
 conky-all
-conky-manager
 #consolekit
 #cryptsetup-modified-functions
 #cups-driver-gutenprint
+dbus-user-session
 dconf-cli
 dconf-editor
 #dconf-tools
@@ -59,6 +59,7 @@ dh-python
 #dukto
 #elogind
 #eudev
+engrampa
 exo-utils
 #faenza-cupertino-icons
 #faenza-cupertino-mini-icons
@@ -68,7 +69,6 @@ exo-utils
 #fbsplash-antix
 featherpad
 feh
-file-roller
 flac
 flatpak
 #flashplugin-nonfree
@@ -186,7 +186,7 @@ libvirglrenderer1
 #light-locker
 lightdm
 lightdm-gtk-greeter
-lightdm-gtk-greeter-mx23
+lightdm-gtk-greeter-mx
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 #linux-headers-686-pae
@@ -212,7 +212,9 @@ mx-apps
 #mx-bluebird-themes
 #mx-clocky
 mx-conky
+mx-conky-data
 mx-comfort-themes
+mx-ease-themes
 mx-matcha-themes
 #mx-defaultlook
 mx-docs
@@ -247,14 +249,9 @@ nomacs-l10n
 #numix-gtk-theme
 #numix-icon-theme
 nvidia-detect
+onboard
+onboard-data
 open-vm-tools
-#openjdk-8-jre
-#openjdk-8-jre-headless
-#openjdk-8-jre-lib
-#openjfx - only in backports
-#openssh-blacklist
-#openssh-blacklist-extra
-#openssh-server
 orage
 pacpl
 papirus-mxblue
@@ -265,6 +262,7 @@ peg-e
 phonon-backend-gstreamer-common
 #pidgin
 #pidgin-data
+piranha2-xfwm4-theme
 pinentry-gtk2
 #plane-gtk-theme
 plymouth
@@ -292,12 +290,8 @@ qpdfview-translations
 #qt5-style-plugins
 qt6-gtk-platformtheme
 qt6gtk2
-#qtchooser
-#qtcore4-l10n
-#rarian-compat
-#rdesktop
-#rtkit
-#scrollkeeper
+rtl8812au-dkms
+rtl8821cu-dkms
 sane-airscan
 seahorse
 sendemail
@@ -318,7 +312,7 @@ sysbench
 system-config-printer
 system-config-printer-udev
 #system-config-samba
-#systemd-sysv
+systemd-cryptsetup
 #tango-icon-theme
 thunar
 thunar-archive-plugin

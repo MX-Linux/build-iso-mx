@@ -1,0 +1,22 @@
+Types: deb
+Enabled: yes
+URIs: http://mxrepo.com/mx/repo/
+Suites: trixie
+Components: main  non-free
+Signed-By: /usr/share/keyrings/mx-25-archive-keyring.gpg 
+
+Types: deb
+Enabled: yes
+URIs: http://mxrepo.com/mx/repo/
+Suites: trixie
+Components: ahs
+Signed-By: /usr/share/keyrings/mx-25-archive-keyring.gpg 
+
+Types: deb
+Enabled: no
+URIs: http://mxrepo.com/mx/testrepo/
+Suites: trixie
+Components: test
+Signed-By: /usr/share/keyrings/mx-25-archive-keyring.gpg 
+ 
+

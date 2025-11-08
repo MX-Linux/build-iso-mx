@@ -27,7 +27,6 @@ colord-data
 compton
 compton-conf
 conky-all
-conky-manager
 conky-toggle-mx
 coreutils
 #cryptsetup-modified-functions

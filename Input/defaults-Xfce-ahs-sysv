@@ -1,0 +1,23 @@
+#----------------------------------------------------------------------
+# defaults file for build-antiX-iso
+#
+# This file contains almost all of the variables that determine what
+# actually gets built.  It has a middle priority in between
+# defaults-system which has the lowest priority and defaults-local
+# which has the highest
+#----------------------------------------------------------------------
+
+DEFAULTDESKTOP="Xfce_ahs_sysvinit"
+DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
+
+# kernel
+# ahs
+K_REVISION="*-liquorix"
+K_TEMPLATE="%V%G-%R-%A"
+K_VERSION="6.*.*"
+#UNSIGNED="-unsigned"
+
+ENABLE_LOCALES=Default
+THEME=mx
+ISO_FLAV=mxahs-sysv
+ARCH=amd64
