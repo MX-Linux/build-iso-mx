@@ -19,6 +19,4 @@ psmisc
 rsync
 shared-mime-info
 sudo
-systemd
-sysvinit-utils
 xdg-user-dirs
