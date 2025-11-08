@@ -20,6 +20,5 @@ rsync
 shared-mime-info
 sudo
 systemd
-systemd-shim
 sysvinit-utils
 xdg-user-dirs
