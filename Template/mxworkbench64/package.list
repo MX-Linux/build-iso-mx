@@ -1,9 +1,11 @@
 abiword
+ack
 adduser
 alsa-topology-conf
 alsa-ucm-conf
+ansible
+ansible-lint
 apt
-apt-notifier
 apt-utils
 archivemount
 arpwatch
@@ -14,6 +16,8 @@ bar
 base-files
 base-passwd
 bash
+bat
+bind9-dnsutils
 binwalk
 blueman
 bluetooth
@@ -23,6 +27,7 @@ bluez-test-tools
 bluez-tools
 bonnie++
 bsdmainutils
+btop
 can-utils
 catfish
 cdrdao
@@ -60,9 +65,6 @@ digitemp
 disktype
 dislocker
 dmidecode
-dmraid
-dnsutils
-dstat
 duf
 dump
 dvtm
@@ -80,6 +82,7 @@ feh
 file-roller
 filezilla
 fio
+fish
 flashrom
 fonts-vlgothic #Japanese
 fonts-wqy-microhei #Chinese
@@ -90,19 +93,13 @@ fsarchiver
 fstransform
 fwupd
 galculator
-gamin
-gconf-service
-gconf2
-gconf2-common
 gcr
 gdbm-l10n
 geany
-gftp-gtk
 ghex
 git
 gnome-accessibility-themes
 gnome-disk-utility
-gpa
 gpart
 gparted
 gpg-agent
@@ -111,15 +108,12 @@ grsync
 gstreamer1.0-pulseaudio
 gthumb
 gtk2-engines-murrine
-gtkdialog
 guymager
 gzip
 hardinfo2
 hashcat
 hfsplus
 hfsprogs
-hfsutils
-hfsutils-tcltk
 hwdata
 i2c-tools
 icmpinfo
@@ -136,7 +130,6 @@ iputils-arping
 iputils-tracepath
 isc-dhcp-client
 isc-dhcp-common
-isomaster
 jmtpfs
 job-scheduler
 kdiskmark
@@ -168,10 +161,10 @@ mesa-vulkan-drivers
 moreutils
 mount
 mpt-status
-mx-comfort-themes
-mx-idevice-mounter
 mx-live-usb-maker
+mx-matcha-themes
 mx-network-assistant
+mx-updater
 mx-usb-unmounter
 nano
 ncdu
@@ -201,6 +194,7 @@ policykit-1-gnome
 progress
 psensor
 pssh
+qdiskinfo
 qla-tools
 qpdf
 qpdfview
@@ -209,7 +203,6 @@ rdesktop
 rdiff-backup
 readline-common
 reglookup
-reiser4progs
 remmina
 remmina-plugin-exec
 remmina-plugin-rdp
@@ -225,7 +218,6 @@ screen
 scrounge-ntfs
 secure-delete
 sensible-utils
-smbios-utils
 ssh-askpass-gnome
 stress-ng
 stressapptest
@@ -302,7 +294,4 @@ xinput-calibrator
 xutils-dev
 zerofree
 zfs-fuse
-zsh
-zsh-autosuggestions
-zsh-syntax-highlighting
-zsh-theme-powerlevel10k
+zoxide
