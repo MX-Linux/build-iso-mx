@@ -2,8 +2,8 @@
 
 <channel name="xsettings" version="1.0">
   <property name="Net" type="empty">
-    <property name="ThemeName" type="string" value="mx-comfort"/>
-    <property name="IconThemeName" type="string" value="Papirus-mxblue-darkpanes"/>
+    <property name="ThemeName" type="string" value="mx-matcha"/>
+    <property name="IconThemeName" type="string" value="Papirus-mxblue"/>
     <property name="DoubleClickTime" type="empty"/>
     <property name="DoubleClickDistance" type="empty"/>
     <property name="DndDragThreshold" type="empty"/>
