@@ -11,61 +11,63 @@ Category=* Info *
 list-cli-tools
 
 Category=Disk Management
-gparted 
+gparted
 clonezilla
-gsmartcontrol 
+gsmartcontrol
 org.gnome.baobab
 nwipe
 testdisk
 org.gnome.DiskUtility
 ncdu
+QDiskInfo
 
 Category=GRUB Boot Functions
-mx-boot-repair 
+mx-boot-repair
 mx-boot-options
-chroot-rescue-scan 
+chroot-rescue-scan
 
 Category=File Management
-mc 
+mc
 xfburn
-FreeFileSync 
+FreeFileSync
 RealTimeSync
-grsync 
-org.gnome.FileRoller 
+grsync
+org.gnome.FileRoller
 gftp
-org.gnome.Meld 
-ghex 
+org.gnome.Meld
+ghex
 isomaster
-gtkhash 
+gtkhash
 iDevice-Mounter
 
 Category=Antivirus
-clamtk 
+clamtk
 
 Category=File Recovery
 testdisk
 photorec
 
 Category=Misc.
-geany 
+geany
 xfce4-terminal
-htop 
-iotop 
+htop
+iotop
+btop
 
 Category=Hardware Info
 hardinfo
 Quick_System_Info user
 
 Category=Network
-ceni 
+ceni
 wireshark
-linssid 
+linssid
 remmina
 netwag
 
 Category=Live USB Tools
-mx-snapshot 
-mx-remastercc 
+mx-snapshot
+mx-remastercc
 mx-live-usb-maker
 formatusb
 live-kernel-updater
