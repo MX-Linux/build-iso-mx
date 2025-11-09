@@ -1,8 +1,10 @@
 avahi-daemon
 bzip2
 cli-installer-mx
+cryptsetup
 curl
 dialog
+eject
 file
 fontconfig
 gnupg2
@@ -12,6 +14,7 @@ krb5-locales
 less
 manpages
 mtr
+ntfs-3g
 openssl
 passwd
 procps
