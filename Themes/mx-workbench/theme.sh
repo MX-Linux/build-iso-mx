@@ -5,7 +5,7 @@ source $THEME_DIR/../theme-functions.sh
 start_theme "$@"
 
 copy_file grub                  /etc/default/
-copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/
+copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/	--create
 copy_dir extra/               	/usr/share/fonts/extra       	--create
 copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
@@ -20,10 +20,6 @@ copy_file 20-thinkpad.conf      /usr/share/X11/xorg.conf.d/
 copy_file ufw.conf       	/etc/ufw/ 	--create
 copy_file zramswap.service 	/etc/systemd/system/
 
-# setup zsh and powerlevel10k
-copy_file .zshrc /etc/skel/
-copy_file .p10k.zsh /etc/skel/
-copy_file gitstatusd-linux-x86_64 /etc/skel/.cache/gitstatus/ --create
 copy_file adduser.conf /etc/
 
 # copy custom Workbench stuff
@@ -40,7 +36,7 @@ copy_dir defaults/xfconf/xfce-perchannel-xml/ /etc/skel/.config/xfce4/xfconf/xfc
 copy_dir defaults/terminal/ /etc/skel/.config/xfce4/terminal/ --create
 copy_file mx-snapshot.conf /etc/
 copy_file custom-toolbox.conf /etc/custom-toolbox/
-copy_file default23.png /usr/share/backgrounds/
+copy_file default25.png /usr/share/backgrounds/
 ln -sf /usr/games/blockout2 /usr/bin/blockout2 # add a link in $PATH
 
 exit
