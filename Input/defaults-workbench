@@ -15,4 +15,4 @@ THEME="mx-workbench"
 
 ENABLE_LOCALES="default"
 
-ISO_SHELL="/bin/zsh"
+ISO_SHELL="/usr/bin/fish"
