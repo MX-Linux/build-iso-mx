@@ -1,4 +1,3 @@
-apt-notifier
 blueman
 bluez
 desktop-defaults-mx-xfce
@@ -6,18 +5,18 @@ featherpad
 gparted
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
-gtkdialog
 lightdm
 lightdm-gtk-greeter
-lightdm-gtk-greeter-mx23
+lightdm-gtk-greeter-mx
 lightdm-gtk-greeter-settings
 lightdm-modified-init
 linux-headers-amd64
 linux-image-amd64
-mx-comfort-themes
 mx-installer
+mx-matcha-themes
+mx-updater
 mx-usb-unmounter
-mx23-artwork
+mx25-artwork
 network-manager-gnome
 papirus-mxblue
 pavucontrol
