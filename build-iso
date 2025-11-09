@@ -1316,9 +1316,9 @@ do_stage_4() {
 
     if ! is_antiX; then
 
-    say "fix apparmor profile for smbd"
+    say "Fix apparmor profile for smbd"
         if [[ -e /etc/apparmor.d/samba/smbd-shares ]]; then
-            echo "skip apparmor config"
+            echo "Skip apparmor config"
         else
             [[ -d /etc/apparmor.d/samba ]] || mkdir -p /etc/apparmor.d/samba
             touch /etc/apparmor.d/samba/smbd-shares
