@@ -1,0 +1,14 @@
+# Debian -> Arch package name hints.
+# Format: "<debian> <arch>" (whitespace-separated). Lines starting with # ignored.
+#
+# This is intentionally small and incomplete; it exists to bootstrap porting
+# `Template/COMMON/*.list` into `Template/Arch/*` and to document common renames.
+
+initramfs-tools mkinitcpio
+locales glibc
+net-tools inetutils
+dnsutils bind
+build-essential base-devel
+linux-image-amd64 linux
+linux-headers-amd64 linux-headers
+

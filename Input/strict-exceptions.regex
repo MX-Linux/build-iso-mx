@@ -1,2 +1,4 @@
 ^Test Error cat
 ^update-rc\.d: warning:
+^warning: .* is up to date -- skipping$
+^No URL given, so I am including a relative URL in the \.zsync file

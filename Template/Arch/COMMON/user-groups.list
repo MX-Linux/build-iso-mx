@@ -1,0 +1,8 @@
+# One group per line. These are appended to the default user.
+wheel
+audio
+video
+storage
+lp
+scanner
+

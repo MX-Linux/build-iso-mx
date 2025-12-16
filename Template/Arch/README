@@ -1,0 +1,12 @@
+README: Template/Arch/
+======================
+
+This directory mirrors the role of `Template/` but for Arch-based builds.
+
+- `COMMON/`: lists and overlay content shared by all Arch flavours.
+- `<flavour>/`: per-flavour package lists and overlays (examples: `arch64/`, `mx64/`).
+
+List files follow the same rules as the Debian templates:
+- `*.list` contains one item per line, `#` starts a comment.
+- The builder combines `COMMON/` + `<respin>-AND-*` + `<flavour>/` and dedupes.
+

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Exec=sh /usr/share/mx-conky-data/conky-startup.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_IN]=Conky
+Name=Conky
+Comment[en_IN]=
+Comment=
