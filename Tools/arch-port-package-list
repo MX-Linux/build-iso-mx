@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: Tools/arch-port-package-list [options] <input.list>
+
+Parses a Debian-style *.list (one package per line, # comments), applies an
+optional Debian->Arch mapping, then optionally verifies existence via pacman.
+
+Options:
+  -o, --out FILE         Write converted list to FILE (default: stdout)
+  --out FILE            Write converted list to FILE (default: stdout)
+  -m, --missing FILE     Write missing/unknown packages to FILE (default: stderr)
+  --missing FILE        Write missing/unknown packages to FILE (default: stderr)
+  --map FILE            Mapping file (default: Input/arch/debian-to-arch.map)
+  --no-verify           Skip pacman verification
+  --pacman-root DIR     Pass --root DIR to pacman (useful outside chroot)
+  --pacman-conf FILE    Pass --config FILE to pacman
+
+Recommended workflow (inside build chroot):
+  Tools/arch-port-package-list /Build/Template/COMMON/package.list \
+    --out /Build/Template/Arch/arch64/package.list
+USAGE
+}
+
+out_file=""
+missing_file=""
+map_file="Input/arch/debian-to-arch.map"
+verify=1
+pacman_root=""
+pacman_conf=""
+
+say() { printf '%s\n' "$*" >&2; }
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help) usage; exit 0 ;;
+    -o|--out) out_file="${2:-}"; shift 2 ;;
+    --out) out_file="${2:-}"; shift 2 ;;
+    -m|--missing) missing_file="${2:-}"; shift 2 ;;
+    --missing) missing_file="${2:-}"; shift 2 ;;
+    --map) map_file="${2:-}"; shift 2 ;;
+    --no-verify) verify=0; shift ;;
+    --pacman-root) pacman_root="${2:-}"; shift 2 ;;
+    --pacman-conf) pacman_conf="${2:-}"; shift 2 ;;
+    --*) echo "Unknown option: $1" >&2; usage; exit 2 ;;
+    *) break ;;
+  esac
+done
+
+[[ $# -eq 1 ]] || { usage; exit 2; }
+in_file="$1"
+[[ -r "$in_file" ]] || { echo "Missing input file: $in_file" >&2; exit 2; }
+
+declare -A map=()
+if [[ -r "$map_file" ]]; then
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    line="${line%%#*}"
+    line="$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    [[ -z "$line" ]] && continue
+    deb="$(echo "$line" | awk '{print $1}')"
+    arch="$(echo "$line" | awk '{print $2}')"
+    [[ -n "$deb" && -n "$arch" ]] && map["$deb"]="$arch"
+  done < "$map_file"
+fi
+
+tmp_out="$(mktemp)"
+tmp_missing="$(mktemp)"
+cleanup() { rm -f "$tmp_out" "$tmp_missing"; }
+trap cleanup EXIT
+
+sanitize_pkg() {
+  local p="$1"
+  p="${p%%#*}"
+  p="$(echo "$p" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  p="${p%%:*}"   # drop Debian multiarch suffix like :i386
+  echo "$p"
+}
+
+while IFS= read -r line; do
+  pkg="$(sanitize_pkg "$line")"
+  [[ -z "$pkg" ]] && continue
+  [[ "$pkg" =~ ^[a-zA-Z0-9] ]] || continue
+  if [[ -n "${map[$pkg]:-}" ]]; then
+    pkg="${map[$pkg]}"
+  fi
+  echo "$pkg"
+done < "$in_file" | sort -u > "$tmp_out"
+
+if [[ $verify -eq 1 ]]; then
+  command -v pacman >/dev/null 2>&1 || verify=0
+fi
+
+if [[ $verify -eq 1 ]]; then
+  pkg_total="$(wc -l < "$tmp_out" | tr -d ' ')"
+  pacman_args=()
+  [[ -n "$pacman_root" ]] && pacman_args+=(--root "$pacman_root")
+  [[ -n "$pacman_conf" ]] && pacman_args+=(--config "$pacman_conf")
+
+  # Fast path: pull a full list of repo packages once, then diff.
+  # (Much faster than N x `pacman -Si` when validating large lists.)
+  tmp_avail="$(mktemp)"
+  cleanup() { rm -f "$tmp_out" "$tmp_missing" "${tmp_avail:-}"; }
+  trap cleanup EXIT
+
+  say "Verifying ${pkg_total} packages via \`pacman -Slq\`..."
+  if pacman "${pacman_args[@]}" -Slq >/dev/null 2>&1; then
+    pacman "${pacman_args[@]}" -Slq 2>/dev/null | sort -u > "$tmp_avail"
+    comm -23 "$tmp_out" "$tmp_avail" > "$tmp_missing" || true
+  else
+    say "Warning: \`pacman -Slq\` failed; falling back to slow per-package checks..."
+    i=0
+    while IFS= read -r pkg; do
+      [[ -z "$pkg" ]] && continue
+      i=$((i+1))
+      if (( i % 200 == 0 )); then
+        say "  checked ${i}/${pkg_total}..."
+      fi
+      if ! pacman "${pacman_args[@]}" -Si "$pkg" >/dev/null 2>&1; then
+        echo "$pkg" >> "$tmp_missing"
+      fi
+    done < "$tmp_out"
+  fi
+fi
+
+if [[ -n "$out_file" ]]; then
+  mkdir -p "$(dirname "$out_file")"
+  cat "$tmp_out" > "$out_file"
+else
+  cat "$tmp_out"
+fi
+
+if [[ -s "$tmp_missing" ]]; then
+  if [[ -n "$missing_file" ]]; then
+    mkdir -p "$(dirname "$missing_file")"
+    cat "$tmp_missing" > "$missing_file"
+  else
+    echo "Missing (not found via pacman -Si):" >&2
+    cat "$tmp_missing" >&2
+  fi
+fi

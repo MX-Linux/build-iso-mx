@@ -128,6 +128,7 @@ main() {
     local regex_files="$lax_regex_file $strict_regex_file"
     local theme_dir="$script_dir/Themes"
     local root_path="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/bin"
+    local template
 
     local part_env="ASK_PART EXIT_PART RUN_PART SHELL_PART SKIP_PART TEST_PART"
     local stage_env="ASK_STAGE EXIT_STAGE SKIP_STAGE"
@@ -300,6 +301,13 @@ main() {
 
     load_defaults
 
+    # In auto mode we cannot prompt for sudo credentials; require passwordless sudo
+    # (or run as root) to avoid confusing mid-build failures.
+    if (( UID != 0 )) && [[ -n $auto_mode ]]; then
+        sudo -n true >/dev/null 2>&1 \
+            || fatal "$(pq --auto) requires passwordless sudo (or run as root)"
+    fi
+
     trap on_exit       EXIT
     trap "echo; exit"  INT
 
@@ -355,7 +363,8 @@ main() {
         [[ "$DISTRO_NAME" = antiX ]] && full_distro_name="$full_distro_name-$ISO_FLAV"
 
         local fancy_name="$full_distro_name $CODE_NAME $RELEASE_DATE"
-        local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH-$DEBIAN_RELEASE"
+        local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH"
+        [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
         [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
         local work_dir=$remaster_dir/work/$work_name
         local iso_dir=$work_dir/iso
@@ -365,10 +374,23 @@ main() {
         local boot_menu_dir=$sqfs_dir/usr/share/boot-menus
 
         local initrd_dir=$work_dir/initrd
-        local manual_selections_template=$template/COMMON/$manual_selections
 
         local chroot_cache_opts="chroot $work_name $sqfs_dir"
-        local deboot_cache_opts="debootstrap $ARCH-$DEBIAN_RELEASE $sqfs_dir"
+        local deboot_cache_opts
+        if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+            deboot_cache_opts="pacstrap $ARCH $sqfs_dir"
+        else
+            deboot_cache_opts="debootstrap $ARCH-$DEBIAN_RELEASE $sqfs_dir"
+        fi
+
+        # Select template root for all stages (not just Stage 0).
+        case ${DISTRO_FAMILY:-debian} in
+            debian) template="$script_dir/Template" ;;
+              arch) template="$script_dir/Template/Arch"
+                    [[ -d "$template" ]] || fatal "Missing Arch templates at $(pq "$template")" ;;
+                 *) fatal "Unknown DISTRO_FAMILY: $(pqw "$DISTRO_FAMILY")" ;;
+        esac
+        local manual_selections_template=$template/COMMON/$manual_selections
 
         # Do weird modes here after variables are set
         [[ -n $chroot_mode ]] && do_chroot && exit
@@ -470,7 +492,7 @@ do_stage_0() {
     pick_prog MAKE_ISO $MAKE_ISO_PROGS
     pick_prog GZIP     $GZIP_PROGS
 
-    require_programs chroot debootstrap isohybrid mksquashfs md5sum sudo tee zsync \
+    require_programs chroot isohybrid mksquashfs md5sum sudo tee zsync \
         pkill column expand strings iconv unbuffer
 
     mkdir -p "$output_dir" || my_exit
@@ -501,25 +523,54 @@ Remaster_Blurb
 
     load_defaults
 
+    : "${DISTRO_FAMILY:=debian}"
+    # Note: template selection is handled in the main stage loop as well, so
+    # stage-0 is not required for subsequent stages to be correct.
+    case $DISTRO_FAMILY in
+        debian) template="$script_dir/Template" ;;
+          arch) template="$script_dir/Template/Arch"
+                [[ -d "$template" ]] || error "Missing Arch templates at $(pq "$template")" ;;
+             *) error "Unknown DISTRO_FAMILY: $(pqw "$DISTRO_FAMILY")" ;;
+    esac
+
+    # Distro-specific tool requirements (outer build environment)
+    case $DISTRO_FAMILY in
+        debian) require_programs debootstrap apt-get dpkg ;;
+          arch) require_arch_host_tools ;;
+    esac
+
     # Fill in default value
     : "${RELEASE_DATE:=$(printf '%(%e %B %Y)T' -1)}"
+    : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
 
-    choose "local mirror" LOCAL_MIRROR                       \
-                us gr au be bg br ch cz de dk ee es "fi" fr  \
-                gr hk hr hu ie is it jp kr nl no nz pl pt ro \
-                ru se si sk tr tw ua uk us
+    if [[ $DISTRO_FAMILY = debian ]]; then
+        choose "local mirror" LOCAL_MIRROR                       \
+                    us gr au be bg br ch cz de dk ee es "fi" fr  \
+                    gr hk hr hu ie is it jp kr nl no nz pl pt ro \
+                    ru se si sk tr tw ua uk us
 
-    choose "Debian release" DEBIAN_RELEASE \
-                stable testing unstable bullseye bookworm
+        choose "Debian release" DEBIAN_RELEASE \
+                    stable testing unstable bullseye bookworm
+    fi
 
-    choose "which locales to enable" ENABLE_LOCALES  \
-                "Default (about 60)"                 \
-                "All (about 400)"                    \
-                "Single (the one default locale)"
+    if [[ -z ${ENABLE_LOCALES:-} ]]; then
+        choose "which locales to enable" ENABLE_LOCALES  \
+                    "Default (about 60)"                 \
+                    "All (about 400)"                    \
+                    "Single (the one default locale)"
+    fi
 
-    choose "arch"     ARCH      i386 amd64
+    if [[ $DISTRO_FAMILY = arch ]]; then
+        [[ ${ARCH:-} = x86_64 ]] || choose "arch" ARCH x86_64
+    else
+        [[ ${ARCH:-} = i386 || ${ARCH:-} = amd64 ]] || choose "arch" ARCH i386 amd64
+    fi
     # shellcheck disable=SC2046
-    choose "flavour"  ISO_FLAV  $(flavour_list) core-libre
+    if [[ -n ${ISO_FLAV:-} ]]; then
+        local flav_dir=${ISO_FLAV%-libre}
+        [[ -d "$template/$flav_dir" ]] || ISO_FLAV=
+    fi
+    [[ -n ${ISO_FLAV:-} ]] || choose "flavour"  ISO_FLAV  $(flavour_list) core-libre
 
     K_GNU=
     case $ISO_FLAV in
@@ -550,15 +601,25 @@ Remaster_Blurb
     case $ARCH in
          i386) K_ARCH=$distro_k_arch   ; ISO_ARCH=386  ;;
         amd64) K_ARCH=amd64            ; ISO_ARCH=x64  ;;
-            *) error "Invalid ARCH $(pqw "$ARCH"). Expected $(pqw i386) or $(pqw amd64)". ;;
+       x86_64) K_ARCH=amd64            ; ISO_ARCH=x64  ;;
+            *) error "Invalid ARCH $(pqw "$ARCH")." ;;
     esac
 
-    K_NAME=$(echo "$K_TEMPLATE" | sed \
-    -e "s/%V/$K_VERSION/"   \
-    -e "s/%G/$K_GNU/"       \
-    -e "s/%R/$K_REVISION/"  \
-    -e "s/%A/$K_ARCH/"      \
-    -e "s/%V/$K_VERSION/")
+    if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
+        K_NAME=$(echo "$K_TEMPLATE" | sed \
+        -e "s/%V/$K_VERSION/"   \
+        -e "s/%G/$K_GNU/"       \
+        -e "s/%R/$K_REVISION/"  \
+        -e "s/%A/$K_ARCH/"      \
+        -e "s/%V/$K_VERSION/")
+    else
+        : "${K_PKG:=linux}"
+        : "${K_HEADERS_PKG:=linux-headers}"
+        : "${K_BOOT_IMAGE:=vmlinuz-linux}"
+        : "${K_INITRAMFS_IMAGE:=initramfs-linux.img}"
+        : "${K_FALLBACK_INITRAMFS_IMAGE:=initramfs-linux-fallback.img}"
+        : "${K_NAME:=$K_PKG}"
+    fi
 
     local $HOST_ARCH
     case $(arch) in
@@ -584,10 +645,12 @@ Remaster_Blurb
     [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
     local iso_file=$full_distro_name.iso
 
-    local dir
-    for dir in $(flavour_list) COMMON base-AND-full; do
-        mkdir -p "$script_dir/Deb/$dir"
-    done
+    if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
+        local dir
+        for dir in $(flavour_list) COMMON base-AND-full; do
+            mkdir -p "$script_dir/Deb/$dir"
+        done
+    fi
 
     local full_iso_file=$iso_file_dir/$iso_file
     if [[ -e "$full_iso_file" ]]; then
@@ -598,12 +661,19 @@ Remaster_Blurb
 
     cat << Output > $output_file
 ARCH="$ARCH"
+DISTRO_FAMILY="$DISTRO_FAMILY"
 DEBIAN_RELEASE="$DEBIAN_RELEASE"
 FLAV="$FLAV"
 GZIP="$GZIP"
 ISO_ARCH="$ISO_ARCH"
 ISO_FLAV="$ISO_FLAV"
+ISO_LABEL="$ISO_LABEL"
 K_NAME="$K_NAME"
+K_PKG="$K_PKG"
+K_HEADERS_PKG="$K_HEADERS_PKG"
+K_BOOT_IMAGE="$K_BOOT_IMAGE"
+K_INITRAMFS_IMAGE="$K_INITRAMFS_IMAGE"
+K_FALLBACK_INITRAMFS_IMAGE="$K_FALLBACK_INITRAMFS_IMAGE"
 MAKE_ISO="$MAKE_ISO"
 RELEASE_DATE="$RELEASE_DATE"
 RESPIN_INHERIT="$RESPIN_INHERIT"
@@ -649,7 +719,95 @@ do_stage_1() {
 # handles caching what debootstrap created.
 #------------------------------------------------------------------------------
 do_stage_2() {
-    enter_stage 2 "Run debootstrap"
+    enter_stage 2 "Bootstrap root filesystem"
+
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        say "Using pacstrap (Arch; experimental)"
+
+        [[ $do_fast ]] && mount_tmpfs
+
+        if [[ -d "$sqfs_dir" ]]; then
+            say "Clear out existing files ..."
+            check_sqfs_dir
+            $SUDO rm -rf "$(dirname "$sqfs_dir")"/squashfs/*
+        fi
+
+        if restore_cache $chroot_cache_opts; then
+            leave_stage
+            return
+        fi
+
+        if ! restore_cache $deboot_cache_opts; then
+            umount_chroot
+            check_errors_strict
+            start_timer
+
+            $SUDO mkdir -p "$sqfs_dir"
+            : "${PACSTRAP_PACKAGES:=base linux linux-firmware}"
+            say "pacstrap to $(pq "$sqfs_dir") with: $(pq "$PACSTRAP_PACKAGES")"
+            # Note: pacstrap uses the host's pacman config by default, which is
+            # often unconfigured on Debian/MX. Provide a dedicated config + mirrors.
+            : "${PACMAN_CONF:=Input/arch/pacman.conf}"
+            : "${PACMAN_MIRRORLIST:=Input/arch/mirrorlist}"
+            local pacman_conf_src=$script_dir/${PACMAN_CONF#./}
+            local mirror_src=$script_dir/${PACMAN_MIRRORLIST#./}
+            [[ -r "$pacman_conf_src" ]] || fatal "Missing PACMAN_CONF: $(pqw "$PACMAN_CONF")"
+            [[ -r "$mirror_src" ]] || fatal "Missing PACMAN_MIRRORLIST: $(pqw "$PACMAN_MIRRORLIST")"
+
+            local pacman_work=$work_dir/pacman
+            $SUDO mkdir -p "$pacman_work"
+            local pacman_conf=$pacman_work/pacman.conf
+            local mirrorlist=$pacman_work/mirrorlist
+            $SUDO cp "$mirror_src" "$mirrorlist"
+            $SUDO cp "$pacman_conf_src" "$pacman_conf"
+            $SUDO sed -i "s|^Include = /etc/pacman.d/mirrorlist$|Include = $mirrorlist|" "$pacman_conf"
+
+            # Ensure the host keyring exists for signature verification.
+            if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
+                require_programs_fatal pacman-key makepkg
+                if ! ensure_archlinux_keyring_layout; then
+                    fatal "Missing Arch keyring file. On Debian/MX try: sudo apt install archlinux-keyring"
+                fi
+                say "Initialize host pacman keyring"
+                $SUDO pacman-key --init
+                $SUDO pacman-key --populate archlinux
+            fi
+
+            $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES
+
+            end_timer "run pacstrap"
+            check_errors_lax
+            umount_chroot
+            [[ -e "$sqfs_dir/bin/bash" ]] || fatal "pacstrap failed"
+        fi
+
+        # Ensure the target has a working pacman configuration and mirrorlist.
+        # On Debian/MX hosts, pacstrap does not reliably set this up for the target.
+        $SUDO mkdir -p "$sqfs_dir/etc/pacman.d"
+        $SUDO cp "$mirror_src" "$sqfs_dir/etc/pacman.d/mirrorlist"
+        $SUDO cp "$pacman_conf_src" "$sqfs_dir/etc/pacman.conf"
+        if ! $SUDO grep -q '^\[extra\]' "$sqfs_dir/etc/pacman.conf"; then
+            fatal "Target pacman.conf is missing repository sections (e.g. [extra]). Check $(pqw "$PACMAN_CONF")"
+        fi
+
+        # Avoid mkinitcpio warnings about missing vconsole config in minimal installs.
+        if [[ ! -e "$sqfs_dir/etc/vconsole.conf" ]]; then
+            $SUDO mkdir -p "$sqfs_dir/etc"
+            $SUDO sh -c "printf '%s\n' 'KEYMAP=us' > '$sqfs_dir/etc/vconsole.conf'"
+        fi
+
+        report_size "$sqfs_dir"
+        create_cache $deboot_cache_opts
+
+        say "Customize live system (Arch)"
+        copy_template_dir squashfs "$sqfs_dir"
+
+        # pacstrap may emit warnings that are not actionable for our build; reset
+        # error offset so Stage-level strict checking doesn't block progress.
+        check_errors_reset
+        leave_stage notime
+        return
+    fi
 
     [[ $do_fast ]] && mount_tmpfs
 
@@ -826,6 +984,11 @@ do_stage_4() {
 
     #error-logchecking ASAP so we don't waste user's time
     [[ "$script_dir" == "$build_dir" ]] || fatal "We do not appear to be in a chroot environment"
+
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        do_stage_4_arch
+        my_exit
+    fi
 
     [[ -n $K_NAME ]] || error "No K_NAME specified"
 
@@ -1346,6 +1509,327 @@ do_stage_4() {
     my_exit
 }
 
+do_stage_4_arch() {
+    say "Arch in-chroot phase (experimental)"
+
+    require_programs pacman locale-gen mkinitcpio useradd usermod groupadd chpasswd ln systemctl pacman-key mount df awk
+
+    echo $$ > $build_dir/MY-PID
+    PATH=$build_dir/fake:$PATH
+
+    [[ -r "$script_dir/ENV_IN" ]] && source "$script_dir/ENV_IN"
+
+    say "Arch template root: $(pq "$template")"
+    say "Arch flavour: $(pq "$FLAV") (ISO_FLAV=$(pq "$ISO_FLAV")), base=$(pq "$ISO_RESPIN_OF")"
+
+    # Normalize values that may include human-readable suffixes from defaults files.
+    ENABLE_LOCALES=${ENABLE_LOCALES%% (*}
+
+    : "${PACMAN_CACHE_DIR:=/var/cache/pacman/pkg}"
+    : "${PACMAN_CLEAR_CACHE:=true}"
+    : "${MIN_FREE_MB:=2048}"
+
+    # Ensure common tools that expect /etc/mtab work (and pacman can determine mountpoints).
+    ln -sf /proc/mounts /etc/mtab 2>/dev/null || true
+
+    arch_ensure_proc_sys() {
+        mkdir -p /proc /sys 2>/dev/null || true
+        [[ -r /proc/mounts ]] || mount -t proc proc /proc 2>/dev/null || true
+        [[ -r /sys/kernel ]] || mount -t sysfs sysfs /sys 2>/dev/null || true
+        ln -sf /proc/mounts /etc/mtab 2>/dev/null || true
+        mkdir -p "$PACMAN_CACHE_DIR"
+        [[ -r /proc/mounts ]] || error "Missing /proc/mounts inside chroot (pacman may mis-detect disk space)"
+    }
+
+    arch_pacman() {
+        arch_ensure_proc_sys
+        # Always noninteractive: pacman stops parsing options after the first
+        # package name, so options must come first.
+        pacman --noconfirm "$@"
+    }
+
+    # PARTIAL file support (same semantics as Debian path)
+    if [[ ! -f "$script_dir/../Output/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+        rm -f "$partial_file"
+        skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
+    elif [[ -s "$partial_file" ]] && do_part 0 "!Read PARTIAL file to skip parts done"; then
+        local add_skip
+        add_skip=$(join_lines "$partial_file" ",")
+        say "have already processed these parts: $(pq "$add_skip")"
+        if YES_no "Skip these parts this time"; then
+            SKIP_PART="$SKIP_PART${SKIP_PART:+,}$add_skip"
+        else
+            rm -f "$partial_file"
+        fi
+    else
+        skip_part 0 "Read PARTIAL file to skip parts done"
+    fi
+
+    if do_part 1 "!Ensure mounts and pacman cache"; then
+        # pacman checks free space based on mountpoints from /proc/mounts; ensure
+        # pseudo-filesystems are mounted inside the chroot environment.
+        arch_ensure_proc_sys
+        [[ -r /proc/mounts ]] || error "Missing /proc inside chroot (pacman may fail)"
+
+        mkdir -p "$PACMAN_CACHE_DIR"
+
+        local free_mb
+        free_mb=$(df -Pm "$PACMAN_CACHE_DIR" | awk 'NR==2{print $4}')
+        [[ -n $free_mb ]] || free_mb=0
+        if (( free_mb < MIN_FREE_MB )); then
+            error "Low free space: ${free_mb}MB available at $PACMAN_CACHE_DIR (need at least ${MIN_FREE_MB}MB)"
+        fi
+
+        if [[ $PACMAN_CLEAR_CACHE == true ]]; then
+            rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        fi
+
+        if [[ ! -r /proc/mounts ]]; then
+            say "Diagnostics: /proc is missing inside chroot"
+            ls -la /proc 2>&1 || true
+            ls -la /proc/self 2>&1 || true
+        fi
+
+        end_part_lax
+    fi
+
+    if do_part 2 "Update repos and do pacman -Syu"; then
+        [[ -s /etc/pacman.d/mirrorlist ]] || error "Empty or missing /etc/pacman.d/mirrorlist"
+        if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
+            say "Initialize target pacman keyring"
+            pacman-key --init
+            pacman-key --populate archlinux
+        fi
+        # For -Syu we do not need --needed, but it's harmless; keep the wrapper
+        # to guarantee --noconfirm and mount setup.
+        arch_pacman -Syu
+        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_lax
+    fi
+
+    : "${LOCALE:=en_US.UTF-8}"
+    if do_part 3 "!Define locales"; then
+        if [[ -r /etc/locale.gen ]]; then
+            case $ENABLE_LOCALES in
+                [Aa]ll) say "Will build $(pq all) locales"
+                        sed -i -r "s/^# ([a-z][a-z]([a-z]?_| ISO|\\.UTF| UTF))/\\1/" /etc/locale.gen;;
+                [Dd]efault) say "Will build $(pq default) default locales" ;;
+                [Ss]ingle) say "Will build $(pq "$LOCALE") locale"
+                        local locale_re=${LOCALE//./\\.}
+                        sed -i -r -e "s/^([a-z])/# \\1/" -e "s/^#\\s+($locale_re)/\\1/" /etc/locale.gen;;
+                *) error "Bad ENABLE_LOCALES: $ENABLE_LOCALES" ;;
+            esac
+            locale-gen
+        fi
+        echo "LANG=$LOCALE" > /etc/locale.conf
+        end_part_lax
+    fi
+
+    if gather_any basic-package && do_part 4 "Install basic packages"; then
+        gather_say basic-package "Install $(pqn %n) basic package%s"
+        # shellcheck disable=SC2206
+        local pkgs=( $(compile_pkg_list basic-package exclude-chroot) )
+        # Strip Debian-style multiarch suffixes like ":i386" if they sneak in.
+        local arch_pkgs=() p
+        for p in "${pkgs[@]}"; do
+            p=${p%%:*}
+            [[ -n $p ]] && arch_pkgs+=( "$p" )
+        done
+        pkgs=( "${arch_pkgs[@]}" )
+        if (( ${#pkgs[@]} > 0 )); then
+            arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing basic packages"
+        fi
+        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_strict
+    else
+        skip_part 4 "Install basic packages"
+    fi
+
+    if do_part 5 "Install kernel & headers"; then
+        : "${K_PKG:=linux}"
+        : "${K_HEADERS_PKG:=linux-headers}"
+        arch_pacman -S --needed "$K_PKG" "$K_HEADERS_PKG"
+        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_strict
+    fi
+
+    if gather_any package && do_part 8 "Install flavour packages"; then
+        gather_say package "Install $(pqn %n) flavour package%s"
+        # shellcheck disable=SC2206
+        local pkgs=( $(compile_pkg_list package exclude-chroot) )
+        # Strip Debian-style multiarch suffixes like ":i386" if they sneak in.
+        local arch_pkgs=() p
+        for p in "${pkgs[@]}"; do
+            p=${p%%:*}
+            [[ -n $p ]] && arch_pkgs+=( "$p" )
+        done
+        pkgs=( "${arch_pkgs[@]}" )
+        if (( ${#pkgs[@]} > 0 )); then
+            arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing flavour packages"
+        fi
+        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_strict
+    else
+        skip_part 8 "Install flavour packages"
+    fi
+
+    if do_part 9 "Enable common live services"; then
+        if [[ -e /usr/lib/systemd/system/NetworkManager.service ]]; then
+            systemctl enable NetworkManager.service
+        fi
+        end_part_lax
+    fi
+
+    if do_part 10 "Ensure minimal console config"; then
+        [[ -e /etc/vconsole.conf ]] || echo "KEYMAP=us" > /etc/vconsole.conf
+        end_part_lax
+    fi
+
+    if gather_any remove && do_part 11 "Remove some packages"; then
+        # shellcheck disable=SC2206
+        local pkgs=( $(gather remove) )
+        (( ${#pkgs[@]} > 0 )) && arch_pacman -Rns "${pkgs[@]}"
+        end_part_strict
+    fi
+
+    if gather_any add && do_part 12 "Add some packages"; then
+        # shellcheck disable=SC2206
+        local pkgs=( $(compile_pkg_list add exclude-chroot) )
+        (( ${#pkgs[@]} > 0 )) && arch_pacman -S --needed "${pkgs[@]}"
+        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_lax
+    fi
+
+    if do_part 17 "!Update Timezone, hostname, and user accounts"; then
+        if [[ -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
+            ln -sf "/usr/share/zoneinfo/$TIME_ZONE" /etc/localtime
+        fi
+
+        : "${NEW_HOSTNAME:=archlive}"
+        echo "$NEW_HOSTNAME" > /etc/hostname
+        if command -v hostname >/dev/null 2>&1; then
+            hostname -F /etc/hostname
+        fi
+
+        local user
+        user=${LIVE_USER:-demo}
+        if ! grep -q "^$user:" /etc/passwd; then
+            say "Set up live user account $(pq $user)"
+            grep -q "^$user:" /etc/group || groupadd "$user"
+            useradd -m -s "${ISO_SHELL:="/bin/bash"}" -g "$user" "$user"
+        fi
+
+        gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
+        local group
+        for group in $(gather user-groups); do
+            usermod -a -G "$group" "$user"
+        done
+
+        if [[ -x /usr/bin/sudo ]]; then
+            mkdir -p /etc/sudoers.d
+            echo "%wheel ALL=(ALL:ALL) ALL" > /etc/sudoers.d/10-wheel
+            chmod 0440 /etc/sudoers.d/10-wheel
+        fi
+
+        # Set simple default passwords (caller can override via overlays/autologin).
+        echo "$user:$user" | chpasswd
+        echo "root:root" | chpasswd
+
+        end_part_strict
+    fi
+
+    if do_part 18 "Rebuild initramfs (mkinitcpio)"; then
+        mkinitcpio -P
+        end_part_lax
+    fi
+
+    if do_part 19 "Build archiso initramfs"; then
+        local archiso_conf="/etc/mkinitcpio-archiso.conf"
+        local releng_conf=
+        local cand
+        for cand in \
+            /usr/share/archiso/configs/releng/mkinitcpio.conf \
+            /usr/share/archiso/configs/releng/airootfs/etc/mkinitcpio.conf \
+            /usr/share/archiso/configs/baseline/mkinitcpio.conf \
+            /usr/share/archiso/configs/baseline/airootfs/etc/mkinitcpio.conf \
+            /usr/share/archiso/configs/*/mkinitcpio.conf \
+            /usr/share/archiso/configs/*/airootfs/etc/mkinitcpio.conf; do
+            [[ -r $cand ]] || continue
+            releng_conf=$cand
+            break
+        done
+
+        local kpath="/boot/${K_BOOT_IMAGE:-vmlinuz-linux}"
+        [[ -r "$kpath" ]] || error "Missing kernel image for mkinitcpio: $(pqw "$kpath")"
+
+        if [[ -n "$releng_conf" ]]; then
+            cp "$releng_conf" "$archiso_conf"
+            # archiso doesn't pass a traditional root= device; the `fsck` hook
+            # can emit a noisy "device '' not found" warning. Strip it.
+            sed -i -r 's/\bfsck\b//g; s/HOOKS=\(([[:space:]]*)/HOOKS=(\1/; s/[[:space:]]+/ /g; s/\( /\(/; s/ \)/\)/' "$archiso_conf" 2>/dev/null || true
+            mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img
+        else
+            # Fallback: synthesize a minimal archiso mkinitcpio config.
+            # Avoid autodetect in chroot (it can error due to missing real rootfs metadata).
+            local hooks="base udev modconf block filesystems keyboard"
+            if [[ ! -e /usr/lib/initcpio/hooks/archiso && ! -e /usr/lib/initcpio/install/archiso ]]; then
+                # On some Arch snapshots, archiso hooks are shipped by mkinitcpio-archiso.
+                arch_pacman -S mkinitcpio-archiso || true
+            fi
+
+            if [[ -e /usr/lib/initcpio/hooks/archiso ]] || [[ -e /usr/lib/initcpio/install/archiso ]]; then
+                hooks="$hooks archiso"
+                [[ -e /usr/lib/initcpio/hooks/archiso_shutdown ]] && hooks="$hooks archiso_shutdown"
+            fi
+
+            cat > "$archiso_conf" <<MKINITCPIO
+MODULES=()
+BINARIES=()
+FILES=()
+HOOKS=($hooks)
+COMPRESSION="zstd"
+MKINITCPIO
+
+            if [[ $hooks != *" archiso"* ]]; then
+                error "archiso mkinitcpio hooks not found under /usr/lib/initcpio (install mkinitcpio-archiso?)"
+            fi
+
+            if ! mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img; then
+                say "mkinitcpio diagnostics:"
+                ls -la /usr/lib/initcpio/hooks 2>&1 | tail -n 30 || true
+                ls -la /usr/lib/initcpio/install 2>&1 | tail -n 30 || true
+                error "Failed to build /boot/archiso.img"
+            fi
+        fi
+        chmod 0644 /boot/archiso.img 2>/dev/null || true
+        [[ -r /boot/archiso.img ]] || error "Missing /boot/archiso.img after mkinitcpio"
+        end_part_strict
+    fi
+
+    if do_part 20 "Detect kernel module version"; then
+        if [[ -d /usr/lib/modules ]]; then
+            K_MODVER=$(ls -1 /usr/lib/modules 2>/dev/null | sort -V | tail -1)
+        fi
+        [[ -n $K_MODVER ]] || error "Could not detect kernel module version under /usr/lib/modules"
+        end_part_lax
+    fi
+
+    mkdir -p /usr/share/antiX
+    pacman -Qqe > "$output_dir/package-list.out"
+    pacman -Qqe > /usr/share/antiX/installed-packages.txt
+
+    say "Write version files"
+    write_version_files
+
+    cat > "$output_file" << Output
+K_NAME="$K_NAME"
+K_MODVER="$K_MODVER"
+Output
+
+    rm -f "$partial_file"
+    leave_stage
+}
+
 apply_theme() {
     export ISO_ARCH
     local theme=${1:-$THEME}
@@ -1441,7 +1925,9 @@ do_stage_5() {
         eval $SUDO rm -rf $sqfs_dir/$f 2>/dev/null
     done
 
-    (cd $sqfs_dir/var/log && $SUDO touch apt/history.log apt/term.log dpkg.log)
+    if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
+        (cd $sqfs_dir/var/log && $SUDO touch apt/history.log apt/term.log dpkg.log)
+    fi
 
     say "Delete $(pq "/dev/*") in chroot"
     mountpoint -q $sqfs_dir/dev && fatal "$(pqw /dev) is still mounted in squashfs!"
@@ -1452,7 +1938,7 @@ do_stage_5() {
     $SUDO rm -rf $sqfs_dir$build_dir
 
     # We used LOCAL_MIRROR while building inside the chroot
-    set_chroot_mirror $MIRROR "DEFAULT mirror"
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $MIRROR "DEFAULT mirror"
 
     say "Delete $(pq /etc/mtab)"
     $SUDO rm -f $sqfs_dir/etc/mtab
@@ -1550,10 +2036,12 @@ Eth0_entry
         $SUDO rm -f $sqfs_dir/*.old
     fi
 
-#rename diverted files under /var/lib/dpkg-diverts-mx/ to drop .dpkg-dist extension
-	find $sqfs_dir/var/lib/dpkg-diverts-mx/ -type f -name '*.dpkg-dist' -print0 |	while IFS= read -r -d '' file; do
-    	$SUDO mv "$file" "${file%.dpkg-dist}"
-	done
+    # rename diverted files under /var/lib/dpkg-diverts-mx/ to drop .dpkg-dist extension
+    if [[ ${DISTRO_FAMILY:-debian} = debian ]] && [[ -d $sqfs_dir/var/lib/dpkg-diverts-mx ]]; then
+        find $sqfs_dir/var/lib/dpkg-diverts-mx/ -type f -name '*.dpkg-dist' -print0 | while IFS= read -r -d '' file; do
+            $SUDO mv "$file" "${file%.dpkg-dist}"
+        done
+    fi
 
     leave_stage
 }
@@ -1563,6 +2051,12 @@ Eth0_entry
 #------------------------------------------------------------------------------
 do_stage_6() {
     enter_stage 6 "Prepare iso directory"
+
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        do_stage_6_arch
+        leave_stage
+        return
+    fi
     # (0) Populate iso dir with boilerplate files
     # (1) Copy flavour-dependent bootloader.cfg files via inheritance
     
@@ -1765,6 +2259,83 @@ Bootloader_Data
     leave_stage
 }
 
+do_stage_6_arch() {
+    require_programs grub-mkrescue
+
+    # Minimal archiso-style layout:
+    #   /arch/<arch>/airootfs.sfs (created in Stage 7)
+    #   /arch/boot/<arch>/vmlinuz-linux
+    #   /arch/boot/<arch>/archiso.img
+    local arch_dir=$iso_dir/arch
+    local boot_dir=$arch_dir/boot/$ARCH
+    local rootfs_dir=$arch_dir/$ARCH
+
+    mkdir -p "$boot_dir" "$rootfs_dir" "$iso_dir/boot/grub"
+
+    local kimg=$sqfs_dir/boot/${K_BOOT_IMAGE:-vmlinuz-linux}
+    local initrd_img=$sqfs_dir/boot/archiso.img
+    [[ -e "$kimg" ]] || error "Missing kernel image in squashfs: $(pqw "${kimg#"$sqfs_dir"}")"
+    if ! [[ -r "$initrd_img" ]]; then
+        say "Missing $(pq /boot/archiso.img) in squashfs; attempting to build it now"
+        prep_chroot
+        $SUDO chroot "$sqfs_dir" /bin/bash -lc '
+            set -euo pipefail
+            kpath="/boot/'"${K_BOOT_IMAGE:-vmlinuz-linux}"'"
+            if ! [[ -r "$kpath" ]]; then
+                kpath="$(ls -1 /boot/vmlinuz-* 2>/dev/null | head -n 1 || true)"
+            fi
+            [[ -r "$kpath" ]] || { echo "Missing kernel image for mkinitcpio: $kpath" >&2; exit 1; }
+
+            conf=/etc/mkinitcpio-archiso.conf
+            if ! [[ -r "$conf" ]]; then
+                hooks="base udev modconf block filesystems keyboard"
+                if [[ -e /usr/lib/initcpio/hooks/archiso || -e /usr/lib/initcpio/install/archiso ]]; then
+                    hooks="$hooks archiso"
+                    [[ -e /usr/lib/initcpio/hooks/archiso_shutdown ]] && hooks="$hooks archiso_shutdown"
+                fi
+                cat > "$conf" <<MKINITCPIO
+MODULES=()
+BINARIES=()
+FILES=()
+HOOKS=($hooks)
+COMPRESSION="zstd"
+MKINITCPIO
+            fi
+
+            mkinitcpio -c "$conf" -k "$kpath" -g /boot/archiso.img
+            chmod 0644 /boot/archiso.img 2>/dev/null || true
+        ' || true
+    fi
+    [[ -e "$initrd_img" ]] || error "Missing archiso initramfs in squashfs: $(pqw "${initrd_img#"$sqfs_dir"}")"
+
+    $SUDO cp "$kimg" "$boot_dir/vmlinuz-linux"
+    $SUDO cp "$initrd_img" "$boot_dir/archiso.img"
+
+    # Provide package list (useful for debugging/remaster workflows)
+    if [[ -r "$work_dir/package-list.out" ]]; then
+        cp "$work_dir/package-list.out" "$arch_dir/pkglist.$ARCH.txt"
+    fi
+
+    # Grub entry boots archiso with copy-to-ram support.
+    : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
+    cat > "$iso_dir/boot/grub/grub.cfg" << GRUBCFG
+set default=0
+set timeout=5
+
+menuentry "${DISTRO_NAME} Live (${ARCH})" {
+    search --no-floppy --set=root --label "${ISO_LABEL}"
+    linux  /arch/boot/${ARCH}/vmlinuz-linux archisobasedir=arch archisolabel=${ISO_LABEL}
+    initrd /arch/boot/${ARCH}/archiso.img
+}
+
+menuentry "${DISTRO_NAME} Live (${ARCH}) (Copy To RAM)" {
+    search --no-floppy --set=root --label "${ISO_LABEL}"
+    linux  /arch/boot/${ARCH}/vmlinuz-linux archisobasedir=arch archisolabel=${ISO_LABEL} copytoram
+    initrd /arch/boot/${ARCH}/archiso.img
+}
+GRUBCFG
+}
+
 #------------------------------------------------------------------------------
 # Stage 7 creates the squashfs file
 #------------------------------------------------------------------------------
@@ -1773,7 +2344,12 @@ do_stage_7() {
     umount_chroot
 
     say "Run depmod one last time"
-    $SUDO depmod --basedir $sqfs_dir $K_NAME
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        [[ -n $K_MODVER ]] || error "Missing K_MODVER for Arch depmod"
+        $SUDO depmod --basedir $sqfs_dir "$K_MODVER"
+    else
+        $SUDO depmod --basedir $sqfs_dir $K_NAME
+    fi
 
     say "Clear /run directory"
     $SUDO rm -rf $sqfs_dir/run
@@ -1804,10 +2380,16 @@ do_stage_7() {
         COMPRESSION_TYPE_CODE="-comp lz4 -Xhc"
     fi
 
-    say "Build the $COMPRESSION_TYPE compressed linuxfs file. This takes time and uses a lot of CPU power."
+    say "Build the $COMPRESSION_TYPE compressed squashfs file. This takes time and uses a lot of CPU power."
 
-    local linuxfs_file=$iso_dir/antiX/linuxfs
-    rm -f $linuxfs_file
+    local linuxfs_file
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        linuxfs_file=$iso_dir/arch/$ARCH/airootfs.sfs
+        $SUDO mkdir -p "$(dirname "$linuxfs_file")"
+    else
+        linuxfs_file=$iso_dir/antiX/linuxfs
+    fi
+    rm -f "$linuxfs_file"
 
     start_timer
     #                                                    262144 = 0x40000
@@ -1817,7 +2399,11 @@ do_stage_7() {
 
     local output="/tmp/mksquash_output"
     local UNCOMPRESSEDSIZE_FILE UNCOMPRESSEDSIZE
-    UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        UNCOMPRESSEDSIZE_FILE="$iso_dir/arch/$ARCH/airootfs.info"
+    else
+        UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
+    fi
     $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE | tee $output
     UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
@@ -1826,6 +2412,11 @@ do_stage_7() {
     size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
     md5sum_file $linuxfs_file
+
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        # archiso typically provides a separate md5 file for airootfs.sfs
+        (cd "$(dirname "$linuxfs_file")" && md5sum "$(basename "$linuxfs_file")" > airootfs.md5)
+    fi
 
     leave_stage
 }
@@ -1847,6 +2438,25 @@ do_stage_8() {
     mkdir -p $iso_file_dir
     local full_iso_file=$iso_file_dir/$iso_file
     say "Build the live $(pq $iso_file) file"
+
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        require_programs grub-mkrescue
+        start_timer
+        : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
+        say "Using $(pq grub-mkrescue) to make ISO (label: $(pq "$ISO_LABEL"))"
+        grub-mkrescue -o "$full_iso_file" -volid "$ISO_LABEL" "$iso_dir" 2>&1 \
+            || error "iso file creation failed"
+        size=$(du_size $full_iso_file)
+        end_timer "create $(pqn $size) iso file"
+
+        sha256sum_file $full_iso_file
+        zsyncmake_file $full_iso_file
+        say2 "Your live $(pq $iso_file) is in $(pq Remaster/iso-files) ready to be tested"
+
+        leave_stage
+        echo "$text_co$ME$bold_co done$nc" > $sign_off_file
+        [[ -n $full_auto ]]  || my_exit
+    fi
 
     local file full
     for file in vmlinuz linuxfs initrd.gz; do
@@ -2805,7 +3415,7 @@ make_uefi_iso() {
 
 make_xorriso_iso() {
     local prog=$1 file=$2 dir=$3
-    local label="$DISTRO_NAME-Live"
+    local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
     local opts_1="-hfsplus on -as mkisofs -quiet -l"
 
     local opts_2="-R -J -iso-level 3 -pad -partition_cyl_align on"
@@ -3079,7 +3689,7 @@ bind_mount() {
 prep_chroot() {
     check_sqfs_dir
     umount_chroot
-    mount_deb_cache
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && mount_deb_cache
 
     for fs in proc sys; do
         say "Mounting $(pq /$fs) in chroot"
@@ -3100,14 +3710,26 @@ prep_chroot() {
         bind_mount /dev/pts $sqfs_dir/dev/pts
     fi
 
-    [[ -e $sqfs_dir/Build ]] || make_build_dir
+    if [[ -n $REFRESH_BUILD_DIR ]]; then
+        say "Refresh $(pq /Build) payload in chroot"
+        make_build_dir
+    else
+        [[ -e $sqfs_dir/Build ]] || make_build_dir
+    fi
 
-    if ! is_antiX && [[ ! -f $sqfs_dir/etc/resolv.conf ]]; then
+    # Ensure DNS works inside chroot. On Arch rootfs, /etc/resolv.conf may be a
+    # symlink to a /run/* path that does not exist in our chroot.
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        $SUDO mkdir -p "$sqfs_dir/etc"
+        $SUDO rm -f "$sqfs_dir/etc/resolv.conf"
+        $SUDO cp -L /etc/resolv.conf "$sqfs_dir/etc/resolv.conf"
+        $SUDO chmod 644 "$sqfs_dir/etc/resolv.conf" 2>/dev/null || true
+    elif ! is_antiX && [[ ! -f $sqfs_dir/etc/resolv.conf ]]; then
         $SUDO cp -H /etc/resolv.conf $sqfs_dir/etc/resolv.conf
     fi
 
     # Always use local mirror when working in chroot
-    set_chroot_mirror $LOCAL_MIRROR "LOCAL mirror"
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $LOCAL_MIRROR "LOCAL mirror"
 
     # TERM helps nano to work in chroot, LC_ALL is for Deb
     export TERM=xterm LC_ALL=C
@@ -3158,12 +3780,17 @@ make_build_dir() {
     done
 
     # This skips the larger subdirectories which aren't needed
+    local template_tree=Template
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        template_tree="Template/Arch"
+        [[ -d "$script_dir/$template_tree" ]] || fatal "Missing Arch templates at $(pq "$template_tree")"
+    fi
     (cd $script_dir && tar cf -          \
         --exclude iso                    \
         --exclude initrd                 \
         --exclude squashfs               \
         --exclude isolinux               \
-        Template)                        \
+        "$template_tree")                \
         | (cd $b_dir && tar xBf -)
 
     [[ -n $THEME ]] && copy_theme_dir $b_dir
@@ -3220,6 +3847,9 @@ copy_theme_dir() {
 # after four attempts to umount it then we error out at the end of the routine.
 #------------------------------------------------------------------------------
 umount_chroot() {
+    # Pretend mode must not touch mounts.
+    [[ -n $pretend_mode ]] && return 0
+
     for mp in $(mount | cut -d" " -f3 | grep "^$remaster_dir/work/.*/squashfs/"); do
         local name=${err_co}chroot:$bold_co${mp##"$remaster_dir"/*/squashfs}
 
@@ -4086,9 +4716,54 @@ require_programs() {
     local prog missing
 
     for prog; do
-        PATH=$root_path which $prog >/dev/null 2>&1 || missing="$missing $prog"
+        PATH=$root_path command -v "$prog" >/dev/null 2>&1 || missing="$missing $prog"
     done
     [[ -n $missing ]] && error "Missing these required programs: $(pqw $missing)"
+}
+
+missing_programs() {
+    local prog missing
+    for prog; do
+        PATH=$root_path command -v "$prog" >/dev/null 2>&1 || missing="$missing $prog"
+    done
+    echo "${missing# }"
+}
+
+require_programs_fatal() {
+    local missing
+    missing=$(missing_programs "$@")
+    [[ -z $missing ]] && return 0
+    fatal "Missing these required programs: $(pqw "$missing")"
+}
+
+require_arch_host_tools() {
+    local missing
+    missing=$(missing_programs pacstrap pacman pacman-key makepkg grub-mkrescue xorriso mformat mcopy)
+    [[ -z $missing ]] && return 0
+
+    local hint=""
+    if [[ $missing =~ (^|[[:space:]])pacman($|[[:space:]]) ]] && which apt-get >/dev/null 2>&1; then
+        hint=" On Debian/MX try: sudo apt install pacman-package-manager pacman-mirrorlist makepkg archlinux-keyring"
+    fi
+    fatal "Missing these required programs: $(pqw "$missing").$hint"
+}
+
+ensure_archlinux_keyring_layout() {
+    # On Arch, keyrings live under /usr/share/pacman/keyrings.
+    # On Debian/MX, archlinux-keyring installs under /usr/share/keyrings.
+    local deb_keyrings=/usr/share/keyrings
+    local arch_keyrings=/usr/share/pacman/keyrings
+
+    [[ -r "$arch_keyrings/archlinux.gpg" ]] && return 0
+    [[ -r "$deb_keyrings/archlinux.gpg" ]] || return 1
+
+    $SUDO mkdir -p "$arch_keyrings"
+    for f in archlinux.gpg archlinux-trusted archlinux-revoked; do
+        if [[ -e "$deb_keyrings/$f" ]] && [[ ! -e "$arch_keyrings/$f" ]]; then
+            $SUDO ln -s "$deb_keyrings/$f" "$arch_keyrings/$f" 2>/dev/null || $SUDO cp -a "$deb_keyrings/$f" "$arch_keyrings/$f"
+        fi
+    done
+    [[ -r "$arch_keyrings/archlinux.gpg" ]]
 }
 
 #==============================================================================

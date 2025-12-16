@@ -1,0 +1,45 @@
+# Experimental Arch Linux profile (work in progress).
+# Use with: ./build-iso --user-default defaults-arch
+
+DISTRO_FAMILY="arch"
+
+# ISO identity
+DISTRO_NAME="Arch"
+DISTRO_VERSION="rolling"
+CODE_NAME="arch"
+
+# Arch uses x86_64 naming; keep this consistent across templates/iso naming.
+ARCH="x86_64"
+
+# Use the matching Arch template flavour directory (Template/Arch/*).
+ISO_FLAV="arch64"
+THEME="none"
+
+# ISO authoring is done via `grub-mkrescue` for Arch builds, but Stage 0 still
+# expects a value here.
+MAKE_ISO="xorriso"
+
+# Base packages for pacstrap in Stage 2 (outer build).
+# Keep this minimal; add desktop stacks via Template/Arch/*.list.
+PACSTRAP_PACKAGES="base linux linux-firmware archlinux-keyring archiso mkinitcpio-archiso"
+
+# While Arch support is experimental, always rebuild the `/Build` payload so
+# changes to scripts/templates propagate into the chroot.
+REFRESH_BUILD_DIR="1"
+
+# Host-side pacman configuration used by pacstrap (especially important on Debian/MX).
+PACMAN_CONF="Input/arch/pacman.conf"
+PACMAN_MIRRORLIST="Input/arch/mirrorlist"
+
+# Kernel/initramfs naming for Arch boot stage.
+K_PKG="linux"
+K_HEADERS_PKG="linux-headers"
+K_BOOT_IMAGE="vmlinuz-linux"
+
+# Default live user
+LIVE_USER="demo"
+
+# Locale / timezone
+ENABLE_LOCALES="Single"
+LOCALE="en_US.UTF-8"
+TIME_ZONE="UTC"

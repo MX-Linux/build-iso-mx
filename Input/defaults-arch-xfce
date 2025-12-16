@@ -1,0 +1,37 @@
+# Arch Linux profile using the `mx64` Arch template flavour.
+# Use with: ./build-iso --user-default defaults-arch-mx64
+
+DISTRO_FAMILY="arch"
+
+# ISO identity
+DISTRO_NAME="MXarch"
+DISTRO_VERSION="26.01"
+CODE_NAME="infinity arch"
+
+# Arch uses x86_64 naming; keep this consistent across templates/iso naming.
+ARCH="x86_64"
+
+# Use `Template/Arch/mx64/` for flavour lists/overlays.
+ISO_FLAV="xfce"
+THEME="archxfce"
+
+MAKE_ISO="xorriso"
+
+# Base packages for pacstrap in Stage 2 (outer build).
+PACSTRAP_PACKAGES="base linux linux-firmware archlinux-keyring archiso mkinitcpio-archiso"
+
+REFRESH_BUILD_DIR="1"
+
+PACMAN_CONF="Input/arch/pacman.conf"
+PACMAN_MIRRORLIST="Input/arch/mirrorlist"
+
+K_PKG="linux"
+K_HEADERS_PKG="linux-headers"
+K_BOOT_IMAGE="vmlinuz-linux"
+
+LIVE_USER="demo"
+
+ENABLE_LOCALES="Single"
+LOCALE="en_US.UTF-8"
+TIME_ZONE="UTC"
+

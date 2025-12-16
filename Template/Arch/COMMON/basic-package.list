@@ -1,0 +1,9 @@
+# Packages installed early inside the chroot (Arch).
+# Keep this list small and broadly applicable.
+sudo
+networkmanager
+openssh
+man-db
+man-pages
+inetutils
+

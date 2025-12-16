@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ME=${0##*/}
+
+usage() {
+    cat <<'USAGE'
+Usage:
+  Tools/arch-remaster --from <rootfs> --out <file.iso> [options]
+
+Build an archiso-style ISO from an existing Arch root filesystem directory.
+This is intended for snapshot/remaster workflows (host-side).
+
+Required:
+  --from <dir>         Root filesystem to snapshot (e.g. /mnt/rootfs)
+  --out <file.iso>     Output ISO path
+
+Options:
+  --arch <arch>        Default: x86_64
+  --label <volid>      Default: Arch-Live
+  --work <dir>         Work directory (default: mktemp)
+  --comp <algo>        Squashfs compression (default: zstd)
+  --kernel <path>      Default: <from>/boot/vmlinuz-linux
+  --initrd <path>      Default: <from>/boot/archiso.img
+  --no-copytoram       Do not include copytoram in grub cmdline
+
+Example:
+  sudo Tools/arch-remaster --from /mnt/arch-root --out ./archlive.iso --label ARCHLIVE
+USAGE
+}
+
+fatal() { echo "$ME: error: $*" >&2; exit 2; }
+need() { command -v "$1" >/dev/null 2>&1 || fatal "Missing required program: $1"; }
+
+FROM=
+OUT=
+ARCH=x86_64
+LABEL=Arch-Live
+WORK=
+COMP=zstd
+KERNEL=
+INITRD=
+COPYTORAM=yes
+
+while (( $# )); do
+    case $1 in
+        -h|--help) usage; exit 0 ;;
+        --from) FROM=${2:-}; shift 2 ;;
+        --out) OUT=${2:-}; shift 2 ;;
+        --arch) ARCH=${2:-}; shift 2 ;;
+        --label) LABEL=${2:-}; shift 2 ;;
+        --work) WORK=${2:-}; shift 2 ;;
+        --comp) COMP=${2:-}; shift 2 ;;
+        --kernel) KERNEL=${2:-}; shift 2 ;;
+        --initrd) INITRD=${2:-}; shift 2 ;;
+        --no-copytoram) COPYTORAM=no; shift ;;
+        *) fatal "Unknown argument: $1" ;;
+    esac
+done
+
+[[ -n $FROM && -n $OUT ]] || { usage; exit 2; }
+[[ -d $FROM ]] || fatal "--from is not a directory: $FROM"
+
+need mksquashfs
+need grub-mkrescue
+need xorriso
+need md5sum
+
+[[ -n ${WORK} ]] || WORK=$(mktemp -d -t arch-remaster.XXXXXXXX)
+cleanup() { [[ -n ${WORK:-} ]] && rm -rf "$WORK"; }
+trap cleanup EXIT
+
+ISO_DIR=$WORK/iso
+ARCH_DIR=$ISO_DIR/arch
+BOOT_DIR=$ARCH_DIR/boot/$ARCH
+ROOTFS_DIR=$ARCH_DIR/$ARCH
+
+mkdir -p "$BOOT_DIR" "$ROOTFS_DIR" "$ISO_DIR/boot/grub"
+
+KERNEL=${KERNEL:-$FROM/boot/vmlinuz-linux}
+INITRD=${INITRD:-$FROM/boot/archiso.img}
+
+[[ -r $KERNEL ]] || fatal "Missing kernel: $KERNEL"
+[[ -r $INITRD ]] || fatal "Missing archiso initramfs: $INITRD"
+
+cp -a "$KERNEL" "$BOOT_DIR/vmlinuz-linux"
+cp -a "$INITRD" "$BOOT_DIR/archiso.img"
+
+SFS=$ROOTFS_DIR/airootfs.sfs
+MD5=$ROOTFS_DIR/airootfs.md5
+
+EXCLUDES=(
+    proc sys dev run tmp
+    mnt media
+    var/tmp
+    var/cache/pacman/pkg
+    lost+found
+)
+
+EXTRA=
+[[ $COMP == xz   ]] && EXTRA="-b 262144"
+[[ $COMP == zstd ]] && EXTRA="-b 262144 -Xcompression-level 15"
+
+echo "$ME: building squashfs ($COMP) from $FROM -> $SFS"
+
+rm -f "$SFS"
+mksquashfs "$FROM" "$SFS" -comp "$COMP" $EXTRA \
+    $(printf -- "-e %q " "${EXCLUDES[@]}") \
+    >/dev/null
+
+(cd "$ROOTFS_DIR" && md5sum airootfs.sfs > "$MD5")
+
+KPARAMS="archisobasedir=arch archisolabel=${LABEL}"
+[[ $COPYTORAM == yes ]] && KPARAMS="$KPARAMS copytoram"
+
+cat > "$ISO_DIR/boot/grub/grub.cfg" <<GRUBCFG
+set default=0
+set timeout=5
+
+menuentry "${LABEL} (${ARCH})" {
+    search --no-floppy --set=root --label "${LABEL}"
+    linux  /arch/boot/${ARCH}/vmlinuz-linux ${KPARAMS}
+    initrd /arch/boot/${ARCH}/archiso.img
+}
+GRUBCFG
+
+echo "$ME: creating ISO -> $OUT"
+grub-mkrescue -o "$OUT" -volid "$LABEL" "$ISO_DIR" >/dev/null
+
+echo "$ME: done"

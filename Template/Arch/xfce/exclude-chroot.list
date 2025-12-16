@@ -1,0 +1,4 @@
+# Packages to exclude from Arch Xfce flavour installs.
+#
+# `discover` (KDE Discover) pulls in a large KDE/Qt stack; keep it out of Xfce.
+discover

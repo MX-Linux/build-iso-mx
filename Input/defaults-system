@@ -15,6 +15,11 @@
 #----------------------------------------------------------------------
 
     APT_GET_OPTS="-q -y -o DPkg::Options::=--force-confold"
+
+# Target distribution family:
+# - debian: debootstrap + apt/dpkg tooling (MX/antiX)
+# - arch:   pacstrap/pacman tooling (work-in-progress)
+DISTRO_FAMILY="debian"
            CACHE="debootstrap,chroot"
     CACHE_EXPIRE="7"
 

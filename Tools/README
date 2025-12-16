@@ -54,6 +54,13 @@ strip-color
 summary-of-code
     Print out some comment blocks and the names of all functions.
 
+arch-remaster
+    Experimental: create an archiso-style ISO from an existing Arch rootfs.
+
+arch-port-package-list
+    Helper: convert a Debian-style `*.list` into an Arch package list using an
+    optional mapping file and (optionally) validate packages via `pacman -Si`.
+
 vmlinuz-gcc-version
     Print out the version of gcc that was used to compile the
     kernel stored in a vmlinuz file.  Relies on having the
