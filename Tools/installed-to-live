@@ -43,6 +43,7 @@ DEF_BIN=$(sed -n '/^valid_user()/,/^}/{/^\s*local ent=/{s=.*:/bin/.*=/bin=p;q}}'
 DEF_SHELL=${DEF_BIN}/${DEF_SHELL##*/bin/}
 
 PRETEND=
+#VERBOSE=true
 
 SUBID_FILES="/etc/subuid /etc/subgid"
 PW_FILES="/etc/passwd /etc/shadow /etc/gshadow /etc/group $SUBID_FILES"
@@ -797,6 +798,16 @@ munge_files() {
     pretend adduser $quiet --disabled-login --shell "${DEF_SHELL:-/usr/bin/bash}" --no-create-home  $comment_opt $def_user $added_user
     local added_group=$(id -u $added_user 2>/dev/null)
 
+    # If BIND_ROOT is overlay and the temp user is not visible there,
+    # fall back to REAL_ROOT when copying passwd/group files.
+    local src_root=$bind_root
+    if findmnt -n -o FSTYPE "$bind_root" 2>/dev/null | grep -q "^overlay$"; then
+        if ! grep -q "^$added_user:" "$bind_root/etc/passwd" 2>/dev/null; then
+            src_root=$REAL_ROOT
+        fi
+    fi
+
+
 
     # Copy in files to the bind_from *after* we've added added_user (if needed)
     # Use files from template_dir first if they are available.
@@ -810,8 +821,7 @@ munge_files() {
         [ "$template_dir" -a -e $template_dir$file ] && continue
         pretend mkdir -p $bdir
 
-        # Probably makes no difference that we copy from bind_root, not real_root
-        pretend cp -a $bind_root$file $bdir
+        pretend cp -a $src_root$file $bdir
     done
 
     # Remove the added user from the originals (but it is still in the copies
@@ -989,4 +999,3 @@ pretend() {
 }
 
 main "$@"
-
