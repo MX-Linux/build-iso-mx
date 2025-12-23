@@ -37,6 +37,7 @@ exfatprogs
 f2fs-tools
 fakeroot
 fastfetch
+fastfetch
 file
 firefox
 fish
@@ -87,9 +88,7 @@ nano
 ntfs-3g
 nvim
 nvme-cli
-openconnect
 openssl
-openvpn
 orca
 os-prober
 papirus-icon-theme
@@ -104,7 +103,6 @@ read-edid
 rpcbind
 rsync
 samba
-scrot
 sdparm
 shared-mime-info
 smartmontools
@@ -116,10 +114,11 @@ sudo
 syslinux
 tcl
 testdisk
+tldr
 tlp
 tmux
 traceroute
-ttf-bitstream-vera
+ttf-liberation
 udisks2
 unpaper
 unrar
@@ -134,7 +133,7 @@ wavpack
 whois
 wireless-regdb
 wmctrl
-wvdial
+xclip
 xdelta3
 xdg-user-dirs
 xdg-utils

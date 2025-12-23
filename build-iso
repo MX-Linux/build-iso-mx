@@ -1617,14 +1617,23 @@ do_stage_4_arch() {
         if [[ -r /etc/locale.gen ]]; then
             case $ENABLE_LOCALES in
                 [Aa]ll) say "Will build $(pq all) locales"
-                        sed -i -r "s/^# ([a-z][a-z]([a-z]?_| ISO|\\.UTF| UTF))/\\1/" /etc/locale.gen;;
+                        # Uncomment every locale line while preserving the rest of the line.
+                        sed -i -r "s/^#\\s*([a-z][a-z]([a-z]?_| ISO|\\.UTF| UTF).*)/\\1/" /etc/locale.gen;;
                 [Dd]efault) say "Will build $(pq default) default locales" ;;
                 [Ss]ingle) say "Will build $(pq "$LOCALE") locale"
                         local locale_re=${LOCALE//./\\.}
-                        sed -i -r -e "s/^([a-z])/# \\1/" -e "s/^#\\s+($locale_re)/\\1/" /etc/locale.gen;;
+                        sed -i -r \
+                            -e 's/^[[:space:]]*([^#[:space:]].*)/# \1/' \
+                            -e "s/^#\\s*(${locale_re}[[:space:]]+.*)/\\1/" /etc/locale.gen;;
                 *) error "Bad ENABLE_LOCALES: $ENABLE_LOCALES" ;;
             esac
             locale-gen
+            local normalized_locale
+            normalized_locale=$(echo "$LOCALE" | tr '[:upper:]' '[:lower:]')
+            normalized_locale=${normalized_locale/.utf-8/.utf8}
+            if ! locale -a 2>/dev/null | grep -qi "^${normalized_locale}$"; then
+                error "Locale $(pqw "$LOCALE") missing after locale-gen (check /etc/locale.gen)"
+            fi
         fi
         echo "LANG=$LOCALE" > /etc/locale.conf
         end_part_lax
