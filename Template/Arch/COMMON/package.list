@@ -5,6 +5,7 @@ acpid
 alsa-tools
 alsa-utils
 at-spi2-core
+autoconf
 bc
 binutils
 btrfs-progs
@@ -14,6 +15,7 @@ ca-certificates
 cabextract
 chrony
 cifs-utils
+conky
 cryptsetup
 cups-browsed
 curl
@@ -81,7 +83,9 @@ most
 mpg123
 mtools
 mtr
+nano
 ntfs-3g
+nvim
 nvme-cli
 openconnect
 openssl

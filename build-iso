@@ -650,6 +650,11 @@ Remaster_Blurb
         for dir in $(flavour_list) COMMON base-AND-full; do
             mkdir -p "$script_dir/Deb/$dir"
         done
+    elif [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        # Create directories for Arch packages
+        mkdir -p "$script_dir/Deb/Arch"
+        mkdir -p "$script_dir/Deb/ArchXfce"
+        mkdir -p "$script_dir/Deb/ArchKDE"
     fi
 
     local full_iso_file=$iso_file_dir/$iso_file
@@ -1685,6 +1690,24 @@ do_stage_4_arch() {
         end_part_lax
     fi
 
+    # Install Arch-specific packages from /Deb/Arch* directories
+    local arch_pkgs cnt
+    arch_pkgs=$(ls $build_dir/Deb/*.pkg.tar.{zst,xz,gz} 2>/dev/null | grep -v '\*')
+    cnt=$(echo "$arch_pkgs" | grep -c . 2>/dev/null || echo 0)
+    if (( cnt > 0 )) \
+        && do_part 13 "Install Arch packages from /Deb"; then
+        psay $cnt "Install $(pqn %n) Arch package%s"
+
+        for pkg in $arch_pkgs; do
+            say "install $(pq "${pkg##*/}")"
+            arch_pacman -U "$pkg"
+        done
+        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_lax
+    else
+        skip_part 13 "Install Arch packages from /Deb"
+    fi
+
     if gather_any remove && do_part 11 "Remove some packages"; then
         # shellcheck disable=SC2206
         local pkgs=( $(gather remove) )
@@ -2383,9 +2406,13 @@ do_stage_7() {
     say "Build the $COMPRESSION_TYPE compressed squashfs file. This takes time and uses a lot of CPU power."
 
     local linuxfs_file
+    local -a mksquash_opts
+    mksquash_opts=($COMPRESSION_TYPE_CODE)
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         linuxfs_file=$iso_dir/arch/$ARCH/airootfs.sfs
         $SUDO mkdir -p "$(dirname "$linuxfs_file")"
+        say "Exclude /Build from Arch squashfs payload"
+        mksquash_opts+=(-e Build)
     else
         linuxfs_file=$iso_dir/antiX/linuxfs
     fi
@@ -2404,7 +2431,7 @@ do_stage_7() {
     else
         UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     fi
-    $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file $COMPRESSION_TYPE_CODE | tee $output
+    $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file "${mksquash_opts[@]}" | tee $output
     UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm "$output"
@@ -3366,6 +3393,27 @@ gather_deb() {
     done
 }
 
+gather_arch_pkg() {
+    local pkg_dir=$script_dir/Deb
+    local dirs=("$pkg_dir/Arch")
+
+    # Add flavor-specific directory based on THEME
+    # archxfce -> ArchXfce, archkde -> ArchKDE
+    case ${THEME:-} in
+        archxfce) dirs+=("$pkg_dir/ArchXfce") ;;
+        archkde)  dirs+=("$pkg_dir/ArchKDE") ;;
+    esac
+
+    local dir f
+    for dir in "${dirs[@]}"; do
+        [[ -d $dir ]] || continue
+        for f in "$dir"/*.pkg.tar.{zst,xz,gz}; do
+            [[ -f $f ]] || continue
+            echo "$f"
+        done
+    done
+}
+
 collect_live_files() {
     local list_file=$1 dest_dir=$sqfs_dir$2
     [[ -r $list_file ]] || return
@@ -3760,6 +3808,13 @@ make_build_dir() {
     local deb_files
     deb_files=$(gather_deb)
     [[ -n $deb_files ]] && cp --target-directory=$b_dir/Deb $deb_files
+
+    # Copy Arch packages if building for Arch
+    if [[ $DISTRO_FAMILY = arch ]]; then
+        local arch_pkgs
+        arch_pkgs=$(gather_arch_pkg)
+        [[ -n $arch_pkgs ]] && cp --target-directory=$b_dir/Deb $arch_pkgs
+    fi
 
     cp -r $0 Input $tools $regex_files $b_dir
 
