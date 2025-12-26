@@ -622,7 +622,7 @@ Remaster_Blurb
     fi
 
     local $HOST_ARCH
-    case $(arch) in
+    case $(uname -m) in
         i386|i486|i686) HOST_ARCH=386 ;;
         x86_64)         HOST_ARCH=x64 ;;
         *) error "Cannot detect Host ARCH" ;;
