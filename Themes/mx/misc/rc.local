@@ -56,7 +56,7 @@ fi
 [ -e /usr/bin/BroadcomStartup ] && /usr/bin/BroadcomStartup
 
 # Set up 12 hour clock format for some countries eg US
-[ -e /usr/local/clock12or24 ] && /usr/bin/clock12or24
+[ -e /usr/bin/clock12or24 ] && /usr/bin/clock12or24
 
 # Automatically switch to vt2 when not in runlevel 5
 case $(runlevel) in
