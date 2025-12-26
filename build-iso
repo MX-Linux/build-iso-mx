@@ -1709,7 +1709,7 @@ do_stage_4_arch() {
 
         for pkg in $arch_pkgs; do
             say "install $(pq "${pkg##*/}")"
-            arch_pacman -U "$pkg"
+            arch_pacman --overwrite='*' -U "$pkg"
         done
         [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_lax
@@ -1849,6 +1849,14 @@ MKINITCPIO
     mkdir -p /usr/share/antiX
     pacman -Qqe > "$output_dir/package-list.out"
     pacman -Qqe > /usr/share/antiX/installed-packages.txt
+
+    # It is easier to do this outside the chroot but by doing it here, the
+    # updatedb database will contain the theme files
+    if [[ -n $THEME && $THEME != none ]] && do_part 21 "Apply Theme"; then
+        apply_theme $THEME
+        check_errors_reset
+        end_part_strict
+    fi
 
     say "Write version files"
     write_version_files
