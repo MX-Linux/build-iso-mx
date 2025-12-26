@@ -112,6 +112,7 @@ main() {
     remaster_dir=$(readlink -f "$script_dir"/Remaster)
     local iso_file_dir="$remaster_dir/iso-files"
     local deb_cache_dir="$remaster_dir/deb-cache/archives"
+    local pacman_cache_dir="$remaster_dir/pacman-cache/pkg"
     local manual_selections=manual-selections
     local exit_file="$output_dir/MUST-EXIT"
     local sign_off_file="$output_dir/SIGN-OFF"
@@ -750,35 +751,41 @@ do_stage_2() {
             $SUDO mkdir -p "$sqfs_dir"
             : "${PACSTRAP_PACKAGES:=base linux linux-firmware}"
             say "pacstrap to $(pq "$sqfs_dir") with: $(pq "$PACSTRAP_PACKAGES")"
-            # Note: pacstrap uses the host's pacman config by default, which is
-            # often unconfigured on Debian/MX. Provide a dedicated config + mirrors.
-            : "${PACMAN_CONF:=Input/arch/pacman.conf}"
-            : "${PACMAN_MIRRORLIST:=Input/arch/mirrorlist}"
-            local pacman_conf_src=$script_dir/${PACMAN_CONF#./}
-            local mirror_src=$script_dir/${PACMAN_MIRRORLIST#./}
-            [[ -r "$pacman_conf_src" ]] || fatal "Missing PACMAN_CONF: $(pqw "$PACMAN_CONF")"
-            [[ -r "$mirror_src" ]] || fatal "Missing PACMAN_MIRRORLIST: $(pqw "$PACMAN_MIRRORLIST")"
 
-            local pacman_work=$work_dir/pacman
-            $SUDO mkdir -p "$pacman_work"
-            local pacman_conf=$pacman_work/pacman.conf
-            local mirrorlist=$pacman_work/mirrorlist
-            $SUDO cp "$mirror_src" "$mirrorlist"
-            $SUDO cp "$pacman_conf_src" "$pacman_conf"
-            $SUDO sed -i "s|^Include = /etc/pacman.d/mirrorlist$|Include = $mirrorlist|" "$pacman_conf"
+            if is_arch_host; then
+                # On Arch host, use native pacman configuration
+                say "Using host pacman configuration (Arch Linux)"
+                $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES
+            else
+                # On Debian/MX host, provide dedicated config + mirrors
+                : "${PACMAN_CONF:=Input/arch/pacman.conf}"
+                : "${PACMAN_MIRRORLIST:=Input/arch/mirrorlist}"
+                local pacman_conf_src=$script_dir/${PACMAN_CONF#./}
+                local mirror_src=$script_dir/${PACMAN_MIRRORLIST#./}
+                [[ -r "$pacman_conf_src" ]] || fatal "Missing PACMAN_CONF: $(pqw "$PACMAN_CONF")"
+                [[ -r "$mirror_src" ]] || fatal "Missing PACMAN_MIRRORLIST: $(pqw "$PACMAN_MIRRORLIST")"
 
-            # Ensure the host keyring exists for signature verification.
-            if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
-                require_programs_fatal pacman-key makepkg
-                if ! ensure_archlinux_keyring_layout; then
-                    fatal "Missing Arch keyring file. On Debian/MX try: sudo apt install archlinux-keyring"
+                local pacman_work=$work_dir/pacman
+                $SUDO mkdir -p "$pacman_work"
+                local pacman_conf=$pacman_work/pacman.conf
+                local mirrorlist=$pacman_work/mirrorlist
+                $SUDO cp "$mirror_src" "$mirrorlist"
+                $SUDO cp "$pacman_conf_src" "$pacman_conf"
+                $SUDO sed -i "s|^Include = /etc/pacman.d/mirrorlist$|Include = $mirrorlist|" "$pacman_conf"
+
+                # Ensure the host keyring exists for signature verification.
+                if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
+                    require_programs_fatal pacman-key makepkg
+                    if ! ensure_archlinux_keyring_layout; then
+                        fatal "Missing Arch keyring file. On Debian/MX try: sudo apt install archlinux-keyring"
+                    fi
+                    say "Initialize host pacman keyring"
+                    $SUDO pacman-key --init
+                    $SUDO pacman-key --populate archlinux
                 fi
-                say "Initialize host pacman keyring"
-                $SUDO pacman-key --init
-                $SUDO pacman-key --populate archlinux
-            fi
 
-            $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES
+                $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES
+            fi
 
             end_timer "run pacstrap"
             check_errors_lax
@@ -787,12 +794,25 @@ do_stage_2() {
         fi
 
         # Ensure the target has a working pacman configuration and mirrorlist.
-        # On Debian/MX hosts, pacstrap does not reliably set this up for the target.
-        $SUDO mkdir -p "$sqfs_dir/etc/pacman.d"
-        $SUDO cp "$mirror_src" "$sqfs_dir/etc/pacman.d/mirrorlist"
-        $SUDO cp "$pacman_conf_src" "$sqfs_dir/etc/pacman.conf"
-        if ! $SUDO grep -q '^\[extra\]' "$sqfs_dir/etc/pacman.conf"; then
-            fatal "Target pacman.conf is missing repository sections (e.g. [extra]). Check $(pqw "$PACMAN_CONF")"
+        if is_arch_host; then
+            # On Arch host, pacstrap should have set up the target correctly
+            # But let's verify and fix if needed
+            if [[ ! -f "$sqfs_dir/etc/pacman.conf" ]]; then
+                say "Copying host pacman.conf to target"
+                $SUDO cp "/etc/pacman.conf" "$sqfs_dir/etc/pacman.conf"
+            fi
+            if [[ ! -f "$sqfs_dir/etc/pacman.d/mirrorlist" ]]; then
+                say "Copying host mirrorlist to target"
+                $SUDO cp "/etc/pacman.d/mirrorlist" "$sqfs_dir/etc/pacman.d/mirrorlist"
+            fi
+        else
+            # On Debian/MX hosts, pacstrap does not reliably set this up for the target.
+            $SUDO mkdir -p "$sqfs_dir/etc/pacman.d"
+            $SUDO cp "$mirror_src" "$sqfs_dir/etc/pacman.d/mirrorlist"
+            $SUDO cp "$pacman_conf_src" "$sqfs_dir/etc/pacman.conf"
+            if ! $SUDO grep -q '^\[extra\]' "$sqfs_dir/etc/pacman.conf"; then
+                fatal "Target pacman.conf is missing repository sections (e.g. [extra]). Check $(pqw "$PACMAN_CONF")"
+            fi
         fi
 
         # Avoid mkinitcpio warnings about missing vconsole config in minimal installs.
@@ -3733,6 +3753,17 @@ mount_deb_cache() {
     bind_mount $deb_cache_dir $deb_dir
 }
 
+# mount_pacman_cache
+# Bind mount the pacman package cache directory outside the chroot so we can reuse all
+# packages that have been downloaded. This is MUCH more efficient than simply
+# deleting them.
+#------------------------------------------------------------------------------
+mount_pacman_cache() {
+    local pacman_dir=$sqfs_dir/var/cache/pacman/pkg
+    mkdir -p $pacman_cache_dir
+    bind_mount $pacman_cache_dir $pacman_dir
+}
+
 #------------------------------------------------------------------------------
 # bind_mount old_mp new_mp
 # Common code for bind outside mounting directories in the chroot.
@@ -3747,7 +3778,7 @@ bind_mount() {
 
 #------------------------------------------------------------------------------
 # prep_chroot
-# Mount /proc /sys and /var/cache/apt/archives in the chroot. Offer to also
+# Mount /proc /sys and package caches (/var/cache/apt/archives or /var/cache/pacman/pkg) in the chroot. Offer to also
 # mount /dev if it appears to be empty. Create and populate the /Build dir
 # in the chroot if it does not already exist. Otherwise don't touch it.
 #------------------------------------------------------------------------------
@@ -3755,6 +3786,7 @@ prep_chroot() {
     check_sqfs_dir
     umount_chroot
     [[ ${DISTRO_FAMILY:-debian} = debian ]] && mount_deb_cache
+    [[ ${DISTRO_FAMILY:-debian} = arch ]] && mount_pacman_cache
 
     for fs in proc sys; do
         say "Mounting $(pq /$fs) in chroot"
@@ -4119,7 +4151,7 @@ _cache_() {
     local ctype=$1; shift
     local type=$1 subtype=$2 dir=$3
 
-    local cache_exclude="^/Build|^/proc/|^/sys/|^/var/cache/apt/archives/"
+    local cache_exclude="^/Build|^/proc/|^/sys/|^/var/cache/apt/archives/|^/var/cache/pacman/pkg/"
 
     echo $dir | grep -q "^$remaster_dir" || fatal "Refusing to cache suspicious directory: $dir"
 
@@ -4814,10 +4846,27 @@ require_arch_host_tools() {
     [[ -z $missing ]] && return 0
 
     local hint=""
-    if [[ $missing =~ (^|[[:space:]])pacman($|[[:space:]]) ]] && which apt-get >/dev/null 2>&1; then
+    if is_arch_host; then
+        # On Arch host, pacman should already be available
+        if [[ $missing =~ (^|[[:space:]])pacstrap($|[[:space:]]) ]]; then
+            hint=" On Arch Linux try: sudo pacman -S pacman"
+        fi
+        if [[ $missing =~ (^|[[:space:]])makepkg($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo pacman -S pacman"
+        fi
+        if [[ $missing =~ (^|[[:space:]])grub-mkrescue($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo pacman -S grub"
+        fi
+        if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo pacman -S libisoburn"
+        fi
+        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo pacman -S mtools"
+        fi
+    elif [[ $missing =~ (^|[[:space:]])pacman($|[[:space:]]) ]] && which apt-get >/dev/null 2>&1; then
         hint=" On Debian/MX try: sudo apt install pacman-package-manager pacman-mirrorlist makepkg archlinux-keyring"
     fi
-    fatal "Missing these required programs: $(pqw "$missing").$hint"
+    fatal "Missing these required programs: $(pqw "$missing").${hint:+ $hint}"
 }
 
 ensure_archlinux_keyring_layout() {
@@ -5102,6 +5151,12 @@ make_real() {
 # Is this an antiX iso?
 #------------------------------------------------------------------------------
 is_antiX() { [[ $DISTRO_NAME = "antiX" ]] ; return $? ; }
+
+# Detect if running on Arch Linux host
+is_arch_host() {
+    [[ -f /etc/os-release ]] && grep -q '^ID=arch' /etc/os-release 2>/dev/null
+    return $?
+}
 
 #------------------------------------------------------------------------------
 # Distro based check of flavour name
