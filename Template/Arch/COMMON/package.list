@@ -21,7 +21,6 @@ cups-browsed
 curl
 desktop-file-utils
 dfc
-dhclient
 dialog
 discover
 dkms
@@ -51,7 +50,6 @@ glib-networking
 gocr
 groff
 gsettings-desktop-schemas
-gufw
 haveged
 hdparm
 hexedit
