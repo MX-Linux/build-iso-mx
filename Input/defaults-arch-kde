@@ -35,3 +35,4 @@ ENABLE_LOCALES="Single"
 LOCALE="en_US.UTF-8"
 TIME_ZONE="UTC"
 
+ISO_SHELL="/usr/bin/fish"

@@ -30,5 +30,8 @@ copy_file conky.desktop             /etc/skel/.config/autostart/ --create
 copy_file magnus-autostart.desktop  /etc/skel/.config/autostart/ --create
 copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/ --create
 
+# Enable services
+systemctl enable systemd-resolved
+
 exit 0
 
