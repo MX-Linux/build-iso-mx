@@ -302,11 +302,11 @@ main() {
 
     load_defaults
 
-    # In auto mode we cannot prompt for sudo credentials; require passwordless sudo
+    # In auto mode we need to cache sudo credentials to avoid mid-build prompts
     # (or run as root) to avoid confusing mid-build failures.
     if (( UID != 0 )) && [[ -n $auto_mode ]]; then
-        sudo -n true >/dev/null 2>&1 \
-            || fatal "$(pq --auto) requires passwordless sudo (or run as root)"
+        sudo true >/dev/null 2>&1 \
+            || fatal "$(pq --auto) requires sudo access (or run as root)"
     fi
 
     trap on_exit       EXIT
