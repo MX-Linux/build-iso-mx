@@ -1349,8 +1349,8 @@ do_stage_4() {
         check_errors_lax
     fi
 
-    if do_part 17 "!Update Timezone, hostname, and user accounts"; then
-       if [[  -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
+    if do_part 16 "!Update Timezone and hostname"; then
+        if [[  -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
             say "Set timezone and localtime to $(pq $TIME_ZONE)"
             echo $TIME_ZONE > /etc/timezone
             DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata 2>&1 && echo
@@ -1368,6 +1368,10 @@ do_stage_4() {
             hostname -F /etc/hostname
         fi
 
+        end_part_strict
+    fi
+
+    if do_part 17 "!Set up live user accounts"; then
         local user
         user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
@@ -1419,7 +1423,7 @@ do_stage_4() {
     check_errors_strict
 
     if is_antiX; then
-        if [[ -n "$default_desktop" ]] && do_part 19 "!Update SLiM defaults"; then
+        if [[ -n "$default_desktop" ]] && do_part 20 "!Update SLiM defaults"; then
 
             if ! [[ -x "$make_xinitrc" ]]; then
                 mkdir -p "$(dirname "$make_xinitrc")"    || my_exit
@@ -1440,7 +1444,7 @@ do_stage_4() {
 
             end_part_strict
         else
-            skip_part 19 "Update SLiM defaults"
+            skip_part 20 "Update SLiM defaults"
         fi
     fi
 
@@ -1471,7 +1475,7 @@ do_stage_4() {
 
     # It is easier to do this outside the chroot but by doing it here, the
     # updatedb database will contain the theme files
-    if [[ -n $THEME && $THEME != none ]] && do_part 20 "Apply Theme"; then
+    if [[ -n $THEME && $THEME != none ]] && do_part 22 "Apply Theme"; then
         apply_theme $THEME
         check_errors_reset
         end_part_strict
@@ -1605,7 +1609,7 @@ do_stage_4_arch() {
             error "Low free space: ${free_mb}MB available at $PACMAN_CACHE_DIR (need at least ${MIN_FREE_MB}MB)"
         fi
 
-        if [[ $PACMAN_CLEAR_CACHE == true ]]; then
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then
             rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         fi
 
@@ -1628,7 +1632,7 @@ do_stage_4_arch() {
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
         arch_pacman -Syu
-        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_lax
     fi
 
@@ -1673,7 +1677,7 @@ do_stage_4_arch() {
         if (( ${#pkgs[@]} > 0 )); then
             arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing basic packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_strict
     else
         skip_part 4 "Install basic packages"
@@ -1683,7 +1687,7 @@ do_stage_4_arch() {
         : "${K_PKG:=linux}"
         : "${K_HEADERS_PKG:=linux-headers}"
         arch_pacman -S --needed "$K_PKG" "$K_HEADERS_PKG"
-        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_strict
     fi
 
@@ -1701,7 +1705,7 @@ do_stage_4_arch() {
         if (( ${#pkgs[@]} > 0 )); then
             arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing flavour packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_strict
     else
         skip_part 8 "Install flavour packages"
@@ -1731,7 +1735,7 @@ do_stage_4_arch() {
             say "install $(pq "${pkg##*/}")"
             arch_pacman --overwrite='*' -U "$pkg"
         done
-        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_lax
     else
         skip_part 13 "Install Arch packages from /Deb"
@@ -1748,11 +1752,11 @@ do_stage_4_arch() {
         # shellcheck disable=SC2206
         local pkgs=( $(compile_pkg_list add exclude-chroot) )
         (( ${#pkgs[@]} > 0 )) && arch_pacman -S --needed "${pkgs[@]}"
-        [[ $PACMAN_CLEAR_CACHE == true ]] && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
         end_part_lax
     fi
 
-    if do_part 17 "!Update Timezone, hostname, and user accounts"; then
+    if do_part 16 "!Update Timezone and hostname"; then
         if [[ -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
             ln -sf "/usr/share/zoneinfo/$TIME_ZONE" /etc/localtime
         fi
@@ -1763,6 +1767,10 @@ do_stage_4_arch() {
             hostname -F /etc/hostname
         fi
 
+        end_part_strict
+    fi
+
+    if do_part 17 "!Set up live user accounts"; then
         local user
         user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
@@ -1795,7 +1803,7 @@ do_stage_4_arch() {
         end_part_lax
     fi
 
-    if do_part 19 "Build archiso initramfs"; then
+    if do_part 20 "Build archiso initramfs"; then
         local archiso_conf="/etc/mkinitcpio-archiso.conf"
         local releng_conf=
         local cand
@@ -1858,7 +1866,7 @@ MKINITCPIO
         end_part_strict
     fi
 
-    if do_part 20 "Detect kernel module version"; then
+    if do_part 21 "Detect kernel module version"; then
         if [[ -d /usr/lib/modules ]]; then
             K_MODVER=$(ls -1 /usr/lib/modules 2>/dev/null | sort -V | tail -1)
         fi
@@ -1872,7 +1880,7 @@ MKINITCPIO
 
     # It is easier to do this outside the chroot but by doing it here, the
     # updatedb database will contain the theme files
-    if [[ -n $THEME && $THEME != none ]] && do_part 21 "Apply Theme"; then
+    if [[ -n $THEME && $THEME != none ]] && do_part 22 "Apply Theme"; then
         apply_theme $THEME
         check_errors_reset
         end_part_strict
@@ -1928,7 +1936,7 @@ do_stage_5() {
 
     sleep 2
 
-    if is_antiX && do_part 21 "!Check kernel's GCC version"; then
+    if is_antiX && do_part 22 "!Check kernel's GCC version"; then
         check_kernel_gcc vmlinuz-$K_NAME
         end_part_strict
     fi
