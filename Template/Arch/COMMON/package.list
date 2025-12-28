@@ -110,7 +110,6 @@ spice-vdagent
 squashfs-tools
 sshfs
 strace
-sudo
 tcl
 testdisk
 tldr
@@ -139,5 +138,4 @@ xdg-utils
 xfsprogs
 yad
 zip
-zstd
 zsync
