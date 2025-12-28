@@ -43,6 +43,7 @@ fish
 fontconfig
 fprintd
 fuse3
+fwupd
 gcc
 gdu
 ghostscript
@@ -64,6 +65,7 @@ jq
 kbd
 laptop-detect
 less
+linux-firmware
 lockfile-progs
 lsb-release
 lshw
@@ -109,7 +111,6 @@ squashfs-tools
 sshfs
 strace
 sudo
-syslinux
 tcl
 testdisk
 tldr
