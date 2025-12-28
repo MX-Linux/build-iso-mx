@@ -19,5 +19,6 @@ copy_file zramswap.service	/etc/systemd/system/
 # Enable services
 systemctl enable sddm
 systemctl enable systemd-resolved
+systemctl --user enable mx-arch-updater-tray
 
 exit 0
