@@ -1,0 +1,15 @@
+
+%FULL_DISTRO_NAME_SPACE% (%RELEASE_DATE%)
+
+Boot Options:
+  Default     - Boot the live system
+  Copy To RAM - Load system into memory (requires sufficient RAM)
+
+Keyboard Shortcuts:
+  e - Edit the selected boot entry
+  c - Open GRUB command line
+  ESC - Return to menu
+
+For more information, visit the project website.
+
+Press <Enter> to return to the menu
