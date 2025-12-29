@@ -1010,6 +1010,10 @@ do_stage_4() {
     #error-logchecking ASAP so we don't waste user's time
     [[ "$script_dir" == "$build_dir" ]] || fatal "We do not appear to be in a chroot environment"
 
+    # Set SIGN_OFF early to ensure it's available before any potential exits
+    SIGN_OFF="$text_co$ME in chroot done$nc"
+    vsay "DEBUG: SIGN_OFF set to: '$SIGN_OFF'"
+
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         do_stage_4_arch
         my_exit
@@ -1531,7 +1535,6 @@ do_stage_4() {
     echo "K_NAME=\"$K_NAME\"" > $output_file
 
     _say_ "$num_co===============================================================$nc"
-    SIGN_OFF="$text_co$ME in chroot done$nc"
 
     rm -f "$partial_file"
     leave_stage
@@ -1550,6 +1553,10 @@ do_stage_4_arch() {
 
     say "Arch template root: $(pq "$template")"
     say "Arch flavour: $(pq "$FLAV") (ISO_FLAV=$(pq "$ISO_FLAV")), base=$(pq "$ISO_RESPIN_OF")"
+
+    # Set SIGN_OFF for Arch chroot as well
+    SIGN_OFF="$text_co$ME in chroot done$nc"
+    vsay "DEBUG: SIGN_OFF set to: '$SIGN_OFF'"
 
     # Normalize values that may include human-readable suffixes from defaults files.
     ENABLE_LOCALES=${ENABLE_LOCALES%% (*}
