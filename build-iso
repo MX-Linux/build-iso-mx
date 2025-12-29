@@ -1565,7 +1565,20 @@ do_stage_6() {
     enter_stage 6 "Prepare iso directory"
     # (0) Populate iso dir with boilerplate files
     # (1) Copy flavour-dependent bootloader.cfg files via inheritance
-    copy_template_dir -u iso $iso_dir
+    
+    #copy correct iso folder for multi-init if present
+    if [ -d "$template/COMMON/iso-multi" ]; then
+    	if [ -e "$sqfs_dir/usr/lib/sysvinit/init" ] && [ -e "$sqfs_dir/usr/lib/systemd/systemd" ]; then
+        	say "copy multi-init iso template"
+    		copy_template_dir -u iso-multi $iso_dir
+    	else
+    		say "copy single-init iso template"
+    		copy_template_dir -u iso $iso_dir
+    	fi
+    else
+    	say "iso-multi not found, copy single-init iso template"
+    	copy_template_dir -u iso $iso_dir
+    fi
 
     say "Make/customize bootloader configuration"
 
