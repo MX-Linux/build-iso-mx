@@ -91,6 +91,7 @@ nvme-cli
 openssl
 orca
 os-prober
+packagekit
 papirus-icon-theme
 parted
 patch
@@ -118,6 +119,7 @@ tmux
 traceroute
 ttf-liberation
 udisks2
+ufw
 unpaper
 unrar
 unzip

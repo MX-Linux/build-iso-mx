@@ -10,6 +10,7 @@ start_theme "$@"
 #
 copy_dir desktop-base/		/usr/share/desktop-base/	--create
 copy_dir extra/			/usr/share/fonts/extra		--create
+copy_file grub			/etc/default
 copy_file rc.local		/etc/
 copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file plymouthd.conf	/etc/plymouth/			--create
