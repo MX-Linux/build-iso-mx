@@ -1464,7 +1464,9 @@ do_stage_4() {
     write_version_files
 
     if ! is_antiX; then
-        mv /etc/antix-version /etc/mx-version
+        if [[ ! -f /etc/mx-version || $(readlink -f /etc/antix-version 2>/dev/null) != $(readlink -f /etc/mx-version 2>/dev/null) ]]; then
+            mv /etc/antix-version /etc/mx-version
+        fi
         ln -frs /etc/mx-version /etc/antix-version
 
         ##mask cgmanager.service - not needed for systemd and masking won't prevent sysVinit from using it.
@@ -1910,7 +1912,9 @@ MKINITCPIO
     write_version_files
 
     if ! is_antiX; then
-        mv /etc/antix-version /etc/mx-version
+        if [[ ! -f /etc/mx-version || $(readlink -f /etc/antix-version 2>/dev/null) != $(readlink -f /etc/mx-version 2>/dev/null) ]]; then
+            mv /etc/antix-version /etc/mx-version
+        fi
         ln -frs /etc/mx-version /etc/antix-version
     fi
 
@@ -2365,6 +2369,10 @@ do_stage_6_arch() {
 
     mkdir -p "$boot_dir" "$rootfs_dir" "$iso_dir/boot/grub"
 
+    # Copy GRUB theme and configuration from template
+    say "Copy GRUB theme and configuration for Arch ISO"
+    copy_template_dir -u iso $iso_dir
+
     local kimg=$sqfs_dir/boot/${K_BOOT_IMAGE:-vmlinuz-linux}
     local initrd_img=$sqfs_dir/boot/archiso.img
     [[ -e "$kimg" ]] || error "Missing kernel image in squashfs: $(pqw "${kimg#"$sqfs_dir"}")"
@@ -2409,24 +2417,36 @@ MKINITCPIO
         cp "$work_dir/package-list.out" "$arch_dir/pkglist.$ARCH.txt"
     fi
 
-    # Grub entry boots archiso with copy-to-ram support.
+    # Process bootloader template variables in grub.cfg
     : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
-    cat > "$iso_dir/boot/grub/grub.cfg" << GRUBCFG
-set default=0
-set timeout=5
+    say "Fill in bootloader template files"
+    local bootloader_data=$output_dir/bootloader-data
+    cat << Bootloader_Data > $bootloader_data
+      DISTRO_NAME="$DISTRO_NAME"
+   DISTRO_VERSION="$DISTRO_VERSION"
+ FULL_DISTRO_NAME="$full_distro_name"
+         ISO_ARCH="$ISO_ARCH"
+        CODE_NAME="$CODE_NAME"
+             ARCH="$ARCH"
+        ISO_LABEL="$ISO_LABEL"
+     RELEASE_DATE="$RELEASE_DATE"
+Bootloader_Data
 
-menuentry "${DISTRO_NAME} Live (${ARCH})" {
-    search --no-floppy --set=root --label "${ISO_LABEL}"
-    linux  /arch/boot/${ARCH}/vmlinuz-linux archisobasedir=arch archisolabel=${ISO_LABEL} copytoram=0
-    initrd /arch/boot/${ARCH}/archiso.img
-}
-
-menuentry "${DISTRO_NAME} Live (${ARCH}) (Copy To RAM)" {
-    search --no-floppy --set=root --label "${ISO_LABEL}"
-    linux  /arch/boot/${ARCH}/vmlinuz-linux archisobasedir=arch archisolabel=${ISO_LABEL} copytoram
-    initrd /arch/boot/${ARCH}/archiso.img
-}
-GRUBCFG
+    # Apply template substitutions to grub.cfg and theme files
+    if [[ -f "$iso_dir/boot/grub/grub.cfg" ]]; then
+        $tools/bootloader-template -i --data=$bootloader_data "$iso_dir/boot/grub/grub.cfg"
+    fi
+    if [[ -f "$iso_dir/boot/grub/theme/uefi.txt" ]]; then
+        sed -i "s/%DISTRO%/${DISTRO_NAME}/g" "$iso_dir/boot/grub/theme/uefi.txt"
+        sed -i "s/%ASCII_CODE_NAME%/${CODE_NAME}/g" "$iso_dir/boot/grub/theme/uefi.txt"
+    fi
+    if [[ -f "$iso_dir/boot/grub/theme/bios.txt" ]]; then
+        sed -i "s/%DISTRO%/${DISTRO_NAME}/g" "$iso_dir/boot/grub/theme/bios.txt"
+        sed -i "s/%ASCII_CODE_NAME%/${CODE_NAME}/g" "$iso_dir/boot/grub/theme/bios.txt"
+    fi
+    if [[ -f "$iso_dir/boot/grub/theme/help.txt" ]]; then
+        $tools/bootloader-template -i --data=$bootloader_data "$iso_dir/boot/grub/theme/help.txt"
+    fi
 }
 
 #------------------------------------------------------------------------------
