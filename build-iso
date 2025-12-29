@@ -1741,6 +1741,12 @@ do_stage_4_arch() {
         skip_part 13 "Install Arch packages from /Deb"
     fi
 
+    if do_part 14 "Update system after installing custom packages"; then
+        arch_pacman -Syu
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        end_part_lax
+    fi
+
     if gather_any remove && do_part 11 "Remove some packages"; then
         # shellcheck disable=SC2206
         local pkgs=( $(gather remove) )
