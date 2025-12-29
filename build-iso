@@ -1841,12 +1841,17 @@ do_stage_4_arch() {
             cp "$releng_conf" "$archiso_conf"
             # archiso doesn't pass a traditional root= device; the `fsck` hook
             # can emit a noisy "device '' not found" warning. Strip it.
+            # Also add plymouth hook before filesystems if not present
             sed -i -r 's/\bfsck\b//g; s/HOOKS=\(([[:space:]]*)/HOOKS=(\1/; s/[[:space:]]+/ /g; s/\( /\(/; s/ \)/\)/' "$archiso_conf" 2>/dev/null || true
+            # Add plymouth hook if plymouth is installed and hook not already present
+            if command -v plymouth >/dev/null 2>&1 && ! grep -q "plymouth" "$archiso_conf"; then
+                sed -i -r 's/(HOOKS=\([^)]*block[[:space:]]+)/\1plymouth /' "$archiso_conf"
+            fi
             mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img
         else
             # Fallback: synthesize a minimal archiso mkinitcpio config.
             # Avoid autodetect in chroot (it can error due to missing real rootfs metadata).
-            local hooks="base udev modconf block filesystems keyboard"
+            local hooks="base udev modconf block plymouth filesystems keyboard"
             if [[ ! -e /usr/lib/initcpio/hooks/archiso && ! -e /usr/lib/initcpio/install/archiso ]]; then
                 # On some Arch snapshots, archiso hooks are shipped by mkinitcpio-archiso.
                 arch_pacman -S mkinitcpio-archiso || true
