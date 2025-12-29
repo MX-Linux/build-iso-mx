@@ -1899,6 +1899,13 @@ MKINITCPIO
         end_part_strict
     fi
 
+    if do_part 15 "Generate GRUB configuration"; then
+        if command -v grub-mkconfig >/dev/null 2>&1; then
+            grub-mkconfig -o /boot/grub/grub.cfg
+        fi
+        end_part_lax
+    fi
+
     say "Write version files"
     write_version_files
 
@@ -2405,7 +2412,7 @@ set timeout=5
 
 menuentry "${DISTRO_NAME} Live (${ARCH})" {
     search --no-floppy --set=root --label "${ISO_LABEL}"
-    linux  /arch/boot/${ARCH}/vmlinuz-linux archisobasedir=arch archisolabel=${ISO_LABEL}
+    linux  /arch/boot/${ARCH}/vmlinuz-linux archisobasedir=arch archisolabel=${ISO_LABEL} copytoram=0
     initrd /arch/boot/${ARCH}/archiso.img
 }
 
