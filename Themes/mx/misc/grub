@@ -1,11 +1,11 @@
-# If you change this file, run 'update-grub' afterwards to update
-# /boot/grub/grub.cfg.
+# If you change this file, run 'grub-mkconfig -o /boot/grub/grub.cfg'
+# afterwards to update /boot/grub/grub.cfg.
 # For full documentation of the options in this file, see:
 #   info -f grub -n 'Simple configuration'
 
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=5
-GRUB_DISTRIBUTOR="$(unset PRETTY_NAME; (. /etc/lsb-release; echo ${PRETTY_NAME:?}) 2>/dev/null || echo Debian)"
+GRUB_DISTRIBUTOR="$(unset DISTRIB_DESCRIPTION; (. /etc/lsb-release; echo ${DISTRIB_DESCRIPTION:?}) 2>/dev/null || echo Arch Linux)"
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 GRUB_CMDLINE_LINUX=""
 
