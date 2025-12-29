@@ -1909,6 +1909,11 @@ MKINITCPIO
     say "Write version files"
     write_version_files
 
+    if ! is_antiX; then
+        mv /etc/antix-version /etc/mx-version
+        ln -frs /etc/mx-version /etc/antix-version
+    fi
+
     cat > "$output_file" << Output
 K_NAME="$K_NAME"
 K_MODVER="$K_MODVER"
