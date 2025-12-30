@@ -19,6 +19,7 @@ conky
 cryptsetup
 cups-browsed
 curl
+debugedit
 desktop-file-utils
 dfc
 dialog

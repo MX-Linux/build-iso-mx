@@ -10,6 +10,7 @@ bluez-cups
 bluez-tools
 breeze
 breeze-gtk
+breeze-gtk
 breeze-icons
 ca-certificates-java
 catdoc
@@ -42,6 +43,7 @@ kamoso
 kate
 kcalc
 kde-cli-tools
+kde-gtk-config
 kdeconnect
 kdegraphics-thumbnailers
 kdenetwork-filesharing
@@ -76,7 +78,6 @@ noto-fonts-emoji
 okular
 oxygen-icons
 oxygen-sounds
-packagekit
 partitionmanager
 pavucontrol
 pdfarranger
