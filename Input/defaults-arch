@@ -42,4 +42,4 @@ LIVE_USER="demo"
 # Locale / timezone
 ENABLE_LOCALES="Single"
 LOCALE="en_US.UTF-8"
-TIME_ZONE="UTC"
+TIME_ZONE="America/New_York"
