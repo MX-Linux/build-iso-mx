@@ -33,6 +33,6 @@ LIVE_USER="demo"
 
 ENABLE_LOCALES="Single"
 LOCALE="en_US.UTF-8"
-TIME_ZONE="UTC"
+TIME_ZONE="America/New_York"
 
 ISO_SHELL="/usr/bin/fish"
