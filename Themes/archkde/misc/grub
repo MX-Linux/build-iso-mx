@@ -5,7 +5,7 @@
 
 GRUB_DEFAULT=0
 GRUB_TIMEOUT=5
-GRUB_DISTRIBUTOR="$(unset DISTRIB_DESCRIPTION; (. /etc/lsb-release; echo ${DISTRIB_DESCRIPTION:?}) 2>/dev/null || echo Arch Linux)"
+GRUB_DISTRIBUTOR="$(unset DISTRIB_ID; (. /etc/lsb-release; echo ${DISTRIB_ID:?}) 2>/dev/null || echo Arch)"
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 GRUB_CMDLINE_LINUX=""
 
