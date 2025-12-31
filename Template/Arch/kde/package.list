@@ -68,6 +68,7 @@ kscreen
 ksshaskpass
 ksudoku
 kwalletmanager
+kwin
 kwin-x11
 lame
 libcanberra-pulse
@@ -107,6 +108,7 @@ skanpage
 smb4k
 sound-theme-freedesktop
 sox
+spectacle
 strawberry
 system-config-printer
 systemsettings
