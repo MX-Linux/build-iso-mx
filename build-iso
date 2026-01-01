@@ -4907,7 +4907,7 @@ require_arch_host_tools() {
     if is_arch_host; then
         # On Arch host, pacman should already be available
         if [[ $missing =~ (^|[[:space:]])pacstrap($|[[:space:]]) ]]; then
-            hint=" On Arch Linux try: sudo pacman -S pacman"
+            hint=" On Arch Linux try: sudo pacman -S arch-install-scripts"
         fi
         if [[ $missing =~ (^|[[:space:]])makepkg($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }sudo pacman -S pacman"
@@ -4921,8 +4921,30 @@ require_arch_host_tools() {
         if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }sudo pacman -S mtools"
         fi
-    elif [[ $missing =~ (^|[[:space:]])pacman($|[[:space:]]) ]] && which apt-get >/dev/null 2>&1; then
-        hint=" On Debian/MX try: sudo apt install pacman-package-manager pacman-mirrorlist makepkg archlinux-keyring"
+
+    elif which apt-get >/dev/null 2>&1; then
+        # On Debian/MX hosts
+        if [[ $missing =~ (^|[[:space:]])pacstrap($|[[:space:]]) ]]; then
+            hint=" For pacstrap try: sudo apt install arch-install-scripts"
+        fi
+        if [[ $missing =~ (^|[[:space:]])pacman($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For pacman try: sudo apt install pacman-package-manager && sudo pacman-key --refresh-keys"
+        fi
+        if [[ $missing =~ (^|[[:space:]])pacman-key($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For pacman-key try: sudo apt install pacman-package-manager"
+        fi
+        if [[ $missing =~ (^|[[:space:]])makepkg($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For makepkg try: sudo apt install pacman-package-manager"
+        fi
+        if [[ $missing =~ (^|[[:space:]])grub-mkrescue($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For grub-mkrescue try: sudo apt install grub2-common (or grub-common on older versions)"
+        fi
+        if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For xorriso try: sudo apt install xorriso"
+        fi
+        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For mformat/mcopy try: sudo apt install mtools"
+        fi
     fi
     fatal "Missing these required programs: $(pqw "$missing").${hint:+ $hint}"
 }
