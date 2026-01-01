@@ -919,7 +919,11 @@ make_xorg() {
     echo_live "$_Configuring_X_file_with_Y_" "$(pquote $file)" "$(pquote $driver $bus_id)"
 
     backup_file $file
-    /sbin/make-xorg-conf --output=$file $driver $bus_id
+    if [ -x /sbin/make-xorg-conf ]; then
+    	/sbin/make-xorg-conf --output=$file $driver $bus_id
+    else
+    	/bin/make-xorg-conf --output=$file $driver $bus_id
+    fi
     sync
     sleep 1  # *** sigh ***
 }
