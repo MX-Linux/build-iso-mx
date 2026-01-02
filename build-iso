@@ -2566,8 +2566,48 @@ do_stage_8() {
         start_timer
         : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
         say "Using $(pq grub-mkrescue) to make ISO (label: $(pq "$ISO_LABEL"))"
-        grub-mkrescue -o "$full_iso_file" -volid "$ISO_LABEL" "$iso_dir" 2>&1 \
-            || error "iso file creation failed"
+
+        # Temporarily overlay GRUB modules from squashfs for hybrid BIOS+UEFI ISO
+        # grub-mkrescue auto-detects platforms in /usr/lib/grub/, so we temporarily
+        # make squashfs modules available there
+        local host_grub_backup="/usr/lib/grub-host-backup-$$"
+        local restore_host_grub=false
+
+        if [[ -d "$sqfs_dir/usr/lib/grub/i386-pc" ]]; then
+            say "Temporarily install GRUB modules from squashfs for hybrid BIOS+UEFI boot"
+
+            # Backup existing host GRUB if present
+            if [[ -d "/usr/lib/grub" ]]; then
+                $SUDO mv "/usr/lib/grub" "$host_grub_backup"
+                restore_host_grub=true
+            fi
+
+            # Symlink squashfs GRUB modules to standard location
+            $SUDO ln -s "$sqfs_dir/usr/lib/grub" "/usr/lib/grub"
+
+            [[ -d "/usr/lib/grub/i386-pc" ]] && say "  BIOS (i386-pc) modules available"
+            [[ -d "/usr/lib/grub/x86_64-efi" ]] && say "  UEFI (x86_64-efi) modules available"
+        else
+            warn "Missing BIOS GRUB modules in squashfs - ISO will be UEFI-only"
+        fi
+
+        # Create hybrid BIOS+UEFI ISO using auto-detected platforms
+        GRUB_MKRESCUE_XORRISO="$(which xorriso)" grub-mkrescue \
+            --modules="iso9660 normal" \
+            -o "$full_iso_file" \
+            -volid "$ISO_LABEL" \
+            "$iso_dir" 2>&1
+        local mkrescue_result=$?
+
+        # Restore original host GRUB
+        if [[ -L "/usr/lib/grub" ]]; then
+            $SUDO rm "/usr/lib/grub"
+        fi
+        if [[ $restore_host_grub == true ]]; then
+            $SUDO mv "$host_grub_backup" "/usr/lib/grub"
+        fi
+
+        [[ $mkrescue_result -eq 0 ]] || error "iso file creation failed"
         size=$(du_size $full_iso_file)
         end_timer "create $(pqn $size) iso file"
 
