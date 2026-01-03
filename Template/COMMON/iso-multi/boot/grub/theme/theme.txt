@@ -1,0 +1,86 @@
+# Global Property
+title-text:     ""
+title-font:     "DejaVu Sans Bold 18"
+title-color:    "#ffffff"
+desktop-image:  "background.jpg"
+desktop-color:  "#000000"
+
+#terminal-font:  "Fixed Regular 13"
+terminal-font:  "Unifont Regular 16"
+
+terminal-box:   "inbox_*.png"
+
+# Use this label as a title
++ label {
+    left  = 30%
+    top   = 8%
+    width = 100%
+    text  = " Welcome to %DISTRO% (%ASCII_CODE_NAME%)!"
+    color = "#ffffff"
+    align = "left"
+    font  = "DejaVu Sans Bold 18"
+}
+
+# Show the boot menu
++ boot_menu {
+    left        = 30%
+    top         = 18%
+    width       = 50%
+    height      = 55%
+    item_color                 = "#a0a0a0"
+    selected_item_color        = "#ffffff"
+    selected_item_pixmap_style = "select_*.png"
+
+    #menu_pixmap_style          = "inbox_*.png"
+
+    selected_item_font = "DejaVu Sans Regular 16"
+    item_font          = "DejaVu Sans Regular 16"
+    item_height        = 32
+    item_padding       = 5
+    item_spacing       = 0
+    icon_width         = 0
+    icon_height        = 0
+    icon_spacing       = 0
+}
+
+# Show informational messages below the boot menu
+# --using individual labels instead of a vbox
+
++ label {
+    left  = 40%
+    top   = 80%
+    width = 50%
+    text  = "Press 'e' to edit entry."
+    color = "#fafafa"
+    align = "left"
+    font  = "DejaVu Sans Regular 14"
+}
+
+#-- + label {
+#--     left  = 30%
+#--     top   = 80%
+#--     width = 70%
+#--     text  = "Press <Esc> to return to the main menu"
+#--     color = "#fafafa"
+#--     align = "left"
+#--     font  = "DejaVu Sans Bold 14"
+#-- }
+
+# Show a styled horizontal progress bar
++ progress_bar {
+    id              = "__timeout__"
+    left            = 22%
+    top             = 90%
+    width           = 60%
+    height          = 18
+    bg_color        = "201, 0, 22"
+    fg_color        = "255, 99,9"
+    border_color    = "255, 181, 21"
+    show_text       = true
+    text_color      = "#fafafa"
+    font            = "DejaVu Sans Regular 14"
+    #text            = "@TIMEOUT_NOTIFICATION_LONG@"
+    text            = "The highlighted entry will start in %d seconds"
+    bar_style       = "progress_bar_*.png"
+    highlight_style = "progress_highlight_*.png"
+}
