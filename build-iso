@@ -1161,20 +1161,30 @@ do_stage_4() {
         update-locale "LANG=$LOCALE"
         end_part_lax
     fi
-
+     
     if gather_any pesky-package \
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
         for package in $(compile_pkg_list "pesky-package" "exclude-chroot"); do
             # Pre-configure firmware-ipw2x00 to accept license automatically
             if [[ "$package" = "firmware-ipw2x00" ]]; then
-                echo 'firmware-ipw2x00 firmware-ipw2x00/license/accepted boolean true' | debconf-set-selections
+                
             fi
-            DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package"
-            if [[ "$package" = "systemd-init-diversity" ]]; then
-            	echo "systemd-init-diversity installed, remove systemd-sysv"
-            	apt-get remove --allow-remove-essential $apt_yes systemd-sysv
-            fi
+            case $package in 
+                # Pre-configure firmware-ipw2x00 to accept license automatically
+                firmware-ipw2x00) echo 'firmware-ipw2x00 firmware-ipw2x00/license/accepted boolean true' | debconf-set-selections
+                                  DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package" ;;
+                # use primary install apt-get options so conf files don't get overwritten                
+            	sysvinit-init-diversity) DEBIAN_FRONTEND=dialog apt-get $APT_GET_OPTS install "$package" ;;
+            	# remove systemd-sysv in systemd-init-diversity it installed
+            	systemd-init-diversity) DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package" 
+            							echo "systemd-init-diversity installed, remove systemd-sysv"
+            							apt-get remove --allow-remove-essential $apt_yes systemd-sysv 
+                # force acceptance of modified-init packages without prompt
+            	*-modified-init)  DEBIAN_FRONTEND=dialog apt-get install $apt_yes -o Dpkg::Options::=--force-confnew "$package" ;;
+            	# old default for pesky packgaes for everything else
+           					  *)  DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package" ;;
+            esac
         done
         end_part_lax
     else
