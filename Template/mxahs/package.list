@@ -153,7 +153,6 @@ lame
 #leafpad
 libc6:i386
 libcanberra-gstreamer
-libcanberra-gtk-module
 libcanberra-gtk3-module
 libcanberra-pulse
 libgcc-s1:i386
