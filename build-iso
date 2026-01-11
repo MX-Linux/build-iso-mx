@@ -4883,9 +4883,9 @@ do_pretend() {
 }
 
 do_stats() {
-    local flavs="mx32 mx64 mxahs mxkde"
-    is_antiX && flavs="core base full"
-    for FLAV in $flavs; do
+    local flavs=(mx32 mx64 mxahs mxkde)
+    is_antiX && flavs=(core base full)
+    for FLAV in "${flavs[@]}"; do
         ISO_RESPIN_OF=$FLAV
         yell "\n$FLAV$high_co:"
         do_one_stat
