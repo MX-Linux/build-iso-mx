@@ -38,6 +38,6 @@ copy_file xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/ 
 copy_file zramswap.service /etc/systemd/system/
 
 # Enable services
-systemctl enable systemd-resolved
+systemctl enable systemd-resolved 2>&1 | tr '\r' '\n'
 
 exit 0

@@ -18,8 +18,8 @@ copy_file ufw.conf		/etc/ufw/			--create
 copy_file zramswap.service	/etc/systemd/system/
 
 # Enable services
-systemctl enable sddm
-systemctl enable systemd-resolved
-systemctl --user enable mx-arch-updater-tray
+systemctl enable sddm 2>&1 | tr '\r' '\n'
+systemctl enable systemd-resolved 2>&1 | tr '\r' '\n'
+systemctl --user enable mx-arch-updater-tray 2>&1 | tr '\r' '\n'
 
 exit 0

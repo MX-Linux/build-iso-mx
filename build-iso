@@ -755,7 +755,7 @@ do_stage_2() {
             if is_arch_host; then
                 # On Arch host, use native pacman configuration
                 say "Using host pacman configuration (Arch Linux)"
-                $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES
+                $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
             else
                 # On Debian/MX host, provide dedicated config + mirrors
                 : "${PACMAN_CONF:=Input/arch/pacman.conf}"
@@ -780,11 +780,11 @@ do_stage_2() {
                         fatal "Missing Arch keyring file. On Debian/MX try: sudo apt install archlinux-keyring"
                     fi
                     say "Initialize host pacman keyring"
-                    $SUDO pacman-key --init
-                    $SUDO pacman-key --populate archlinux
+                    $SUDO sh -c "pacman-key --init 2>&1 | tr '\r' '\n'"
+                    $SUDO sh -c "pacman-key --populate archlinux 2>&1 | tr '\r' '\n'"
                 fi
 
-                $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES
+                $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
             fi
 
             end_timer "run pacstrap"
@@ -1589,7 +1589,7 @@ do_stage_4_arch() {
         arch_ensure_proc_sys
         # Always noninteractive: pacman stops parsing options after the first
         # package name, so options must come first.
-        pacman --noconfirm "$@"
+        pacman --noconfirm "$@" 2>&1 | tr '\r' '\n'
     }
 
     # PARTIAL file support (same semantics as Debian path)
@@ -1641,8 +1641,8 @@ do_stage_4_arch() {
         [[ -s /etc/pacman.d/mirrorlist ]] || error "Empty or missing /etc/pacman.d/mirrorlist"
         if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
             say "Initialize target pacman keyring"
-            pacman-key --init
-            pacman-key --populate archlinux
+            pacman-key --init 2>&1 | tr '\r' '\n'
+            pacman-key --populate archlinux 2>&1 | tr '\r' '\n'
         fi
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
@@ -1726,12 +1726,12 @@ do_stage_4_arch() {
         skip_part 8 "Install flavour packages"
     fi
 
-    if do_part 9 "Enable common live services"; then
-        if [[ -e /usr/lib/systemd/system/NetworkManager.service ]]; then
-            systemctl enable NetworkManager.service
-        fi
-        end_part_lax
-    fi
+     if do_part 9 "Enable common live services"; then
+         if [[ -e /usr/lib/systemd/system/NetworkManager.service ]]; then
+             systemctl enable NetworkManager.service 2>&1 | tr '\r' '\n'
+         fi
+         end_part_lax
+     fi
 
     if do_part 10 "Ensure minimal console config"; then
         [[ -e /etc/vconsole.conf ]] || echo "KEYMAP=us" > /etc/vconsole.conf
@@ -1819,10 +1819,10 @@ do_stage_4_arch() {
         end_part_strict
     fi
 
-    if do_part 18 "Rebuild initramfs (mkinitcpio)"; then
-        mkinitcpio -P
-        end_part_lax
-    fi
+     if do_part 18 "Rebuild initramfs (mkinitcpio)"; then
+         mkinitcpio -P 2>&1 | tr '\r' '\n'
+         end_part_lax
+     fi
 
     if do_part 20 "Build archiso initramfs"; then
         local archiso_conf="/etc/mkinitcpio-archiso.conf"
@@ -1853,7 +1853,7 @@ do_stage_4_arch() {
             if command -v plymouth >/dev/null 2>&1 && ! grep -q "plymouth" "$archiso_conf"; then
                 sed -i -r 's/(HOOKS=\([^)]*block[[:space:]]+)/\1plymouth /' "$archiso_conf"
             fi
-            mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img
+             mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img 2>&1 | tr '\r' '\n'
         else
             # Fallback: synthesize a minimal archiso mkinitcpio config.
             # Avoid autodetect in chroot (it can error due to missing real rootfs metadata).
@@ -1880,7 +1880,7 @@ MKINITCPIO
                 error "archiso mkinitcpio hooks not found under /usr/lib/initcpio (install mkinitcpio-archiso?)"
             fi
 
-            if ! mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img; then
+             if ! mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img 2>&1 | tr '\r' '\n'; then
                 say "mkinitcpio diagnostics:"
                 ls -la /usr/lib/initcpio/hooks 2>&1 | tail -n 30 || true
                 ls -la /usr/lib/initcpio/install 2>&1 | tail -n 30 || true
@@ -1912,12 +1912,12 @@ MKINITCPIO
         end_part_strict
     fi
 
-    if do_part 15 "Generate GRUB configuration"; then
-        if command -v grub-mkconfig >/dev/null 2>&1; then
-            grub-mkconfig -o /boot/grub/grub.cfg
-        fi
-        end_part_lax
-    fi
+     if do_part 15 "Generate GRUB configuration"; then
+         if command -v grub-mkconfig >/dev/null 2>&1; then
+             grub-mkconfig -o /boot/grub/grub.cfg 2>&1 | tr '\r' '\n'
+         fi
+         end_part_lax
+     fi
 
     say "Write version files"
     write_version_files
