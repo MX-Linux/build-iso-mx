@@ -645,12 +645,15 @@ Remaster_Blurb
     else
         [[ ${ARCH:-} = i386 || ${ARCH:-} = amd64 ]] || choose "arch" ARCH i386 amd64
     fi
-    # shellcheck disable=SC2046
     if [[ -n ${ISO_FLAV:-} ]]; then
         local flav_dir=${ISO_FLAV%-libre}
         [[ -d "$template/$flav_dir" ]] || ISO_FLAV=
     fi
-    [[ -n ${ISO_FLAV:-} ]] || choose "flavour"  ISO_FLAV  $(flavour_list) core-libre
+    if [[ -z ${ISO_FLAV:-} ]]; then
+        local flavs=()
+        mapfile -t flavs < <(flavour_list)
+        choose "flavour" ISO_FLAV "${flavs[@]}" core-libre
+    fi
 
     K_GNU=
     case $ISO_FLAV in
