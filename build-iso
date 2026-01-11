@@ -753,7 +753,7 @@ Remaster_Blurb
         YES_no "Continue anyway" || my_exit 0
     fi
 
-    cat << Output > $output_file
+    cat << Output > "$output_file"
 ARCH="$ARCH"
 DISTRO_FAMILY="$DISTRO_FAMILY"
 DEBIAN_RELEASE="$DEBIAN_RELEASE"
@@ -776,7 +776,7 @@ ISO_RESPIN_OF="$ISO_RESPIN_OF"
 Output
 
     say "Ready to begin creation of $(pq "$iso_file")"
-    pretty_output $((stage + 1)) >> $log_file
+    pretty_output $((stage + 1)) >> "$log_file"
 
     [[ -e "$first_time_file" ]] && rm -f "$first_time_file"
 
@@ -1631,7 +1631,7 @@ do_stage_4() {
     sleep 2
     echo 3 | sudo tee /proc/sys/vm/drop_caches >/dev/null
     # We send on the exact kernel name we found
-    echo "K_NAME=\"$K_NAME\"" > $output_file
+    echo "K_NAME=\"$K_NAME\"" > "$output_file"
 
     _say_ "$num_co===============================================================$nc"
 
@@ -2120,9 +2120,10 @@ do_stage_5() {
     write_initrd_release "$sqfs_dir" $SUDO
 
     say "Clean out log files and other files"
-    : ${sqfs_dir:?"sqfs_dir not set"}
+    : "${sqfs_dir:?"sqfs_dir not set"}"
+    [[ "$sqfs_dir" = "/" ]] && fatal "sqfs_dir cannot be /"
     for f in $(gather delete-files); do
-        eval $SUDO rm -rf \${sqfs_dir:?}/\${f:?} 2>/dev/null
+        $SUDO rm -rf "$sqfs_dir"/$f 2>/dev/null
     done
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
@@ -2390,11 +2391,11 @@ Bootloader_Data
         # Copy the kernel from the squashfs
         say "Copy kernel $(pq $K_NAME) to $(pq vmlinuz) in iso directory"
         local kernel_file=$sqfs_dir/boot/vmlinuz-$K_NAME
-        [[ -r $kernel_file ]] || error "Could not find kernel ${kernel_file##*squashfs} in squashfs dir"
+        [[ -r "$kernel_file" ]] || error "Could not find kernel ${kernel_file##*squashfs} in squashfs dir"
 
         local vmlinuz=$iso_dir/antiX/vmlinuz
         mkdir -p "$iso_dir"/antiX
-        cp $kernel_file $vmlinuz || my_exit
+        cp "$kernel_file" "$vmlinuz" || my_exit
         md5sum_file $vmlinuz
     fi
 
@@ -2714,7 +2715,7 @@ do_stage_8() {
         say2 "Your live $(pq $iso_file) is in $(pq Remaster/iso-files) ready to be tested"
 
         leave_stage
-        echo "$text_co$ME$bold_co done$nc" > $sign_off_file
+        echo "$text_co$ME$bold_co done$nc" > "$sign_off_file"
         [[ -n $full_auto ]]  || my_exit
     fi
 
@@ -2851,7 +2852,7 @@ enter_stage() {
     title=${2#!}
 
     has_word EXIT_STAGE $stage && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn $stage)$nc"
-    [[ -n $stage ]] && grep "^$stage$" $did_stage_file 2>/dev/null && fatal "Re-entering stage $stage"
+    [[ -n $stage ]] && grep "^$stage$" "$did_stage_file" 2>/dev/null && fatal "Re-entering stage $stage"
 
     _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(printf '%(%F %T %Z)T' -1)"
     [[ -z $quiet_mode ]] && (( stage > 0 )) \
@@ -2860,12 +2861,12 @@ enter_stage() {
     has_word  ASK_STAGE $stage \
         && YES_no "ASK_STAGE: Exit" && vexit "${text_co}at stage $(pqn $stage)$nc"
 
-    echo $stage >> $did_stage_file
+    echo $stage >> "$did_stage_file"
 
     [[ -z $auto_mode && ! $2 =~ ^! ]] \
         && ! YES_no_loud "\nDo you want to continue" && my_exit
 
-    touch $err_file
+    touch "$err_file"
     check_errors_reset
 
     start_timer STAGE_TIME
@@ -2873,7 +2874,7 @@ enter_stage() {
 }
 
 leave_stage() {
-    touch $output_file
+    touch "$output_file"
     (( $# > 0 )) && return
     _end_timer_ STAGE_TIME "Stage $stage"
     check_errors_strict
@@ -3040,9 +3041,9 @@ kill_chroot_procs() {
 #==============================================================================
 
 check_errors_reset() {
-    [[ -e $err_file ]] || touch $err_file
+    [[ -e "$err_file" ]] || touch "$err_file"
     local offset
-    offset=$(cat $err_file 2>/dev/null | wc -l)
+    offset=$(cat "$err_file" 2>/dev/null | wc -l)
     : ${offset:=0}
     ERROR_OFFSET=$((offset + 1))
     #_say_ "check_errors_reset"
@@ -3062,10 +3063,10 @@ _check_errors_() {
     while true; do
 
         if [[ -n $regex ]]; then
-            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -E ${flag:+"$flag"} "($regex)" | grep -Ev "^\s*$")
+            errors=$(tail -n +$ERROR_OFFSET "$err_file" | grep -E ${flag:+"$flag"} "($regex)" | grep -Ev "^\s*$")
 
         elif [[ $type = STRICT ]]; then
-            errors=$(tail -n +$ERROR_OFFSET $err_file | grep -Ev ${flag:+"$flag"} "^\s*$")
+            errors=$(tail -n +$ERROR_OFFSET "$err_file" | grep -Ev ${flag:+"$flag"} "^\s*$")
         fi
 
         [[ -z $errors ]] && check_errors_reset && return
@@ -3237,8 +3238,8 @@ _end_part_() {
         _end_timer_ PART_TIME "$title"
     fi
 
-    [[ -n $LAST_PART && -w $partial_file ]] && ! grep "^$LAST_PART" $partial_file \
-        && echo $LAST_PART >> $partial_file
+    [[ -n $LAST_PART && -w "$partial_file" ]] && ! grep "^$LAST_PART" "$partial_file" \
+        && echo $LAST_PART >> "$partial_file"
 
     if  [[ -n $LAST_PART ]] && has_word EXIT_PART $LAST_PART; then
         _say_ "Exit after part ($text_co$LAST_PART$nc) $title"
@@ -4464,7 +4465,7 @@ say_in() {
 
 _say_() {
     echo -e "$*"
-    [[ -n $log_file ]] && echo -e "$*" >> $log_file
+    [[ -n $log_file ]] && echo -e "$*" >> "$log_file"
 }
 
 error()  {
@@ -4839,7 +4840,7 @@ clear_outputs() {
 
 my_exit() {
     local ret=${1:-0}
-    echo $ret > $exit_file
+    echo $ret > "$exit_file"
     exit $ret
 }
 
@@ -4967,7 +4968,7 @@ pretty_output() {
 on_exit() {
     [[ -z $UMOUNT_ERRORS ]] && umount_chroot
 
-    [[ -n $exit_file ]] && rm -f $exit_file
+    [[ -n $exit_file ]] && rm -f "$exit_file"
 
     #kill_children
     clear_pids
@@ -4980,9 +4981,9 @@ on_exit() {
         _end_timer_ MAIN_T "$ME $ARCH $FLAV"
     fi
     #else
-    if [[ -r $sign_off_file ]]; then
-        SIGN_OFF=$(cat $sign_off_file 2>/dev/null)
-        rm -f $sign_off_file
+    if [[ -r "$sign_off_file" ]]; then
+        SIGN_OFF=$(cat "$sign_off_file" 2>/dev/null)
+        rm -f "$sign_off_file"
     fi
     _say_ "$SIGN_OFF"
     #fi
