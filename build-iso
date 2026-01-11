@@ -440,14 +440,14 @@ main() {
         local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH"
         [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
         [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
-        local work_dir=$remaster_dir/work/$work_name
-        local iso_dir=$work_dir/iso
-        local sqfs_dir=$work_dir/squashfs
-        local sqfs_output_dir=$sqfs_dir$build_dir/Output/$work_name
-        local sqfs_input_dir=$sqfs_dir$build_dir/Input
-        local boot_menu_dir=$sqfs_dir/usr/share/boot-menus
+        local work_dir="$remaster_dir/work/$work_name"
+        local iso_dir="$work_dir/iso"
+        local sqfs_dir="$work_dir/squashfs"
+        local sqfs_output_dir="$sqfs_dir$build_dir/Output/$work_name"
+        local sqfs_input_dir="$sqfs_dir$build_dir/Input"
+        local boot_menu_dir="$sqfs_dir/usr/share/boot-menus"
 
-        local initrd_dir=$work_dir/initrd
+        local initrd_dir="$work_dir/initrd"
 
         # Ensure convenience links are correct for current build
         convenience_link "$work_dir"   work
@@ -1252,19 +1252,19 @@ do_stage_4() {
         update-locale "LANG=$LOCALE"
         end_part_lax
     fi
-     
+
     if gather_any pesky-package \
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
         for package in $(compile_pkg_list "pesky-package" "exclude-chroot"); do
-            case $package in 
+            case $package in
                 # Pre-configure firmware-ipw2x00 to accept license automatically
                 firmware-ipw2x00) echo 'firmware-ipw2x00 firmware-ipw2x00/license/accepted boolean true' | debconf-set-selections
                                   DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package" ;;
-                # use primary install apt-get options so conf files don't get overwritten                
+                # use primary install apt-get options so conf files don't get overwritten
             	sysvinit-init-diversity) DEBIAN_FRONTEND=dialog apt-get $APT_GET_OPTS install "$package" ;;
             	# remove systemd-sysv in systemd-init-diversity it installed
-            	systemd-init-diversity) DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package" 
+            	systemd-init-diversity) DEBIAN_FRONTEND=dialog apt-get install $apt_yes "$package"
             							echo "systemd-init-diversity installed, remove systemd-sysv"
             							apt-get remove --allow-remove-essential $apt_yes systemd-sysv ;;
                 # force acceptance of modified-init packages without prompt
@@ -1573,7 +1573,7 @@ do_stage_4() {
 
     mkdir -p /usr/share/antiX
 
-    dpkg-query -l | sed -n 's/^ii\s\+//p' > $output_dir/package-list.out
+    dpkg-query -l | sed -n 's/^ii\s\+//p' > "$output_dir"/package-list.out
     dpkg-query -l | sed -n 's/^ii\s\+//p' > /usr/share/antiX/installed-packages.txt
 
     # It is easier to do this outside the chroot but by doing it here, the
@@ -2036,11 +2036,11 @@ apply_theme() {
 
     local t_dir short_t script
     t_dir=$theme_dir/$THEME
-    short_t=$(short_dir $t_dir)
-    [[ ! -d $t_dir ]] \
+    short_t=$(short_dir "$t_dir")
+    [[ ! -d "$t_dir" ]] \
         && error "Theme directory $(pq short_t) does not exist" && return
 
-    local script=$t_dir/theme.sh short_script=$short_t/theme.sh
+    local script="$t_dir"/theme.sh short_script=$short_t/theme.sh
     [[ ! -e $script ]] && \
         error "Theme script $(pq $short_script) does not exist" && return
 
@@ -2074,8 +2074,8 @@ do_stage_5() {
 
     if [[ $FLAV = "base" ]]; then
         say "Change fluxbox and icewm menu-applications files"
-        sudo mv -f $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications-fb $sqfs_dir/usr/share/desktop-menu/.fluxbox/menu-applications
-        sudo mv -f $sqfs_dir/usr/share/desktop-menu/.icewm/menu-applications-ice $sqfs_dir/usr/share/desktop-menu/.icewm/menu-applications
+        sudo mv -f "$sqfs_dir"/usr/share/desktop-menu/.fluxbox/menu-applications-fb "$sqfs_dir"/usr/share/desktop-menu/.fluxbox/menu-applications
+        sudo mv -f "$sqfs_dir"/usr/share/desktop-menu/.icewm/menu-applications-ice "$sqfs_dir"/usr/share/desktop-menu/.icewm/menu-applications
     fi
 
     local f wm
@@ -2087,8 +2087,8 @@ do_stage_5() {
 
     if is_antiX; then
         say "Change permissions for 2 ppp files"
-        $SUDO chmod 666 $sqfs_dir/etc/ppp/chap-secrets
-        $SUDO chmod 666 $sqfs_dir/etc/ppp/pap-secrets
+        $SUDO chmod 666 "$sqfs_dir"/etc/ppp/chap-secrets
+        $SUDO chmod 666 "$sqfs_dir"/etc/ppp/pap-secrets
 
          #say "Disable exec for 2 icewm files"
          #$SUDO chmod 644 $sqfs_dir/usr/bin/icewmbg
@@ -2096,41 +2096,42 @@ do_stage_5() {
 
         if [[ $DEBIAN_RELEASE != "wheezy" && -z "$jbb_mode" ]] && is_antiX; then
             say "Compress /usr/share/doc then delete folder"
-            tar -jcvf doc-$full_distro_name.tar.bz2 -C / ${sqfs_dir#/}/usr/share/doc
+            tar -jcvf doc-$full_distro_name.tar.bz2 -C / "${sqfs_dir#/}"/usr/share/doc
             sleep 1
-            $SUDO find $sqfs_dir/usr/share/doc -type f -name "*.gz" -delete
-            $SUDO find $sqfs_dir/usr/lib -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/gdebi/GDebi/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/python3 -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/python3/debpython -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/python3/__pycache__  -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/python3/debpython/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/streamlink/streamlink_cli/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/streamlink/streamlink_cli/utils/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/streamtuner2/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/streamtuner2/bundle/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/streamtuner2/channels/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/system-config-printer/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/system-config-printer/troubleshoot/__pycache__ -type f -name "*.pyc" -delete
-            $SUDO find $sqfs_dir/usr/share/system-config-printer/xml/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/doc -type f -name "*.gz" -delete
+            $SUDO find "$sqfs_dir"/usr/lib -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/gdebi/GDebi/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/python3 -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/python3/debpython -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/python3/__pycache__  -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/python3/debpython/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/streamlink/streamlink_cli/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/streamlink/streamlink_cli/utils/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/streamtuner2/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/streamtuner2/bundle/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/streamtuner2/channels/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/system-config-printer/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/system-config-printer/troubleshoot/__pycache__ -type f -name "*.pyc" -delete
+            $SUDO find "$sqfs_dir"/usr/share/system-config-printer/xml/__pycache__ -type f -name "*.pyc" -delete
         fi
     fi
 
     say "Write initrd_release file"
-    write_initrd_release $sqfs_dir $SUDO
+    write_initrd_release "$sqfs_dir" $SUDO
 
     say "Clean out log files and other files"
+    : ${sqfs_dir:?"sqfs_dir not set"}
     for f in $(gather delete-files); do
-        eval $SUDO rm -rf $sqfs_dir/$f 2>/dev/null
+        eval $SUDO rm -rf \${sqfs_dir:?}/\${f:?} 2>/dev/null
     done
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
-        (cd $sqfs_dir/var/log && $SUDO touch apt/history.log apt/term.log dpkg.log)
+        (cd "$sqfs_dir"/var/log && $SUDO touch apt/history.log apt/term.log dpkg.log)
     fi
 
     say "Delete $(pq "/dev/*") in chroot"
-    mountpoint -q $sqfs_dir/dev && fatal "$(pqw /dev) is still mounted in squashfs!"
-    $SUDO rm -rf $sqfs_dir/dev
+    mountpoint -q "$sqfs_dir"/dev && fatal "$(pqw /dev) is still mounted in squashfs!"
+    $SUDO rm -rf "$sqfs_dir"/dev
     $SUDO mkdir $sqfs_dir/dev
 
     # Clean up our loose ends (once here instead of after every chroot)
@@ -2140,22 +2141,22 @@ do_stage_5() {
     [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $MIRROR "DEFAULT mirror"
 
     say "Delete $(pq /etc/mtab)"
-    $SUDO rm -f $sqfs_dir/etc/mtab
+    $SUDO rm -f "$sqfs_dir"/etc/mtab
 
     say "Customize configuration"
-    copy_template_dir -o custom-config-files $sqfs_dir
+    copy_template_dir -o custom-config-files "$sqfs_dir"
 
     if is_antiX; then
         say "Add folders for sane"
-        $SUDO mkdir $sqfs_dir/usr/lib/sane
+        $SUDO mkdir "$sqfs_dir"/usr/lib/sane
         sleep 1
-        $SUDO mkdir $sqfs_dir/usr/lib64/sane
+        $SUDO mkdir "$sqfs_dir"/usr/lib64/sane
 
         #collect_live_files $live_files_list /usr/share/live-files
         say "Save Live files for snapshot"
 
-        $SUDO rm -rf $sqfs_dir/usr/share/live-files
-        $SUDO $tools/installed-to-live populate-live-files $sqfs_dir $sqfs_dir
+        $SUDO rm -rf "$sqfs_dir"/usr/share/live-files
+        $SUDO "$tools"/installed-to-live populate-live-files "$sqfs_dir" "$sqfs_dir"
 
         if [[ $FLAV = "core" ]] && is_antiX; then
             local if_file=$sqfs_dir/etc/network/interfaces
@@ -2258,37 +2259,37 @@ do_stage_6() {
     fi
     # (0) Populate iso dir with boilerplate files
     # (1) Copy flavour-dependent bootloader.cfg files via inheritance
-    
+
     #copy correct iso folder for multi-init if present
     if [ -d "$template/COMMON/iso-multi" ]; then
     	if [ -e "$sqfs_dir/usr/lib/sysvinit/init" ] && [ -e "$sqfs_dir/usr/lib/systemd/systemd" ]; then
         	say "copy multi-init iso template"
-    		copy_template_dir -u iso-multi $iso_dir
+    		copy_template_dir -u iso-multi "$iso_dir"
     	else
     		say "copy single-init iso template"
-    		copy_template_dir -u iso $iso_dir
+    		copy_template_dir -u iso "$iso_dir"
     	fi
     else
     	say "iso-multi not found, copy single-init iso template"
-    	copy_template_dir -u iso $iso_dir
+    	copy_template_dir -u iso "$iso_dir"
     fi
 
     say "Make/customize bootloader configuration"
 
     # Directories under iso/
-    local isolinux_dir=$iso_dir/boot/isolinux
-    local syslinux_dir=$iso_dir/boot/syslinux
+    local isolinux_dir="$iso_dir/boot/isolinux"
+    local syslinux_dir="$iso_dir/boot/syslinux"
 
     # Directories with unpacked cpio archives
-    local isolinux_cpio=$work_dir/isolinux-cpio
-    local syslinux_cpio=$work_dir/syslinux-cpio
+    local isolinux_cpio="$work_dir/isolinux-cpio"
+    local syslinux_cpio="$work_dir/syslinux-cpio"
 
-    unpack_gfx_cpio isolinux $isolinux_cpio
-    unpack_gfx_cpio syslinux $syslinux_cpio
+    unpack_gfx_cpio isolinux "$isolinux_cpio"
+    unpack_gfx_cpio syslinux "$syslinux_cpio"
 
     # (2) Let bootloader know if we use a 64-bit kernel
-    [[ $ARCH = amd64 ]] && echo 1 > $isolinux_cpio/64bit
-    [[ $ARCH = amd64 ]] && echo 1 > $syslinux_cpio/64bit
+    [[ $ARCH = amd64 ]] && echo 1 > "$isolinux_cpio"/64bit
+    [[ $ARCH = amd64 ]] && echo 1 > "$syslinux_cpio"/64bit
 
     # (3) Update Fn menu in bootloader
     local boot_menu
@@ -2300,8 +2301,8 @@ do_stage_6() {
 
     # (4) Mostly for flavour dependent desktop.men file
     #     could also be used to over-write add other files in the gfx-cpio
-    copy_template_dir -u gfx-cpio $isolinux_cpio
-    copy_template_dir -u gfx-cpio $syslinux_cpio
+    copy_template_dir -u gfx-cpio "$isolinux_cpio"
+    copy_template_dir -u gfx-cpio "$syslinux_cpio"
 
     # (5)
     say "Fill in bootloader template files"
@@ -2321,8 +2322,8 @@ do_stage_6() {
      RELEASE_DATE="$RELEASE_DATE"
 Bootloader_Data
 
-    $SUDO mkdir -p $sqfs_dir/usr/share/antiX/
-    $SUDO cp $bootloader_data $sqfs_dir/usr/share/antiX/
+    $SUDO mkdir -p "$sqfs_dir"/usr/share/antiX/
+    $SUDO cp "$bootloader_data" "$sqfs_dir"/usr/share/antiX/
 
     $tools/bootloader-template -i --data=$bootloader_data $iso_dir
     $tools/bootloader-template -i --data=$bootloader_data $isolinux_cpio/en.hlp
@@ -2341,7 +2342,7 @@ Bootloader_Data
     $tools/make-isolinux-menu $syslinux_cfg >> $syslinux_dir/readme.msg
 
     # (7) Enabled "Save" menu on syslinux side only
-    sed -r -i "/key\.F.=save/ s/^\s*;+\s*//" $syslinux_cpio/gfxboot.cfg
+    sed -r -i "/key\.F.=save/ s/^\s*;+\s*//" "$syslinux_cpio"/gfxboot.cfg
 
     # (7.1) add ask+save entry to syslinux console menu
     local con_menu=$syslinux_cpio/console.men
@@ -2363,26 +2364,26 @@ Bootloader_Data
     fi
 
     # (9)
-    sed -i 's/APPEND hd0/APPEND hd1/' $syslinux_dir/syslinux.cfg
+    sed -i 's/APPEND hd0/APPEND hd1/' "$syslinux_dir"/syslinux.cfg
 
     # (10)
     if [[ $FLAV = "core" ]]; then
         say "Use large font in bootloader for $(pq $FLAV) system"
-        sed -i "s/16x16.fnt/16x16aa.fnt/"  $isolinux_cpio/gfxboot.cfg $syslinux_cpio/gfxboot.cfg
+        sed -i "s/16x16.fnt/16x16aa.fnt/"  "$isolinux_cpio"/gfxboot.cfg "$syslinux_cpio"/gfxboot.cfg
     fi
 
     # say "Make efi.img"
     # $SUDO $tools/make-efi-img $iso_dir "$DISTRO_NAME-uefi"
 
-    repack_gfx_cpio isolinux $isolinux_cpio
-    repack_gfx_cpio syslinux $syslinux_cpio
+    repack_gfx_cpio isolinux "$isolinux_cpio"
+    repack_gfx_cpio syslinux "$syslinux_cpio"
 
-    echo "$fancy_name" > $iso_dir/version
+    echo "$fancy_name" > "$iso_dir"/version
 
     local sneaky=".disk"
     say "Add sneaky $sneaky/ directory"
-    mkdir -p $iso_dir/$sneaky
-    cp $iso_dir/version $iso_dir/$sneaky/info
+    mkdir -p "$iso_dir"/"$sneaky"
+    cp "$iso_dir"/version "$iso_dir"/"$sneaky"/info
 
 
     if [[ -z $iso_only ]]; then
@@ -2392,7 +2393,7 @@ Bootloader_Data
         [[ -r $kernel_file ]] || error "Could not find kernel ${kernel_file##*squashfs} in squashfs dir"
 
         local vmlinuz=$iso_dir/antiX/vmlinuz
-        mkdir -p $iso_dir/antiX
+        mkdir -p "$iso_dir"/antiX
         cp $kernel_file $vmlinuz || my_exit
         md5sum_file $vmlinuz
     fi
@@ -2403,18 +2404,18 @@ Bootloader_Data
         rm -rf "${initrd_dir:?}"
     fi
 
-    mkdir -p $initrd_dir
+    mkdir -p "$initrd_dir"
 
     local initrd_src=$template/COMMON/initrd
 
     if [[ -d $initrd_src ]]; then
-        copy_template_dir -u initrd $initrd_dir
+        copy_template_dir -u initrd "$initrd_dir"
     else
         error "No $initrd_src/ or $initrd_src.gz found"
     fi
 
     say "Write initrd_release file"
-    write_initrd_release $initrd_dir
+    write_initrd_release "$initrd_dir"
 
     if [[ -z $iso_only ]]; then
         say "Copy $(pq $K_NAME) modules into initrd"
@@ -2430,12 +2431,12 @@ Bootloader_Data
 
     local initrd_gz=$iso_dir/antiX/initrd.gz
     say "Create initrd.gz"
-    (cd $initrd_dir && find . | cpio -o -H newc --owner root:root --quiet) \
+    (cd "$initrd_dir" && find . | cpio -o -H newc --owner root:root --quiet) \
         | $GZIP -9 > $initrd_gz
 
     md5sum_file $initrd_gz
 
-    [[ -z "$iso_only" ]] && copy_second_kernel $sqfs_dir/boot $iso_dir/antiX
+    [[ -z "$iso_only" ]] && copy_second_kernel "$sqfs_dir"/boot "$iso_dir"/antiX
 
     say "Write auxiliary information"
 
