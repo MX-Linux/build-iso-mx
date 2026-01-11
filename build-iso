@@ -302,6 +302,71 @@ main() {
 
     load_defaults
 
+    set_output_paths() {
+        local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH"
+        [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
+        [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
+        output_dir="$script_dir/Output/$work_name"
+        log_file="$output_dir/$ME.log"
+        err_file="$output_dir/$ME.err"
+        did_stage_file="$output_dir/did-stage"
+    }
+
+    # Set ISO_ARCH based on ARCH
+    case $ARCH in
+        i386)   ISO_ARCH=386 ;;
+        amd64)  ISO_ARCH=x64 ;;
+        x86_64) ISO_ARCH=x64 ;;
+        *) error "Invalid ARCH $(pqw "$ARCH")." ;;
+    esac
+
+    # Set kernel variables (copied from do_stage_0)
+    if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
+        : "${K_PKG:=linux}"
+        : "${K_HEADERS_PKG:=linux-headers}"
+        : "${K_BOOT_IMAGE:=vmlinuz-linux}"
+        : "${K_INITRAMFS_IMAGE:=initramfs-linux.img}"
+        : "${K_FALLBACK_INITRAMFS_IMAGE:=initramfs-linux-fallback.img}"
+    else
+        : "${K_PKG:=linux}"
+        : "${K_HEADERS_PKG:=linux-headers}"
+        : "${K_BOOT_IMAGE:=vmlinuz-linux}"
+        : "${K_INITRAMFS_IMAGE:=initramfs-linux.img}"
+        : "${K_FALLBACK_INITRAMFS_IMAGE:=initramfs-linux-fallback.img}"
+    fi
+
+    K_GNU=
+    case $ISO_FLAV in
+      *-libre) K_GNU=-gnu
+               FLAV=${ISO_FLAV%-libre} ;;
+            *) FLAV=$ISO_FLAV ;;
+    esac
+
+    local distro_k_arch=686
+    is_antiX && distro_k_arch=486
+    case $ARCH in
+       i386) K_ARCH=$distro_k_arch   ;;
+      amd64) K_ARCH=amd64            ;;
+     x86_64) K_ARCH=amd64            ;;
+          *) error "Invalid ARCH $(pqw "$ARCH")." ;;
+    esac
+
+    if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
+        K_NAME=$(echo "$K_TEMPLATE" | sed \
+            -e "s/%V/$K_VERSION/"   \
+            -e "s/%G/$K_GNU/"       \
+            -e "s/%R/$K_REVISION/"  \
+            -e "s/%A/$K_ARCH/"      \
+            -e "s/%V/$K_VERSION/")
+    else
+        : "${K_NAME:=$K_PKG}"
+    fi
+
+
+
+    # Set build-specific output directory
+    set_output_paths
+
     # In auto mode we need to cache sudo credentials to avoid mid-build prompts
     # (or run as root) to avoid confusing mid-build failures.
     if (( UID != 0 )) && [[ -n $auto_mode ]]; then
@@ -351,13 +416,21 @@ main() {
     while true; do
 
         # Read previous output files and set the stage
-        for stage in $all_stages; do
-            output_file="$output_dir/stage-$stage.out"
-            [[ -r "$output_file" ]] || break
-            [[ -n "$start_from" ]] && (( stage == start_from )) && break
-            # shellcheck disable=SC1090
-            source "$output_file"
-        done
+        if [[ -n $start_from ]]; then
+            stage=$start_from
+            # Source all previous stage files to get full state
+            for ((s=0; s<=stage; s++)); do
+                output_file="$output_dir/stage-$s.out"
+                [[ -r "$output_file" ]] && source "$output_file"
+            done
+        else
+            for stage in $all_stages; do
+                output_file="$output_dir/stage-$stage.out"
+                [[ -r "$output_file" ]] || break
+                # shellcheck disable=SC1090
+                source "$output_file"
+            done
+        fi
 
         # Variables derived from output files
         local full_distro_name="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
@@ -370,11 +443,17 @@ main() {
         local work_dir=$remaster_dir/work/$work_name
         local iso_dir=$work_dir/iso
         local sqfs_dir=$work_dir/squashfs
-        local sqfs_output_dir=$sqfs_dir$build_dir/Output
+        local sqfs_output_dir=$sqfs_dir$build_dir/Output/$work_name
         local sqfs_input_dir=$sqfs_dir$build_dir/Input
         local boot_menu_dir=$sqfs_dir/usr/share/boot-menus
 
         local initrd_dir=$work_dir/initrd
+
+        # Ensure convenience links are correct for current build
+        convenience_link "$work_dir"   work
+        convenience_link "$sqfs_dir"   sqfs
+        convenience_link "$iso_dir"    iso
+        convenience_link "$initrd_dir" initrd
 
         local chroot_cache_opts="chroot $work_name $sqfs_dir"
         local deboot_cache_opts
@@ -494,7 +573,7 @@ do_stage_0() {
     pick_prog GZIP     $GZIP_PROGS
 
     require_programs chroot isohybrid mksquashfs md5sum sudo tee zsync \
-        pkill column expand strings iconv unbuffer
+        pkill expand strings iconv unbuffer
 
     mkdir -p "$output_dir" || my_exit
 
@@ -642,6 +721,15 @@ Remaster_Blurb
 
     # repeated code
     remaster_dir=$(readlink -f "$script_dir/Remaster")
+    set_output_paths
+    if [[ -n $pretend_mode || -n $chroot_mode || -n $stats_mode ]]; then
+        log_file=/dev/null
+    else
+        mkdir -p "$output_dir"
+    fi
+    output_file="$output_dir/stage-$stage.out"
+    : > "$did_stage_file"
+
     local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
     [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
     local iso_file=$full_distro_name.iso
@@ -943,7 +1031,8 @@ do_stage_3() {
     local next_output_file
     next_output_file=$sqfs_output_dir/stage-$((stage + 1)).out
 
-    [[ -n $interactive     ]] && args="--interactive"
+    args="$args -$((stage + 1))"
+    [[ -n $interactive     ]] && args="$args --interactive"
     [[ -n $auto_mode       ]] && args="$args --auto"
     [[ -n $quiet_mode      ]] && args="$args --quiet"
     [[ -n $ask_errors      ]] && args="$args --error-ask"
@@ -1064,7 +1153,7 @@ do_stage_4() {
     require_programs apt-get
 
     # Skip PARTIAL file check if we have no stage output files (clean build)
-    if [[ ! -f "$script_dir/../Output/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+    if [[ ! -f "$script_dir/../Output/$work_name/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
         rm -f "$partial_file"
         skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
     elif [[ -s "$partial_file" ]]  \
@@ -1595,7 +1684,7 @@ do_stage_4_arch() {
     }
 
     # PARTIAL file support (same semantics as Debian path)
-    if [[ ! -f "$script_dir/../Output/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+    if [[ ! -f "$script_dir/../Output/$work_name/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
         rm -f "$partial_file"
         skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
     elif [[ -s "$partial_file" ]] && do_part 0 "!Read PARTIAL file to skip parts done"; then
@@ -2527,7 +2616,7 @@ do_stage_7() {
 
 #also capture uncompressed filesystem output into a variable and place that in a file in the SQFILE_DIR location
 
-    local output="/tmp/mksquash_output"
+    local output="/tmp/mksquashfs_$work_name"
     local UNCOMPRESSEDSIZE_FILE UNCOMPRESSEDSIZE
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         UNCOMPRESSEDSIZE_FILE="$iso_dir/arch/$ARCH/airootfs.info"
@@ -3978,10 +4067,10 @@ make_build_dir() {
         cp $user_defaults $b_dir/Input/defaults
     fi
 
-    mkdir $b_dir/Output
-    touch $b_dir/$partial_name $b_dir/Output/$ME.log
+    mkdir -p $b_dir/Output/$work_name
+    touch $b_dir/$partial_name $b_dir/Output/$work_name/$ME.log
 
-    cp $output_dir/stage-?.out $b_dir/Output
+    cp $output_dir/stage-*.out $b_dir/Output/$work_name 2>/dev/null || true
 
     local cmd
     mkdir -p $b_dir/fake
@@ -4576,7 +4665,7 @@ my_select() {
         # shellcheck disable=SC2059
         printf "%s" "$bold_co$title$nc\n"
         # shellcheck disable=SC2059
-        printf "%s" "$display" | column | sed -r "s/(^|\t)( ?[0-9]+)/\t$green\2$nc/g"
+        printf "%s" "$display" | sed -r "s/(^|\t)( ?[0-9]+)/\t$green\2$nc/g"
         # shellcheck disable=SC2059
         printf "%s" "$prompt"
 
@@ -4716,7 +4805,7 @@ clear_outputs() {
         files="$files $file"
     done
     local col_names
-    col_names=$(echo -e "$names" | sort | column -c 78 | expand \
+    col_names=$(echo -e "$names" | sort | expand \
         | sed -e "s/^/$high_co/" -e "s/$/$nc/")
 
     [[ -n $files ]] || return 0
