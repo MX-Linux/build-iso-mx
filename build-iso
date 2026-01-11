@@ -735,7 +735,7 @@ do_stage_2() {
         if [[ -d "$sqfs_dir" ]]; then
             say "Clear out existing files ..."
             check_sqfs_dir
-            $SUDO rm -rf "$(dirname "$sqfs_dir")"/squashfs/*
+            $SUDO rm -rf "$(dirname "${sqfs_dir:?}")"/squashfs/*
         fi
 
         if restore_cache $chroot_cache_opts; then
@@ -840,7 +840,7 @@ do_stage_2() {
         say "Clear out existing files ..."
         check_sqfs_dir
         # Convoluted to be safer against deleting entire filesystem
-        $SUDO rm -rf "$(dirname "$sqfs_dir")"/squashfs/*
+        $SUDO rm -rf "$(dirname "${sqfs_dir:?}")"/squashfs/*
     fi
 
     if restore_cache $chroot_cache_opts; then
@@ -915,7 +915,7 @@ do_stage_3() {
     [[ -e "$sqfs_dir$partial_file" ]] && cp "$sqfs_dir$partial_file" "$work_dir"
 
     # Make sure we start over from scratch
-    $SUDO rm -rf "$sqfs_dir$build_dir"
+    $SUDO rm -rf "${sqfs_dir:?}${build_dir:?}"
 
     prep_chroot
 
@@ -1625,7 +1625,7 @@ do_stage_4_arch() {
         fi
 
         if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then
-            rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+            rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         fi
 
         if [[ ! -r /proc/mounts ]]; then
@@ -1647,7 +1647,7 @@ do_stage_4_arch() {
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
         arch_pacman -Syu
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_lax
     fi
 
@@ -1692,7 +1692,7 @@ do_stage_4_arch() {
         if (( ${#pkgs[@]} > 0 )); then
             arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing basic packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_strict
     else
         skip_part 4 "Install basic packages"
@@ -1702,7 +1702,7 @@ do_stage_4_arch() {
         : "${K_PKG:=linux}"
         : "${K_HEADERS_PKG:=linux-headers}"
         arch_pacman -S --needed "$K_PKG" "$K_HEADERS_PKG"
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_strict
     fi
 
@@ -1720,7 +1720,7 @@ do_stage_4_arch() {
         if (( ${#pkgs[@]} > 0 )); then
             arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing flavour packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_strict
     else
         skip_part 8 "Install flavour packages"
@@ -1750,7 +1750,7 @@ do_stage_4_arch() {
             say "install $(pq "${pkg##*/}")"
             arch_pacman --overwrite='*' -U "$pkg"
         done
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_lax
     else
         skip_part 13 "Install Arch packages from /Deb"
@@ -1758,7 +1758,7 @@ do_stage_4_arch() {
 
     if do_part 14 "Update system after installing custom packages"; then
         arch_pacman -Syu
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_lax
     fi
 
@@ -1773,7 +1773,7 @@ do_stage_4_arch() {
         # shellcheck disable=SC2206
         local pkgs=( $(compile_pkg_list add exclude-chroot) )
         (( ${#pkgs[@]} > 0 )) && arch_pacman -S --needed "${pkgs[@]}"
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "$PACMAN_CACHE_DIR"/* 2>/dev/null || true
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
         end_part_lax
     fi
 
@@ -2043,7 +2043,7 @@ do_stage_5() {
     $SUDO mkdir $sqfs_dir/dev
 
     # Clean up our loose ends (once here instead of after every chroot)
-    $SUDO rm -rf $sqfs_dir$build_dir
+    $SUDO rm -rf "${sqfs_dir:?}${build_dir:?}"
 
     # We used LOCAL_MIRROR while building inside the chroot
     [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $MIRROR "DEFAULT mirror"
@@ -2309,7 +2309,7 @@ Bootloader_Data
     # Create custom initrd.gz including modules from the squashfs kernel
     if [[ -e $initrd_dir ]]; then
         say "Clear out initrd directory"
-        rm -rf $initrd_dir
+        rm -rf "${initrd_dir:?}"
     fi
 
     mkdir -p $initrd_dir
@@ -2328,7 +2328,7 @@ Bootloader_Data
     if [[ -z $iso_only ]]; then
         say "Copy $(pq $K_NAME) modules into initrd"
 
-        rm -rf $initrd_dir/lib/modules/
+        rm -rf "${initrd_dir:?}/lib/modules/"
 
         # Note: please use built-in list so we are all in sync. Thanks!     #anticap
         $tools/copy-initrd-modules --encrypt --very-quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
@@ -2716,21 +2716,21 @@ do_stage_9() {
     rel_work_dir=Remaster/work/$(basename $work_dir)
     if [[ -n $delete_all ]]; then
         say "Delete entire work directory $(pq $rel_work_dir)"
-        $SUDO rm -rf $work_dir
+        $SUDO rm -rf "${work_dir:?}"
         [[ -n $links ]] && rm $links
 
     elif [[ -n $delete_mode ]]; then
         say "Delete squashfs directory $(pq $rel_work_dir/squashfs)"
-        $SUDO rm -rf $sqfs_dir
+        $SUDO rm -rf "${sqfs_dir:?}"
         rm -f $script_dir/squashfs
 
         if yes_NO "Delete everything else in $(pq $rel_work_dir)"; then
-            $SUDO rm -rf $work_dir
+            $SUDO rm -rf "${work_dir:?}"
             [[ -n $links ]] && rm $links
         fi
 
     elif yes_NO "Delete entire work directory $(pq $rel_work_dir)"; then
-        $SUDO rm -rf $work_dir
+        $SUDO rm -rf "${work_dir:?}"
         [[ -n $links ]] && rm $links
 
     elif yes_NO "Delete squashfs directory $(pq $rel_work_dir/squashfs)"; then
@@ -2854,7 +2854,7 @@ umount_tmpfs() {
     YES_no_loud "Clear out $name/ and umount it" || return 1
 
     check_sqfs_dir $dir
-    $SUDO rm -rf "$(dirname $dir)"/squashfs/*
+    $SUDO rm -rf "$(dirname "${dir:?}")"/squashfs/*
     $SUDO umount $dir
     mountpoint -q $dir || return
     warn "name did not simply umount. Trying -l (lazy option)"
@@ -2895,7 +2895,7 @@ check_all_tmpfs() {
         YES_no_loud "Cache chroot directory before umount" && force_cache chroot "$name" "$dir"
         YES_no "Clear and umount this directory" || continue
 
-        $SUDO rm -rf "$(dirname $dir)"/squashfs/*
+        $SUDO rm -rf "$(dirname "${dir:?}")"/squashfs/*
         $SUDO umount -l $dir
     done
 
@@ -3567,7 +3567,7 @@ collect_live_files() {
     $SUDO mkdir -p $dest_dir
     # This hard-codes the live-files dir but it is safer in case
     # $dest_dir is empty.
-    $SUDO rm -rf "$(dirname $dest_dir)"/live-files/*
+    $SUDO rm -rf "$(dirname "${dest_dir:?}")"/live-files/*
 
     local file dest
     # shellcheck disable=SC2086
@@ -3638,7 +3638,7 @@ repack_gfx_cpio() {
 prep_dir() {
     local dir=$1
     [[ -z $dir || ! $dir =~ [a-zA-Z] ]] && fatal "Bad directory name: $dir"
-    rm -rf $dir
+    rm -rf "${dir:?}"
     mkdir -p $dir
 }
 
@@ -3954,7 +3954,7 @@ prep_chroot() {
 make_build_dir() {
 
     local b_dir=$work_dir/Build
-    rm -rf $b_dir
+    rm -rf "${b_dir:?}"
     mkdir $b_dir
 
     mkdir -p $b_dir/Deb
@@ -4028,7 +4028,7 @@ source /Build/bashrc
 PS1="${lt_blue}breakpoint${lt_green}>$nc "
 Bashrc2
 
-    $SUDO rm -rf $sqfs_dir/Build
+    $SUDO rm -rf "${sqfs_dir:?}/Build"
     $SUDO mv $b_dir $sqfs_dir
 }
 
