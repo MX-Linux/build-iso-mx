@@ -161,13 +161,13 @@ main() {
 
         # Deal with all options that take a parameter
         case $arg in
-          -color|C) (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -$arg)"
+          -color|C) (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -"$arg")"
                     val=$1
                     [[ $val =~ ^- ]] \
                         && fatal "Suspicious argument after -$arg: $(pqw "$val")"
 
                     shift         ;;
-    -user-default)  (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -$arg)"
+    -user-default)  (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -"$arg")"
                     val=$1
                     # Use basename to allow both "filename" and "Input/filename" formats
                     val=$(basename "$val")
@@ -949,7 +949,7 @@ do_stage_2() {
         exclude_list=$(gather_join exclude-debootstrap)
         include_list=$(gather_join include-debootstrap)
         cnt=$(echo "$exclude_list" | tr ',' '\n' | wc -l)
-        psay $cnt "Exclude $(pqn %n) package%s"
+        psay "$cnt" "Exclude $(pqn %n) package%s"
         keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
         [[ -n "$exclude_list" ]] && args="$args --exclude=$exclude_list"
         [[ -n "$include_list" ]] && args="$args --include=$include_list"
@@ -1280,7 +1280,7 @@ do_stage_4() {
 
     if gather_any package \
         && do_part 8 "Install antiX packages"; then
-        install_packages package $FLAV
+        install_packages package "$FLAV"
         end_part_lax
 
     else
@@ -1302,7 +1302,7 @@ do_stage_4() {
     cnt=$(echo "$debs" | wc -w)
     if (( cnt > 0 )) \
         && do_part 10 "Install latest antiX debs"; then
-        psay $cnt "Install $(pqn %n) .deb package%s"
+        psay "$cnt" "Install $(pqn %n) .deb package%s"
 
         for deb in $debs; do
             say "install $(pq "${deb##*/}")"
@@ -1347,11 +1347,11 @@ do_stage_4() {
             say "Set x-terminal-emulator to $(pq "$X_TERM_EMULATOR")"
             update-alternatives --set x-terminal-emulator "$X_TERM_EMULATOR"
         else
-            error "Missing or unknown x-term-emulator $(pqw $X_TERM_EMULATOR)"
+            error "Missing or unknown x-term-emulator $(pqw "$X_TERM_EMULATOR")"
         fi
 
     if [[ -e $CURSOR_ICON_THEME ]]; then
-        say "Set cursor icon theme to $(pq $CURSOR_ICON_THEME)"
+        say "Set cursor icon theme to $(pq "$CURSOR_ICON_THEME")"
         if is_antiX; then
             local theme dir
             for theme in oxy-white oxy-black Breeze-Snow Breeze-Amber; do
@@ -1360,9 +1360,9 @@ do_stage_4() {
                 update-alternatives --install /usr/share/icons/default/index.theme x-cursor-theme "$dir"/index.theme 20
             done
         fi
-        update-alternatives --set x-cursor-theme $CURSOR_ICON_THEME
+        update-alternatives --set x-cursor-theme "$CURSOR_ICON_THEME"
     else
-        error "Missing or unknown cursor icon theme $(pqw $CURSOR_ICON_THEME)"
+        error "Missing or unknown cursor icon theme $(pqw "$CURSOR_ICON_THEME")"
     fi
 
     say "Reconfigure networking sym links"
@@ -1452,17 +1452,17 @@ do_stage_4() {
 
     if do_part 16 "!Update Timezone and hostname"; then
         if [[  -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
-            say "Set timezone and localtime to $(pq $TIME_ZONE)"
-            echo $TIME_ZONE > /etc/timezone
+            say "Set timezone and localtime to $(pq "$TIME_ZONE")"
+            echo "$TIME_ZONE" > /etc/timezone
             DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata 2>&1 && echo
             end_part_lax
         else
-            error "Unknown time zone $(pqw $TIME_ZONE)"
+            error "Unknown time zone $(pqw "$TIME_ZONE")"
         fi
 
         : ${NEW_HOSTNAME:=antix1}
-        say "Set hostname to $(pq $NEW_HOSTNAME)"
-        echo $NEW_HOSTNAME > /etc/hostname
+        say "Set hostname to $(pq "$NEW_HOSTNAME")"
+        echo "$NEW_HOSTNAME" > /etc/hostname
 
         if [[ -z $NO_SET_HOSTNAME ]]; then
             say "run hostname command"
@@ -1477,10 +1477,10 @@ do_stage_4() {
         user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
             say "Set up live user account $(pq $user)"
-            grep -q "^$user:" /etc/group || groupadd $user
+            grep -q "^$user:" /etc/group || groupadd "$user"
             local user_pw
-            user_pw=$(mkpasswd -m sha-512 $user)
-            useradd -s ${ISO_SHELL:="/bin/bash"} -g $user -d /home/$user -p $user_pw $user
+            user_pw=$(mkpasswd -m sha-512 "$user")
+            useradd -s "${ISO_SHELL:="/bin/bash"}" -g "$user" -d /home/"$user" -p "$user_pw" "$user"
         fi
 
         gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
@@ -1491,13 +1491,13 @@ do_stage_4() {
 
         local group
         for group in $(gather user-groups); do
-            usermod -a -G $group $user
+            usermod -a -G "$group" "$user"
         done
 
         say "Set root password"
         local root_pw
         root_pw=$(mkpasswd -m sha-512 root)
-        usermod -p $root_pw root
+        usermod -p "$root_pw" root
 
         end_part_strict
     fi
@@ -1551,7 +1551,7 @@ do_stage_4() {
 
     if is_antiX; then
         say "Customize Mozilla Browser"
-        customize_firefox $LOCALE
+        customize_firefox "$LOCALE"
     else
         ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
     fi
@@ -1838,7 +1838,7 @@ do_stage_4_arch() {
     cnt=${#arch_pkgs[@]}
     if (( cnt > 0 )) \
         && do_part 13 "Install Arch packages from /Deb"; then
-        psay $cnt "Install $(pqn %n) Arch package%s"
+        psay "$cnt" "Install $(pqn %n) Arch package%s"
 
         for pkg in "${arch_pkgs[@]}"; do
             say "install $(pq "${pkg##*/}")"
