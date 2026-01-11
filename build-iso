@@ -748,7 +748,9 @@ do_stage_2() {
             check_errors_strict
             start_timer
 
-            $SUDO mkdir -p "$sqfs_dir"
+            $SUDO mkdir -p "$sqfs_dir/etc"
+            # Create vconsole.conf before pacstrap to avoid mkinitcpio errors
+            $SUDO sh -c "printf '%s\n' 'KEYMAP=us' > '$sqfs_dir/etc/vconsole.conf'"
             : "${PACSTRAP_PACKAGES:=base linux linux-firmware}"
             say "pacstrap to $(pq "$sqfs_dir") with: $(pq "$PACSTRAP_PACKAGES")"
 
