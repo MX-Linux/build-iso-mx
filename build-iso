@@ -4296,8 +4296,8 @@ _end_timer_() {
     local name=$1 title
     title=$(cprint_left 36 "$2")
     eval local start_t=\$$name
-    # shellcheck disable=SC2154
     echo  # Ensure we start on a fresh line
+    # shellcheck disable=SC2154
     _say_ "${time_co}time for $text_co$title$nc $(pqn "$(elapsed $start_t)")$nc"
 }
 
