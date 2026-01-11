@@ -1831,13 +1831,16 @@ do_stage_4_arch() {
 
     # Install Arch-specific packages from /Deb/Arch* directories
     local arch_pkgs cnt
-    arch_pkgs=$(ls $build_dir/Deb/*.pkg.tar.{zst,xz,gz} 2>/dev/null | grep -v '\*')
-    cnt=$(echo "$arch_pkgs" | grep -c . 2>/dev/null || echo 0)
+    arch_pkgs=()
+    for pkg in "$build_dir"/Deb/*.pkg.tar.{zst,xz,gz}; do
+        [[ $pkg != *'*'* ]] && arch_pkgs+=("$pkg")
+    done
+    cnt=${#arch_pkgs[@]}
     if (( cnt > 0 )) \
         && do_part 13 "Install Arch packages from /Deb"; then
         psay $cnt "Install $(pqn %n) Arch package%s"
 
-        for pkg in $arch_pkgs; do
+        for pkg in "${arch_pkgs[@]}"; do
             say "install $(pq "${pkg##*/}")"
             arch_pacman --overwrite='*' -U "$pkg"
         done
