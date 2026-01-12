@@ -2718,6 +2718,15 @@ do_stage_8() {
 
         sha256sum_file $full_iso_file
         zsyncmake_file $full_iso_file
+
+        if [[ $SIGN_FILES == true ]]; then
+            say "Sign $(basename $full_iso_file)"
+            rm -f $full_iso_file.sig 2>/dev/null
+            local gpg_sudo
+            is_antiX && gpg_sudo=$SUDO
+            $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
+        fi
+
         say2 "Your live $(pq $iso_file) is in $(pq Remaster/iso-files) ready to be tested"
 
         leave_stage
