@@ -5353,7 +5353,8 @@ zsyncmake_file() {
     local dir file
     dir=$(dirname $1)
     file=$(basename $1)
-    (cd $dir && zsyncmake -e $file)
+    say "Creating a zsync file..."
+    (cd $dir && zsyncmake -e $file 2>/dev/null)
 }
 
 #------------------------------------------------------------------------------
