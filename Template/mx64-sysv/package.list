@@ -361,6 +361,8 @@ tumbler
 tumbler-common
 tumbler-plugins-extra
 ure
+va-driver-all
+vdpau-driver-all
 vcdimager
 virtualbox-guest-utils
 virtualbox-guest-utils-modified-init
