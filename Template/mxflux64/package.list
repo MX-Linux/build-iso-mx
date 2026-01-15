@@ -308,6 +308,8 @@ tlp
 tumbler
 tumbler-common
 tumbler-plugins-extra
+va-driver-all
+vdpau-driver-all
 vcdimager
 # virtualbox-guest-dkms
 # virtualbox-guest-utils

@@ -336,7 +336,8 @@ tumbler-plugins-extra
 #unetbootin
 #uno-libs3
 ure
-#uswsusp
+va-driver-all
+vdpau-driver-all
 vcdimager
 #virtualbox-guest-dkms
 virtualbox-guest-utils

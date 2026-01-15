@@ -213,6 +213,7 @@ menu
 menu-l10n
 menu-xdg
 mesa-utils
+mesa-libgallium
 mobile-broadband-provider-info
 modemmanager
 module-assistant
@@ -355,10 +356,8 @@ usb-modeswitch
 usbmuxd
 usbutils
 user-installed-packages
-va-driver-all
 vainfo
 vbetool
-vdpau-driver-all
 vim-tiny
 vorbis-tools
 vpnc
