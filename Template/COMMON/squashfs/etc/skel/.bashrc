@@ -103,7 +103,7 @@ fi
 
 # Default parameter to send to the "less" command
 # -R: show ANSI colors correctly; -i: case insensitive search
-[ -z "$LESS" ] && LESS="-R -i"
+[ -z "$LESS" ] && export LESS="-R -i"
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
