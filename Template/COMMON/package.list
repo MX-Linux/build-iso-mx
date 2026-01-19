@@ -1,8 +1,8 @@
-avahi-daemon
 bzip2
 cli-installer-mx
 cryptsetup
 curl
+dhcpcd
 dialog
 eject
 file

@@ -18,5 +18,5 @@ ENABLE_LOCALES="single"
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -b 262144"
 
-MX_LIVE_BOOT_OPTIONS="quiet splasht= nosplash"
+MX_LIVE_BOOT_OPTIONS="quiet nosplash"
 
