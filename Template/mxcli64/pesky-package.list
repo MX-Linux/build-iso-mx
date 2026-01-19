@@ -1,5 +1,4 @@
 elogind-init-diversity
 init-diversity-tools
-lightdm-modified-init
 systemd-init-diversity
 sysvinit-init-diversity
