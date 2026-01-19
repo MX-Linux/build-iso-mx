@@ -962,7 +962,31 @@ do_stage_2() {
         check_errors_strict
         start_timer
         $SUDO mkdir -p "$sqfs_dir/usr" "$sqfs_dir/etc"
-        $SUDO debootstrap $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
+        local debian_frontend_env=""
+        if [[ -n $auto_mode ]]; then
+            debian_frontend_env="DEBIAN_FRONTEND=noninteractive"
+            say "Running debootstrap in noninteractive mode (auto mode enabled)..."
+        else
+            say "Running debootstrap in interactive mode..."
+        fi
+
+        vsay "DEBUG: debootstrap args: $args"
+        vsay "DEBUG: DEBIAN_RELEASE: $DEBIAN_RELEASE"
+        vsay "DEBUG: sqfs_dir: $sqfs_dir"
+        vsay "DEBUG: url: $url"
+
+        # WSL workaround: patch debootstrap to replace 'sync' with 'true' to avoid hangs
+        if grep -qi microsoft /proc/version 2>/dev/null; then
+            say "WSL detected: creating patched debootstrap without sync..."
+            local patched_debootstrap="$work_dir/debootstrap-no-sync"
+            $SUDO sed 's/^\tsync$/\ttrue  # sync disabled for WSL/' /usr/sbin/debootstrap > "$patched_debootstrap"
+            $SUDO chmod +x "$patched_debootstrap"
+            $SUDO $debian_frontend_env "$patched_debootstrap" $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
+        else
+            $SUDO $debian_frontend_env debootstrap $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
+        fi
+
+        say "debootstrap completed, checking results..."
         end_timer "run debootstrap \"$ARCH\" \"$DEBIAN_RELEASE\""
         check_errors_lax
 
