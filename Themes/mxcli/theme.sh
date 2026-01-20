@@ -16,11 +16,7 @@ copy_file desktop.menu          /usr/share/boot-menus/
 
 # Disable services that require executables from mx-tweak (not installed in CLI)
 # Remove symlinks and deb-systemd-helper state files to prevent re-enabling at boot
-rm -fv $PREFIX/etc/systemd/system/multi-user.target.wants/live-broadcomstartup.service
-rm -fv $PREFIX/etc/systemd/system/multi-user.target.wants/live-clock12or24.service
-rm -fv $PREFIX/var/lib/systemd/deb-systemd-helper-enabled/multi-user.target.wants/live-broadcomstartup.service
-rm -fv $PREFIX/var/lib/systemd/deb-systemd-helper-enabled/multi-user.target.wants/live-clock12or24.service
-rm -fv $PREFIX/var/lib/systemd/deb-systemd-helper-enabled/live-broadcomstartup.service.dsh-also
-rm -fv $PREFIX/var/lib/systemd/deb-systemd-helper-enabled/live-clock12or24.service.dsh-also
+rm_file /usr/lib/systemd/system/live-broadcomstartup.service
+rm_file /usr/lib/systemd/system/live-clock12or24.service
 
 exit
