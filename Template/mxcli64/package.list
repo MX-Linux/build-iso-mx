@@ -1,5 +1,7 @@
 ceni
 efibootmgr
+isc-dhcp-client
+openresolv
 iso-snapshot-cli
 iw
 linux-headers-amd64

@@ -1,0 +1,13 @@
+[Unit]
+Description=Auto DHCP client
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/auto-dhcp start
+ExecStop=/usr/local/sbin/auto-dhcp stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

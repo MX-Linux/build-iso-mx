@@ -1,0 +1,110 @@
+#!/bin/bash
+# auto-dhcp: Auto-detect network interface and obtain DHCP lease
+# Tries each interface until one gets a valid address
+
+WAIT_FOR_IFACE=10
+LOG_TAG="auto-dhcp"
+
+log() {
+    logger -t "$LOG_TAG" "$*"
+    echo "$*"
+}
+
+setup_resolvconf() {
+    # Ensure resolvconf directory exists for dhclient
+    if [[ -L /etc/resolv.conf ]]; then
+        local target
+        target=$(readlink -f /etc/resolv.conf 2>/dev/null || readlink /etc/resolv.conf)
+        local dir=$(dirname "$target")
+        [[ ! -d "$dir" ]] && mkdir -p "$dir"
+    fi
+}
+
+get_interfaces() {
+    # Get list of ethernet interfaces (exclude lo, wifi, virtual)
+    ip -o link show | awk -F': ' '{print $2}' | grep -E '^(eth|en)' | sort
+}
+
+wait_for_interfaces() {
+    local count=0
+    while [[ -z "$(get_interfaces)" && $count -lt $WAIT_FOR_IFACE ]]; do
+        sleep 1
+        ((count++))
+    done
+}
+
+has_valid_ip() {
+    local iface=$1
+    ip -4 addr show "$iface" 2>/dev/null | grep -q 'inet '
+}
+
+try_dhcp() {
+    local iface=$1
+    log "Trying DHCP on $iface..."
+
+    # Bring interface up
+    ip link set "$iface" up
+    sleep 1
+
+    # Check for carrier (cable connected)
+    if [[ $(cat /sys/class/net/"$iface"/carrier 2>/dev/null) != "1" ]]; then
+        log "No carrier on $iface, skipping"
+        return 1
+    fi
+
+    # Run dhclient (-1 = try once and exit)
+    dhclient -1 -v "$iface" 2>&1 | logger -t "$LOG_TAG"
+
+    # Check if we got an IP
+    if has_valid_ip "$iface"; then
+        log "Successfully obtained IP on $iface"
+        return 0
+    else
+        log "Failed to obtain IP on $iface"
+        dhclient -r "$iface" 2>/dev/null
+        return 1
+    fi
+}
+
+main() {
+    setup_resolvconf
+    wait_for_interfaces
+
+    local interfaces
+    interfaces=$(get_interfaces)
+
+    if [[ -z "$interfaces" ]]; then
+        log "No network interfaces found"
+        exit 1
+    fi
+
+    log "Found interfaces: $interfaces"
+
+    for iface in $interfaces; do
+        if try_dhcp "$iface"; then
+            exit 0
+        fi
+    done
+
+    log "Failed to obtain DHCP lease on any interface"
+    exit 1
+}
+
+case "${1:-start}" in
+    start)
+        main
+        ;;
+    stop)
+        for iface in $(get_interfaces); do
+            dhclient -r "$iface" 2>/dev/null
+        done
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
