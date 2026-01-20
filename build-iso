@@ -2260,9 +2260,14 @@ Eth0_entry
     fi
 
     if ! is_antiX; then
-        #remove symlink for /etc/resolv.conf
-        say "Removing symlink for /etc/resolv.conf"
-        $SUDO rm -f $sqfs_dir/etc/resolv.conf
+        #reset /etc/resolv.conf to resolvconf symlink when resolvconf is present
+        if [[ -x $sqfs_dir/sbin/resolvconf || -x $sqfs_dir/usr/sbin/resolvconf || -e $sqfs_dir/run/resolvconf/resolv.conf ]]; then
+            say "Resetting /etc/resolv.conf symlink"
+            $SUDO rm -f $sqfs_dir/etc/resolv.conf
+            $SUDO ln -sf /run/resolvconf/resolv.conf $sqfs_dir/etc/resolv.conf
+        else
+            say "Leaving /etc/resolv.conf as-is (no resolvconf)"
+        fi
 
         #remove old linux image files
         say "Removing *.old files from / "
@@ -4059,8 +4064,9 @@ prep_chroot() {
         $SUDO rm -f "$sqfs_dir/etc/resolv.conf"
         $SUDO cp -L /etc/resolv.conf "$sqfs_dir/etc/resolv.conf"
         $SUDO chmod 644 "$sqfs_dir/etc/resolv.conf" 2>/dev/null || true
-    elif ! is_antiX && [[ ! -f $sqfs_dir/etc/resolv.conf ]]; then
-        $SUDO cp -H /etc/resolv.conf $sqfs_dir/etc/resolv.conf
+    elif ! is_antiX; then
+        $SUDO rm -f "$sqfs_dir/etc/resolv.conf"
+        $SUDO cp -L /etc/resolv.conf "$sqfs_dir/etc/resolv.conf"
     fi
 
     # Always use local mirror when working in chroot
