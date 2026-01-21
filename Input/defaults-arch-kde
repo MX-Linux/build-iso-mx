@@ -5,7 +5,7 @@ DISTRO_FAMILY="arch"
 
 # ISO identity
 DISTRO_NAME="MXarch"
-DISTRO_VERSION="26.01.2"
+DISTRO_VERSION="26.02"
 CODE_NAME="Infinity Arch"
 
 # Arch uses x86_64 naming; keep this consistent across templates/iso naming.
