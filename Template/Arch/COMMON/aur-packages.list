@@ -1,0 +1,17 @@
+# AUR (Arch User Repository) packages to install.
+# One package per line. Comments start with #.
+#
+# These packages are installed using paru after regular packages.
+# paru must be available (either pre-built in Deb/Arch/ or will be bootstrapped).
+#
+# Example:
+
+formatusb
+job-scheduler
+mx-boot-repair
+mx-conky
+mx-iso-template-arch
+mx-packageinstaller
+mx-snapshot
+uefi-manager
+update-notifier-qt

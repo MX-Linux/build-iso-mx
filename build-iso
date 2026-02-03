@@ -1947,6 +1947,63 @@ do_stage_4_arch() {
          end_part_lax
      fi
 
+    # Install AUR packages using paru (must run as non-root user)
+    if gather_any aur-packages && do_part 19 "Install AUR packages"; then
+        gather_say aur-packages "Install $(pqn %n) AUR package%s"
+        local aur_user=${LIVE_USER:-demo}
+
+        # Verify user exists (created in Part 17)
+        if ! grep -q "^$aur_user:" /etc/passwd; then
+            error "AUR installation requires user '$aur_user' (should be created in Part 17)"
+        fi
+
+        # Check if paru is available
+        if ! command -v paru >/dev/null 2>&1; then
+            say "paru not found, bootstrapping from AUR..."
+
+            # Install base-devel if not present (needed for makepkg)
+            if ! pacman -Qq base-devel >/dev/null 2>&1; then
+                arch_pacman -S --needed base-devel git
+            fi
+
+            # Create build directory
+            local paru_build_dir="/tmp/paru-build"
+            mkdir -p "$paru_build_dir"
+            chown "$aur_user:$aur_user" "$paru_build_dir"
+
+            # Clone and build paru-bin (binary release, faster to build)
+            say "Cloning paru-bin from AUR..."
+            sudo -u "$aur_user" git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$paru_build_dir/paru-bin"
+
+            say "Building paru-bin..."
+            (
+                cd "$paru_build_dir/paru-bin"
+                sudo -u "$aur_user" makepkg -si --noconfirm 2>&1 | tr '\r' '\n'
+            )
+
+            rm -rf "$paru_build_dir"
+
+            if ! command -v paru >/dev/null 2>&1; then
+                error "Failed to bootstrap paru"
+            fi
+            say "paru bootstrapped successfully"
+        fi
+
+        # shellcheck disable=SC2206
+        local aur_pkgs=( $(compile_pkg_list aur-packages exclude-chroot) )
+        if (( ${#aur_pkgs[@]} > 0 )); then
+            say "Installing AUR packages as user $(pq "$aur_user")..."
+            # Run paru as non-root user with sudo for pacman operations
+            # --skipreview skips PKGBUILD review, --noconfirm for non-interactive
+            sudo -u "$aur_user" paru -S --needed --noconfirm --skipreview "${aur_pkgs[@]}" 2>&1 | tr '\r' '\n' \
+                || error "paru failed installing AUR packages"
+        fi
+        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        end_part_strict
+    else
+        skip_part 19 "Install AUR packages"
+    fi
+
     if do_part 20 "Build archiso initramfs"; then
         local archiso_conf="/etc/mkinitcpio-archiso.conf"
         local releng_conf=
