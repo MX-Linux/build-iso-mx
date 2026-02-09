@@ -13,5 +13,6 @@ mx-conky
 mx-iso-template-arch
 mx-packageinstaller
 mx-snapshot
+paru
 uefi-manager
 update-notifier-qt

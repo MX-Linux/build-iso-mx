@@ -104,6 +104,7 @@ psmisc
 psutils
 pv
 read-edid
+reflector
 rpcbind
 rsync
 samba
