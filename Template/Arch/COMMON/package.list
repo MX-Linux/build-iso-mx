@@ -38,6 +38,7 @@ f2fs-tools
 fakeroot
 fastfetch
 fastfetch
+fd
 file
 firefox
 fish
@@ -105,6 +106,7 @@ psutils
 pv
 read-edid
 reflector
+ripgrep
 rpcbind
 rsync
 samba
