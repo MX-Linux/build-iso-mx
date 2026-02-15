@@ -11,6 +11,7 @@ job-scheduler
 mx-boot-repair
 mx-conky
 mx-iso-template-arch
+mx-live-usb-maker
 mx-packageinstaller
 mx-snapshot
 paru
