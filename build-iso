@@ -2726,11 +2726,11 @@ do_stage_7() {
     local size
     size=$(du_size $linuxfs_file)
     end_timer "create $(pqn $size) squashfs file"
-    md5sum_file $linuxfs_file
-
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
-        # archiso typically provides a separate md5 file for airootfs.sfs
-        (cd "$(dirname "$linuxfs_file")" && md5sum "$(basename "$linuxfs_file")" > airootfs.md5)
+        # archiso boot hooks verify airootfs.sfs using airootfs.sha512
+        (cd "$(dirname "$linuxfs_file")" && sha512sum "$(basename "$linuxfs_file")" > airootfs.sha512)
+    else
+        md5sum_file $linuxfs_file
     fi
 
     leave_stage
