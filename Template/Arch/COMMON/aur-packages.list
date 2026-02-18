@@ -14,6 +14,7 @@ mx-iso-template-arch
 mx-live-usb-maker
 mx-packageinstaller
 mx-snapshot
+open-vm-tools
 paru
 uefi-manager
 update-notifier-qt

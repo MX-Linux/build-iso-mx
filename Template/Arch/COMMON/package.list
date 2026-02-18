@@ -101,6 +101,7 @@ patch
 pciutils
 pkgconfig
 plocate
+progress
 psmisc
 psutils
 pv
