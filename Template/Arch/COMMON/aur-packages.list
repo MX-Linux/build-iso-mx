@@ -7,8 +7,10 @@
 # Example:
 
 formatusb
+gazelle-installer
 job-scheduler
 mx-boot-repair
+mx-boot-options
 mx-conky
 mx-iso-template-arch
 mx-live-usb-maker
