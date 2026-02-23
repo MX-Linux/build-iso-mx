@@ -3146,7 +3146,7 @@ kill_chroot_procs() {
 check_errors_reset() {
     [[ -e "$err_file" ]] || touch "$err_file"
     local offset
-    offset=$(cat "$err_file" 2>/dev/null | wc -l)
+    offset=$(wc -l < "$err_file" 2>/dev/null)
     : ${offset:=0}
     ERROR_OFFSET=$((offset + 1))
     #_say_ "check_errors_reset"
