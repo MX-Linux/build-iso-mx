@@ -1977,7 +1977,7 @@ do_stage_4_arch() {
 
             say "Building paru-bin..."
             (
-                cd "$paru_build_dir/paru-bin"
+                cd "$paru_build_dir/paru-bin" || exit
                 sudo -u "$aur_user" makepkg -si --noconfirm 2>&1 | tr '\r' '\n'
             )
 
