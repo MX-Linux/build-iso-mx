@@ -1487,7 +1487,7 @@ do_stage_4() {
             error "Unknown time zone $(pqw "$TIME_ZONE")"
         fi
 
-        : ${NEW_HOSTNAME:=antix1}
+        : "${NEW_HOSTNAME:=antix1}"
         say "Set hostname to $(pq "$NEW_HOSTNAME")"
         echo "$NEW_HOSTNAME" > /etc/hostname
 
@@ -3147,7 +3147,7 @@ check_errors_reset() {
     [[ -e "$err_file" ]] || touch "$err_file"
     local offset
     offset=$(wc -l < "$err_file" 2>/dev/null)
-    : ${offset:=0}
+    : "${offset:=0}"
     ERROR_OFFSET=$((offset + 1))
     #_say_ "check_errors_reset"
     return 0
@@ -3160,7 +3160,7 @@ _check_errors_() {
     local type=$1 regex=$2 flag=$3
 
     [[ -n $disable_errors ]] && return
-    : ${ERROR_OFFSET:=1}
+    : "${ERROR_OFFSET:=1}"
     #say "Checking for $(pq $type) errors @offset $ERROR_OFFSET"
     local errors cnt
     while true; do
@@ -3947,7 +3947,7 @@ write_initrd_release() {
     local file1=$dir/etc/$name  file2=$dir/etc/live/version/$name
     $sudo mkdir -p "$(dirname $file1)" "$(dirname $file2)"
 
-    : ${ASCII_CODE_NAME:="$(echo "$CODE_NAME" | utf8_to_ascii)"}
+    : "${ASCII_CODE_NAME:="$(echo "$CODE_NAME" | utf8_to_ascii)"}"
 
     if [[ $ASCII_CODE_NAME != "$CODE_NAME" ]]; then
 
@@ -4808,7 +4808,7 @@ update_default() {
         echo -n "Enter new default> "
         read -r value
         echo
-        : ${value:="$orig_val"}
+        : "${value:="$orig_val"}"
         if echo "$value" | grep -q '["\\$]'; then
             warn "Removing [\"\\\$] characters"
             # Remove all occurrences of " \ $
