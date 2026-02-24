@@ -421,6 +421,7 @@ main() {
             # Source all previous stage files to get full state
             for ((s=0; s<=stage; s++)); do
                 output_file="$output_dir/stage-$s.out"
+                # shellcheck disable=SC1090
                 [[ -r "$output_file" ]] && source "$output_file"
             done
         else
@@ -1175,6 +1176,7 @@ do_stage_4() {
     PATH=$build_dir/fake:$PATH
 
     # Read in the ASK_PART, SKIP_PART, etc values from outer program
+    # shellcheck disable=SC1091
     [[ -r "$script_dir/ENV_IN" ]] && source "$script_dir/ENV_IN"
 
     require_programs apt-get
@@ -1678,6 +1680,7 @@ do_stage_4_arch() {
     echo $$ > $build_dir/MY-PID
     PATH=$build_dir/fake:$PATH
 
+    # shellcheck disable=SC1091
     [[ -r "$script_dir/ENV_IN" ]] && source "$script_dir/ENV_IN"
 
     say "Arch template root: $(pq "$template")"
