@@ -303,6 +303,7 @@ main() {
     load_defaults
 
     set_output_paths() {
+        # shellcheck disable=SC2153
         local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH"
         [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
         [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
@@ -2234,6 +2235,7 @@ do_stage_5() {
     $SUDO rm -rf "${sqfs_dir:?}${build_dir:?}"
 
     # We used LOCAL_MIRROR while building inside the chroot
+    # shellcheck disable=SC2153
     [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $MIRROR "DEFAULT mirror"
 
     say "Delete $(pq /etc/mtab)"
@@ -3285,6 +3287,7 @@ _do_part_() {
     fi
 
     # If TEST_PART is non-empty and contains at least one digit
+    # shellcheck disable=SC2153
     if [[ $TEST_PART =~ ^[0-9] ]]; then
         if ! has_word TEST_PART $part; then
             _say_ "${bold_co}Test mode:$nc Skip part ($pnum) $title"
@@ -4210,6 +4213,7 @@ make_build_dir() {
     [[ -n $THEME ]] && copy_theme_dir $b_dir
 
     # Let chroot user over-ride values set by host system
+    # shellcheck disable=SC2153
     cat << Env_In > $b_dir/ENV_IN
 : \${ASK_PART:=$ASK_PART}
 : \${EXIT_PART:=$EXIT_PART}
@@ -4465,6 +4469,7 @@ _cache_() {
 
     echo $dir | grep -q "^$remaster_dir" || fatal "Refusing to cache suspicious directory: $dir"
 
+    # shellcheck disable=SC2153
     case ,$CACHE, in
         *,$type,*) ;;
                 *)  say "Skipping cache type $(pq $type)"
