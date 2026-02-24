@@ -1458,6 +1458,7 @@ do_stage_4() {
         fi
 
         if (( save_cnt > 0 || reconfig_cnt > 0 )); then
+            # shellcheck disable=SC2015
             YES_no "Save these new selections"                     \
                 && debconf-get-selections                          \
                 | { [[ -n "$package_re" ]] && grep -E "^$package_re" || cat; } | grep -v "[[:space:]]$"  \
@@ -1767,7 +1768,7 @@ do_stage_4_arch() {
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
         arch_pacman -Syu
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_lax
     fi
 
@@ -1812,7 +1813,7 @@ do_stage_4_arch() {
         if (( ${#pkgs[@]} > 0 )); then
             arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing basic packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_strict
     else
         skip_part 4 "Install basic packages"
@@ -1822,7 +1823,7 @@ do_stage_4_arch() {
         : "${K_PKG:=linux}"
         : "${K_HEADERS_PKG:=linux-headers}"
         arch_pacman -S --needed "$K_PKG" "$K_HEADERS_PKG"
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_strict
     fi
 
@@ -1840,7 +1841,7 @@ do_stage_4_arch() {
         if (( ${#pkgs[@]} > 0 )); then
             arch_pacman -S --needed "${pkgs[@]}" || error "pacman failed installing flavour packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_strict
     else
         skip_part 8 "Install flavour packages"
@@ -1873,7 +1874,7 @@ do_stage_4_arch() {
             say "install $(pq "${pkg##*/}")"
             arch_pacman --overwrite='*' -U "$pkg"
         done
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_lax
     else
         skip_part 13 "Install Arch packages from /Deb"
@@ -1881,7 +1882,7 @@ do_stage_4_arch() {
 
     if do_part 14 "Update system after installing custom packages"; then
         arch_pacman -Syu
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_lax
     fi
 
@@ -1896,7 +1897,7 @@ do_stage_4_arch() {
         # shellcheck disable=SC2206,SC2207
         local pkgs=( $(compile_pkg_list add exclude-chroot) )
         (( ${#pkgs[@]} > 0 )) && arch_pacman -S --needed "${pkgs[@]}"
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_lax
     fi
 
@@ -1998,7 +1999,7 @@ do_stage_4_arch() {
             sudo -u "$aur_user" paru -S --needed --noconfirm --skipreview "${aur_pkgs[@]}" 2>&1 | tr '\r' '\n' \
                 || error "paru failed installing AUR packages"
         fi
-        [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
+        if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_strict
     else
         skip_part 19 "Install AUR packages"
@@ -3880,6 +3881,7 @@ copy_second_kernel() {
 
     local version_0 version_1
     version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
+    # shellcheck disable=SC2015
     version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | { [[ -n $version_0 ]] && grep -v "^$version_0$" || cat; })
 
     case $(echo -n "$version_1" | grep -c .) in
