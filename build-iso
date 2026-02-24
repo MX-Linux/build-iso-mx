@@ -1800,7 +1800,7 @@ do_stage_4_arch() {
 
     if gather_any basic-package && do_part 4 "Install basic packages"; then
         gather_say basic-package "Install $(pqn %n) basic package%s"
-        # shellcheck disable=SC2206
+        # shellcheck disable=SC2206,SC2207
         local pkgs=( $(compile_pkg_list basic-package exclude-chroot) )
         # Strip Debian-style multiarch suffixes like ":i386" if they sneak in.
         local arch_pkgs=() p
@@ -1828,7 +1828,7 @@ do_stage_4_arch() {
 
     if gather_any package && do_part 8 "Install flavour packages"; then
         gather_say package "Install $(pqn %n) flavour package%s"
-        # shellcheck disable=SC2206
+        # shellcheck disable=SC2206,SC2207
         local pkgs=( $(compile_pkg_list package exclude-chroot) )
         # Strip Debian-style multiarch suffixes like ":i386" if they sneak in.
         local arch_pkgs=() p
@@ -1886,14 +1886,14 @@ do_stage_4_arch() {
     fi
 
     if gather_any remove && do_part 11 "Remove some packages"; then
-        # shellcheck disable=SC2206
+        # shellcheck disable=SC2206,SC2207
         local pkgs=( $(gather remove) )
         (( ${#pkgs[@]} > 0 )) && arch_pacman -Rns "${pkgs[@]}"
         end_part_strict
     fi
 
     if gather_any add && do_part 12 "Add some packages"; then
-        # shellcheck disable=SC2206
+        # shellcheck disable=SC2206,SC2207
         local pkgs=( $(compile_pkg_list add exclude-chroot) )
         (( ${#pkgs[@]} > 0 )) && arch_pacman -S --needed "${pkgs[@]}"
         [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR" && rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null || true
@@ -1989,7 +1989,7 @@ do_stage_4_arch() {
             say "paru bootstrapped successfully"
         fi
 
-        # shellcheck disable=SC2206
+        # shellcheck disable=SC2206,SC2207
         local aur_pkgs=( $(compile_pkg_list aur-packages exclude-chroot) )
         if (( ${#aur_pkgs[@]} > 0 )); then
             say "Installing AUR packages as user $(pq "$aur_user")..."
@@ -2698,6 +2698,7 @@ do_stage_7() {
 
     local linuxfs_file
     local -a mksquash_opts
+    # shellcheck disable=SC2206
     mksquash_opts=($COMPRESSION_TYPE_CODE)
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         linuxfs_file=$iso_dir/arch/$ARCH/airootfs.sfs
