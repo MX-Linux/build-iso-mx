@@ -2062,7 +2062,9 @@ MKINITCPIO
 
              if ! mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img 2>&1 | tr '\r' '\n'; then
                 say "mkinitcpio diagnostics:"
+                # shellcheck disable=SC2012
                 ls -la /usr/lib/initcpio/hooks 2>&1 | tail -n 30 || true
+                # shellcheck disable=SC2012
                 ls -la /usr/lib/initcpio/install 2>&1 | tail -n 30 || true
                 error "Failed to build /boot/archiso.img"
             fi
@@ -2074,7 +2076,7 @@ MKINITCPIO
 
     if do_part 21 "Detect kernel module version"; then
         if [[ -d /usr/lib/modules ]]; then
-            K_MODVER=$(ls -1 /usr/lib/modules 2>/dev/null | sort -V | tail -1)
+            K_MODVER=$(find /usr/lib/modules -maxdepth 1 -mindepth 1 -printf '%f\n' 2>/dev/null | sort -V | tail -1)
         fi
         [[ -n $K_MODVER ]] || error "Could not detect kernel module version under /usr/lib/modules"
         end_part_lax
@@ -2577,6 +2579,7 @@ do_stage_6_arch() {
     if ! [[ -r "$initrd_img" ]]; then
         say "Missing $(pq /boot/archiso.img) in squashfs; attempting to build it now"
         prep_chroot
+        # shellcheck disable=SC2016
         $SUDO chroot "$sqfs_dir" /bin/bash -lc '
             set -euo pipefail
             kpath="/boot/'"${K_BOOT_IMAGE:-vmlinuz-linux}"'"
