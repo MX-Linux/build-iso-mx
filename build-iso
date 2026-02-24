@@ -407,6 +407,7 @@ main() {
 
     [[ -n $update_mode ]] && say "update mode: skipping parts $(pq "$SKIP_PART")"
 
+    # shellcheck disable=SC2086
     expand_parts $part_env $stage_env
 
     # Clear out the did-stage file
@@ -571,7 +572,9 @@ do_stage_0() {
         fi
     fi
 
+    # shellcheck disable=SC2086
     pick_prog MAKE_ISO $MAKE_ISO_PROGS
+    # shellcheck disable=SC2086
     pick_prog GZIP     $GZIP_PROGS
 
     require_programs chroot isohybrid mksquashfs md5sum sudo tee zsync \
@@ -706,6 +709,7 @@ Remaster_Blurb
         : "${K_NAME:=$K_PKG}"
     fi
 
+    # shellcheck disable=SC2086
     local $HOST_ARCH
     case $(uname -m) in
         i386|i486|i686) HOST_ARCH=386 ;;
@@ -831,11 +835,13 @@ do_stage_2() {
             $SUDO rm -rf "$(dirname "${sqfs_dir:?}")"/squashfs/*
         fi
 
+        # shellcheck disable=SC2086
         if restore_cache $chroot_cache_opts; then
             leave_stage
             return
         fi
 
+        # shellcheck disable=SC2086
         if ! restore_cache $deboot_cache_opts; then
             umount_chroot
             check_errors_strict
@@ -845,11 +851,13 @@ do_stage_2() {
             # Create vconsole.conf before pacstrap to avoid mkinitcpio errors
             $SUDO sh -c "printf '%s\n' 'KEYMAP=us' > '$sqfs_dir/etc/vconsole.conf'"
             : "${PACSTRAP_PACKAGES:=base linux linux-firmware}"
-            say "pacstrap to $(pq "$sqfs_dir") with: $(pq "$PACSTRAP_PACKAGES")"
+            # shellcheck disable=SC2086
+            say "pacstrap to $(pq "$sqfs_dir") with: $(pq $PACSTRAP_PACKAGES)"
 
             if is_arch_host; then
                 # On Arch host, use native pacman configuration
                 say "Using host pacman configuration (Arch Linux)"
+                # shellcheck disable=SC2086
                 $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
             else
                 # On Debian/MX host, provide dedicated config + mirrors
@@ -879,6 +887,7 @@ do_stage_2() {
                     $SUDO sh -c "pacman-key --populate archlinux 2>&1 | tr '\r' '\n'"
                 fi
 
+                # shellcheck disable=SC2086
                 $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
             fi
 
@@ -917,6 +926,7 @@ do_stage_2() {
         fi
 
         report_size "$sqfs_dir"
+        # shellcheck disable=SC2086
         create_cache $deboot_cache_opts
 
         say "Customize live system (Arch)"
@@ -938,11 +948,13 @@ do_stage_2() {
         $SUDO rm -rf "$(dirname "${sqfs_dir:?}")"/squashfs/*
     fi
 
+    # shellcheck disable=SC2086
     if restore_cache $chroot_cache_opts; then
         leave_stage
         return
     fi
 
+    # shellcheck disable=SC2086
     if ! restore_cache $deboot_cache_opts; then
 
         say "debootstrap for $(pq "$ARCH" "$DEBIAN_RELEASE") from local mirror $(pq "$LOCAL_MIRROR") ..."
@@ -983,8 +995,10 @@ do_stage_2() {
             local patched_debootstrap="$work_dir/debootstrap-no-sync"
             $SUDO sed 's/^\tsync$/\ttrue  # sync disabled for WSL/' /usr/sbin/debootstrap > "$patched_debootstrap"
             $SUDO chmod +x "$patched_debootstrap"
+            # shellcheck disable=SC2086
             $SUDO $debian_frontend_env "$patched_debootstrap" $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
         else
+            # shellcheck disable=SC2086
             $SUDO $debian_frontend_env debootstrap $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
         fi
 
@@ -1006,6 +1020,7 @@ do_stage_2() {
 
     report_size "$sqfs_dir"
 
+    # shellcheck disable=SC2086
     create_cache $deboot_cache_opts
 
     say "Customize live system for antiX"
@@ -1073,6 +1088,7 @@ do_stage_3() {
     check_errors_strict
 
     say "Run $(pq "$ME") in chroot"
+    # shellcheck disable=SC2086
     $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args
 
     $SUDO hostname "$HOST_HOSTNAME"
@@ -1081,7 +1097,8 @@ do_stage_3() {
         say "The buld inside the chroot failed"
         say  "======================================================="
         say  "You are in a chroot environment."
-        say  "Use the command $(pq /Build/$ME $args)"
+        # shellcheck disable=SC2086
+        say  "Use the command $(pq /Build/"$ME" $args)"
         say  "to continue building"
         say  "Use $(pq exit) or $(pq Ctrl-D) when done"
         say  "======================================================="
@@ -1229,6 +1246,7 @@ do_stage_4() {
         [[ $ISO_FLAV =~ -libre$ ]] \
             && sed -i -e 's/\<contrib\>//g' -e 's/\<non-free\>//g' $list_dir/debian.list
 
+        # shellcheck disable=SC2086
         apt-get $APT_GET_OPTS update
         end_part_lax
     fi
@@ -1272,6 +1290,7 @@ do_stage_4() {
     if do_part 5 "Install kernel & headers"; then
         local kname="linux-image-$K_NAME"
         ! is_antiX && kname="$kname$UNSIGNED"
+        # shellcheck disable=SC2086
         apt-get $APT_GET_OPTS install "linux-headers-$K_NAME" "$kname"
         end_part_strict
     fi
@@ -1287,6 +1306,7 @@ do_stage_4() {
         && do_part 7 "Install pesky packages"; then
         gather_say pesky-package "Install $(pqn %n) pesky package%s"
         for package in $(compile_pkg_list "pesky-package" "exclude-chroot"); do
+            # shellcheck disable=SC2086
             case $package in
                 # Pre-configure firmware-ipw2x00 to accept license automatically
                 firmware-ipw2x00) echo 'firmware-ipw2x00 firmware-ipw2x00/license/accepted boolean true' | debconf-set-selections
@@ -1322,6 +1342,7 @@ do_stage_4() {
     show_tmpfs_and_mem
 
     if do_part 9 "Run first apt-get -f $apt_yes install"; then
+        # shellcheck disable=SC2086
         apt-get update && apt-get $APT_GET_OPTS dist-upgrade
         apt-get -f install
         end_part_lax
@@ -1507,14 +1528,14 @@ do_stage_4() {
         local user
         user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
-            say "Set up live user account $(pq $user)"
+            say "Set up live user account $(pq "$user")"
             grep -q "^$user:" /etc/group || groupadd "$user"
             local user_pw
             user_pw=$(mkpasswd -m sha-512 "$user")
             useradd -s "${ISO_SHELL:="/bin/bash"}" -g "$user" -d /home/"$user" -p "$user_pw" "$user"
         fi
 
-        gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
+        gather_say user-groups "Add $(pq "$user") to $(pqn %n) group%s"
 
         # add conveinence group vboxsf even if virtualbox guest additions
         # aren not installed
@@ -1536,7 +1557,9 @@ do_stage_4() {
     if do_part 18 "Run second apt-get -f install"; then
 
         if [[ $DEBIAN_RELEASE != "wheezy" ]] && is_antiX; then
+            # shellcheck disable=SC2086
             apt-get $APT_GET_OPTS purge systemd libsystemd0 udev software-properties-common software-properties-gtk
+            # shellcheck disable=SC2086
             apt-get $APT_GET_OPTS install --reinstall eudev
             update-rc.d udev defaults
         fi
@@ -1544,6 +1567,7 @@ do_stage_4() {
         apt-get -f $apt_yes install
         # Remove unwanted apps that may have sneaked in.
         say "Run $(pq "apt-get autoremove")"
+        # shellcheck disable=SC2086
         apt-get $APT_GET_OPTS autoremove
         end_part_lax
     fi
@@ -1610,7 +1634,7 @@ do_stage_4() {
     # It is easier to do this outside the chroot but by doing it here, the
     # updatedb database will contain the theme files
     if [[ -n $THEME && $THEME != none ]] && do_part 22 "Apply Theme"; then
-        apply_theme $THEME
+        apply_theme "$THEME"
         check_errors_reset
         end_part_strict
     fi
@@ -1923,12 +1947,12 @@ do_stage_4_arch() {
         local user
         user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
-            say "Set up live user account $(pq $user)"
+            say "Set up live user account $(pq "$user")"
             grep -q "^$user:" /etc/group || groupadd "$user"
             useradd -m -s "${ISO_SHELL:="/bin/bash"}" -g "$user" "$user"
         fi
 
-        gather_say user-groups "Add $(pq $user) to $(pqn %n) group%s"
+        gather_say user-groups "Add $(pq "$user") to $(pqn %n) group%s"
         local group
         for group in $(gather user-groups); do
             usermod -a -G "$group" "$user"
@@ -2094,7 +2118,7 @@ MKINITCPIO
     # It is easier to do this outside the chroot but by doing it here, the
     # updatedb database will contain the theme files
     if [[ -n $THEME && $THEME != none ]] && do_part 22 "Apply Theme"; then
-        apply_theme $THEME
+        apply_theme "$THEME"
         check_errors_reset
         end_part_strict
     fi
@@ -2138,12 +2162,12 @@ apply_theme() {
 
     local script="$t_dir"/theme.sh short_script=$short_t/theme.sh
     [[ ! -e $script ]] && \
-        error "Theme script $(pq $short_script) does not exist" && return
+        error "Theme script $(pq "$short_script") does not exist" && return
 
     [[ ! -x $script ]] && \
-        error "Theme script $(pq $short_script) is not executable" && return
+        error "Theme script $(pq "$short_script") is not executable" && return
 
-    say "Applying theme $(pq $theme)"
+    say "Applying theme $(pq "$theme")"
     $script --functions --VERBOSE  && return
 
     error "There was an error processing the theme script"
@@ -2164,7 +2188,7 @@ do_stage_5() {
     sleep 2
 
     if is_antiX && do_part 22 "!Check kernel's GCC version"; then
-        check_kernel_gcc vmlinuz-$K_NAME
+        check_kernel_gcc vmlinuz-"$K_NAME"
         end_part_strict
     fi
 
@@ -2178,7 +2202,7 @@ do_stage_5() {
     say "Change ownership of 3 menu-applications files"
     for wm in fluxbox icewm jwm; do
         f=$sqfs_dir/usr/share/desktop-menu/.$wm/menu-applications
-        [[ -e $f ]] && $SUDO chown 1000:1000 $f
+        [[ -e $f ]] && $SUDO chown 1000:1000 "$f"
     done
 
     if is_antiX; then
@@ -2192,7 +2216,7 @@ do_stage_5() {
 
         if [[ $DEBIAN_RELEASE != "wheezy" && -z "$jbb_mode" ]] && is_antiX; then
             say "Compress /usr/share/doc then delete folder"
-            tar -jcvf doc-$full_distro_name.tar.bz2 -C / "${sqfs_dir#/}"/usr/share/doc
+            tar -jcvf doc-"$full_distro_name".tar.bz2 -C / "${sqfs_dir#/}"/usr/share/doc
             sleep 1
             $SUDO find "$sqfs_dir"/usr/share/doc -type f -name "*.gz" -delete
             $SUDO find "$sqfs_dir"/usr/lib -type f -name "*.pyc" -delete
@@ -2219,7 +2243,7 @@ do_stage_5() {
     : "${sqfs_dir:?"sqfs_dir not set"}"
     [[ "$sqfs_dir" = "/" ]] && fatal "sqfs_dir cannot be /"
     for f in $(gather delete-files); do
-        $SUDO rm -rf "$sqfs_dir"/$f 2>/dev/null
+        $SUDO rm -rf "$sqfs_dir"/"$f" 2>/dev/null
     done
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
@@ -2229,14 +2253,14 @@ do_stage_5() {
     say "Delete $(pq "/dev/*") in chroot"
     mountpoint -q "$sqfs_dir"/dev && fatal "$(pqw /dev) is still mounted in squashfs!"
     $SUDO rm -rf "$sqfs_dir"/dev
-    $SUDO mkdir $sqfs_dir/dev
+    $SUDO mkdir "$sqfs_dir"/dev
 
     # Clean up our loose ends (once here instead of after every chroot)
     $SUDO rm -rf "${sqfs_dir:?}${build_dir:?}"
 
     # We used LOCAL_MIRROR while building inside the chroot
     # shellcheck disable=SC2153
-    [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $MIRROR "DEFAULT mirror"
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror "$MIRROR" "DEFAULT mirror"
 
     say "Delete $(pq /etc/mtab)"
     $SUDO rm -f "$sqfs_dir"/etc/mtab
@@ -2258,9 +2282,9 @@ do_stage_5() {
 
         if [[ $FLAV = "core" ]] && is_antiX; then
             local if_file=$sqfs_dir/etc/network/interfaces
-            if ! grep -q eth0 $if_file; then
-                say "Adding eth0 entry to $(pq ${if_file#"$sqfs_dir"})"
-                cat << Eth0_entry | $SUDO tee -a $if_file >/dev/null
+            if ! grep -q eth0 "$if_file"; then
+                say "Adding eth0 entry to $(pq "${if_file#"$sqfs_dir"}")"
+                cat << Eth0_entry | $SUDO tee -a "$if_file" >/dev/null
 
 # The primary network interface
 allow-hotplug eth0
@@ -2273,7 +2297,7 @@ Eth0_entry
     local cached=$sqfs_dir/etc/console-setup/cached_setup_keyboard.sh
     if [[ -e $cached ]]; then
         say "Removing console-setup cached files"
-        $SUDO rm $cached*
+        $SUDO rm "$cached"*
     fi
 
     #local exclude_files="$sqfs_dir/usr/share/excludes/*.list"
@@ -2287,24 +2311,24 @@ Eth0_entry
     local bc_fw_bin=$sqfs_dir/lib/firmware/brcm/brcmfmac4350-pcie.bin
     local bc_fw_txt=${bc_fw_bin%.bin}.txt
     local bc_fw_name
-    bc_fw_name=$(basename $bc_fw_bin)
+    bc_fw_name=$(basename "$bc_fw_bin")
 
     if [[ -e $bc_fw_bin && ! -e $bc_fw_txt ]]; then
-        say "Linking to $(pq $bc_fw_name)"
-        $SUDO ln -s $bc_fw_name $bc_fw_txt
+        say "Linking to $(pq "$bc_fw_name")"
+        $SUDO ln -s "$bc_fw_name" "$bc_fw_txt"
     fi
 
     local vim_bin=$sqfs_dir/usr/bin/vim
     if [[ -x $vim_bin.tiny && ! -e $vim_bin ]]; then
         say "Making /usr/bin/vim symlink to vim.tiny"
-        $SUDO ln -s vim.tiny $vim_bin
+        $SUDO ln -s vim.tiny "$vim_bin"
     fi
 
     local cdrecord_bin=$sqfs_dir/usr/bin/cdrecord
     local wodim_bin=$sqfs_dir/usr/bin/wodim
     if is_antiX && [[ -x $wodim_bin && ! -e $cdrecord_bin ]]; then
         say "Making /usr/bin/cdrecord symlink to wodim"
-        $SUDO ln -s wodim $cdrecord_bin
+        $SUDO ln -s wodim "$cdrecord_bin"
     fi
 
     local cli_cc_prog=antiX-cli-cc
@@ -2315,33 +2339,33 @@ Eth0_entry
             #[[ -e $file ]] && continue
 
             say "Putting command line control centre into Bash history in $(pq $dir)"
-            echo $cli_cc_prog | $SUDO tee $file >/dev/null
+            echo $cli_cc_prog | $SUDO tee "$file" >/dev/null
         done
 
     # Make sure root's history is either clobbered (above) or erased
     elif [[ -e $sqfs_dir/root/.bash_history ]]; then
         say "Deleting root's history"
-        $SUDO rm -f $sqfs_dir/root/.bash_history
+        $SUDO rm -f "$sqfs_dir"/root/.bash_history
     fi
 
     if ! is_antiX; then
         #reset /etc/resolv.conf to resolvconf symlink when resolvconf is present
         if [[ -x $sqfs_dir/sbin/resolvconf || -x $sqfs_dir/usr/sbin/resolvconf || -e $sqfs_dir/run/resolvconf/resolv.conf ]]; then
             say "Resetting /etc/resolv.conf symlink"
-            $SUDO rm -f $sqfs_dir/etc/resolv.conf
-            $SUDO ln -sf /run/resolvconf/resolv.conf $sqfs_dir/etc/resolv.conf
+            $SUDO rm -f "$sqfs_dir"/etc/resolv.conf
+            $SUDO ln -sf /run/resolvconf/resolv.conf "$sqfs_dir"/etc/resolv.conf
         else
             say "Leaving /etc/resolv.conf as-is (no resolvconf)"
         fi
 
         #remove old linux image files
         say "Removing *.old files from / "
-        $SUDO rm -f $sqfs_dir/*.old
+        $SUDO rm -f "$sqfs_dir"/*.old
     fi
 
     # rename diverted files under /var/lib/dpkg-diverts-mx/ to drop .dpkg-dist extension
     if [[ ${DISTRO_FAMILY:-debian} = debian ]] && [[ -d $sqfs_dir/var/lib/dpkg-diverts-mx ]]; then
-        find $sqfs_dir/var/lib/dpkg-diverts-mx/ -type f -name '*.dpkg-dist' -print0 | while IFS= read -r -d '' file; do
+        find "$sqfs_dir"/var/lib/dpkg-diverts-mx/ -type f -name '*.dpkg-dist' -print0 | while IFS= read -r -d '' file; do
             $SUDO mv "$file" "${file%.dpkg-dist}"
         done
     fi
@@ -2398,8 +2422,8 @@ do_stage_6() {
     local boot_menu
     get_template_file gfxboot.menu boot_menu
     if [[ -n $boot_menu ]]; then
-        update_gfxboot_menu $boot_menu $isolinux_cpio/gfxboot.cfg
-        update_gfxboot_menu $boot_menu $syslinux_cpio/gfxboot.cfg "key.F8=save"
+        update_gfxboot_menu "$boot_menu" "$isolinux_cpio"/gfxboot.cfg
+        update_gfxboot_menu "$boot_menu" "$syslinux_cpio"/gfxboot.cfg "key.F8=save"
     fi
 
     # (4) Mostly for flavour dependent desktop.men file
@@ -2411,9 +2435,9 @@ do_stage_6() {
     say "Fill in bootloader template files"
     local bootloader_data=$output_dir/bootloader-data
     # shellcheck disable=SC2154
-    eval local boot_options=\$${DISTRO_NAME}_LIVE_BOOT_OPTIONS
+    eval local boot_options=\$"${DISTRO_NAME}"_LIVE_BOOT_OPTIONS
     # shellcheck disable=SC2154
-    cat << Bootloader_Data > $bootloader_data
+    cat << Bootloader_Data > "$bootloader_data"
       DISTRO_NAME="$DISTRO_NAME"
    DISTRO_VERSION="$DISTRO_VERSION"
  FULL_DISTRO_NAME="$full_distro_name"
@@ -2428,41 +2452,41 @@ Bootloader_Data
     $SUDO mkdir -p "$sqfs_dir"/usr/share/antiX/
     $SUDO cp "$bootloader_data" "$sqfs_dir"/usr/share/antiX/
 
-    $tools/bootloader-template -i --data=$bootloader_data $iso_dir
-    $tools/bootloader-template -i --data=$bootloader_data $isolinux_cpio/en.hlp
-    $tools/bootloader-template -i --data=$bootloader_data $syslinux_cpio/en.hlp
+    "$tools"/bootloader-template -i --data="$bootloader_data" "$iso_dir"
+    "$tools"/bootloader-template -i --data="$bootloader_data" "$isolinux_cpio"/en.hlp
+    "$tools"/bootloader-template -i --data="$bootloader_data" "$syslinux_cpio"/en.hlp
 
     # (6) Create/append-to text-only bootloader menu (.msg file)
     local isolinux_cfg=$isolinux_dir/isolinux.cfg
     local syslinux_cfg=$syslinux_dir/syslinux.cfg
 
     if [[ -n $MEM_TEST_BUG ]]; then
-        say "Comment out memtest in $(basename $syslinux_cfg)"
-        sed -i "/memtest/,$ s/^/#--memtest /" $syslinux_cfg
+        say "Comment out memtest in $(basename "$syslinux_cfg")"
+        sed -i "/memtest/,$ s/^/#--memtest /" "$syslinux_cfg"
     fi
 
-    $tools/make-isolinux-menu $isolinux_cfg >> $isolinux_dir/readme.msg
-    $tools/make-isolinux-menu $syslinux_cfg >> $syslinux_dir/readme.msg
+    "$tools"/make-isolinux-menu "$isolinux_cfg" >> "$isolinux_dir"/readme.msg
+    "$tools"/make-isolinux-menu "$syslinux_cfg" >> "$syslinux_dir"/readme.msg
 
     # (7) Enabled "Save" menu on syslinux side only
     sed -r -i "/key\.F.=save/ s/^\s*;+\s*//" "$syslinux_cpio"/gfxboot.cfg
 
     # (7.1) add ask+save entry to syslinux console menu
     local con_menu=$syslinux_cpio/console.men
-    grep -q "ask+save" $con_menu || echo "ask+save \`vga=ask gfxsave" >> $con_menu
+    grep -q "ask+save" "$con_menu" || echo "ask+save \`vga=ask gfxsave" >> "$con_menu"
 
     # (8) Create/update text (UEFI) desktop menu based on menu in isolinux cpio archive
     local desktop_men=$isolinux_cpio/desktop.men
     if [[ -e $desktop_men ]]; then
         say "Create desktop text boot-menu"
-        $SUDO $tools/make-text-menu desktop $boot_menu_dir $desktop_men
+        $SUDO "$tools"/make-text-menu desktop "$boot_menu_dir" "$desktop_men"
         local append_menu dir targ
         get_template_file append-to-desktop.men append_menu
         for dir in $isolinux_cpio $syslinux_cpio; do
             targ=$dir/desktop.men
             [[ -e $targ ]] || continue
-            say "Append to $(basename $dir)/$(basename $targ)"
-            cat $append_menu >> $targ
+            say "Append to $(basename "$dir")/$(basename "$targ")"
+            cat "$append_menu" >> "$targ"
         done
     fi
 
@@ -2471,7 +2495,7 @@ Bootloader_Data
 
     # (10)
     if [[ $FLAV = "core" ]]; then
-        say "Use large font in bootloader for $(pq $FLAV) system"
+        say "Use large font in bootloader for $(pq "$FLAV") system"
         sed -i "s/16x16.fnt/16x16aa.fnt/"  "$isolinux_cpio"/gfxboot.cfg "$syslinux_cpio"/gfxboot.cfg
     fi
 
@@ -2491,14 +2515,14 @@ Bootloader_Data
 
     if [[ -z $iso_only ]]; then
         # Copy the kernel from the squashfs
-        say "Copy kernel $(pq $K_NAME) to $(pq vmlinuz) in iso directory"
+        say "Copy kernel $(pq "$K_NAME") to $(pq vmlinuz) in iso directory"
         local kernel_file=$sqfs_dir/boot/vmlinuz-$K_NAME
         [[ -r "$kernel_file" ]] || error "Could not find kernel ${kernel_file##*squashfs} in squashfs dir"
 
         local vmlinuz=$iso_dir/antiX/vmlinuz
         mkdir -p "$iso_dir"/antiX
         cp "$kernel_file" "$vmlinuz" || my_exit
-        md5sum_file $vmlinuz
+        md5sum_file "$vmlinuz"
     fi
 
     # Create custom initrd.gz including modules from the squashfs kernel
@@ -2521,43 +2545,43 @@ Bootloader_Data
     write_initrd_release "$initrd_dir"
 
     if [[ -z $iso_only ]]; then
-        say "Copy $(pq $K_NAME) modules into initrd"
+        say "Copy $(pq "$K_NAME") modules into initrd"
 
         rm -rf "${initrd_dir:?}/lib/modules/"
 
         # Note: please use built-in list so we are all in sync. Thanks!     #anticap
-        $tools/copy-initrd-modules --encrypt --very-quiet --kernel $K_NAME --from $sqfs_dir --to $initrd_dir --count
+        "$tools"/copy-initrd-modules --encrypt --very-quiet --kernel "$K_NAME" --from "$sqfs_dir" --to "$initrd_dir" --count
 
         #anticap#$tools/copy-initrd-programs --to $initrd_dir --clean
-        $tools/copy-initrd-programs --encrypt --quiet --to $initrd_dir --from $sqfs_dir
+        "$tools"/copy-initrd-programs --encrypt --quiet --to "$initrd_dir" --from "$sqfs_dir"
     fi
 
     local initrd_gz=$iso_dir/antiX/initrd.gz
     say "Create initrd.gz"
     (cd "$initrd_dir" && find . | cpio -o -H newc --owner root:root --quiet) \
-        | $GZIP -9 > $initrd_gz
+        | $GZIP -9 > "$initrd_gz"
 
-    md5sum_file $initrd_gz
+    md5sum_file "$initrd_gz"
 
     [[ -z "$iso_only" ]] && copy_second_kernel "$sqfs_dir"/boot "$iso_dir"/antiX
 
     say "Write auxiliary information"
 
-    [[ $iso_only ]] && touch $work_dir/package-list.out
+    [[ $iso_only ]] && touch "$work_dir"/package-list.out
 
     local misc_dir=$iso_file_dir/misc/$full_distro_name
-    mkdir -p $misc_dir
-    gather package                               > $misc_dir/package-list.antiX
-    gather exclude-bootstrap                     > $misc_dir/exclude-list
-    pretty_output | strip_color                  > $misc_dir/info
-    awk '{ print $1}' $work_dir/package-list.out > $misc_dir/package-list.all
-    write_version_info                           > $misc_dir/version-info
+    mkdir -p "$misc_dir"
+    gather package                               > "$misc_dir"/package-list.antiX
+    gather exclude-bootstrap                     > "$misc_dir"/exclude-list
+    pretty_output | strip_color                  > "$misc_dir"/info
+    awk '{ print $1}' "$work_dir"/package-list.out > "$misc_dir"/package-list.all
+    write_version_info                           > "$misc_dir"/version-info
 
-    cp $work_dir/package-list.out                  $misc_dir/package-list.full
+    cp "$work_dir"/package-list.out                  "$misc_dir"/package-list.full
 
     say "Initializing random number generator"
     local seed_file=$iso_dir/antiX/$seed_fname
-    dd status=none if=/dev/urandom of=$seed_file bs=1 count=512
+    dd status=none if=/dev/urandom of="$seed_file" bs=1 count=512
 
     leave_stage
 }
@@ -2577,7 +2601,7 @@ do_stage_6_arch() {
 
     # Copy GRUB theme and configuration from template
     say "Copy GRUB theme and configuration for Arch ISO"
-    copy_template_dir -u iso $iso_dir
+    copy_template_dir -u iso "$iso_dir"
 
     local kimg=$sqfs_dir/boot/${K_BOOT_IMAGE:-vmlinuz-linux}
     local initrd_img=$sqfs_dir/boot/archiso.img
@@ -2628,7 +2652,7 @@ MKINITCPIO
     : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
     say "Fill in bootloader template files"
     local bootloader_data=$output_dir/bootloader-data
-    cat << Bootloader_Data > $bootloader_data
+    cat << Bootloader_Data > "$bootloader_data"
       DISTRO_NAME="$DISTRO_NAME"
    DISTRO_VERSION="$DISTRO_VERSION"
  FULL_DISTRO_NAME="$full_distro_name"
@@ -2641,7 +2665,7 @@ Bootloader_Data
 
     # Apply template substitutions to grub.cfg and theme files
     if [[ -f "$iso_dir/boot/grub/grub.cfg" ]]; then
-        $tools/bootloader-template -i --data=$bootloader_data "$iso_dir/boot/grub/grub.cfg"
+        "$tools"/bootloader-template -i --data="$bootloader_data" "$iso_dir/boot/grub/grub.cfg"
     fi
     if [[ -f "$iso_dir/boot/grub/theme/uefi.txt" ]]; then
         sed -i "s/%DISTRO%/${DISTRO_NAME}/g" "$iso_dir/boot/grub/theme/uefi.txt"
@@ -2652,7 +2676,7 @@ Bootloader_Data
         sed -i "s/%ASCII_CODE_NAME%/${CODE_NAME}/g" "$iso_dir/boot/grub/theme/bios.txt"
     fi
     if [[ -f "$iso_dir/boot/grub/theme/help.txt" ]]; then
-        $tools/bootloader-template -i --data=$bootloader_data "$iso_dir/boot/grub/theme/help.txt"
+        "$tools"/bootloader-template -i --data="$bootloader_data" "$iso_dir/boot/grub/theme/help.txt"
     fi
 }
 
@@ -2666,29 +2690,29 @@ do_stage_7() {
     say "Run depmod one last time"
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         [[ -n $K_MODVER ]] || error "Missing K_MODVER for Arch depmod"
-        $SUDO depmod --basedir $sqfs_dir "$K_MODVER"
+        $SUDO depmod --basedir "$sqfs_dir" "$K_MODVER"
     else
-        $SUDO depmod --basedir $sqfs_dir $K_NAME
+        $SUDO depmod --basedir "$sqfs_dir" "$K_NAME"
     fi
 
     say "Clear /run directory"
-    $SUDO rm -rf $sqfs_dir/run
-    $SUDO mkdir -p $sqfs_dir/run
+    $SUDO rm -rf "$sqfs_dir"/run
+    $SUDO mkdir -p "$sqfs_dir"/run
 
     if [[ -x $sqfs_dir/usr/bin/updatedb ]]; then
         say "Run updatedb one last time"
-        $SUDO chroot $sqfs_dir /usr/bin/updatedb 2>/dev/null || true
+        $SUDO chroot "$sqfs_dir" /usr/bin/updatedb 2>/dev/null || true
     fi
 
     say "Update font cache"
-    [[ -x $sqfs_dir/usr/bin/fc-cache ]] && $SUDO chroot $sqfs_dir fc-cache -r -s -v
+    [[ -x $sqfs_dir/usr/bin/fc-cache ]] && $SUDO chroot "$sqfs_dir" fc-cache -r -s -v
 
     if ! is_antiX; then
-        [[ -x $sqfs_dir/usr/bin/fc-cache ]] && $SUDO chroot $sqfs_dir fc-cache -r -v /usr/share/fonts/extra
-        [[ -d $sqfs_dir/etc/skel/.cache/fontconfig ]] || $SUDO mkdir -p $sqfs_dir/etc/skel/.cache/fontconfig
+        [[ -x $sqfs_dir/usr/bin/fc-cache ]] && $SUDO chroot "$sqfs_dir" fc-cache -r -v /usr/share/fonts/extra
+        [[ -d $sqfs_dir/etc/skel/.cache/fontconfig ]] || $SUDO mkdir -p "$sqfs_dir"/etc/skel/.cache/fontconfig
 
-        $SUDO rm -f $sqfs_dir/etc/skel/.cache/fontconfig/*
-        $SUDO cp $sqfs_dir/var/cache/fontconfig/* $sqfs_dir/etc/skel/.cache/fontconfig/
+        $SUDO rm -f "$sqfs_dir"/etc/skel/.cache/fontconfig/*
+        $SUDO cp "$sqfs_dir"/var/cache/fontconfig/* "$sqfs_dir"/etc/skel/.cache/fontconfig/
     fi
 
     if  [[ -n $zstd_override ]]; then
@@ -2729,18 +2753,18 @@ do_stage_7() {
     else
         UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     fi
-    $SUDO unbuffer -p mksquashfs $sqfs_dir $linuxfs_file "${mksquash_opts[@]}" | tee $output
+    $SUDO unbuffer -p mksquashfs "$sqfs_dir" "$linuxfs_file" "${mksquash_opts[@]}" | tee "$output"
     UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm "$output"
     local size
-    size=$(du_size $linuxfs_file)
-    end_timer "create $(pqn $size) squashfs file"
+    size=$(du_size "$linuxfs_file")
+    end_timer "create $(pqn "$size") squashfs file"
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         # archiso boot hooks verify airootfs.sfs using airootfs.sha512
         (cd "$(dirname "$linuxfs_file")" && sha512sum "$(basename "$linuxfs_file")" > airootfs.sha512)
     else
-        md5sum_file $linuxfs_file
+        md5sum_file "$linuxfs_file"
     fi
 
     leave_stage
@@ -2757,12 +2781,12 @@ do_stage_8() {
 
     enter_stage 8 "Create iso file"
 
-    report_size $iso_dir
+    report_size "$iso_dir"
 
     local iso_file=$full_distro_name.iso
-    mkdir -p $iso_file_dir
+    mkdir -p "$iso_file_dir"
     local full_iso_file=$iso_file_dir/$iso_file
-    say "Build the live $(pq $iso_file) file"
+    say "Build the live $(pq "$iso_file") file"
 
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         require_programs grub-mkrescue
@@ -2811,21 +2835,21 @@ do_stage_8() {
         fi
 
         [[ $mkrescue_result -eq 0 ]] || error "iso file creation failed"
-        size=$(du_size $full_iso_file)
-        end_timer "create $(pqn $size) iso file"
+        size=$(du_size "$full_iso_file")
+        end_timer "create $(pqn "$size") iso file"
 
-        sha256sum_file $full_iso_file
-        zsyncmake_file $full_iso_file
+        sha256sum_file "$full_iso_file"
+        zsyncmake_file "$full_iso_file"
 
         if [[ $SIGN_FILES == true ]]; then
-            say "Sign $(basename $full_iso_file)"
-            rm -f $full_iso_file.sig 2>/dev/null
+            say "Sign $(basename "$full_iso_file")"
+            rm -f "$full_iso_file".sig 2>/dev/null
             local gpg_sudo
             is_antiX && gpg_sudo=$SUDO
-            $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
+            $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
         fi
 
-        say2 "Your live $(pq $iso_file) is in $(pq Remaster/iso-files) ready to be tested"
+        say2 "Your live $(pq "$iso_file") is in $(pq Remaster/iso-files) ready to be tested"
 
         leave_stage
         echo "$text_co$ME$bold_co done$nc" > "$sign_off_file"
@@ -2835,7 +2859,7 @@ do_stage_8() {
     local file full
     for file in vmlinuz linuxfs initrd.gz; do
         full=$iso_dir/antiX/$file
-        [[ -e $full ]] && md5sum_file $full
+        [[ -e $full ]] && md5sum_file "$full"
     done
 
     start_timer
@@ -2843,62 +2867,62 @@ do_stage_8() {
     local file_dir chown_opts
     file_dir="$full_iso_file $iso_dir"
     chown_opts="-uid 0 -gid 0"
-    say "Using $(pq "$(basename $MAKE_ISO)") to make iso file"
+    say "Using $(pq "$(basename "$MAKE_ISO")") to make iso file"
     if [[ -z ${MAKE_ISO%%*xorriso} ]]; then
-        $SUDO chown -R root:root $iso_dir
-        make_xorriso_iso $MAKE_ISO $file_dir
-        $SUDO chown -R $UID $iso_dir
+        $SUDO chown -R root:root "$iso_dir"
+        make_xorriso_iso "$MAKE_ISO" "$file_dir"
+        $SUDO chown -R $UID "$iso_dir"
 
-    elif has_option $MAKE_ISO -e; then
-        make_uefi_iso "$MAKE_ISO" "$chown_opts -e" $file_dir
+    elif has_option "$MAKE_ISO" -e; then
+        make_uefi_iso "$MAKE_ISO" "$chown_opts -e" "$file_dir"
 
-    elif has_option $MAKE_ISO -eltorito-platform; then
-        make_uefi_iso "$MAKE_ISO" "$chown_opts -eltorito-platform 0xEF -eltorito-boot" $file_dir
+    elif has_option "$MAKE_ISO" -eltorito-platform; then
+        make_uefi_iso "$MAKE_ISO" "$chown_opts -eltorito-platform 0xEF -eltorito-boot" "$file_dir"
 
     else
         warn "Disabling 'dd' live-usb UEFI booting"
         $MAKE_ISO -l -V antiXlive -R -J -pad -no-emul-boot -boot-load-size 4  \
             -boot-info-table -gid 0 -uid 0 -b boot/isolinux/isolinux.bin      \
-            -c boot/isolinux/isolinux.cat -o $full_iso_file $iso_dir 2>&1 \
+            -c boot/isolinux/isolinux.cat -o "$full_iso_file" "$iso_dir" 2>&1 \
             || error "iso file creation failed"
 
-            isohybrid $full_iso_file
+            isohybrid "$full_iso_file"
     fi
 
-    size=$(du_size $full_iso_file)
-    end_timer "create $(pqn $size) iso file"
+    size=$(du_size "$full_iso_file")
+    end_timer "create $(pqn "$size") iso file"
 
     if [[ $SIGN_FILES == true ]]; then
-        say "Sign $(basename $full_iso_file)"
-        rm -f $full_iso_file.sig 2>/dev/null
+        say "Sign $(basename "$full_iso_file")"
+        rm -f "$full_iso_file".sig 2>/dev/null
         local gpg_sudo
         is_antiX && gpg_sudo=$SUDO
-        $gpg_sudo gpg --output $full_iso_file.sig --detach-sign $full_iso_file
+        $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
     fi
 
     #md5sum_file $full_iso_file
-    sha256sum_file $full_iso_file
-    zsyncmake_file $full_iso_file
+    sha256sum_file "$full_iso_file"
+    zsyncmake_file "$full_iso_file"
 
 
     if is_antiX && [[ -L "$ISO_SYMLINK" ]];then
         say
-        say "Create symlink $(pq $ISO_SYMLINK) to iso file"
-        ln -sf $full_iso_file $ISO_SYMLINK
+        say "Create symlink $(pq "$ISO_SYMLINK") to iso file"
+        ln -sf "$full_iso_file" "$ISO_SYMLINK"
     fi
 
-    say2 "Your live $(pq $iso_file) is in $(pq Remaster/iso-files) ready to be tested"
+    say2 "Your live $(pq "$iso_file") is in $(pq Remaster/iso-files) ready to be tested"
 
-    if [[ -z $full_auto ]] && mountpoint -q $sqfs_dir; then
+    if [[ -z $full_auto ]] && mountpoint -q "$sqfs_dir"; then
         echo
-        yell "Run $(pqw $ME) again or run $(pqw $ME -F) to cache and umount the tmpfs"
+        yell "Run $(pqw "$ME") again or run $(pqw "$ME" -F) to cache and umount the tmpfs"
         yell "Or use the $(pqw "-A (--AUTO)") flag next time to do this automatically"
        echo
    fi
 
     leave_stage
 
-    echo "$text_co$ME$bold_co done$nc" > $sign_off_file
+    echo "$text_co$ME$bold_co done$nc" > "$sign_off_file"
     # Go on to final stage when in auto-mode
     [[ -n $full_auto ]]  || my_exit
 }
@@ -2919,29 +2943,29 @@ do_stage_9() {
     clear_outputs
 
     local rel_work_dir
-    rel_work_dir=Remaster/work/$(basename $work_dir)
+    rel_work_dir=Remaster/work/$(basename "$work_dir")
     if [[ -n $delete_all ]]; then
-        say "Delete entire work directory $(pq $rel_work_dir)"
+        say "Delete entire work directory $(pq "$rel_work_dir")"
         $SUDO rm -rf "${work_dir:?}"
-        [[ -n $links ]] && rm $links
+        [[ -n $links ]] && rm "$links"
 
     elif [[ -n $delete_mode ]]; then
-        say "Delete squashfs directory $(pq $rel_work_dir/squashfs)"
+        say "Delete squashfs directory $(pq "$rel_work_dir"/squashfs)"
         $SUDO rm -rf "${sqfs_dir:?}"
-        rm -f $script_dir/squashfs
+        rm -f "$script_dir"/squashfs
 
-        if yes_NO "Delete everything else in $(pq $rel_work_dir)"; then
+        if yes_NO "Delete everything else in $(pq "$rel_work_dir")"; then
             $SUDO rm -rf "${work_dir:?}"
-            [[ -n $links ]] && rm $links
+            [[ -n $links ]] && rm "$links"
         fi
 
-    elif yes_NO "Delete entire work directory $(pq $rel_work_dir)"; then
+    elif yes_NO "Delete entire work directory $(pq "$rel_work_dir")"; then
         $SUDO rm -rf "${work_dir:?}"
-        [[ -n $links ]] && rm $links
+        [[ -n $links ]] && rm "$links"
 
-    elif yes_NO "Delete squashfs directory $(pq $rel_work_dir/squashfs)"; then
-        $SUDO rm -rf $sqfs_dir
-        rm -f $script_dir/sqfs
+    elif yes_NO "Delete squashfs directory $(pq "$rel_work_dir"/squashfs)"; then
+        $SUDO rm -rf "$sqfs_dir"
+        rm -f "$script_dir"/sqfs
     fi
 
     my_exit
@@ -2949,6 +2973,7 @@ do_stage_9() {
 
 do_save() {
     (( stage > 0 )) || return 1
+    # shellcheck disable=SC2086
     force_cache $chroot_cache_opts
     return 0
 }
@@ -2964,17 +2989,17 @@ do_save() {
 enter_stage() {
     title=${2#!}
 
-    has_word EXIT_STAGE $stage && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn $stage)$nc"
+    has_word EXIT_STAGE "$stage" && vexit "via EXIT_STAGE=$EXIT_STAGE ${text_co}at stage $(pqn "$stage")$nc"
     [[ -n $stage ]] && grep "^$stage$" "$did_stage_file" 2>/dev/null && fatal "Re-entering stage $stage"
 
     _say_ "\n${bold_co}Stage $num_co$stage$text_co: $title$nc @ $(printf '%(%F %T %Z)T' -1)"
     [[ -z $quiet_mode ]] && (( stage > 0 )) \
-        && say "Making: $(pq $full_distro_name) with kernel $(pq $K_NAME)"
+        && say "Making: $(pq "$full_distro_name") with kernel $(pq "$K_NAME")"
 
-    has_word  ASK_STAGE $stage \
-        && YES_no "ASK_STAGE: Exit" && vexit "${text_co}at stage $(pqn $stage)$nc"
+    has_word  ASK_STAGE "$stage" \
+        && YES_no "ASK_STAGE: Exit" && vexit "${text_co}at stage $(pqn "$stage")$nc"
 
-    echo $stage >> "$did_stage_file"
+    echo "$stage" >> "$did_stage_file"
 
     [[ -z $auto_mode && ! $2 =~ ^! ]] \
         && ! YES_no_loud "\nDo you want to continue" && my_exit
@@ -3002,11 +3027,11 @@ mount_tmpfs() {
     local dir needed name
     dir=${1:-$sqfs_dir}
     needed=$(((2500 + 70 * $(gather_cnt package)) / 10))
-    name=$(basename $dir)
+    name=$(basename "$dir")
 
     [[ -n $dir ]] || fatal "Can't mount_tmpfs() without a directory specified"
 
-    if mountpoint -q $dir; then
+    if mountpoint -q "$dir"; then
         say "tmpfs is already in use"
         return
     fi
@@ -3014,7 +3039,7 @@ mount_tmpfs() {
     # shellcheck disable=SC2046
     eval $(get_cache_free_swap)
     say "The tmpfs will require $(pqn ${needed}) meg of RAM"
-    display_cache_free_swap $cache $free $swap
+    display_cache_free_swap "$cache" "$free" "$swap"
 
     local balance
     balance=$((free + swap - needed))
@@ -3024,19 +3049,19 @@ mount_tmpfs() {
     YES_no "Mount as tmpfs" || return
 
     # Try to make a backup if directory exists and is not empty
-    if [[ -d $dir ]] && [[ -n $(ls $dir) ]]; then
+    if [[ -d $dir ]] && [[ -n $(ls "$dir") ]]; then
         if [[ ! -d $dir.bak ]]; then
             say "Save $name dir at $name.bak"
-            mv $dir $dir.bak
+            mv "$dir" "$dir".bak
         else
             say "Not saving $name/ because $name.bak already exists"
         fi
     fi
 
-    say "mount $(pq $name/) as tmpfs size: $(pqn ${needed})m"
+    say "mount $(pq "$name"/) as tmpfs size: $(pqn ${needed})m"
 
-    mkdir -p $dir
-    if ! $SUDO mount -t tmpfs -o noatime,size=${needed}m tmpfs $dir; then
+    mkdir -p "$dir"
+    if ! $SUDO mount -t tmpfs -o noatime,size=${needed}m tmpfs "$dir"; then
         check_errors_reset
         error "Failed to mount $name/ as tmpfs"
     fi
@@ -3046,26 +3071,26 @@ mount_tmpfs() {
 umount_tmpfs() {
     local dir name
     dir=${1:-$sqfs_dir}
-    name=$(basename $dir)
+    name=$(basename "$dir")
 
     [[ -n $dir ]] || fatal "Can't umount_tmpfs() without a directory specified"
 
-    mountpoint -q $dir || return
+    mountpoint -q "$dir" || return
 
-    say "About to umount $(pq $name)"
-    report_size $dir
-    # shellcheck disable=SC2046
+    say "About to umount $(pq "$name")"
+    report_size "$dir"
+    # shellcheck disable=SC2046,SC2086
     YES_no_loud "Cache chroot directory before umount" && force_cache $chroot_cache_opts
 
     YES_no_loud "Clear out $name/ and umount it" || return 1
 
-    check_sqfs_dir $dir
+    check_sqfs_dir "$dir"
     $SUDO rm -rf "$(dirname "${dir:?}")"/squashfs/*
-    $SUDO umount $dir
-    mountpoint -q $dir || return
+    $SUDO umount "$dir"
+    mountpoint -q "$dir" || return
     warn "name did not simply umount. Trying -l (lazy option)"
-    $SUDO umount -l $dir
-    mountpoint -q $dir || error "Could not umount $name"
+    $SUDO umount -l "$dir"
+    mountpoint -q "$dir" || error "Could not umount $name"
 
 }
 
@@ -3073,11 +3098,11 @@ find_all_tmpfs() {
     local dir type name
     for dir in "$remaster_dir"/work/*/squashfs; do
         [[ -d $dir ]]          || continue
-        mountpoint -q $dir   || continue
-        type=$(df -Tm $dir | awk '{type=$2} END {print type}')
+        mountpoint -q "$dir"   || continue
+        type=$(df -Tm "$dir" | awk '{type=$2} END {print type}')
         [[ $type = tmpfs ]]  || continue
         name=${dir#"$remaster_dir"/work/}
-        echo ${name%/squashfs}
+        echo "${name%/squashfs}"
     done
 }
 
@@ -3086,10 +3111,10 @@ check_all_tmpfs() {
     all_tmpfs=$(find_all_tmpfs)
     [[ -n $all_tmpfs ]] || return 1
     cnt=$(echo "$all_tmpfs" | wc -w)
-    psay $cnt "Found $(pqn %n) tmpfs mount point%s"
+    psay "$cnt" "Found $(pqn %n) tmpfs mount point%s"
 
     for name in $all_tmpfs; do
-        display_tmpfs $name
+        display_tmpfs "$name"
     done
 
     YES_no "Cache or umount any of these" || return 0
@@ -3097,12 +3122,12 @@ check_all_tmpfs() {
     for name in $all_tmpfs; do
         echo
         local dir=$remaster_dir/work/$name/squashfs
-        display_tmpfs $name
+        display_tmpfs "$name"
         YES_no_loud "Cache chroot directory before umount" && force_cache chroot "$name" "$dir"
         YES_no "Clear and umount this directory" || continue
 
         $SUDO rm -rf "$(dirname "${dir:?}")"/squashfs/*
-        $SUDO umount -l $dir
+        $SUDO umount -l "$dir"
     done
 
     return 0
@@ -3113,24 +3138,25 @@ display_tmpfs() {
     local fmt dir sizes
     fmt="    $high_co%-35s $(pqn %6s)/$(pqn %s) meg$nc\n"
     dir=$remaster_dir/work/$name/squashfs
-    sizes=$(df -m $dir | awk '{size=$2; used=$3} END {print used " " size}')
+    sizes=$(df -m "$dir" | awk '{size=$2; used=$3} END {print used " " size}')
     # shellcheck disable=SC2059
-    printf "$fmt" "$name" $sizes
+    printf "$fmt" "$name" "$sizes"
 }
 
 kill_chroot_procs() {
     local pids
-    pids=$($SUDO lsof 2>/dev/null | grep $sqfs_dir | tail -n +2 | awk '{print $2}' | sort -u)
+    pids=$($SUDO lsof 2>/dev/null | grep "$sqfs_dir" | tail -n +2 | awk '{print $2}' | sort -u)
     if [[ -z $pids ]]; then
         say "No remaining chroot processes found"
         return
     fi
     local cnt
     cnt=$(echo "$pids" | wc -l)
-    psay $cnt "Found $(pqn %n) chroot process%es still running"
+    psay "$cnt" "Found $(pqn %n) chroot process%es still running"
     _say_ "$(my_ps "$pids")"
 
     YES_no "Kill these processes" || return
+    # shellcheck disable=SC2086
     $SUDO kill $pids
     #FIXME check for survivors
 }
@@ -3176,10 +3202,10 @@ _check_errors_() {
     while true; do
 
         if [[ -n $regex ]]; then
-            errors=$(tail -n +$ERROR_OFFSET "$err_file" | grep -E ${flag:+"$flag"} "($regex)" | grep -Ev "^\s*$")
+            errors=$(tail -n +"$ERROR_OFFSET" "$err_file" | grep -E ${flag:+"$flag"} "($regex)" | grep -Ev "^\s*$")
 
         elif [[ $type = STRICT ]]; then
-            errors=$(tail -n +$ERROR_OFFSET "$err_file" | grep -Ev ${flag:+"$flag"} "^\s*$")
+            errors=$(tail -n +"$ERROR_OFFSET" "$err_file" | grep -Ev ${flag:+"$flag"} "^\s*$")
         fi
 
         [[ -z $errors ]] && check_errors_reset && return
@@ -3187,15 +3213,15 @@ _check_errors_() {
         local cnt
         cnt=$(echo "$errors" | wc -l)
         if [[ -n $no_check_errors ]]; then
-            say "$(plural $cnt "Skipping $(pqn %n) $type error%s")"
+            say "$(plural "$cnt" "Skipping $(pqn %n) $type error%s")"
             return
         fi
 
         yell "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        say_in $err_co "$errors"
+        say_in "$err_co" "$errors"
         #_say_ "$(echo "$errors" | sed -e "s/^/$err_co/" -e "s/$/$nc/")"
         yell "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        yell "$(plural $cnt "Found $(pqw %n) $type error%s")"
+        yell "$(plural "$cnt" "Found $(pqw %n) $type error%s")"
         [[ -n $ask_errors ]] || break
         YES_no "Retry"    || break
         read_error_regexes
@@ -3219,10 +3245,10 @@ _check_errors_() {
 read_error_regexes() {
 
     [[ -r $lax_regex_file ]] || error "Could not find/read lax-error file $file"
-    LAX_ERRORS=$(join_lines $lax_regex_file "|")
+    LAX_ERRORS=$(join_lines "$lax_regex_file" "|")
 
     [[ -r $strict_regex_file ]] || error "Could not find/read strict-exception file $file"
-    STRICT_EXCEPTIONS=$(join_lines $strict_regex_file "|")
+    STRICT_EXCEPTIONS=$(join_lines "$strict_regex_file" "|")
 }
 
 join_lines() {
@@ -3231,7 +3257,7 @@ join_lines() {
         echo -n "$sep$line"
         sep=${2:-,}
     done << Join_Lines
-$(grep "[^\s]" $file)
+$(grep "[^\s]" "$file")
 Join_Lines
 
 }
@@ -3264,7 +3290,7 @@ do_part() {
     _do_part_ || return 1
 
     local pnum
-    pnum="$(printf "%2d" $part)"
+    pnum="$(printf "%2d" "$part")"
 
     _say_
     _say_ "${bold_co}Part $num_co$pnum$text_co: $ptitle$nc @ $(printf '%(%F %T %Z)T' -1)"
@@ -3281,7 +3307,7 @@ do_part() {
 
 _do_part_() {
 
-    if has_word SHELL_PART $part; then
+    if has_word SHELL_PART "$part"; then
         _say_ "Breakpoint at $pnum: $ptitle"
         bash --rcfile /Build/bashrc2
     fi
@@ -3289,18 +3315,18 @@ _do_part_() {
     # If TEST_PART is non-empty and contains at least one digit
     # shellcheck disable=SC2153
     if [[ $TEST_PART =~ ^[0-9] ]]; then
-        if ! has_word TEST_PART $part; then
+        if ! has_word TEST_PART "$part"; then
             _say_ "${bold_co}Test mode:$nc Skip part ($pnum) $title"
             return 1
         fi
 
-    elif has_word ASK_PART $part; then
+    elif has_word ASK_PART "$part"; then
         YES_no_loud "Run $nc($pnum) $ptitle" || return 1
 
-    elif has_word RUN_PART $part; then
+    elif has_word RUN_PART "$part"; then
         return 0
 
-    elif has_word SKIP_PART $part; then
+    elif has_word SKIP_PART "$part"; then
         _say_ "Skip part ($pnum) $title"
         return 1
 
@@ -3311,7 +3337,7 @@ _do_part_() {
 
 skip_part() {
     local part=$1 pnum
-    pnum="$(printf "%2d" $part)"
+    pnum="$(printf "%2d" "$part")"
     _say_
     _say_ "Part $pnum: $2 -- skipped --"
 }
@@ -3338,8 +3364,8 @@ show_tmpfs_and_mem() {
     local used total
     used=$(df -m / 2>/dev/null | awk '{used=$3}  END {print used}')
     total=$(df -m / 2>/dev/null | awk '{total=$2} END {print total}')
-    say_fmt "tmpfs used"   $used
-    say_fmt "tmpfs total"  $total
+    say_fmt "tmpfs used"   "$used"
+    say_fmt "tmpfs total"  "$total"
     display_cache_free_swap
 }
 
@@ -3353,9 +3379,9 @@ _end_part_() {
     fi
 
     [[ -n $LAST_PART && -w "$partial_file" ]] && ! grep "^$LAST_PART" "$partial_file" \
-        && echo $LAST_PART >> "$partial_file"
+        && echo "$LAST_PART" >> "$partial_file"
 
-    if  [[ -n $LAST_PART ]] && has_word EXIT_PART $LAST_PART; then
+    if  [[ -n $LAST_PART ]] && has_word EXIT_PART "$LAST_PART"; then
         _say_ "Exit after part ($text_co$LAST_PART$nc) $title"
         my_exit
     fi
@@ -3367,7 +3393,7 @@ list_newer_procs() {
 
     for pid in $(pgrep .); do
         (( pid > ref ))         || continue
-        is_zombie_or_kthread $pid && continue
+        is_zombie_or_kthread "$pid" && continue
         newer=$newer,$pid
     done
     if [[ -n $newer ]]; then
@@ -3381,16 +3407,16 @@ list_newer_procs() {
 my_ps() {
     local pids=${1//[[:space:]]/,}
     [[ -n $pids ]] || return
-    ps -o "$PS_FORMAT" -p ${pids#,} | sed -e "1 s/^/$text_co/" -e "1 s/$/$nc/"
+    ps -o "$PS_FORMAT" -p "${pids#,}" | sed -e "1 s/^/$text_co/" -e "1 s/$/$nc/"
 }
 
 get_cache_free_swap() {
     local lab free cache swap
     while read -r lab total used free cache; do
         case $lab in
-            Mem:) echo free=$free
-                  echo cache=$cache ;;
-           Swap:) echo swap=$free   ;;
+            Mem:) echo free="$free"
+                  echo cache="$cache" ;;
+           Swap:) echo swap="$free"   ;;
         esac
     done << Get_Free
 $(free -m)
@@ -3401,14 +3427,14 @@ display_cache_free_swap() {
     local cache=$1 free=$2 swap=$3
     # shellcheck disable=SC2046
     (( $# == 3 )) || eval $(get_cache_free_swap)
-    say_fmt "Free Mem"  $free
-    say_fmt "Free Swap" $swap
-    say_fmt "Cached"    $cache
+    say_fmt "Free Mem"  "$free"
+    say_fmt "Free Swap" "$swap"
+    say_fmt "Cached"    "$cache"
 }
 
 is_zombie_or_kthread() {
     local len
-    len=$(wc -c /proc/$pid/cmdline 2>/dev/null) || return 0
+    len=$(wc -c /proc/"$pid"/cmdline 2>/dev/null) || return 0
     [[ -z $len ]]                                     && return 0
     [[ "${len%% *}" = 0 ]]
 }
@@ -3465,12 +3491,12 @@ search_for_k_name() {
     fi
 
     K_NAME=${name#linux-image-}
-    say "Found kernel $(pq $K_NAME)"
+    say "Found kernel $(pq "$K_NAME")"
 }
 
 vmlinuz_gcc_version() {
     local vmlinuz=$1
-    $tools/extract-vmlinux $vmlinuz  2>/dev/null | strings \
+    "$tools"/extract-vmlinux "$vmlinuz"  2>/dev/null | strings \
         | sed -n -r '/gcc version/ s/.*gcc version ([0-9.]+).*/\1/p' | head -1
 }
 
@@ -3478,37 +3504,37 @@ check_kernel_gcc() {
     local kernel=vmlinuz-$K_NAME
     local vmlinuz=$sqfs_dir/boot/$kernel
     [[ ! -r $vmlinuz ]] \
-        && error "Could not find kernel file: $(pqw $kernel)" && return
+        && error "Could not find kernel file: $(pqw "$kernel")" && return
 
     local kgcc
-    kgcc=gcc-$(vmlinuz_gcc_version $vmlinuz)
+    kgcc=gcc-$(vmlinuz_gcc_version "$vmlinuz")
 
     [[ $kgcc = gcc- ]] \
-        && error "Could not find gcc version for $(pqw $kernel)" && return
+        && error "Could not find gcc version for $(pqw "$kernel")" && return
 
-    say "Kernel $(pq $K_NAME) was compiled with $(pq $kgcc)"
+    say "Kernel $(pq "$K_NAME") was compiled with $(pq "$kgcc")"
 
     local kalt gcc
-    kalt=$(echo $kgcc | sed -n -r 's/([0-9]+\.[0-9]+)\.[0-9]+$/\1/p')
+    kalt=$(echo "$kgcc" | sed -n -r 's/([0-9]+\.[0-9]+)\.[0-9]+$/\1/p')
 
     for gcc in $kgcc $kalt; do
         [[  -e $sqfs_dir/usr/bin/$gcc ]] || continue
-        say "Found $(pq $gcc) on system"
+        say "Found $(pq "$gcc") on system"
         return 0
     done
-    error "Could not find these versions of gcc: $(pq $kgcc $kalt)"
+    error "Could not find these versions of gcc: $(pq "$kgcc" "$kalt")"
 }
 
 customize_firefox() {
     local pref_files file lang=${1%%.*}
     local string="user_pref(\"spellchecker.dictionary\","
 
-    pref_files=$(ls $firefox_prefs 2>/dev/null)
+    pref_files=$(ls "$firefox_prefs" 2>/dev/null)
     [[ -n $pref_files ]] || return
-    sed -i "/$string/d" $pref_files
-    sed -i '/"extensions.lastAppVersion"/ d' $pref_files
+    sed -i "/$string/d" "$pref_files"
+    sed -i '/"extensions.lastAppVersion"/ d' "$pref_files"
     for file in $pref_files; do
-        echo "$string \"$lang\");" >> $file
+        echo "$string \"$lang\");" >> "$file"
     done
 }
 
@@ -3516,12 +3542,12 @@ apt_get_packages() {
     local file=$1 label=$2
     shift 2
     local pkg_list cnt msg
-    pkg_list=$(compile_pkg_list $file exclude-chroot)
+    pkg_list=$(compile_pkg_list "$file" exclude-chroot)
     cnt=$(echo "$pkg_list" | wc -w)
     (( cnt == 0 )) && return
 
     local last_arg="${!#}"
-    msg=$(plural $cnt "apt-get $last_arg $(pqn %n) $label package%s.")
+    msg=$(plural "$cnt" "apt-get $last_arg $(pqn %n) $label package%s.")
     (( cnt >= 100 )) && msg="$msg  This could take some time."
     say "$msg"
 
@@ -3533,6 +3559,7 @@ apt_get_packages() {
     local missing_packages=""
 
     # Run simulation with -s flag
+    # shellcheck disable=SC2086
     echo "$pkg_list" | xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
     simulation_output=$(cat "$temp_output")
     rm -f "$temp_output"
@@ -3568,7 +3595,7 @@ apt_get_packages() {
     if [[ -n $missing_packages ]]; then
         local missing_cnt
         missing_cnt=$(echo "$missing_packages" | wc -w)
-        say_in $high_co "$(plural $missing_cnt "$(pqw %n) $label package%s not available:")
+        say_in "$high_co" "$(plural "$missing_cnt" "$(pqw %n) $label package%s not available:")
 $missing_packages"
 
         local available_packages="$pkg_list"
@@ -3584,7 +3611,7 @@ $missing_packages"
             return 1
         fi
 
-        say "$(plural $available_cnt "$(pqw %n) package%s will be installed.")"
+        say "$(plural "$available_cnt" "$(pqw %n) package%s will be installed.")"
         YES_no "\nContinue with installation of available packages?" || my_exit
         pkg_list="$available_packages"
     fi
@@ -3607,6 +3634,7 @@ $missing_packages"
         local exit_code
 
         # Run apt-get with tee to show output in real-time and capture to file
+        # shellcheck disable=SC2086
         echo "$remaining_packages" | xargs apt-get $APT_GET_OPTS "$@" 2>&1 | tee "$temp_output"
         exit_code=${PIPESTATUS[1]}
 
@@ -3673,7 +3701,7 @@ $missing_packages"
         failed_cnt=$(echo "$failed_packages" | wc -w)
         # Clean up the failed packages list (remove leading/trailing spaces)
         failed_packages=$(echo "$failed_packages" | sed 's/^ *//;s/ *$//')
-	say_in $high_co "$(plural $failed_cnt "$(pqw %n) $label package%s could not be found:")
+	say_in "$high_co" "$(plural "$failed_cnt" "$(pqw %n) $label package%s could not be found:")
 	$failed_packages"
 	error "Package installation completed with missing packages above"
     fi
@@ -3682,37 +3710,37 @@ $missing_packages"
 install_packages() {
     local file=$1  label=$2
     shift 2
-    apt_get_packages $file $label "$@" install
-    check_missing $file "$label"
+    apt_get_packages "$file" "$label" "$@" install
+    check_missing "$file" "$label"
 }
 
 check_missing() {
     local pkg missing file=$1 label=$2 pkg_list cnt
-    pkg_list=$(compile_pkg_list $file exclude-chroot)
+    pkg_list=$(compile_pkg_list "$file" exclude-chroot)
     cnt=$(echo "$pkg_list" | wc -w)
     (( cnt == 0 )) && return
 
     local installed=/Build/installed-$label
 
-    psay $cnt "Checking that $(pqn %n) $label package%s %were installed ..."
+    psay "$cnt" "Checking that $(pqn %n) $label package%s %were installed ..."
 
-    dpkg --get-selections | grep "install\(ed\)\?$" | sed 's/\t.*//' > $installed.list
+    dpkg --get-selections | grep "install\(ed\)\?$" | sed 's/\t.*//' > "$installed".list
     for pkg in $pkg_list; do
-        grep -q "^$pkg\(:[A-Za-z0-9+-]\+\)\?$" $installed.list || missing="$missing$pkg\n"
+        grep -q "^$pkg\(:[A-Za-z0-9+-]\+\)\?$" "$installed".list || missing="$missing$pkg\n"
     done
     if [[ -z $missing ]]; then
         say "... Okay"
         return
     fi
-    dpkg --get-selections  >  $installed.raw
-    echo -e "$missing"     >  /Build/missing-$label.list
+    dpkg --get-selections  >  "$installed".raw
+    echo -e "$missing"     >  /Build/missing-"$label".list
 
     local mcnt
     mcnt=$(echo -e "$missing" | wc -w)
     _say_ "$high_co------------------------------------------------$nc"
     _say_ "$(echo -e "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
     #_say_ "$(printf "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
-    error "$(plural $mcnt "$(pqw %n) missing $label package%s")"
+    error "$(plural "$mcnt" "$(pqw %n) missing $label package%s")"
 }
 
 gather_deb() {
@@ -3731,12 +3759,12 @@ gather_deb() {
 
     local dir f name deb_dir=$script_dir/Deb
     local flav=$ISO_RESPIN_OF
-    for dir in $(flav_dirs $deb_dir); do
+    for dir in $(flav_dirs "$deb_dir"); do
         for f in "$dir"/*.deb; do
             [[ -f $f ]] || continue
-            [[ -n $filt_arch ]] && basename $f | grep -q -- "$filt_arch" && continue
-            [[ -n $filt_flav ]] && basename $f | grep -q -- "$filt_flav" && continue
-            echo $f
+            [[ -n $filt_arch ]] && basename "$f" | grep -q -- "$filt_arch" && continue
+            [[ -n $filt_flav ]] && basename "$f" | grep -q -- "$filt_flav" && continue
+            echo "$f"
         done
     done
 }
@@ -3767,11 +3795,11 @@ collect_live_files() {
     [[ -r $list_file ]] || return
     echo "Collecting Live-files"
     local list
-    list="$(cat $list_file | grep -v "^\s*#\s*" | sed 's/\s*#.*//' \
+    list="$(grep -v "^\s*#\s*" "$list_file" | sed 's/\s*#.*//' \
         | grep "^/" | sed "s=^=$sqfs_dir=")"
     #echo "$list"
 
-    $SUDO mkdir -p $dest_dir
+    $SUDO mkdir -p "$dest_dir"
     # This hard-codes the live-files dir but it is safer in case
     # $dest_dir is empty.
     $SUDO rm -rf "$(dirname "${dest_dir:?}")"/live-files/*
@@ -3804,9 +3832,9 @@ make_uefi_iso() {
     -eltorito-alt-boot $uefi boot/grub/efi.img -no-emul-boot
     -quiet -c boot/isolinux/isolinux.cat -o $file $dir"
 
-    echo $cmd
+    echo "$cmd"
     $cmd 2>&1 || error "iso file creation failed"
-    isohybrid --uefi $file
+    isohybrid --uefi "$file"
 }
 
 make_xorriso_iso() {
@@ -3831,38 +3859,38 @@ make_xorriso_iso() {
 
 unpack_gfx_cpio() {
     local type=$1  dir=${2:-$work_dir/$1-cpio}  file=${3:-$iso_dir/boot/$1/gfx-cpio}
-    say "Unpack $(pq $type) cpio archive"
-    prep_dir $dir
-    (cd $dir && cpio -idum --dot --quiet < $file 2>&1)
+    say "Unpack $(pq "$type") cpio archive"
+    prep_dir "$dir"
+    (cd "$dir" && cpio -idum --dot --quiet < "$file" 2>&1)
 }
 
 repack_gfx_cpio() {
     local type=$1  dir=${2:-$work_dir/$1-cpio}  file=${3:-$iso_dir/boot/$1/gfx-cpio}
-    say "Repack $(pq $type) cpio archive"
-    (cd $dir && find . -depth | cpio -o --quiet --dot --file=$file) 2>&1
+    say "Repack $(pq "$type") cpio archive"
+    (cd "$dir" && find . -depth | cpio -o --quiet --dot --file="$file") 2>&1
 }
 
 prep_dir() {
     local dir=$1
     [[ -z $dir || ! $dir =~ [a-zA-Z] ]] && fatal "Bad directory name: $dir"
     rm -rf "${dir:?}"
-    mkdir -p $dir
+    mkdir -p "$dir"
 }
 
 update_gfxboot_menu() {
     local menu_file=$1 conf_file=$2
     shift 2
     local subdir
-    subdir="$(basename "$(dirname $conf_file)")"
+    subdir="$(basename "$(dirname "$conf_file")")"
     local menu_string="Function key menu"
     # Insert Function key menu into gfxboot.cfg
     [[ -e $menu_file && -e $conf_file ]] || return
     grep -q "$menu_string" "$conf_file" || return
-    say "Update Fn key menu in $(pq $subdir/"$(basename $conf_file)")"
-    sed -i "/$menu_string/,$ d" $conf_file
-    cat << Fn_Menu >> $conf_file
+    say "Update Fn key menu in $(pq "$subdir"/"$(basename "$conf_file")")"
+    sed -i "/$menu_string/,$ d" "$conf_file"
+    cat << Fn_Menu >> "$conf_file"
 ; >>>>>>>>>> Function key menu >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-$(cat $menu_file)
+$(cat "$menu_file")
 $*
 ; <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 Fn_Menu
@@ -3886,9 +3914,9 @@ copy_second_kernel() {
     ! [[ -x "$lmk" ]]          && error "Could not find program $lmk"          && return 1
 
     local version_0 version_1
-    version_0=$($version_prog -nr $vmlinuz  |grep vmlinuz| cut -d" " -f1)
+    version_0=$($version_prog -nr "$vmlinuz"  |grep vmlinuz| cut -d" " -f1)
     # shellcheck disable=SC2015
-    version_1=$($version_prog -nr $from_dir | grep vmlinuz| cut -d" " -f1 | { [[ -n $version_0 ]] && grep -v "^$version_0$" || cat; })
+    version_1=$($version_prog -nr "$from_dir" | grep vmlinuz| cut -d" " -f1 | { [[ -n $version_0 ]] && grep -v "^$version_0$" || cat; })
 
     case $(echo -n "$version_1" | grep -c .) in
         0) return ;;
@@ -3900,10 +3928,10 @@ copy_second_kernel() {
 
     say "Found 2nd kernel $version_1"
     local k1
-    [[ -n $version_1 ]] && k1=$($version_prog -n $from_dir | grep " $version_1 " | cut -d" " -f1) || k1=""
+    [[ -n $version_1 ]] && k1=$($version_prog -n "$from_dir" | grep " $version_1 " | cut -d" " -f1) || k1=""
     say "copy $k1 $vmlinuz_1"
-    cp $k1 $vmlinuz_1
-    (cd $to_dir && md5sum $k1_name > $k1_name.md5)
+    cp "$k1" "$vmlinuz_1"
+    (cd "$to_dir" && md5sum $k1_name > $k1_name.md5)
 
     $lmk --distro="$DISTRO_NAME"
 }
@@ -3957,18 +3985,18 @@ write_initrd_release() {
     is_antiX || DISTRO_BASE="MX"
 
     local file1=$dir/etc/$name  file2=$dir/etc/live/version/$name
-    $sudo mkdir -p "$(dirname $file1)" "$(dirname $file2)"
+    $sudo mkdir -p "$(dirname "$file1")" "$(dirname "$file2")"
 
     : "${ASCII_CODE_NAME:="$(echo "$CODE_NAME" | utf8_to_ascii)"}"
 
     if [[ $ASCII_CODE_NAME != "$CODE_NAME" ]]; then
 
-        cat << Initrd_Version | $sudo tee $file1
+        cat << Initrd_Version | $sudo tee "$file1"
 NAME="$DISTRO_NAME"
 VERSION="$DISTRO_VERSION ($CODE_NAME)"
 ASCII_VERSION="$DISTRO_VERSION ($ASCII_CODE_NAME)"
-ID="$(echo $DISTRO_NAME | tr '[:upper:]' '[:lower:]')"
-VERSION_ID="$(echo $DISTRO_VERSION | sed -r 's/^([0-9._-]+).*/\1/')"
+ID="$(echo "$DISTRO_NAME" | tr '[:upper:]' '[:lower:]')"
+VERSION_ID="$(echo "$DISTRO_VERSION" | sed -r 's/^([0-9._-]+).*/\1/')"
 PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($CODE_NAME)"
 ASCII_PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($ASCII_CODE_NAME)"
 ANSI_COLOR="0;34"
@@ -3979,11 +4007,11 @@ Initrd_Version
 
     else
 
-        cat << Initrd_Version | $sudo tee $dir/etc/initrd_release
+        cat << Initrd_Version | $sudo tee "$dir"/etc/initrd_release
 NAME="$DISTRO_NAME"
 VERSION="$DISTRO_VERSION ($CODE_NAME)"
-ID="$(echo $DISTRO_NAME | tr '[:upper:]' '[:lower:]')"
-VERSION_ID="$(echo $DISTRO_VERSION | sed -r 's/^([0-9._-]+).*/\1/')"
+ID="$(echo "$DISTRO_NAME" | tr '[:upper:]' '[:lower:]')"
+VERSION_ID="$(echo "$DISTRO_VERSION" | sed -r 's/^([0-9._-]+).*/\1/')"
 PRETTY_NAME="$DISTRO_NAME $DISTRO_VERSION ($CODE_NAME)"
 ANSI_COLOR="0;34"
 HOME_URL="$HOME_URL"
@@ -3993,7 +4021,7 @@ Initrd_Version
 
     fi
 
-    $sudo cp $file1 $file2
+    $sudo cp "$file1" "$file2"
 }
 
 utf8_to_ascii() {
@@ -4015,28 +4043,28 @@ busybox_depmod() {
 
     local proc_dir=$targ/proc
     if ! [[ -e $proc_dir ]]; then
-        mkdir $proc_dir
+        mkdir "$proc_dir"
         to_delete="$proc_dir $to_delete"
     fi
 
-    touch $proc_dir/modules
+    touch "$proc_dir"/modules
 
     fake_dir=$mod_dir/$(uname -r)
     if [[ $fake_dir != "$k_dir" ]]; then
-        ln -s $kernel $fake_dir || error "Error creating $fake_dir symlink"
+        ln -s "$kernel" "$fake_dir" || error "Error creating $fake_dir symlink"
         to_delete="$fake_dir $to_delete"
     fi
 
-    $SUDO chroot $targ /bin/depmod
+    $SUDO chroot "$targ" /bin/depmod
     for file in $to_delete; do
         echo "delete $file"
-        rm -r $file
+        rm -r "$file"
     done
 
     depmod_file=$k_dir/modules.dep.bb
     [[ -e $depmod_file ]] || error "The modules.dep.bb file was not created"
 
-    $SUDO chown $USER $depmod_file
+    $SUDO chown "$USER" "$depmod_file"
 }
 
 #==============================================================================
@@ -4046,8 +4074,8 @@ do_chroot() {
     (( stage >= 1 )) || fatal "Not ready to do chroot"
 
     prep_chroot
-    say "Enter chroot for $(pq $full_distro_name)"
-    $SUDO chroot $sqfs_dir /bin/bash --rcfile /Build/bashrc
+    say "Enter chroot for $(pq "$full_distro_name")"
+    $SUDO chroot "$sqfs_dir" /bin/bash --rcfile /Build/bashrc
     say "Leave chroot"
     umount_chroot
     return 0
@@ -4061,8 +4089,8 @@ do_chroot() {
 #------------------------------------------------------------------------------
 mount_deb_cache() {
     local deb_dir=$sqfs_dir/var/cache/apt/archives
-    mkdir -p $deb_cache_dir
-    bind_mount $deb_cache_dir $deb_dir
+    mkdir -p "$deb_cache_dir"
+    bind_mount "$deb_cache_dir" "$deb_dir"
 }
 
 # mount_pacman_cache
@@ -4072,8 +4100,8 @@ mount_deb_cache() {
 #------------------------------------------------------------------------------
 mount_pacman_cache() {
     local pacman_dir=$sqfs_dir/var/cache/pacman/pkg
-    mkdir -p $pacman_cache_dir
-    bind_mount $pacman_cache_dir $pacman_dir
+    mkdir -p "$pacman_cache_dir"
+    bind_mount "$pacman_cache_dir" "$pacman_dir"
 }
 
 #------------------------------------------------------------------------------
@@ -4082,9 +4110,9 @@ mount_pacman_cache() {
 #------------------------------------------------------------------------------
 bind_mount() {
     local old=$1 new=$2
-    mountpoint -q $new && return
-    $SUDO mkdir -p $new
-    $SUDO mount --bind $old $new  || my_exit
+    mountpoint -q "$new" && return
+    $SUDO mkdir -p "$new"
+    $SUDO mount --bind "$old" "$new"  || my_exit
     UMOUNTS="$new $UMOUNTS"
 }
 
@@ -4102,7 +4130,7 @@ prep_chroot() {
 
     for fs in proc sys; do
         say "Mounting $(pq /$fs) in chroot"
-        if ! bind_mount /$fs $sqfs_dir/$fs; then
+        if ! bind_mount /$fs "$sqfs_dir"/$fs; then
             error "Failed to mount $(pq /$fs) in chroot"
             my_exit
         fi
@@ -4111,12 +4139,12 @@ prep_chroot() {
 
     if ! [[ -e $sqfs_dir/dev/tty ]]; then
         say "Mount $(pq /dev) in the chroot"
-        bind_mount /dev $sqfs_dir/dev
+        bind_mount /dev "$sqfs_dir"/dev
     fi
 
-    if ! mountpoint -q $sqfs_dir/dev/pts; then
+    if ! mountpoint -q "$sqfs_dir"/dev/pts; then
         say "Mount $(pq /dev/pts) in the chroot"
-        bind_mount /dev/pts $sqfs_dir/dev/pts
+        bind_mount /dev/pts "$sqfs_dir"/dev/pts
     fi
 
     if [[ -n $REFRESH_BUILD_DIR ]]; then
@@ -4139,7 +4167,7 @@ prep_chroot() {
     fi
 
     # Always use local mirror when working in chroot
-    [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror $LOCAL_MIRROR "LOCAL mirror"
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror "$LOCAL_MIRROR" "LOCAL mirror"
 
     # TERM helps nano to work in chroot, LC_ALL is for Deb
     export TERM=xterm LC_ALL=C
@@ -4164,36 +4192,39 @@ make_build_dir() {
 
     local b_dir=$work_dir/Build
     rm -rf "${b_dir:?}"
-    mkdir $b_dir
+    mkdir "$b_dir"
 
-    mkdir -p $b_dir/Deb
+    mkdir -p "$b_dir"/Deb
     local deb_files
     deb_files=$(gather_deb)
-    [[ -n $deb_files ]] && cp --target-directory=$b_dir/Deb $deb_files
+    # shellcheck disable=SC2086
+    [[ -n $deb_files ]] && cp --target-directory="$b_dir"/Deb $deb_files
 
     # Copy Arch packages if building for Arch
     if [[ $DISTRO_FAMILY = arch ]]; then
         local arch_pkgs
         arch_pkgs=$(gather_arch_pkg)
-        [[ -n $arch_pkgs ]] && cp --target-directory=$b_dir/Deb $arch_pkgs
+        # shellcheck disable=SC2086
+        [[ -n $arch_pkgs ]] && cp --target-directory="$b_dir"/Deb $arch_pkgs
     fi
 
-    cp -r $0 Input $tools $regex_files $b_dir
+    # shellcheck disable=SC2086
+    cp -r "$0" Input "$tools" $regex_files "$b_dir"
 
     #make custom user-defaults file defaults in chroot, if it exists and switch was used
     if [[ -n $user_defaults ]]; then
-        cp $user_defaults $b_dir/Input/defaults
+        cp "$user_defaults" "$b_dir"/Input/defaults
     fi
 
-    mkdir -p $b_dir/Output/$work_name
-    touch $b_dir/$partial_name $b_dir/Output/$work_name/$ME.log
+    mkdir -p "$b_dir"/Output/"$work_name"
+    touch "$b_dir"/$partial_name "$b_dir"/Output/"$work_name"/"$ME".log
 
-    cp $output_dir/stage-*.out $b_dir/Output/$work_name 2>/dev/null || true
+    cp "$output_dir"/stage-*.out "$b_dir"/Output/"$work_name" 2>/dev/null || true
 
     local cmd
-    mkdir -p $b_dir/fake
+    mkdir -p "$b_dir"/fake
     for cmd in $DUMMY_SERVICES; do
-        ln -s /bin/true $b_dir/fake/$cmd
+        ln -s /bin/true "$b_dir"/fake/"$cmd"
     done
 
     # This skips the larger subdirectories which aren't needed
@@ -4202,19 +4233,19 @@ make_build_dir() {
         template_tree="Template/Arch"
         [[ -d "$script_dir/$template_tree" ]] || fatal "Missing Arch templates at $(pq "$template_tree")"
     fi
-    (cd $script_dir && tar cf -          \
+    (cd "$script_dir" && tar cf -          \
         --exclude iso                    \
         --exclude initrd                 \
         --exclude squashfs               \
         --exclude isolinux               \
         "$template_tree")                \
-        | (cd $b_dir && tar xBf -)
+        | (cd "$b_dir" && tar xBf -)
 
-    [[ -n $THEME ]] && copy_theme_dir $b_dir
+    [[ -n $THEME ]] && copy_theme_dir "$b_dir"
 
     # Let chroot user over-ride values set by host system
     # shellcheck disable=SC2153
-    cat << Env_In > $b_dir/ENV_IN
+    cat << Env_In > "$b_dir"/ENV_IN
 : \${ASK_PART:=$ASK_PART}
 : \${EXIT_PART:=$EXIT_PART}
 : \${RUN_PART:=$RUN_PART}
@@ -4225,7 +4256,7 @@ Env_In
 
     local lt_blue="\e[1;34m" lt_green="\e[1;32m" lt_red="\e[1;31m" nc="\e[0m"
 
-    cat << Bashrc > $b_dir/bashrc
+    cat << Bashrc > "$b_dir"/bashrc
 source ~/.bashrc
 alias ls="ls --color=auto -F"
 alias ll="ls --color=auto -lhF"
@@ -4233,13 +4264,13 @@ alias la="ls --color=auto -FA"
 PS1="${lt_blue}chroot${lt_green}>$nc "
 Bashrc
 
-    cat << Bashrc2 > $b_dir/bashrc2
+    cat << Bashrc2 > "$b_dir"/bashrc2
 source /Build/bashrc
 PS1="${lt_blue}breakpoint${lt_green}>$nc "
 Bashrc2
 
     $SUDO rm -rf "${sqfs_dir:?}/Build"
-    $SUDO mv $b_dir $sqfs_dir
+    $SUDO mv "$b_dir" "$sqfs_dir"
 }
 
 copy_theme_dir() {
@@ -4247,14 +4278,14 @@ copy_theme_dir() {
     local b_dir=$1 t_dir=$theme_dir/$THEME
     if [[ ! -d $t_dir ]]; then
         # shellcheck disable=SC2046
-        error "Theme directory $(pqw \"$(short_dir \"$t_dir\")\") does not exist"
+        error "Theme directory $(pqw \"$(short_dir \""$t_dir"\")\") does not exist"
         return
     fi
     local b_theme_dir
-    b_theme_dir=$b_dir/"$(basename $theme_dir)"
-    mkdir -p $b_theme_dir/$THEME
-    cp -a $t_dir/* $b_theme_dir/$THEME/
-    cp -a $theme_dir/*.sh $b_theme_dir/
+    b_theme_dir=$b_dir/"$(basename "$theme_dir")"
+    mkdir -p "$b_theme_dir"/"$THEME"
+    cp -a "$t_dir"/* "$b_theme_dir"/"$THEME"/
+    cp -a "$theme_dir"/*.sh "$b_theme_dir"/
 }
 
 #------------------------------------------------------------------------------
@@ -4274,17 +4305,17 @@ umount_chroot() {
         # Don't umount the tmpfs
         [[ $mp == "$sqfs_dir" ]] && continue
 
-        $SUDO umount -l $mp 2>/dev/null
+        $SUDO umount -l "$mp" 2>/dev/null
 
         for _ in 1 2 3; do
-            mountpoint -q $mp || break
+            mountpoint -q "$mp" || break
             say "umount $name"
-            $SUDO umount -l $mp
-            mountpoint -q $mp || break
+            $SUDO umount -l "$mp"
+            mountpoint -q "$mp" || break
             sleep 1
         done
 
-        mountpoint -q $mp || continue
+        mountpoint -q "$mp" || continue
         warn "Still could not umount $name"
         UMOUNT_ERRORS=true
     done
@@ -4304,8 +4335,8 @@ set_chroot_mirror() {
     local file=$sqfs_dir/etc/apt/sources.list.d/debian.list
     [[ -f $file ]] || return
 
-    say "Set apt mirror to $* $(pq $mirror)"
-    $SUDO sed -i "s=/ftp\.\(..\.\)\\?debian\.org/=/ftp.$mirror.debian.org/=" $file
+    say "Set apt mirror to $* $(pq "$mirror")"
+    $SUDO sed -i "s=/ftp\.\(..\.\)\\?debian\.org/=/ftp.$mirror.debian.org/=" "$file"
 }
 
 #==============================================================================
@@ -4313,24 +4344,24 @@ set_chroot_mirror() {
 #==============================================================================
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-du_size() { $SUDO du --one-file-system -sh $1 | cut -f1 | sed 's/^\s\+//'; }
+du_size() { $SUDO du --one-file-system -sh "$1" | cut -f1 | sed 's/^\s\+//'; }
 
 convenience_link() {
     local dir=$1 link=$2 label=${3:-$2}
     [[ -z $link ]] && error "No link passed to convenience_link()" && return
 
-    mkdir -p $dir || error "Could not create $label dir $(pqw $dir)"
-    rm -f $script_dir/$link
-    ln -sf $dir $script_dir/$link
+    mkdir -p "$dir" || error "Could not create $label dir $(pqw "$dir")"
+    rm -f "$script_dir"/"$link"
+    ln -sf "$dir" "$script_dir"/"$link"
 }
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 report_size() {
     local name size
-    name=$(basename $1)
-    size=$(du_size $1)
-    say "size of $name dir: $(pqn $size)"
+    name=$(basename "$1")
+    size=$(du_size "$1")
+    say "size of $name dir: $(pqn "$size")"
 }
 
 #------------------------------------------------------------------------------
@@ -4340,8 +4371,8 @@ report_size() {
 check_sqfs_dir() {
     local dir=${1:-$sqfs_dir}
 
-    echo $dir | grep -q "^$remaster_dir/work/.*/squashfs" \
-        || fatal "Suspicous sqfs_dir in stage $stage: <$(pqw $dir)>"
+    echo "$dir" | grep -q "^$remaster_dir/work/.*/squashfs" \
+        || fatal "Suspicous sqfs_dir in stage $stage: <$(pqw "$dir")>"
 
     [[ -d $dir ]] || fatal "sqfs_dir does not exist! in stage: $stage"
 }
@@ -4354,7 +4385,7 @@ check_sqfs_dir() {
 #------------------------------------------------------------------------------
 has_word() {
     local name=$1 part=$2
-    eval val=\$$name
+    eval val=\$"$name"
     case ,$val, in
             *,$part,*) return 0 ;;
         *,a,*|*,all,*) return 0 ;;
@@ -4399,7 +4430,7 @@ short_dir() {
 #==============================================================================
 start_timer() {
     local name=${1:-START_T}
-    eval $name=\"$EPOCHSECONDS\"
+    eval "$name"=\"$EPOCHSECONDS\"
 }
 
 end_timer() {
@@ -4409,10 +4440,10 @@ end_timer() {
 _end_timer_() {
     local name=$1 title
     title=$(cprint_left 36 "$2")
-    eval local start_t=\$$name
+    eval local start_t=\$"$name"
     echo  # Ensure we start on a fresh line
     # shellcheck disable=SC2154
-    _say_ "${time_co}time for $text_co$title$nc $(pqn "$(elapsed $start_t)")$nc"
+    _say_ "${time_co}time for $text_co$title$nc $(pqn "$(elapsed "$start_t")")$nc"
 }
 
 elapsed() {
@@ -4467,17 +4498,17 @@ _cache_() {
 
     local cache_exclude="^/Build|^/proc/|^/sys/|^/var/cache/apt/archives/|^/var/cache/pacman/pkg/"
 
-    echo $dir | grep -q "^$remaster_dir" || fatal "Refusing to cache suspicious directory: $dir"
+    echo "$dir" | grep -q "^$remaster_dir" || fatal "Refusing to cache suspicious directory: $dir"
 
     # shellcheck disable=SC2153
     case ,$CACHE, in
         *,$type,*) ;;
-                *)  say "Skipping cache type $(pq $type)"
+                *)  say "Skipping cache type $(pq "$type")"
                     return 1;;
     esac
 
     local cache_dir=$remaster_dir/cache
-    mkdir -p $cache_dir
+    mkdir -p "$cache_dir"
     local ext=.cpio.gz
     local name=$type-$subtype
     local file=$cache_dir/$name$ext
@@ -4488,40 +4519,40 @@ _cache_() {
     fi
 
     local short
-    short=$(short_dir $cache_dir)
+    short=$(short_dir "$cache_dir")
     if [[ -n $CACHE_EXPIRE ]] && (( CACHE_EXPIRE > 0 )); then
         #vsay "Find $(pqn $ext) files to expire in $(pq $short)"
         local expire
-        expire=$(find $cache_dir -name "*$ext" -ctime +$CACHE_EXPIRE)
+        expire=$(find "$cache_dir" -name "*$ext" -ctime +"$CACHE_EXPIRE")
         for e in $expire; do
-            say "Expire:$bold_co $(basename $e $ext)$nc"
+            say "Expire:$bold_co $(basename "$e" $ext)$nc"
         done
         [[ -n $expire ]] && YES_no "Expire these files" \
-            && find $cache_dir -name "*$ext" -ctime +$CACHE_EXPIRE -delete
+            && find "$cache_dir" -name "*$ext" -ctime +"$CACHE_EXPIRE" -delete
     fi
 
     case $ctype in
     restore)
         [[ -e $file ]] || return 1
-        say "Found cache $(pq $name$ext)"
+        say "Found cache $(pq "$name"$ext)"
         YES_no "Restore from this cache" || return 1
 
         if [[ -d "$dir" && "$(find "$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
             say "Clear out existing files"
             find "$dir" -mindepth 1 -delete
         fi
-        mkdir -p $dir
+        mkdir -p "$dir"
 
-        say "Restore $(pq $type $subtype) from cache"
+        say "Restore $(pq "$type" "$subtype") from cache"
         start_timer
-        (cd $dir && gunzip -c $file | $SUDO cpio -idum --quiet)
+        (cd "$dir" && gunzip -c "$file" | $SUDO cpio -idum --quiet)
         end_timer "Restore cache"
-        say "Restored $(pqn "$(du_size $dir)") bytes of data"
+        say "Restored $(pqn "$(du_size "$dir")") bytes of data"
         ;;
 
     create|force)
 
-        say "Create cache of $(pq $type $subtype)"
+        say "Create cache of $(pq "$type" "$subtype")"
 
         if [[ -e $file ]]; then
             [[ $ctype = create ]] && return 1
@@ -4529,15 +4560,15 @@ _cache_() {
         fi
 
         [[ -d $dir ]] || fatal "Can't cache a non-existent directory: $dir"
-        mkdir -p $cache_dir
+        mkdir -p "$cache_dir"
 
         # This prevents us from prompting for the password two
         # time simultaneously inside the parens below.
         $SUDO echo >/dev/null
         start_timer
 
-        (cd $dir && $SUDO find . -depth | grep -vE "$cache_exclude" \
-            | $SUDO cpio -oa -H newc --quiet | $GZIP -3) > $file
+        (cd "$dir" && $SUDO find . -depth | grep -vE "$cache_exclude" \
+            | $SUDO cpio -oa -H newc --quiet | $GZIP -3) > "$file"
 
         end_timer "Create cache"
         ;;
@@ -4620,7 +4651,7 @@ plural() {
     esac
     echo "$str" | sed -e "s/%s\>/$s/g" -e "s/%ies\>/$ies/g" \
         -e "s/%are\>/$are/g" -e "s/%n\>/$n/g" -e "s/%were\>/$were/g" \
-        -e "s/%es\>/$es/g" -e "s/%3d\>/$(printf "%3d" $n)/g"
+        -e "s/%es\>/$es/g" -e "s/%3d\>/$(printf "%3d" "$n")/g"
 }
 
 #------------------------------------------------------------------------------
@@ -4643,7 +4674,7 @@ yes_NO_loud() { _yes_no_ -1  1 "((y/N))" "$1"; }
 _yes_no_() {
     local ans quiet_ret=$1 def_ret=$2 yn=$3 prompt=$4
 
-    [[ -n $quiet_mode ]] && (( quiet_ret >= 0 )) && return $quiet_ret
+    [[ -n $quiet_mode ]] && (( quiet_ret >= 0 )) && return "$quiet_ret"
 
     while true; do
         echo -ne "$text_co$prompt$prompt_co $yn?$nc "
@@ -4651,7 +4682,7 @@ _yes_no_() {
         case x$ans in
             x[Yy]*) return 0;;
             x[Nn]*) return 1;;
-                 x) (( def_ret >= 0 )) && return $def_ret;;
+                 x) (( def_ret >= 0 )) && return "$def_ret";;
         esac
 
         [[  -z $ans ]] && echo -n 'You must answer "y" or "n".  '
@@ -4668,7 +4699,7 @@ show_stages() {
     while read -r num title; do
         printf " $bold_co%2d$nc. $text_co%s$nc\n" "$num" "$title"
     done << Extract_Stages
-$(sed -r -n "s/^\s*enter_stage\s*([0-9]+)\s*\"[!]?([^\"]+)\".*/\1 \2/p" $0)
+$(sed -r -n "s/^\s*enter_stage\s*([0-9]+)\s*\"[!]?([^\"]+)\".*/\1 \2/p" "$0")
 Extract_Stages
 
     cat << Stages_Blurb
@@ -4689,7 +4720,7 @@ show_parts() {
     while read -r num title; do
         printf " $bold_co%2d$nc. $text_co%s$nc\n" "$num" "$title"
     done << Extract_Parts
-$(sed -r -n 's=^\s.*do_part\s+([0-9]+)\s+"[!]?([^"]+)".*=\1 \2=p' $0)
+$(sed -r -n 's=^\s.*do_part\s+([0-9]+)\s+"[!]?([^"]+)".*=\1 \2=p' "$0")
 Extract_Parts
 
     cat << Parts_Blurb
@@ -4727,14 +4758,14 @@ expand_range() {
 
 _expand_range_() {
     for p in ${1//,/ }; do
-        if ! echo $p | grep -Eq "^[0-9]+-[0-9]+$"; then
+        if ! echo "$p" | grep -Eq "^[0-9]+-[0-9]+$"; then
             echo "$p"
             continue
         fi
         local first last
-        first=$(echo $p | cut -d- -f1)
-        last=$(echo $p | cut -d- -f2)
-        seq $first $last
+        first=$(echo "$p" | cut -d- -f1)
+        last=$(echo "$p" | cut -d- -f2)
+        seq "$first" "$last"
     done
 }
 
@@ -4751,21 +4782,21 @@ choose() {
     local value title=$1 var=$2;
     shift 2;
 
-    eval value=\$$var
+    eval value=\$"$var"
     [[ -n $value && -z $reset_mode ]] && return
 
     local prompt="${err_co}Enter a number$prompt_co>$nc "
     echo
-    [[ -n $value ]] && say "Current $(pq $title) default: $(pq $value)"
+    [[ -n $value ]] && say "Current $(pq "$title") default: $(pq "$value")"
 
     my_select "Select $title:" "$prompt" value "$@"
 
     # Strip first " (" and all that follows it (for ENABLE_LOCALES)
     # Quite a kludge but it seems to work okay.
     value=${value%% (*}
-    eval $var=\$value
+    eval "$var"=\$value
 
-    update_default_file $var "$value"
+    update_default_file "$var" "$value"
 }
 
 my_select() {
@@ -4802,7 +4833,7 @@ my_select() {
             continue
         fi
 
-        eval $var=\"$val\"
+        eval "$var"=\""$val"\"
         break
     done
 }
@@ -4812,10 +4843,10 @@ my_select() {
 #------------------------------------------------------------------------------
 update_default() {
     local value var=$1
-    eval value=\$$var
+    eval value=\$"$var"
     local orig_val=$value
     [[ -n $value && -z $reset_mode ]] && return
-    echo -e "\n${text_co}Update default $(pq $var): $orig_val$nc"
+    echo -e "\n${text_co}Update default $(pq "$var"): $orig_val$nc"
     [[ -n $orig_val ]] && YES_no "Use current default" && return
 
     while true; do
@@ -4834,19 +4865,20 @@ update_default() {
         fi
         YES_no "Is \"$(pq "$value")\" correct" && break
     done
-    [[ $value != "$orig_val" ]] && update_default_file $var "$value"
+    [[ $value != "$orig_val" ]] && update_default_file "$var" "$value"
 }
 
 
 update_default_file() {
     local file  short var=$1  value=$2
 
+    # shellcheck disable=SC2086
     for file in $(reverse $all_defaults); do
-        grep -q "^\s*$var=" $file || continue
-        short=$(short_dir $file)
+        grep -q "^\s*$var=" "$file" || continue
+        short=$(short_dir "$file")
         #YES_no "\nDo you want to save $var ($(pq "$value")) in $(pq $short)" || return
-        sed -r -i "s/^(\s*$var=).*/\1\"$value\"/" $file
-        say "Saved $(pq "$var=\"$value\"") in file $(pq $short)"
+        sed -r -i "s/^(\s*$var=).*/\1\"$value\"/" "$file"
+        say "Saved $(pq "$var=\"$value\"") in file $(pq "$short")"
         break
     done
 }
@@ -4862,20 +4894,20 @@ reverse() {
 load_defaults() {
     local file short
     for file in $all_defaults; do
-        short=$(short_dir $file)
-        [[ -r $file ]] || fatal "No $(pqw $short) file found."
+        short=$(short_dir "$file")
+        [[ -r $file ]] || fatal "No $(pqw "$short") file found."
         # shellcheck disable=SC1090
-        source $file
+        source "$file"
     done
 }
 
 pick_prog() {
     local prog found var=$1
     shift
-    eval $var=
+    eval "$var"=
     for prog; do
-        which $prog &>/dev/null || continue
-        eval $var=\$prog
+        which "$prog" &>/dev/null || continue
+        eval "$var"=\$prog
         found=true
         break
     done
@@ -4885,19 +4917,19 @@ pick_prog() {
 select_theme() {
     local themes dir
     for dir in "$theme_dir"/*; do
-        [[ -d $dir ]] && themes="$themes $(basename $dir)"
+        [[ -d $dir ]] && themes="$themes $(basename "$dir")"
     done
 
     [[ -n $themes ]] || return
     yes_NO_loud "Do you want to set a theme" || return
-    choose "Select a theme" THEME $themes
+    choose "Select a theme" THEME "$themes"
 }
 
 check_theme_dir() {
     local theme=${1:-$THEME}
     [[ -z $theme || $theme = none ]] && return
     [[ -d $theme_dir/$THEME ]] \
-        || error "The theme directory $(pqw sort_dir $theme_dir/$THEME) does not exist"
+        || error "The theme directory $(pqw sort_dir "$theme_dir"/"$THEME") does not exist"
 
 }
 
@@ -4916,6 +4948,7 @@ check_theme_dir() {
 #------------------------------------------------------------------------------
 clear_outputs() {
     local names files stop=${1:-0} pretend=$2 delete=$3
+    # shellcheck disable=SC2086
     for i in $(reverse $all_stages); do
         (( i < stop )) && break
         local name=stage-$i.out
@@ -4935,6 +4968,7 @@ clear_outputs() {
         return 0
 
     elif [[ -n $delete ]]; then
+        # shellcheck disable=SC2086
         rm -f $files
         return 0
 
@@ -4946,10 +4980,12 @@ clear_outputs() {
         if [[ -n $work_dir && -d $work_dir ]]; then
             #nqsay "Save:\n$col_names"
             local save_out=$work_dir/Output
-            mkdir -p $save_out
-            mv -f $files $save_out/
+            mkdir -p "$save_out"
+            # shellcheck disable=SC2086
+            mv -f $files "$save_out"/
         else
             #nqsay "Delete:\n$col_names"
+            # shellcheck disable=SC2086
             rm -f $files
         fi
     fi
@@ -4958,8 +4994,8 @@ clear_outputs() {
 
 my_exit() {
     local ret=${1:-0}
-    echo $ret > "$exit_file"
-    exit $ret
+    echo "$ret" > "$exit_file"
+    exit "$ret"
 }
 
 #------------------------------------------------------------------------------
@@ -4975,7 +5011,7 @@ do_pretend() {
     echo "$ME would next do stage: $bold_co$stage$nc"
 
     local stage_info
-    [[ -n $stage ]] && stage_info=$(grep -m 1 "^\s\+enter_stage\s\+$stage" $0\
+    [[ -n $stage ]] && stage_info=$(grep -m 1 "^\s\+enter_stage\s\+$stage" "$0"\
         | sed -r "s/^\s*enter_stage\s*$stage\s*\"[!]?([^\"]+)\".*/    \1/") || stage_info=""
 
     [[ -n $stage_info ]] && echo -e "$text_co$stage_info$nc"
@@ -4984,7 +5020,7 @@ do_pretend() {
     if [[ -z $quiet_mode ]]; then
         echo -e "\nUsing this information:"
         echo
-        pretty_output $stage
+        pretty_output "$stage"
     fi
 
     if (( stage > 0 )); then
@@ -5058,7 +5094,8 @@ global_names() {
         [[ -e $file ]] && files="$files $file"
     done
 
-    cat $files 2>/dev/null | sed -n -r "s/^\s*([a-zA-Z_]+)=.*/\1/p" | sort -u
+    # shellcheck disable=SC2086
+    sed -n -r "s/^\s*([a-zA-Z_]+)=.*/\1/p" $files 2>/dev/null | sort -u
 }
 
 #------------------------------------------------------------------------------
@@ -5069,7 +5106,7 @@ global_names() {
 pretty_output() {
     local name value
     for name in $(global_names "$@"); do
-        eval value=\"\$$name\"
+        eval value=\"\$"$name"\"
         # shellcheck disable=SC2059
         printf "$pretty_fmt" "$name" "$value"
     done
@@ -5116,8 +5153,8 @@ clear_pids() {
         eval local pid=\$$name
         unset   $name
         [[ -z $pid ]] && continue
-        disown  $pid 2>/dev/null
-        kill    $pid 2>/dev/null
+        disown  "$pid" 2>/dev/null
+        kill    "$pid" 2>/dev/null
     done
 }
 
@@ -5137,7 +5174,7 @@ require_programs() {
     for prog; do
         PATH=$root_path command -v "$prog" >/dev/null 2>&1 || missing="$missing $prog"
     done
-    [[ -n $missing ]] && error "Missing these required programs: $(pqw $missing)"
+    [[ -n $missing ]] && error "Missing these required programs: $(pqw "$missing")"
 }
 
 missing_programs() {
@@ -5243,7 +5280,7 @@ _gather_() {
 
     for dir in $(flav_dirs); do
         [[ -r $dir/$file ]] || continue
-        sed '/^\s*#/d; s/\s*#.*//' $dir/$file | grep '[a-zA-Z0-9]'
+        sed '/^\s*#/d; s/\s*#.*//' "$dir"/"$file" | grep '[a-zA-Z0-9]'
     done
 }
 
@@ -5256,8 +5293,8 @@ gather_any() {
 
 gather_say() {
     local file=$1 msg=$2 cnt
-    cnt=$(gather_cnt $file)
-    psay $cnt "$msg"
+    cnt=$(gather_cnt "$file")
+    psay "$cnt" "$msg"
 }
 
 #------------------------------------------------------------------------------
@@ -5266,17 +5303,17 @@ gather_say() {
 #------------------------------------------------------------------------------
 gather_join() {
     local out f
-    for f in $(gather $1); do
+    for f in $(gather "$1"); do
         out=$out,$f
     done
-    echo ${out#,}
+    echo "${out#,}"
 }
 
 flav_dirs() {
     local dir=${1:-$template} respin=${2:-$ISO_RESPIN_OF} flav=${3:-$FLAV}
 
-    echo -n $dir/COMMON $dir/$respin-AND-* $dir/*-AND-$respin
-    echo " " $dir/*-AND-$respin-AND-* $dir/$flav
+    echo -n "$dir"/COMMON "$dir"/"$respin"-AND-* "$dir"/*-AND-"$respin"
+    echo " " "$dir"/*-AND-"$respin"-AND-* "$dir"/"$flav"
 }
 
 flavour_list() {
@@ -5290,12 +5327,12 @@ flavour_list() {
 #------------------------------------------------------------------------------
 compile_pkg_list() {
     local pkg_list exclude_list result
-    pkg_list=$(gather $1)
-    exclude_list=$(gather $2)
+    pkg_list=$(gather "$1")
+    exclude_list=$(gather "$2")
     for i in $pkg_list ; do
         [[ ! $exclude_list =~ .*$i.* ]] && result="$result $i"
     done
-    echo $result
+    echo "$result"
 }
 
 #------------------------------------------------------------------------------
@@ -5315,12 +5352,12 @@ get_template_file() {
     for flav in $FLAV $RESPIN_INHERIT COMMON; do
         full=$template/$flav/$file
         [[ -r $full ]] || continue
-        eval $var=\$full
+        eval "$var"=\$full
         return 0
     done
 
     [[ -n $do_error ]] || return 1
-    error "Could not find appropriate $(pqw $name) file in the template"
+    error "Could not find appropriate $(pqw "$name") file in the template"
 }
 
 #------------------------------------------------------------------------------
@@ -5342,18 +5379,18 @@ copy_template_dir() {
     echo "$dest" | grep -q "^$remaster_dir/work/" \
         || fatal "Suspicious destination in copy_template_dir: $dest"
 
-    $sudo mkdir -p $dest
+    $sudo mkdir -p "$dest"
     for flav in COMMON $RESPIN_INHERIT $FLAV; do
         local dir=$template/$flav/$from
         [[ -d $dir ]] || continue
         if [[ -n $only_overwrite ]]; then
-            say "Only overwrite from Template: $(pq $flav/$from)"
-            only_overwrite $dir $dest
+            say "Only overwrite from Template: $(pq "$flav"/"$from")"
+            only_overwrite "$dir" "$dest"
         else
         	#ensure template files are read-only on group permission
-        	chmod -R g-w $dir/
-            say "Copy from Template: $(pq $flav/$from)"
-            $sudo cp -R --preserve=link,mode $dir/* $dest/
+        	chmod -R g-w "$dir"/
+            say "Copy from Template: $(pq "$flav"/"$from")"
+            $sudo cp -R --preserve=link,mode "$dir"/* "$dest"/
         fi
     done
 }
@@ -5364,9 +5401,9 @@ only_overwrite() {
         dest=$dest_dir${from#"$from_dir"}
         [[ -f $dest ]] || continue
         echo "  --> ${dest#"$dest_dir"}"
-        $sudo cp -d $from $dest
+        $sudo cp -d "$from" "$dest"
     done<<Only_Overwrite
-$(find $from_dir -type f -o -type l)
+$(find "$from_dir" -type f -o -type l)
 Only_Overwrite
 }
 
@@ -5380,20 +5417,20 @@ update_add_remove_lists() {
         for fname in remove.list add.list; do
             file=$dir/$fname
             [[ -e $file ]] || continue
-            pkgs=$(grep -v -e "^\s*#" -e "^\s*$" $file | sed 's/\s*#.*//')
+            pkgs=$(grep -v -e "^\s*#" -e "^\s*$" "$file" | sed 's/\s*#.*//')
             [[ -n $pkgs ]] || next
             cnt=$(echo "$pkgs" | wc -l)
-            say "Found $(pqn $cnt) packages in $flav/$fname"
-            say_in $high_co "$pkgs"
+            say "Found $(pqn "$cnt") packages in $flav/$fname"
+            say_in "$high_co" "$pkgs"
             #say "$(echo "$pkgs" | sed -e "s/^/    $high_co/" -e "s/$/$nc/")"
 
             case $fname in
-                remove.list)  update_remove_list $file $flav "$pkgs";;
-                   add.list)  update_add_list    $file $flav "$pkgs";;
+                remove.list)  update_remove_list "$file" "$flav" "$pkgs";;
+                   add.list)  update_add_list    "$file" "$flav" "$pkgs";;
                           *)  error
             esac
-            if YES_no "Delete file $(pq $flav/$fname)"; then
-                rm -f $file
+            if YES_no "Delete file $(pq "$flav"/$fname)"; then
+                rm -f "$file"
             fi
         done
     done
@@ -5409,23 +5446,23 @@ update_remove_list() {
         targ_dirs=$template/$flav
         [[ $flav != "COMMON" ]] && targ_dirs="$targ_dirs $template/COMMON"
     else
-        targ_dirs=$(flav_dirs $template $flav $flav)
+        targ_dirs=$(flav_dirs "$template" "$flav" "$flav")
     fi
 
     local p tdir tfile tflav short preg regex
     for tdir in $targ_dirs; do
         for tname in package basic-package pesky-packages; do
             tfile=$tdir/$tname.list
-            tflav=$(basename $tdir)
+            tflav=$(basename "$tdir")
             short=$tflav/$tname.list
             [[ -e $tfile ]] || continue
             for p in $pkgs; do
                 preg=${p//+/\\+}
                 regex="^\s*$preg\s*\\(#\|$\)"
-                grep -q "$regex" $tfile || continue
-                if YES_no "Remove package $(pq $p) from $short"; then
-                    sed -n "/$regex/ s/^\s*\($preg\)\>.*/$comment \1/p" $tfile
-                    sed -i "/$regex/ s/^\s*\($preg\)\>.*/$comment \1/"  $tfile
+                grep -q "$regex" "$tfile" || continue
+                if YES_no "Remove package $(pq "$p") from $short"; then
+                    sed -n "/$regex/ s/^\s*\($preg\)\>.*/$comment \1/p" "$tfile"
+                    sed -i "/$regex/ s/^\s*\($preg\)\>.*/$comment \1/"  "$tfile"
                 fi
             done
         done
@@ -5434,39 +5471,39 @@ update_remove_list() {
 
 update_add_list() {
     local p targ_dirs  file=$1  flav=$2  pkgs=$3 tfile comment short
-    tfile=$(dirname $file)/package.list
+    tfile=$(dirname "$file")/package.list
     comment="#-- ADD ($date)"
     short=$flav/package.list
     for p in $pkgs; do
         local line
-        line=$(printf "%-30s $comment" $p)
-        if YES_no "Add package $(pq $p) to $short"; then
+        line=$(printf "%-30s $comment" "$p")
+        if YES_no "Add package $(pq "$p") to $short"; then
             echo "$line"
-            echo "$line" >> $tfile
+            echo "$line" >> "$tfile"
         fi
     done
 }
 
 md5sum_file() {
     local dir file
-    dir=$(dirname $1)
-    file=$(basename $1)
-    (cd $dir && md5sum $file > $file.md5)
+    dir=$(dirname "$1")
+    file=$(basename "$1")
+    (cd "$dir" && md5sum "$file" > "$file".md5)
 }
 
 sha256sum_file() {
     local dir file
-    dir=$(dirname $1)
-    file=$(basename $1)
-    (cd $dir && sha256sum $file > $file.sha256)
+    dir=$(dirname "$1")
+    file=$(basename "$1")
+    (cd "$dir" && sha256sum "$file" > "$file".sha256)
 }
 
 zsyncmake_file() {
     local dir file
-    dir=$(dirname $1)
-    file=$(basename $1)
+    dir=$(dirname "$1")
+    file=$(basename "$1")
     say "Creating a zsync file..."
-    (cd $dir && zsyncmake -e $file 2>/dev/null)
+    (cd "$dir" && zsyncmake -e "$file" 2>/dev/null)
 }
 
 #------------------------------------------------------------------------------
@@ -5476,13 +5513,13 @@ make_real() {
     local file=$1
     [[ -L $file ]] || return
     local dest
-    dest=$(readlink -f $file)
+    dest=$(readlink -f "$file")
     [[ -f "$dest" ]] || return
     say "Convert symlink $file to a real file"
     local tmp
-    tmp=$(mktemp $file.XXXXXXXX)
-    cp $dest $tmp
-    mv $tmp $file
+    tmp=$(mktemp "$file".XXXXXXXX)
+    cp "$dest" "$tmp"
+    mv "$tmp" "$file"
 }
 
 #------------------------------------------------------------------------------
@@ -5529,8 +5566,8 @@ update_template() {
     [[ -d $full_old ]] || return
     [[ -d $full_new ]] && return
     echo "Update Template"
-    YES_no_loud "Rename $(pq $old) to $(pq $new)" || vexit "Must update to continue"
-    mv $full_old $full_new
+    YES_no_loud "Rename $(pq "$old") to $(pq "$new")" || vexit "Must update to continue"
+    mv "$full_old" "$full_new"
 }
 
 update_template_file() {
@@ -5539,8 +5576,8 @@ update_template_file() {
         [[ -d $dir ]] || continue
         [[ -e $dir/$new ]] && continue
         [[ -e $dir/$old ]] || continue
-        say "Moving $(pq $old) to $(pq $new) in Template/$(basename $dir)"
-        mv $dir/$old $dir/$new
+        say "Moving $(pq "$old") to $(pq "$new") in Template/$(basename "$dir")"
+        mv "$dir"/"$old" "$dir"/"$new"
     done
 }
 
