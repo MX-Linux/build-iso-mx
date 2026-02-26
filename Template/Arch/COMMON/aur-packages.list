@@ -15,7 +15,9 @@ mx-conky
 mx-iso-template-arch
 mx-live-usb-maker
 mx-packageinstaller
+mx-samba-config
 mx-snapshot
+mx-user
 open-vm-tools
 paru
 uefi-manager
