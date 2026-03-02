@@ -2028,6 +2028,17 @@ do_stage_4_arch() {
                 || error "paru failed installing AUR packages"
         fi
         if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
+
+        # AUR packages (e.g. gazelle-installer) may add files to /etc/skel after the
+        # live user was already created in Part 17.  Sync any new skel content into the
+        # user's home so those files (e.g. Desktop/Installer.desktop) actually appear.
+        local user_home="/home/$aur_user"
+        if [[ -d "$user_home" ]]; then
+            say "Syncing new /etc/skel files to $(pq "$user_home")"
+            cp -rn /etc/skel/. "$user_home/"
+            chown -R "$aur_user:$aur_user" "$user_home"
+        fi
+
         end_part_strict
     else
         skip_part 19 "Install AUR packages"
