@@ -10,10 +10,12 @@ gazelle-installer
 job-scheduler
 mx-boot-repair
 mx-boot-options
+mx-cleanup
 mx-conky
 mx-datetime
 mx-iso-template-arch
 mx-live-usb-maker
+mx-locale
 mx-packageinstaller
 mx-samba-config
 mx-service-manager
