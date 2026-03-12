@@ -20,6 +20,7 @@ mx-packageinstaller
 mx-samba-config
 mx-service-manager
 mx-snapshot
+mx-tools
 mx-user
 open-vm-tools
 paru
