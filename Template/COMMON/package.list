@@ -155,7 +155,6 @@ gsettings-desktop-schemas
 gstreamer1.0-alsa
 gstreamer1.0-libav
 gufw
-haveged
 hdparm
 hexedit
 hplip
@@ -228,7 +227,7 @@ mx-datetime
 mx-debian-firmware
 mx-goodies
 mx-gpg-keys
-mx-launcher-l10n 
+mx-launcher-l10n
 mx-packageinstaller
 mx-packageinstaller-pkglist
 mx-remaster
