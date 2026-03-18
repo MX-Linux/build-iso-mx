@@ -22,7 +22,7 @@ mx-service-manager
 mx-snapshot
 mx-tools
 mx-user
-open-vm-tools
+open-vm-tools-git
 paru
 quick-system-info-gui
 system-keyboard-qt
