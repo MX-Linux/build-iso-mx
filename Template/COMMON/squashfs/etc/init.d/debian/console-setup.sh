@@ -39,7 +39,7 @@ if [ -f /bin/setupcon ]; then
 	    fi
 	    ;;
         *)
-            echo 'Usage: /etc/init.d/console-setup {start|reload|restart|force-reload|stop|status}'
+            echo 'Usage: /etc/init.d/console-setup.sh {start|reload|restart|force-reload|stop|status}'
             exit 3
             ;;
     esac

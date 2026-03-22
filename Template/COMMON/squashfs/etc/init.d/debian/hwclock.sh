@@ -38,13 +38,24 @@ hwclocksh()
             # Updates the Hardware Clock with the System Clock time.
             # This will *override* any changes made to the Hardware Clock,
             # for example by the Linux kernel when NTP is in use.
-            log_action_msg "Saving the system clock to /dev/$HCTOSYS_DEVICE"
-            if /sbin/hwclock --rtc=/dev/$HCTOSYS_DEVICE --systohc; then
-                verbose_log_action_msg "Hardware Clock updated to `date`"
-            fi
+	    if [ "$(uname -s)" = GNU ]; then
+		log_action_msg "Saving the system clock to CMOS"
+		/sbin/hwclock --directisa --systohc
+	    else
+		log_action_msg "Saving the system clock to /dev/$HCTOSYS_DEVICE"
+		/sbin/hwclock --rtc=/dev/$HCTOSYS_DEVICE --systohc
+	    fi
+            if [ $? -eq 0 ]; then
+		verbose_log_action_msg "Hardware Clock updated to `date`"
+	    fi
+
             ;;
         show)
-            /sbin/hwclock --rtc=/dev/$HCTOSYS_DEVICE --show
+	    if [ "$(uname -s)" = GNU ]; then
+		/sbin/hwclock --directisa --show
+	    else
+		/sbin/hwclock --rtc=/dev/$HCTOSYS_DEVICE --show
+	    fi
             ;;
         *)
             log_success_msg "Usage: hwclock.sh {stop|reload|force-reload|show}"

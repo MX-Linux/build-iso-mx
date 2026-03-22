@@ -9,7 +9,7 @@
 # Description: 
 ### END INIT INFO
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
 . /lib/lsb/init-functions
 
@@ -73,7 +73,6 @@ do_stop () {
 
 	# Kill all processes.
 	log_action_begin_msg "Asking all remaining processes to terminate"
-
 	killall5 -15 $OMITPIDS # SIGTERM
 	log_action_end_msg 0
 	alldead=""
