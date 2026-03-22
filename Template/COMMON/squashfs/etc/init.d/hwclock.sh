@@ -38,6 +38,7 @@ unset TZ
 
 hwclocksh()
 {
+    HCTOSYS_DEVICE=rtc0
     [ ! -x /sbin/hwclock ] && return 0
     [ ! -r /etc/default/rcS ] || . /etc/default/rcS
     [ ! -r /etc/default/hwclock ] || . /etc/default/hwclock

@@ -9,7 +9,7 @@
 # Description: 
 ### END INIT INFO
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
 . /lib/lsb/init-functions
 
