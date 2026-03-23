@@ -2881,14 +2881,14 @@ do_stage_8() {
     say "Using $(pq "$(basename "$MAKE_ISO")") to make iso file"
     if [[ -z ${MAKE_ISO%%*xorriso} ]]; then
         $SUDO chown -R root:root "$iso_dir"
-        make_xorriso_iso "$MAKE_ISO" "$file_dir"
+        make_xorriso_iso "$MAKE_ISO" "$full_iso_file" "$iso_dir"
         $SUDO chown -R $UID "$iso_dir"
 
     elif has_option "$MAKE_ISO" -e; then
-        make_uefi_iso "$MAKE_ISO" "$chown_opts -e" "$file_dir"
+        make_uefi_iso "$MAKE_ISO" "$chown_opts -e" "$full_iso_file" "$iso_dir"
 
     elif has_option "$MAKE_ISO" -eltorito-platform; then
-        make_uefi_iso "$MAKE_ISO" "$chown_opts -eltorito-platform 0xEF -eltorito-boot" "$file_dir"
+        make_uefi_iso "$MAKE_ISO" "$chown_opts -eltorito-platform 0xEF -eltorito-boot" "$full_iso_file" "$iso_dir"
 
     else
         warn "Disabling 'dd' live-usb UEFI booting"
