@@ -214,6 +214,8 @@ main_wrapper() {
 
     set_live_dirs $LIVE_DIR
     mkdir -p $OUTPUT_DIR
+    #make cryptsetup folders
+    mkdir -p /run/cryptsetup
 
     trap "" $SIGNAL_LIST
 
