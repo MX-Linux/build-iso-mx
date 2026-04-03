@@ -6,6 +6,7 @@ alsa-tools
 alsa-utils
 at-spi2-core
 autoconf
+automake
 bc
 binutils
 btrfs-progs
