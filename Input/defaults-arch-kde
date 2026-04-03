@@ -5,9 +5,9 @@ DISTRO_FAMILY="arch"
 
 # ISO identity
 DISTRO_NAME="MXarch"
-DISTRO_VERSION="26.03"
+DISTRO_VERSION="26.04"
 CODE_NAME="Infinity Arch"
-RELEASE_DATE="March 2, 2026"
+RELEASE_DATE="April 2, 2026"
 
 # Arch uses x86_64 naming; keep this consistent across templates/iso naming.
 ARCH="x86_64"
