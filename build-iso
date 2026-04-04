@@ -74,6 +74,7 @@ Options:
     -0 -- -8            Start over from stage N.
     --stop5				Stop process at Stage 5 (cleanup)
     --stop8				Stop process at Stage 8 (iso generation)
+    --grub-only         Use grub for legacy boot (eltorito.img must exist or this will fail)
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -88,6 +89,7 @@ Usage
 main() {
     unset UMOUNT_ERRORS
     MAIN_T=$EPOCHSECONDS
+    GRUB_ONLY=false
 
     local firefox_prefs="/etc/skel/.mozilla/firefox/*/prefs.js"
 
@@ -213,6 +215,7 @@ main() {
               -zstd)  zstd_override=true                        ;;
              -stop5)         stop_5=true                        ;;
              -stop8)         stop_8=true                        ;;
+             -grub-only)    GRUB_ONLY=true                     ;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -3849,6 +3852,10 @@ make_uefi_iso() {
 }
 
 make_xorriso_iso() {
+    if [[ "$GRUB_ONLY" = "true" ]]; then
+        make_xorriso_iso_grub_only "$@"
+        return
+    fi
     local prog=$1 file=$2 dir=$3
     local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
     local opts_1="-hfsplus on -as mkisofs -quiet -l"
@@ -3867,6 +3874,27 @@ make_xorriso_iso() {
     isohybrid --uefi "$file"
 }
 
+make_xorriso_iso_grub_only() {
+    #currently experimental, and not supported in snapshot or the templates
+    #generate eltorito.img
+    $SUDO grub-mkimage -O i386-pc-eltorito -o $work_dir/iso/boot/grub/i386-pc/eltorito.img     -p /boot/grub biosdisk iso9660 search test loadenv
+    local prog=$1 file=$2 dir=$3
+    local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
+    local opts_1="-hfsplus on -as mkisofs -quiet -l"
+
+    local opts_2="-R -J -iso-level 3 -pad -partition_cyl_align on"
+    opts_2="$opts_2 -b boot/grub/i386-pc/eltorito.img"
+    opts_2="$opts_2 -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info"
+    opts_2="$opts_2 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
+    opts_2="$opts_2 -isohybrid-apm-hfsplus -isohybrid-gpt-basdat"
+
+    cmd="$prog $opts_1 -V $label $opts_2 -o $file $dir"
+    echo "$cmd"
+
+    $cmd 2>&1 || error "iso file creation failed"
+    #isohybrid not needed for grub2 legacy boot
+    #isohybrid --uefi "$file"
+}
 
 unpack_gfx_cpio() {
     local type=$1  dir=${2:-$work_dir/$1-cpio}  file=${3:-$iso_dir/boot/$1/gfx-cpio}
