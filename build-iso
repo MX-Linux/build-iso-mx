@@ -3875,9 +3875,12 @@ make_xorriso_iso() {
 }
 
 make_xorriso_iso_grub_only() {
-    #currently experimental, and not supported in snapshot or the templates
+    #currently experimental
     #generate eltorito.img
     $SUDO grub-mkimage -O i386-pc-eltorito -o $work_dir/iso/boot/grub/i386-pc/eltorito.img     -p /boot/grub biosdisk iso9660 search test loadenv
+    #comment out syslinux menus
+    sed -i '/^[^#]*switch_to_syslinux/s/^/#/' $work_dir/iso/boot/grub/config/bootmenu.cfg
+    msg "GRUB2 installation complete."
     local prog=$1 file=$2 dir=$3
     local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
     local opts_1="-hfsplus on -as mkisofs -quiet -l"
