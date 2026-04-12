@@ -2,7 +2,7 @@
 
 ME=${0##*/}
 
-VERSION="25.04"
+VERSION="26.04"
 
 : "${PATH_LIST:=/usr/local/bin /usr/sbin /usr/bin /sbin /bin}"
 : "${BIN_SUBDIR:=bin}"
@@ -23,7 +23,7 @@ X86_64_DIR=/lib/x86_64-linux-gnu
 VAR_LIST=""
 VAR_LIST+="PATH_LIST BIN_SUBDIR LIB_SUBDIR "
 VAR_LIST+="DEFAULT_PROG_LIST ENCRYPT_PROG_LIST DEFAULT_KMOD_LIST "
-VAR_LIST+="DEFAULT_PROG_LIST ENCRYPT_PROG_LIBS DEFAULT_KMOD_LIBS "
+VAR_LIST+="ENCRYPT_PROG_LIBS DEFAULT_KMOD_LIBS "
 
 #PRETEND=true
 
@@ -44,7 +44,7 @@ Options:
     -h --help          Show this usage
     -n --no-color      Turn off text colors
     -p --pretend       Don't actually copy anything
-    -q --quiet         Supress modprobe warnings
+    -q --quiet         Suppress modprobe warnings
     -s --show          Show default values of environment variables
     -t --to=<dir>      Copy to /bin and /lib under <dir>
     -v --verbose       Show more information
@@ -74,15 +74,15 @@ eval_argument() {
              -clean|C) DO_CLEAN=true           ;;
            -encrypt|e) ADD_ENCRYPT=true        ;;
               -from|f) FROM_DIR=$val           ;;
+             -from=*) FROM_DIR=$val            ;;
              -force|F) FORCE=true              ;;
-              -from=*) FROM_DIR=$val           ;;
               -help|h) usage                   ;;
           -no-color|n) NO_COLOR=true           ;;
            -pretend|p) PRETEND=true            ;;
              -quiet|q) QUIET=true              ;;
               -show|s) do_show        ; exit 0 ;;
                 -to|t) TO_DIR=$val             ;;
-                -to=*) TO_DIR=$val             ;;
+               -to=*) TO_DIR=$val              ;;
            -verbose|v) VERBOSE=true            ;;
            -version|V) show_version   ; exit 0 ;;
                     *) fatal "Unknown parameter -$arg" ;;
@@ -104,46 +104,46 @@ takes_param() {
 #
 #------------------------------------------------------------------------------
 main() {
-    [ $# -eq 0 ] && usage 0
+    [[ $# -eq 0 ]] && usage 0
 
     show_version
 
     local SHIFT SHORT_STACK="cCefFhnpqtvV"
 
     local SUDO
-    [ "$UID" = 1 ] || SUDO=sudo
+    [[ "$UID" = 0 ]] || SUDO=sudo
 
     read_params "$@"
     shift "$SHIFT"
 
-    [ -n "$NO_COLOR" ] || set_colors
+    [[ -n "$NO_COLOR" ]] || set_colors
 
     local prog_list abs_prog_list
     case $# in
         0)  prog_list=$DEFAULT_PROG_LIST                          ;;
         *)  prog_list="$*"
-            [ "$DO_CLEAN" ] || qsay "Installing %s program(s) from command line" $#
+            [[ "$DO_CLEAN" ]] || qsay "Installing %s program(s) from command line" $#
             ;;
     esac
 
-    if [ $# -eq 0 ] && [ -n "$ADD_ENCRYPT$DO_CLEAN" ]; then
+    if [[ $# -eq 0 ]] && [[ -n "$ADD_ENCRYPT$DO_CLEAN" ]]; then
         vsay "Adding encryption programs to clean list"
         prog_list="$prog_list $ENCRYPT_PROG_LIST"
     fi
 
-    if [ $# -eq 0 ] && [ -n "$DO_CLEAN" ]; then
+    if [[ $# -eq 0 ]] && [[ -n "$DO_CLEAN" ]]; then
         vsay "Adding kmod programs to clean list"
         prog_list="$prog_list $DEFAULT_KMOD_LIST"
     fi
 
     : "${TO_DIR:=.}"
 
-    [ "$CREATE" ] && mkdir -p "$TO_DIR"
+    [[ "$CREATE" ]] && mkdir -p "$TO_DIR"
     test -e "$TO_DIR" || fatal "The --to directory %s does not exist.  Use --create to have it created" "$TO_DIR"
 
     local bin_dir=${TO_DIR%/}/$BIN_SUBDIR  lib_dir=${TO_DIR%/}/$LIB_SUBDIR
 
-    if [ "$DO_CLEAN" ]; then
+    if [[ "$DO_CLEAN" ]]; then
         qsay "Cleaning out all libraries and these program(s): %s" "$prog_list"
         do_clean "$TO_DIR" "$lib_dir" "$bin_dir" "$prog_list"
         exit 0
@@ -162,12 +162,12 @@ main() {
             abs_prog_list="$abs_prog_list $abs_prog"
             break
         done
-        [ -z "$found" ] && missing_progs="$missing_progs${missing_progs:+ }$prog"
+        [[ -z "$found" ]] && missing_progs="$missing_progs${missing_progs:+ }$prog"
     done
 
-    [ -n "$missing_progs" ] && warn_err "The following program(s) were not found: %s"  "$missing_progs"
+    [[ -n "$missing_progs" ]] && warn_err "The following program(s) were not found: %s"  "$missing_progs"
 
-    if [ "$VERBOSE" ]; then
+    if [[ "$VERBOSE" ]]; then
         say "Full path to programs under %s:" "${FROM_DIR:-/}"
         for prog in $abs_prog_list; do
             say "    %s" "$prog"
@@ -178,31 +178,31 @@ main() {
     my_mkdir "$lib_dir"
 
     # Copy each program to the bin directory ...
-    # And ind the libraries needed for each program
+    # And find the libraries needed for each program
     for abs_prog in $abs_prog_list; do
         local from_prog basename_prog
         from_prog="${FROM_DIR%/}$abs_prog"
         basename_prog=$(basename "$abs_prog")
 
         qsay "  add program: %s" "$basename_prog"
-        [ -e "$bin_dir/$basename_prog" ] && pretend rm "$bin_dir/$basename_prog"
+        [[ -e "$bin_dir/$basename_prog" ]] && pretend rm "$bin_dir/$basename_prog"
         pretend cp "$from_prog" "$bin_dir/$basename_prog"
         # kmod handling
-        if [ "$basename_prog" = kmod ] && [ -x "$bin_dir/kmod" ]; then
+        if [[ "$basename_prog" = "kmod" ]] && [[ -x "$bin_dir/kmod" ]]; then
             local link
             for link in $DEFAULT_KMOD_LIST; do
                 pretend ln -nsf kmod "$bin_dir/$link"
             done
         fi
         # xz handling
-        if [ "$basename_prog" = xz ] && [ -x "$bin_dir/xz" ]; then
+        if [[ "$basename_prog" = "xz" ]] && [[ -x "$bin_dir/xz" ]]; then
             local link
             for link in $DEFAULT_XZ_LIST; do
                 pretend ln -nsf xz "$bin_dir/$link"
             done
         fi
         # zstd handling
-        if [ "$basename_prog" = zstd ] && [ -x "$bin_dir/zstd" ]; then
+        if [[ "$basename_prog" = "zstd" ]] && [[ -x "$bin_dir/zstd" ]]; then
             local link
             for link in $DEFAULT_ZSTD_LIST; do
                 pretend ln -nsf zstd "$bin_dir/$link"
@@ -210,7 +210,7 @@ main() {
         fi
 
         local raw_libs
-        if [ -n "$FROM_DIR" ]; then
+        if [[ -n "$FROM_DIR" ]]; then
             local LINUX_ARG; LINUX_ARG=$(get_linux_arg "$from_prog")
             raw_libs=$($SUDO ${LINUX_ARG:+"$LINUX_ARG"} chroot "$FROM_DIR" /usr/bin/ldd "$abs_prog")
         else
@@ -219,99 +219,87 @@ main() {
 
         local libs; libs=$(echo "$raw_libs" | sed -nr "s/.*=>\s*([^ ]+)\s.*/\1/p")
 
-        if [ -z "$libs" ]; then
+        if [[ -z "$libs" ]]; then
             warn_err "No libs found for %s" "$(basename "$abs_prog")"
             continue
         fi
 
         local lib
         # luks2 handling - needs libgcc_s.so.* ...
-        if [ "$basename_prog" = "cryptsetup" ] && [ -x "$bin_dir/cryptsetup" ]; then
-			vsay "luks2 handling"
-			if  echo "$ENCRYPT_PROG_LIBS" | grep -q "libgcc_s.so"; then
-				local libdir libname regex
-                libdir=""
-				vsay "libs=$libs"
-                for lib in $libs; do
-                    libname=${lib##*/}; libname=${libname%%.*};
-                    [ -n "${libname##libc*}" ] && continue  # get libdir from libc.so
-                    libdir=${lib%/*};
-                    break
-                done
-				vsay "libdir: $libdir"
-
-                if [ -n "${libdir}" ]; then
-                    local extra=()
-                    regex=$(echo "$ENCRYPT_PROG_LIBS" | \
-                            sed -r 's/[.]so//g; s:^\s*:.*/(:; s/\s*$/)[.]so.*/; s/\s+/|/g')
-                    readarray -t extra < <(
-                        cd "${FROM_DIR:-/}" 2>/dev/null && \
-                        find "${FROM_DIR:+.}$libdir" ! -type d \
-                        -regextype posix-extended \
-                        -regex "$regex"  2>/dev/null
-                    )
-                    vsay "libs+=%s" "${extra[*]#.}"
-                    libs+=" ${extra[*]}"
-                fi
+        if [[ "$basename_prog" = "cryptsetup" ]] && [[ -x "$bin_dir/cryptsetup" ]]; then
+            vsay "luks2 handling"
+            if echo "$ENCRYPT_PROG_LIBS" | grep -q "libgcc_s.so"; then
+                find_extra_libs "$libs" "$ENCRYPT_PROG_LIBS" libs
             fi
         fi
 
-        # kmod handling - maybe needs libkmod.so, liblzma.so , libzstd.so
-        local extra=()
-        if [ "$basename_prog" = "kmod" ] && [ -x "$bin_dir/kmod" ]; then
-			vsay "kmod handling"
-			if  echo "$DEFAULT_KMOD_LIBS" | grep -q "libkmod"; then
-                local libdir libname
-
-                libdir=""
-				vsay "libs=$libs"
-                for lib in $libs; do
-                    libname=${lib##*/}; libname=${libname%%.*};
-                    [ -n "${libname##libc*}" ] && continue  # get libdir from libc.so
-                    libdir=${lib%/*};
-                    break
-                done
-				vsay "libdir: $libdir"
-
-                if [ -n "${libdir}" ]; then
-                    local regex
-                    regex=$(echo "$DEFAULT_KMOD_LIBS" | \
-                            sed -r 's/.so//g; s:^\s*:.*/(:; s/\s*$/)[.]so.*/; s/\s+/|/g')
-                    readarray -t extra < <(
-                        cd "${FROM_DIR:-/}" 2>/dev/null && \
-                        find "${FROM_DIR:+.}$libdir" ! -type d \
-                        -regextype posix-extended \
-                        -regex "$regex"  2>/dev/null
-                    )
-                    vsay "libs+=%s" "${extra[*]#.}"
-                    libs+=" ${extra[*]}"
-                fi
+        # kmod handling - maybe needs libkmod.so, liblzma.so, libzstd.so
+        if [[ "$basename_prog" = "kmod" ]] && [[ -x "$bin_dir/kmod" ]]; then
+            vsay "kmod handling"
+            if echo "$DEFAULT_KMOD_LIBS" | grep -q "libkmod"; then
+                find_extra_libs "$libs" "$DEFAULT_KMOD_LIBS" libs
             fi
         fi
 
         # For each library, copy the library and the symlink to the lib directory
         for lib in $libs; do
             vsay "copy_symlink  ${FROM_DIR:-/} $lib  $lib_dir"
-            copy_symlink "${FROM_DIR:-/}" "$lib" "$lib_dir"
+            copy_symlink "${FROM_DIR:-/}" "$lib" "$lib_dir" "${LINUX_ARG:-}"
         done
 
         # copy in the ld-linux program specifed by the program
-        ld_linux=$(echo "$raw_libs" | sed -nr "s@^\s*(/lib[^ ]*/ld-linux[^ ]*) .*@\1@p")
-        [ -z "$ld_linux" ] && continue
+        local ld_linux; ld_linux=$(echo "$raw_libs" | sed -nr "s@^\s*(/lib[^ ]*/ld-linux[^ ]*) .*@\1@p")
+        [[ -z "$ld_linux" ]] && continue
 
         local ld_dir; ld_dir="$TO_DIR"$(dirname "$ld_linux")
-        echo "ld_linux: $ld_linux"
-        if [ "${ld_dir##*/}" = lib64 ]; then
+        vsay "ld_linux: %s" "$ld_linux"
+        if [[ "${ld_dir##*/}" = "lib64" ]]; then
             my_mkdir "$ld_dir"
             pretend cp -a "${FROM_DIR%/}${ld_linux}" "$ld_dir"
 
             ld_dir=${ld_dir%/lib64}$X86_64_DIR
         fi
-        echo "ld_dir: $ld_dir"
+        vsay "ld_dir: %s" "$ld_dir"
         my_mkdir "$ld_dir"
-        copy_symlink "$FROM_DIR" "$ld_linux" "$ld_dir"
+        copy_symlink "$FROM_DIR" "$ld_linux" "$ld_dir" "${LINUX_ARG:-}"
 
     done
+}
+
+#------------------------------------------------------------------------------
+# Find extra libraries matching a pattern and append them to a variable.
+# Usage: find_extra_libs "$libs" "$lib_pattern_list" varname
+#   $1 - current libs list (space-separated paths)
+#   $2 - lib pattern list (e.g. "libgcc_s.so liblzma.so")
+#   $3 - name of variable to append results to
+#------------------------------------------------------------------------------
+find_extra_libs() {
+    local current_libs=$1 lib_patterns=$2
+    local -n libs_ref=$3
+
+    local lib libdir="" libname
+    vsay "libs=$current_libs"
+    for lib in $current_libs; do
+        libname=${lib##*/}; libname=${libname%%.*}
+        [[ -n "${libname##libc*}" ]] && continue  # get libdir from libc.so
+        libdir=${lib%/*}
+        break
+    done
+    vsay "libdir: %s" "$libdir"
+
+    if [[ -n "$libdir" ]]; then
+        local extra=() regex
+        regex=$(echo "$lib_patterns" | \
+                sed -r 's/[.]so//g; s:^\s*:.*/(:; s/\s*$/)[.]so.*/; s/\s+/|/g')
+        readarray -t extra < <(
+            cd "${FROM_DIR:-/}" 2>/dev/null && \
+            find "${FROM_DIR:+.}$libdir" ! -type d \
+            -regextype posix-extended \
+            -regex "$regex" 2>/dev/null
+        )
+        vsay "libs+=%s" "${extra[*]#.}"
+        libs_ref+=" ${extra[*]}"
+    fi
 }
 
 #------------------------------------------------------------------------------
@@ -319,28 +307,28 @@ main() {
 # complicated for what it does.
 #------------------------------------------------------------------------------
 copy_symlink() {
-    local from_dir=${1:-/}  symlink=$2  dest_dir=$3
+    local from_dir=${1:-/}  symlink=$2  dest_dir=$3  linux_arg=${4:-}
 
-    # This works for relative symlinks and absolute symlinks that also
+    # This works for relative symlinks and absolute symlinks that are also
     # exist on the host
-    local real_file; real_file=$($SUDO ${LINUX_ARG:+"$LINUX_ARG"} chroot "$from_dir" readlink -f "$symlink")
+    local real_file; real_file=$($SUDO ${linux_arg:+"$linux_arg"} chroot "$from_dir" readlink -f "$symlink")
 
     # If it was not really a symlink then just copy and return
-    if [ -z "$real_file" ] || [ "$real_file" = "$symlink" ]; then
+    if [[ -z "$real_file" ]] || [[ "$real_file" = "$symlink" ]]; then
         local dest_file; dest_file="$dest_dir"/"$(basename "$symlink")"
-        test -e "$dest_file" || pretend cp "$from_dir$symlink" "$dest_file" \
+        [[ -e "$dest_file" ]] || pretend cp "$from_dir$symlink" "$dest_file" \
             || fatal "Failed to copy:\n  %s -->\n  %s" "$from_dir$symlink" "$dest_file"
         return
     fi
 
     # Otherwise, copy the file and then make a relative symlink to it
     local dest_file; dest_file="$dest_dir"/"$(basename "$real_file")"
-    test -e "$dest_file" || pretend cp -a "${from_dir%/}/${real_file#/}" "$dest_file" \
+    [[ -e "$dest_file" ]] || pretend cp -a "${from_dir%/}/${real_file#/}" "$dest_file" \
         || fatal "Failed to copy:\n  %s -->\n  %s" "$from_dir$real_file" "$dest_file"
 
     local sym_targ; sym_targ=$(basename "$real_file")
     local sym_sorc; sym_sorc="$dest_dir"/"$(basename "$symlink")"
-    test -e "$sym_sorc" || pretend ln -s "$sym_targ" "$sym_sorc" \
+    [[ -e "$sym_sorc" ]] || pretend ln -s "$sym_targ" "$sym_sorc" \
         || fatal "Failed to create symlink at:\n  %s" "$sym_sorc"
 }
 
@@ -352,14 +340,14 @@ get_linux_arg() {
     local prog=$1
 
     local need_64 new_arch=linux32
-    if file "$prog" | grep -q x86.64; then
+    if file "$prog" | grep -q 'x86[_-]64'; then
         need_64=true
         new_arch=linux64
     fi
     local have_64
-    uname -m | grep -q x86.64 && have_64=true
+    uname -m | grep -q 'x86[_-]64' && have_64=true
     local linux_arg
-    [ "$need_64" != "$have_64" ] && linux_arg=$new_arch
+    [[ "$need_64" != "$have_64" ]] && linux_arg=$new_arch
     echo "$linux_arg"
 }
 
@@ -396,30 +384,30 @@ do_clean() {
     for prog in $prog_list; do
         local full="$bin_dir/$prog"
         { test -e "$full" || test -L "$full"; }  && pretend rm -f "$full"
-        if [ -x "$busybox"  ] && { "$busybox" --list | grep -sq "^${prog}$"; }; then
+        if [[ -x "$busybox" ]] && { "$busybox" --list | grep -sq "^${prog}$"; }; then
             restore+="$prog "
         fi
     done
     restore="${restore% }"
     # restore busybox links
-    [ -n "$restore" ] && qsay "Restoring these busybox symlink(s): %s" "$restore"
+    [[ -n "$restore" ]] && qsay "Restoring these busybox symlink(s): %s" "$restore"
     local link
     for link in $restore; do
         local full="$bin_dir/$link"
-        if [ -x "$busybox"  ] &&  { "$busybox" --list | grep -sq "^${link}$"; }; then
+        if [[ -x "$busybox" ]] && { "$busybox" --list | grep -sq "^${link}$"; }; then
             pretend ln -nsf busybox "$full"
         fi
     done
 
     local lib
     for lib in "$to_dir"/lib*/{lib,ld}*.so*  "$to_dir"/"$X86_64_DIR"/ld-*.so*; do
-        { [ -e "$lib" ] || [ -L "$lib" ]; } && pretend rm -f "$lib"
+        { [[ -e "$lib" ]] || [[ -L "$lib" ]]; } && pretend rm -f "$lib"
     done
 
     local dir
     for dir in "$to_dir"/lib*/ $bin_dir "$to_dir$X86_64_DIR"; do
         test -d "$dir" || continue
-        [ -z "$(ls -A "$dir" 2>/dev/null)" ] && pretend rmdir "$dir"
+        [[ -z "$(ls -A "$dir" 2>/dev/null)" ]] && pretend rmdir "$dir"
     done
 }
 
@@ -449,8 +437,8 @@ my_mkdir() {
 # Only run the command if not PRETEND.  Show command if PRETEND or VERBOSE.
 #------------------------------------------------------------------------------
 pretend() {
-    { [ "$PRETEND" ] || [ "$VERBOSE" ]; } && echo "$@"
-    [ "$PRETEND" ] && return
+    { [[ "$PRETEND" ]] || [[ "$VERBOSE" ]]; } && echo "$@"
+    [[ "$PRETEND" ]] && return
     "$@"
 }
 
@@ -472,7 +460,7 @@ read_params() {
     local arg val
 
     # Loop through the cmdline args
-    while [ $# -gt 0 ] && [ ${#1} -gt 0 ] && [ -z "${1##-*}" ]; do
+    while [[ $# -gt 0 ]] && [[ ${#1} -gt 0 ]] && [[ -z "${1##-*}" ]]; do
         arg=${1#-}
         shift
         SHIFT=$((SHIFT + 1))
@@ -492,9 +480,9 @@ read_params() {
 
         # Deal with all options that take a parameter
         if takes_param "$arg"; then
-            [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+            [[ $# -lt 1 ]] && fatal "Expected a parameter after: -$arg"
             val=$1
-            [ -n "$val" ] && [ -z "${val##-*}" ] \
+            [[ -n "$val" ]] && [[ -z "${val##-*}" ]] \
                 && fatal "Suspicious argument after -$arg: $val"
             SHIFT=$((SHIFT + 1))
             shift
@@ -517,12 +505,12 @@ say() {
 }
 
 vsay() {
-    [ "$VERBOSE" ] || return
+    [[ "$VERBOSE" ]] || return
     say "$@"
 }
 
 qsay() {
-    [ "$QUIET" ] && return
+    [[ "$QUIET" ]] && return
     say "$@"
 }
 
@@ -538,7 +526,7 @@ warn() {
 }
 
 warn_err() {
-    if [ "$FORCE" ]; then
+    if [[ "$FORCE" ]]; then
         warn "$@"
     else
         fatal "$@"
@@ -564,4 +552,3 @@ set_colors() {
 }
 
 main "$@"
-

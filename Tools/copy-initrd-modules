@@ -1,7 +1,9 @@
 #!/bin/bash
 
 ME=${0##*/}
-MP_ARGS="-D -a"
+# shellcheck disable=SC2034  # kept for parity with sibling scripts
+VERSION="26.04"
+MP_ARGS=(-D -a)
 
 usage() {
         cat <<Usage
@@ -27,45 +29,36 @@ Options:
     -k --kernel=KERN   Use KERN instead of \`uname -r\`
     -O --only-encrypt  Only add encryption modules
     -p --pretend       Don't actually copy anything
-    -q --quiet         Supress modprobe warnings
+    -q --quiet         Suppress modprobe warnings
     -s --show          Show the default list
-    -Q --very-quiet    Also suppress warnins about duplicate inputs
+    -Q --very-quiet    Also suppress warnings about duplicate inputs
     -t --to=TODIR      Copy to TODIR instead of CWD
     -v --verbose       List modules as they are copied
 
 Usage
-    exit ${1:-0}
+    exit "${1:-0}"
 }
 
 DEFAULT_LIST="
-aufs
 battery
-block
 btrfs
 cdrom
 crc16
-crc32
 crc32c-generic
 crc32-pclmul
 crct10dif-common
 crct10dif-generic
 crct10dif-pclmul
-cryptsetup
-dmsetup
 ecb
 ehci-hcd
 ehci-pci
 exfat
-ext2
-ext3
 ext4
 f2fs
 fat
 firewire-core
 firewire-ohci
 firewire-sbp2
-fotg210-hcd
-fusbh200-hcd
 fuse
 hid
 hid-apple
@@ -73,7 +66,6 @@ hid-belkin
 hid-cherry
 hid-generic
 hid-hyperv
-hid-lenovo-tpkbd
 hid-logitech
 hid-logitech-dj
 hid-logitech-hidpp
@@ -86,42 +78,33 @@ hv_utils
 hv_sock
 hv_storvsc
 hv_netvsc
-hyperv
 hyperv-keyboard
-hyperv_fb
 isofs
-jbd
 jbd2
 jfs
 libcrc32c
 libahci
-linear
 loop
 mbcache
 md-mod
 msdos
-multipath
 nls-ascii
 nls-cp437
 nls-utf8
-ntfs
 nvme
 ohci-hcd
 ohci-pci
 overlay
 pci-hyperv
 pci-hyperv-intf
-pcie-aspm
-printk
-pstore
 reiserfs
-rts5139
+rtsx_pci
+rtsx_pci_sdmmc
 scsi-mod
 scsi-transport-fc
 sdhci
 sd-mod
 sg
-shpchp
 squashfs
 sr-mod
 uas
@@ -145,8 +128,6 @@ virtio-pci
 vfat
 vmd
 virtio-gpu
-whc-rc
-whci-hcd
 xcbc
 xfs
 xhci-hcd
@@ -172,26 +153,41 @@ xts
 # nouveau
 # radeon
 
+CONDITIONAL_MODULES="
+hyperv_fb
+linear
+multipath
+"
+
+module_exists_in_tree() {
+    local module_dir=$1
+    local module_name=$2
+    local file_name=${module_name//-/_}
+    find "$module_dir" -type f -name "${file_name}.ko*" -print -quit | grep -q .
+}
+
 main() {
 
     local to_dir from_dir kernel
 
     local short_stack="defhkOpqQstv"
-    while [ $# -gt 0 -a -n "$1" -a -z "${1##-*}" ]; do
+    while [[ $# -gt 0 ]] && [[ -n "$1" ]] && [[ -z "${1##-*}" ]]; do
         local arg=${1#-} val=
         shift
 
         case $arg in
             [$short_stack][$short_stack]*)
                 if echo "$arg" | grep -q "^[$short_stack]\+$"; then
-                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    local ARGS=()
+                    read -ra ARGS < <(echo "$arg" | sed -r 's/([a-zA-Z])/ -\1 /g')
+                    set -- "${ARGS[@]}" "$@"
                     continue
                 fi;;
         esac
 
         case $arg in
             -dir|-from|-kernel|-to|[dfkt])
-                [ $# -lt 1 ] && fatal "Expected a parameter after: -$arg"
+                [[ $# -lt 1 ]] && fatal "Expected a parameter after: -$arg"
                 val=$1
                 shift;;
             *=*)
@@ -204,9 +200,9 @@ main() {
         case $arg in
                   -) USE_STDIN=true                  ;;
            -count|c) SHOW_COUNT=true                 ;;
-             -dir|d) DIRS="$DIRS,$val"               ;;
+             -dir|d) DIRS="${DIRS:+$DIRS,}$val"       ;;
          -encrypt|e) ADD_ENCRYPT=true                ;;
-            -help|h) usage                           ;;
+            -help|h) usage 0                         ;;
             -from|f) from_dir=${val%/}               ;;
           -kernel|k) kernel=$val                     ;;
     -only-encrypt|O) ONLY_ENCRYPT=true               ;;
@@ -220,88 +216,99 @@ main() {
         esac
     done
 
-    [ "$QUIET" -o "$VERY_QUIET" ] && MP_ARGS="$MP_ARGS --quiet"
+    { [[ "$QUIET" ]] || [[ "$VERY_QUIET" ]]; } && MP_ARGS+=(--quiet)
     # fill in default kernel if there is only one
-    if [ -z "$kernel" ]; then
+    if [[ -z "$kernel" ]]; then
         local d="$from_dir/lib/modules"
         test -d "$d" || fatal "Could not find directory \"$d\""
-        [ "$(ls "$d" | wc -l)" = 1 ] && kernel=$(ls "$d")
+        local kernels=()
+        readarray -t kernels < <(find "$d" -mindepth 1 -maxdepth 1 -printf '%f\n')
+        [[ ${#kernels[@]} -eq 1 ]] && kernel=${kernels[0]}
     fi
 
-    [ "$kernel"   ] && MP_ARGS="$MP_ARGS -S $kernel"
-    [ "$from_dir" ] && MP_ARGS="$MP_ARGS -d \"$from_dir\""
+    [[ "$kernel" ]] && MP_ARGS+=(-S "$kernel")
+    [[ "$from_dir" ]] && MP_ARGS+=(-d "$from_dir")
 
-    : ${kernel:=$(uname -r)}
-    : ${to_dir:=.}
+    : "${kernel:=$(uname -r)}"
+    : "${to_dir:=.}"
 
     local mod_dir="$from_dir/lib/modules/$kernel"
     test -d "$mod_dir" || fatal "Directory $mod_dir does not exist"
 
-    local list1 list2 repeats default_mode
+    local list1 list2 default_mode
     # grab list from files or stdin and strip comments
 
-    if [ "$ADD_ENCRYPT" ]; then
+    if [[ "$ADD_ENCRYPT" ]]; then
         DEFAULT_LIST=$DEFAULT_LIST$CRYPT_LIST
-    elif [ "$ONLY_ENCRYPT" ]; then
+    elif [[ "$ONLY_ENCRYPT" ]]; then
         DEFAULT_LIST=$CRYPT_LIST
     fi
 
-    if [ -z "$USE_STDIN" -a $# -eq 0 ]; then
+    local conditional_module
+    for conditional_module in $CONDITIONAL_MODULES; do
+        if module_exists_in_tree "$mod_dir" "${conditional_module//_/-}"; then
+            DEFAULT_LIST="${DEFAULT_LIST}"$'\n'"$conditional_module"
+        fi
+    done
+
+    if [[ -z "$USE_STDIN" ]] && [[ $# -eq 0 ]]; then
         default_mode=true
         list1=$(echo "$DEFAULT_LIST" | grep -v "^\s*#" | sed 's/\s*#.*//')
     else
         list1=$(cat "$@" | grep -v "^\s*#" | sed -e 's/\s*#.*//' -e "s/,/ /g")
     fi
 
-    [ "$default_mode" -a -z "$DIRS" ] && DIRS="kernel/drivers/ata kernel/drivers/mmc"
-    local d
-    for d in $(echo $DIRS | sed 's/,/ /g'); do
+    [[ "$default_mode" ]] && [[ -z "$DIRS" ]] && DIRS="kernel/drivers/ata,kernel/drivers/mmc"
+    local d dir_array=()
+    [[ -n "$DIRS" ]] && IFS=', ' read -ra dir_array <<< "$DIRS"
+    for d in "${dir_array[@]}"; do
         local dir=$mod_dir/$d
         test -d "$dir" || fatal "Subdirectory $dir does not exist"
         list1="$list1
 $(find "$dir" -type f -name '*\.ko*' -printf "%f\n" | sed -nr 's/\.ko(|\.[[:alpha:]]+)$//p')"
     done
 
-    repeats=$(echo "$list1" | sed 's/_/-/g' | sort | uniq --repeated | grep .)
-    if [ "$repeats" -a -z "$VERY_QUIET" ]; then
-        local cnt=$(echo "$repeats" | wc -l)
-        warn "$cnt repeated module(s) in input"
-        echo "$repeats" >&2
-    fi
+    local unique_list
+    unique_list=$(printf '%s\n' "$list1" | sed 's/_/-/g' | sort -u)
 
-    list2=$(echo "$list1" | sed 's/_/-/g' | sort -u \
-        | eval "xargs /sbin/modprobe -n $MP_ARGS" | sed -n 's/^insmod //p' |cut -d' ' -f1| sort -u)
+    list2=$(printf '%s\n' "$unique_list" \
+        | xargs /sbin/modprobe -n "${MP_ARGS[@]}" | sed -n 's/^insmod //p' | cut -d' ' -f1 | sort -u)
 
     local full cnt=0
-    [ -z "${from_dir##/*}" ] || from_dir="$PWD/$from_dir"
-    while read full; do
-        [ "$VERBOSE" ] && printf "  %s\n" "$(basename "$full")"
-        local dir=$(dirname "$full")
-        dir="$to_dir/${dir##$from_dir/}"
-        test -d "$dir" || echo_cmd mkdir -p "$dir"
-        echo_cmd cp "$full" "$dir/"
+    [[ -z "${from_dir##/*}" ]] || from_dir="$PWD/$from_dir"
+    while read -r full; do
+        [[ "$VERBOSE" ]] && printf "  %s\n" "$(basename "$full")"
+        local dir
+        dir=$(dirname "$full")
+        dir="$to_dir/${dir##"$from_dir"/}"
+        test -d "$dir" || pretend mkdir -p "$dir"
+        pretend cp "$full" "$dir/"
         cnt=$((++cnt))
     done<<List_2
-$(echo "$list2")
+$list2
 List_2
 
-    [ "$SHOW_COUNT" ] && printf "$ME: %s module(s)\n" "$cnt"
+    [[ "$SHOW_COUNT" ]] && printf '%s: %s module(s)\n' "$ME" "$cnt"
 
     exit 0
 }
 
-echo_cmd() {
-    [ "$PRETEND" ] && return
+pretend() {
+    [[ "$PRETEND" ]] && return
     "$@"
 }
 
 fatal() {
-    echo "$ME error: $*" >&2
+    local fmt=$1; shift
+    # shellcheck disable=SC2059
+    printf "$ME fatal error: $fmt\n" "$@" >&2
     exit 3
 }
 
 warn() {
-    echo "$ME warning: $*" >&2
+    local fmt=$1; shift
+    # shellcheck disable=SC2059
+    printf "$ME warning: $fmt\n" "$@" >&2
 }
 
 main "$@"
