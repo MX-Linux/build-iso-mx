@@ -963,7 +963,7 @@ arg_fatal() {
 #------------------------------------------------------------------------------
 # Function: vamoose <format> <arg1> ...
 #
-# Use printf to construct a message from the arguments.  Send to the the log
+# Use printf to construct a message from the arguments.  Send to the log
 # file with a slight preamble and send it to stdout if in --verbose mode.
 # Then exit.
 #------------------------------------------------------------------------------

@@ -176,7 +176,6 @@ expand_fname() {
 
     orig=${orig%/}
 
-    #echo ">>$fname<<"
     local abs_name
     if [ -z "${orig##/*}" ]; then 
         abs_name=$base$orig
@@ -207,7 +206,6 @@ expand_fname() {
     FNAME=$fname
     FNAME_DIR=$(dirname $fname)
     FNAME_EXT=${fname##*$CONFIG}
-    #[ -n "$FNAME_EXT" ] && echo "ext: $FNAME_EXT"
     return 0
 }
 
@@ -287,7 +285,6 @@ error() {
 }
 
 warn() {
-    #echo "$ME warning: $*" >&2
     echo "    $*" >&2
 }
 
@@ -297,6 +294,3 @@ fatal() {
 }
 
 main "$@"
-#inherit_config "$1"
-#printf "CONFIG_PRIORITY:\n"
-#printf "$CONFIG_PRIORITY"

@@ -217,7 +217,6 @@ main() {
             raw_libs=$(ldd "$abs_prog")
         fi
 
-        #echo "$raw_libs"
         local libs; libs=$(echo "$raw_libs" | sed -nr "s/.*=>\s*([^ ]+)\s.*/\1/p")
 
         if [ -z "$libs" ]; then
@@ -225,7 +224,6 @@ main() {
             continue
         fi
 
-        #echo -e "$libs"
         local lib
         # luks2 handling - needs libgcc_s.so.* ...
         if [ "$basename_prog" = "cryptsetup" ] && [ -x "$bin_dir/cryptsetup" ]; then
@@ -323,11 +321,9 @@ main() {
 copy_symlink() {
     local from_dir=${1:-/}  symlink=$2  dest_dir=$3
 
-    # This works for relative symlinks and absolute symlinks that are also
+    # This works for relative symlinks and absolute symlinks that also
     # exist on the host
     local real_file; real_file=$($SUDO ${LINUX_ARG:+"$LINUX_ARG"} chroot "$from_dir" readlink -f "$symlink")
-
-    # echo -e "    symlink: $symlink\n  real_file: $real_file"
 
     # If it was not really a symlink then just copy and return
     if [ -z "$real_file" ] || [ "$real_file" = "$symlink" ]; then

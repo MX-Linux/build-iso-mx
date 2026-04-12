@@ -1,16 +1,13 @@
 #!/bin/bash
 
 # Please change these defaults (if you want to)
-COLOR="#b000b0"
-COLOR="#FFFFFF"
 COLOR="#a0a0a0"
-BORDER="12x9"
 BORDER=
 TEXT="Live"
 FONT_SIZE="32"
 POSITION="340,490"
 
-ME=$(basename $0)
+ME=$(basename "$0")
 
 usage() {
     cat <<Usage
@@ -23,7 +20,7 @@ Options:
     -b|--border      <WxH>     default: $BORDER
     -c|--color       <color>   default: $COLOR
     -f|--font-size   <number>  default: $FONT_SIZE
-    -p|-position     <X,Y>     default: $POSITION
+    -p|--position    <X,Y>     default: $POSITION
     -t|--text        <text>    default: $TEXT
 Usage
     exit
@@ -55,7 +52,7 @@ while [ $# -gt 0 ]; do
             BORDER=$2
             shift 2
             ;;
-        -p|-postion|--postion)
+        -p|-position|--position)
             [ $# -ge 2 ] || help_error "expected <xxx,yyy> parameter after $1"
             POSITION=$2
             shift 2

@@ -511,7 +511,6 @@ main() {
         if [[ -z $disable_errors ]]; then
             read_error_regexes
             check_errors_reset
-            #say "ERROR_OFFSET=$ERROR_OFFSET"
         fi
 
         if (( stage != chroot_stage )) && [[ -z $no_log_errors ]]; then
@@ -1187,9 +1186,6 @@ do_stage_4() {
         debconf-set-selections "$manual_selections_template"
     fi
 
-    # Doesn't seem to be needed, it just shows an error that /proc/mounts = /etc/mtab
-    # say "Create $(pq /etc/mtab)"
-    # grep -v rootfs /proc/mounts > /etc/mtab
 
     echo $$ > $build_dir/MY-PID
 
@@ -1431,11 +1427,6 @@ do_stage_4() {
     if which $update_flash 2>/dev/null && do_part 15 "Get Latest Flash"; then
         $update_flash
 
-        #local flash_selector="flashplayer-selector.sh"
-        #if [[ $ARCH = "i386" ]] && which $flash_selector 2>/dev/null; then
-        #   say "Set old flash"
-        #   $flash_selector
-        #fi
         end_part_lax
     fi
 
@@ -1540,8 +1531,8 @@ do_stage_4() {
 
         gather_say user-groups "Add $(pq "$user") to $(pqn %n) group%s"
 
-        # add conveinence group vboxsf even if virtualbox guest additions
-        # aren not installed
+        # add convenience group vboxsf even if virtualbox guest additions
+        # are not installed
         ! is_antiX && ! grep -q vboxsf /etc/group && groupadd --system vboxsf
 
         local group
@@ -2013,7 +2004,7 @@ do_stage_4_arch() {
                 sudo -u "$aur_user" makepkg -si --noconfirm 2>&1 | tr '\r' '\n'
             )
 
-            rm -rf "$paru_build_dir"
+            rm -rf "${paru_build_dir:?}"
 
             if ! command -v paru >/dev/null 2>&1; then
                 error "Failed to bootstrap paru"
@@ -2224,9 +2215,6 @@ do_stage_5() {
         $SUDO chmod 666 "$sqfs_dir"/etc/ppp/chap-secrets
         $SUDO chmod 666 "$sqfs_dir"/etc/ppp/pap-secrets
 
-         #say "Disable exec for 2 icewm files"
-         #$SUDO chmod 644 $sqfs_dir/usr/bin/icewmbg
-         #$SUDO chmod 644 $sqfs_dir/usr/bin/icewm-menu-fdo
 
         if [[ $DEBIAN_RELEASE != "wheezy" && -z "$jbb_mode" ]] && is_antiX; then
             say "Compress /usr/share/doc then delete folder"
@@ -2257,7 +2245,7 @@ do_stage_5() {
     : "${sqfs_dir:?"sqfs_dir not set"}"
     [[ "$sqfs_dir" = "/" ]] && fatal "sqfs_dir cannot be /"
     for f in $(gather delete-files); do
-        $SUDO rm -rf "$sqfs_dir"/"$f" 2>/dev/null
+        $SUDO rm -rf "${sqfs_dir:?}"/"$f" 2>/dev/null
     done
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
@@ -2266,7 +2254,7 @@ do_stage_5() {
 
     say "Delete $(pq "/dev/*") in chroot"
     mountpoint -q "$sqfs_dir"/dev && fatal "$(pqw /dev) is still mounted in squashfs!"
-    $SUDO rm -rf "$sqfs_dir"/dev
+    $SUDO rm -rf "${sqfs_dir:?}"/dev
     $SUDO mkdir "$sqfs_dir"/dev
 
     # Clean up our loose ends (once here instead of after every chroot)
@@ -2288,10 +2276,9 @@ do_stage_5() {
         sleep 1
         $SUDO mkdir "$sqfs_dir"/usr/lib64/sane
 
-        #collect_live_files $live_files_list /usr/share/live-files
         say "Save Live files for snapshot"
 
-        $SUDO rm -rf "$sqfs_dir"/usr/share/live-files
+        $SUDO rm -rf "${sqfs_dir:?}"/usr/share/live-files
         $SUDO "$tools"/installed-to-live populate-live-files "$sqfs_dir" "$sqfs_dir"
 
         if [[ $FLAV = "core" ]] && is_antiX; then
@@ -2513,9 +2500,6 @@ Bootloader_Data
         sed -i "s/16x16.fnt/16x16aa.fnt/"  "$isolinux_cpio"/gfxboot.cfg "$syslinux_cpio"/gfxboot.cfg
     fi
 
-    # say "Make efi.img"
-    # $SUDO $tools/make-efi-img $iso_dir "$DISTRO_NAME-uefi"
-
     repack_gfx_cpio isolinux "$isolinux_cpio"
     repack_gfx_cpio syslinux "$syslinux_cpio"
 
@@ -2710,7 +2694,7 @@ do_stage_7() {
     fi
 
     say "Clear /run directory"
-    $SUDO rm -rf "$sqfs_dir"/run
+    $SUDO rm -rf "${sqfs_dir:?}"/run
     $SUDO mkdir -p "$sqfs_dir"/run
 
     if [[ -x $sqfs_dir/usr/bin/updatedb ]]; then
@@ -2978,7 +2962,7 @@ do_stage_9() {
         [[ -n $links ]] && rm "$links"
 
     elif yes_NO "Delete squashfs directory $(pq "$rel_work_dir"/squashfs)"; then
-        $SUDO rm -rf "$sqfs_dir"
+        $SUDO rm -rf "${sqfs_dir:?}"
         rm -f "$script_dir"/sqfs
     fi
 
@@ -3172,7 +3156,6 @@ kill_chroot_procs() {
     YES_no "Kill these processes" || return
     # shellcheck disable=SC2086
     $SUDO kill $pids
-    #FIXME check for survivors
 }
 #==============================================================================
 # Error detection on STDERR output
@@ -3199,7 +3182,6 @@ check_errors_reset() {
     offset=$(wc -l < "$err_file" 2>/dev/null)
     : "${offset:=0}"
     ERROR_OFFSET=$((offset + 1))
-    #_say_ "check_errors_reset"
     return 0
 }
 
@@ -3211,7 +3193,6 @@ _check_errors_() {
 
     [[ -n $disable_errors ]] && return
     : "${ERROR_OFFSET:=1}"
-    #say "Checking for $(pq $type) errors @offset $ERROR_OFFSET"
     local errors cnt
     while true; do
 
@@ -3233,7 +3214,6 @@ _check_errors_() {
 
         yell "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         say_in "$err_co" "$errors"
-        #_say_ "$(echo "$errors" | sed -e "s/^/$err_co/" -e "s/$/$nc/")"
         yell "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
         yell "$(plural "$cnt" "Found $(pqw %n) $type error%s")"
         [[ -n $ask_errors ]] || break
@@ -3753,7 +3733,6 @@ check_missing() {
     mcnt=$(echo -e "$missing" | wc -w)
     _say_ "$high_co------------------------------------------------$nc"
     _say_ "$(echo -e "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
-    #_say_ "$(printf "$missing" | sed -e "s/^/$high_co/" -e "s/$/$nc/")"
     error "$(plural "$mcnt" "$(pqw %n) missing $label package%s")"
 }
 
@@ -3811,7 +3790,6 @@ collect_live_files() {
     local list
     list="$(grep -v "^\s*#\s*" "$list_file" | sed 's/\s*#.*//' \
         | grep "^/" | sed "s=^=$sqfs_dir=")"
-    #echo "$list"
 
     $SUDO mkdir -p "$dest_dir"
     # This hard-codes the live-files dir but it is safer in case
@@ -4420,7 +4398,7 @@ check_sqfs_dir() {
 
 #------------------------------------------------------------------------------
 # has_word var_name part
-# See if the word "part" is incuded in the comma separated list of words in the
+# See if the word "part" is included in the comma separated list of words in the
 # variable called "name". Also return true if the words "a" or "all" are in
 # the string.
 #------------------------------------------------------------------------------
@@ -4562,7 +4540,6 @@ _cache_() {
     local short
     short=$(short_dir "$cache_dir")
     if [[ -n $CACHE_EXPIRE ]] && (( CACHE_EXPIRE > 0 )); then
-        #vsay "Find $(pqn $ext) files to expire in $(pq $short)"
         local expire
         expire=$(find "$cache_dir" -name "*$ext" -ctime +"$CACHE_EXPIRE")
         for e in $expire; do
@@ -4673,7 +4650,7 @@ fatal()  {
 
 
 #------------------------------------------------------------------------------
-# echo a command to the sceeen and the log file then run it
+# echo a command to the screen and the log file then run it
 #------------------------------------------------------------------------------
 cmd() {
     _say_ " > $*"
@@ -5019,13 +4996,11 @@ clear_outputs() {
         YES_no "Remove these output files" || return 1
 
         if [[ -n $work_dir && -d $work_dir ]]; then
-            #nqsay "Save:\n$col_names"
             local save_out=$work_dir/Output
             mkdir -p "$save_out"
             # shellcheck disable=SC2086
             mv -f $files "$save_out"/
         else
-            #nqsay "Delete:\n$col_names"
             # shellcheck disable=SC2086
             rm -f $files
         fi
@@ -5173,16 +5148,13 @@ on_exit() {
 
     et=$((-MAIN_T + EPOCHSECONDS))
     if (( et >= 30 )); then
-    #if [[ -n $STAGE_1_T && -n $STAGE_6_T ]]; then
         _end_timer_ MAIN_T "$ME $ARCH $FLAV"
     fi
-    #else
     if [[ -r "$sign_off_file" ]]; then
         SIGN_OFF=$(cat "$sign_off_file" 2>/dev/null)
         rm -f "$sign_off_file"
     fi
     _say_ "$SIGN_OFF"
-    #fi
 }
 
 #------------------------------------------------------------------------------
@@ -5463,7 +5435,6 @@ update_add_remove_lists() {
             cnt=$(echo "$pkgs" | wc -l)
             say "Found $(pqn "$cnt") packages in $flav/$fname"
             say_in "$high_co" "$pkgs"
-            #say "$(echo "$pkgs" | sed -e "s/^/    $high_co/" -e "s/$/$nc/")"
 
             case $fname in
                 remove.list)  update_remove_list "$file" "$flav" "$pkgs";;
@@ -5587,11 +5558,6 @@ is_distro_flav() {
     fi
     #
     return 0
-
-    #case $flav in
-    #     mx32|mx64|mxahs|mxkde|mxbase64|mxbase32|mxflux32|mxflux64|mxworkbench32|mxworkbench64) return 0 ;;
-    #esac
-    #return 1
 }
 
 #==============================================================================

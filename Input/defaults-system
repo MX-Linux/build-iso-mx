@@ -47,11 +47,7 @@ DISTRO_VERSION="${RELEASEVERSION}_$DEFAULTDESKTOP$ALPHABETARCVERSION"
 DISTRO_NAME="MX"
 RELEASE_DATE="May 24, 2026"
 
-# system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="trixie"
-
-LIVE_USER="demo"
-NEW_HOSTNAME="mx1"
 
 # kernel
 # standard 64 bit
