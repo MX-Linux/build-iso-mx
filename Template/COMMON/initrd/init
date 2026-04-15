@@ -7096,10 +7096,22 @@ prepare_switch_root() {
     mount_tmpfs $new_live        100 $live_dir   mode=755
 
     mkdir -p -m 777 $new_root/run/lock
+    #make sure a resolv.conf file exists as some setups don't create the file
+    #don't touch symlinks
+    if [ ! -e /etc/resolv.conf ]; then
+        #check for resolvconf installation
+        if [ -d /usr/lib/resolvconf ]; then
+            #resolvconf probably installed, #link /etc/resolv.conf to /run/resolvconf.resolv.conf
+            mkdir -p /run/resolvconf
+            touch /run/resolvconf/resolv.conf
+            ln -nsf /run/resolvconf/resolv.conf /etc/resolv.conf
+        else
+            #touch the file in place to create it.
+            touch /etc/resolv.conf
+        fi
+    fi
 
-    ##Move this to custom 8.sh files
-    #rm -f $new_root/etc/resolv.conf
-    #ln -s ../run/resolvconf/resolv.conf $new_root/etc/resolv.conf
+
 
     [ -z "$NO_TMP_TMP" ] && $LIVE_BIN/mount -t tmpfs -o noatime tmpfs $new_root/tmp
 
