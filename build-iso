@@ -2356,7 +2356,9 @@ Eth0_entry
             $SUDO rm -f "$sqfs_dir"/etc/resolv.conf
             $SUDO ln -sf /run/resolvconf/resolv.conf "$sqfs_dir"/etc/resolv.conf
         else
-            say "Leaving /etc/resolv.conf as-is (no resolvconf)"
+            say "Remove /etc/resolv.conf and recreate to empty it"
+            $SUDO rm -f "$sqfs_dir"/etc/resolv.conf
+            $SUDO touch "$sqfs_dir"/etc/resolv.conf
         fi
 
         #remove old linux image files
