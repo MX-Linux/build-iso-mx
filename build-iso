@@ -154,9 +154,9 @@ main() {
         # Unstack single-letter options
         case $arg in
             [$short_stack][$short_stack]*)
-                if echo "$arg" | grep -q "^[$short_stack]\+$"; then
+                if [[ $arg =~ ^[$short_stack]+$ ]]; then
                     # shellcheck disable=SC2046
-                    set -- $(echo "$arg" | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    set -- $(sed -r 's/([a-zA-Z])/ -\1 /g' <<<"$arg") "$@"
                     continue
                 fi;;
         esac
@@ -356,12 +356,12 @@ main() {
     esac
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
-        K_NAME=$(echo "$K_TEMPLATE" | sed \
+        K_NAME=$(sed \
             -e "s/%V/$K_VERSION/"   \
             -e "s/%G/$K_GNU/"       \
             -e "s/%R/$K_REVISION/"  \
             -e "s/%A/$K_ARCH/"      \
-            -e "s/%V/$K_VERSION/")
+            -e "s/%V/$K_VERSION/"   <<<"$K_TEMPLATE")
     else
         : "${K_NAME:=$K_PKG}"
     fi
@@ -696,12 +696,12 @@ Remaster_Blurb
     esac
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
-        K_NAME=$(echo "$K_TEMPLATE" | sed \
+        K_NAME=$(sed \
         -e "s/%V/$K_VERSION/"   \
         -e "s/%G/$K_GNU/"       \
         -e "s/%R/$K_REVISION/"  \
         -e "s/%A/$K_ARCH/"      \
-        -e "s/%V/$K_VERSION/")
+        -e "s/%V/$K_VERSION/"   <<<"$K_TEMPLATE")
     else
         : "${K_PKG:=linux}"
         : "${K_HEADERS_PKG:=linux-headers}"
@@ -1622,8 +1622,7 @@ do_stage_4() {
 
     mkdir -p /usr/share/antiX
 
-    dpkg-query -l | sed -n 's/^ii\s\+//p' > "$output_dir"/package-list.out
-    dpkg-query -l | sed -n 's/^ii\s\+//p' > /usr/share/antiX/installed-packages.txt
+    dpkg-query -l | sed -n 's/^ii\s\+//p' | tee "$output_dir"/package-list.out > /usr/share/antiX/installed-packages.txt
 
     # It is easier to do this outside the chroot but by doing it here, the
     # updatedb database will contain the theme files
@@ -2864,8 +2863,7 @@ do_stage_8() {
 
     start_timer
 
-    local file_dir chown_opts
-    file_dir="$full_iso_file $iso_dir"
+    local chown_opts
     chown_opts="-uid 0 -gid 0"
     say "Using $(pq "$(basename "$MAKE_ISO")") to make iso file"
     if [[ -z ${MAKE_ISO%%*xorriso} ]]; then
@@ -3358,8 +3356,7 @@ end_part_strict() {
 show_tmpfs_and_mem() {
     [[ -n $do_fast && "$stage" == "$chroot_stage" ]] || return
     local used total
-    used=$(df -m / 2>/dev/null | awk '{used=$3}  END {print used}')
-    total=$(df -m / 2>/dev/null | awk '{total=$2} END {print total}')
+    read -r used total < <(df -m / 2>/dev/null | awk 'END {print $3, $2}')
     say_fmt "tmpfs used"   "$used"
     say_fmt "tmpfs total"  "$total"
     display_cache_free_swap
@@ -3444,7 +3441,7 @@ is_zombie_or_kthread() {
 #------------------------------------------------------------------------------
 search_for_k_name() {
     local search_name
-    search_name=$(echo "$K_NAME" | sed -e "s/\./\\./g" -e "s/\*/[0-9]+.*/g" -e "s/\+/\\+/g")
+    search_name=$(sed -e "s/\./\\./g" -e "s/\*/[0-9]+.*/g" -e "s/\+/\\+/g" <<<"$K_NAME")
     say "Search for kernel matching regex $(pq "$K_NAME")"
     local name
 
@@ -3511,7 +3508,7 @@ check_kernel_gcc() {
     say "Kernel $(pq "$K_NAME") was compiled with $(pq "$kgcc")"
 
     local kalt gcc
-    kalt=$(echo "$kgcc" | sed -n -r 's/([0-9]+\.[0-9]+)\.[0-9]+$/\1/p')
+    kalt=$(sed -n -r 's/([0-9]+\.[0-9]+)\.[0-9]+$/\1/p' <<<"$kgcc")
 
     for gcc in $kgcc $kalt; do
         [[  -e $sqfs_dir/usr/bin/$gcc ]] || continue
@@ -3561,24 +3558,16 @@ apt_get_packages() {
     rm -f "$temp_output"
 
     # Parse simulation output to find missing packages
-    missing_packages=$(echo "$simulation_output" | \
-        grep -oE "Unable to locate package [^ ]+" | \
-        awk '{print $NF}' | \
-        sed "s/'//g")
+    missing_packages=$(sed -n -E "s/.*Unable to locate package ([^ ]+).*/\1/p" <<<"$simulation_output" | tr -d "'")
 
     # Try alternative patterns for missing packages
     if [[ -z $missing_packages ]]; then
-        missing_packages=$(echo "$simulation_output" | \
-            grep -oE "Package [^ ]+ not available" | \
-            awk '{print $2}' | \
-            sed "s/'//g")
+        missing_packages=$(sed -n -E "s/.*Package ([^ ]+) not available.*/\1/p" <<<"$simulation_output" | tr -d "'")
     fi
 
     # Try pattern for "has no installation candidate"
     local candidate_missing
-    candidate_missing=$(echo "$simulation_output" | \
-        grep -oE "Package '[^']+' has no installation candidate" | \
-        sed "s/Package '\\([^']*\\)' has no installation candidate/\\1/")
+    candidate_missing=$(sed -n -E "s/.*Package '([^']+)' has no installation candidate.*/\1/p" <<<"$simulation_output")
 
     if [[ -n $candidate_missing ]]; then
         missing_packages="$missing_packages $candidate_missing"
@@ -3597,7 +3586,7 @@ $missing_packages"
         local available_packages="$pkg_list"
         # Remove missing packages from the list
         for missing_pkg in $missing_packages; do
-            available_packages=$(echo "$available_packages" | sed "s/\b$missing_pkg\b//g" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+            available_packages=$(sed -e "s/\b$missing_pkg\b//g" -e 's/  */ /g' -e 's/^ *//;s/ *$//' <<<"$available_packages")
         done
 
         local available_cnt
@@ -3857,9 +3846,9 @@ make_xorriso_iso() {
 make_xorriso_iso_grub_only() {
     #currently experimental
     #generate eltorito.img
-    $SUDO grub-mkimage -O i386-pc-eltorito -o $work_dir/iso/boot/grub/i386-pc/eltorito.img     -p /boot/grub biosdisk iso9660 search test loadenv
+    $SUDO grub-mkimage -O i386-pc-eltorito -o "$work_dir"/iso/boot/grub/i386-pc/eltorito.img     -p /boot/grub biosdisk iso9660 search test loadenv
     #comment out syslinux menus
-    $SUDO sed -i '/^[^#]*switch_to_syslinux/s/^/#/' $work_dir/iso/boot/grub/config/bootmenu.cfg
+    $SUDO sed -i '/^[^#]*switch_to_syslinux/s/^/#/' "$work_dir"/iso/boot/grub/config/bootmenu.cfg
     local prog=$1 file=$2 dir=$3
     local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
     local opts_1="-hfsplus on -as mkisofs -quiet -l"
