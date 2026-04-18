@@ -6,7 +6,6 @@ start_theme "$@"
 
 copy_file grub                  /etc/default/
 copy_dir desktop-base/          /usr/share/desktop-base/	--create
-copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/
 copy_file timezone		/etc/
