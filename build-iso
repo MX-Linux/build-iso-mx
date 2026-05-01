@@ -75,6 +75,7 @@ Options:
     --stop5				Stop process at Stage 5 (cleanup)
     --stop8				Stop process at Stage 8 (iso generation)
     --grub-only         Use grub for legacy boot (eltorito.img must exist or this will fail)
+    --no-ucode          Don't inject AMD/Intel microcode into initrd.gz
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -102,7 +103,7 @@ main() {
     local quiet_mode start_from reset_mode iso_only full_auto update_mode UPDATE_mode
     local show_parts show_stages interactive color_mode verbose_mode stats_mode
     local no_log_errors no_check_errors disable_errors do_fast check_tmpfs
-    local save_mode jbb_mode
+    local save_mode jbb_mode no_ucode
 
     local script_dir
     script_dir=$(dirname "$(readlink -f "$0")")
@@ -213,6 +214,7 @@ main() {
          -VERBOSE|V)   verbose_mode=true                        ;;
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
+          -no-ucode)     no_ucode=true                        ;;
              -stop5)         stop_5=true                        ;;
              -stop8)         stop_8=true                        ;;
              -grub-only)    GRUB_ONLY=true                     ;;
@@ -2559,6 +2561,17 @@ Bootloader_Data
     say "Create initrd.gz"
     (cd "$initrd_dir" && find . | cpio -o -H newc --owner root:root --quiet) \
         | $GZIP -9 > "$initrd_gz"
+
+    if [[ -z "$no_ucode" ]]; then
+        if command -v uc-tool >/dev/null 2>&1; then
+            say "Inject ucode into initrd.gz"
+            local uc_color=; [[ $color_mode == "off" ]] && uc_color="--no-color"
+            uc-tool $uc_color -u amd,intel -F "$sqfs_dir/lib/firmware" -i "$initrd_gz" \
+                || warn "ucode injection failed -- initrd.gz may lack ucode"
+        else
+            say "uc-tool not found -- skipping ucode injection into initrd.gz"
+        fi
+    fi
 
     md5sum_file "$initrd_gz"
 
