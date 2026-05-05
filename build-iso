@@ -2924,6 +2924,15 @@ do_stage_8() {
 
     say2 "Your live $(pq "$iso_file") is in $(pq Remaster/iso-files) ready to be tested"
 
+    if ls "$work_dir"/missing-*.list >/dev/null 2>&1; then
+        echo
+        yell "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        yell "WARNING: This ISO was built but is MISSING some requested packages!"
+        yell "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        cat "$work_dir"/missing-*.list | sort -u | sed "s/^/  $err_co* $nc/"
+        echo
+    fi
+
     if [[ -z $full_auto ]] && mountpoint -q "$sqfs_dir"; then
         echo
         yell "Run $(pqw "$ME") again or run $(pqw "$ME" -F) to cache and umount the tmpfs"
@@ -3548,6 +3557,7 @@ apt_get_packages() {
     local file=$1 label=$2
     shift 2
     local pkg_list cnt msg
+    local failed_packages=""
     pkg_list=$(compile_pkg_list "$file" exclude-chroot)
     cnt=$(echo "$pkg_list" | wc -w)
     (( cnt == 0 )) && return
@@ -3611,11 +3621,13 @@ $missing_packages"
 
         say "$(plural "$available_cnt" "$(pqw %n) package%s will be installed.")"
         YES_no "\nContinue with installation of available packages?" || my_exit
+        for missing_pkg in $missing_packages; do
+            echo "$missing_pkg"
+        done > /Build/missing-"$label".list
         pkg_list="$available_packages"
     fi
 
     local remaining_packages="$pkg_list"
-    local failed_packages=""
     local attempt=1
 
     # Keep trying to install packages, removing problematic ones each time
@@ -3699,6 +3711,10 @@ $missing_packages"
         failed_cnt=$(echo "$failed_packages" | wc -w)
         # Clean up the failed packages list (remove leading/trailing spaces)
         failed_packages=$(echo "$failed_packages" | sed 's/^ *//;s/ *$//')
+        for failed_pkg in $failed_packages; do
+            echo "$failed_pkg"
+        done >> /Build/missing-"$label".list
+        sort -u -o /Build/missing-"$label".list /Build/missing-"$label".list
 	say_in "$high_co" "$(plural "$failed_cnt" "$(pqw %n) $label package%s could not be found:")
 	$failed_packages"
 	error "Package installation completed with missing packages above"
@@ -3719,11 +3735,13 @@ check_missing() {
     (( cnt == 0 )) && return
 
     local installed=/Build/installed-$label
+    local known_missing=/Build/missing-"$label".list
 
     psay "$cnt" "Checking that $(pqn %n) $label package%s %were installed ..."
 
     dpkg --get-selections | grep "install\(ed\)\?$" | sed 's/\t.*//' > "$installed".list
     for pkg in $pkg_list; do
+        [[ -r $known_missing ]] && grep -qxF "$pkg" "$known_missing" && continue
         grep -q "^$pkg\(:[A-Za-z0-9+-]\+\)\?$" "$installed".list || missing="$missing$pkg\n"
     done
     if [[ -z $missing ]]; then
