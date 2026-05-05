@@ -2765,7 +2765,7 @@ do_stage_7() {
     else
         UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     fi
-    $SUDO unbuffer -p mksquashfs "$sqfs_dir" "$linuxfs_file" "${mksquash_opts[@]}" | tee "$output"
+    $SUDO unbuffer -p mksquashfs "$sqfs_dir" "$linuxfs_file" "${mksquash_opts[@]}" -progress | tee "$output"
     UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm "$output"
