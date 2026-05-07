@@ -1697,7 +1697,7 @@ do_stage_4() {
 do_stage_4_arch() {
     say "Arch in-chroot phase (experimental)"
 
-    require_programs pacman locale-gen mkinitcpio useradd usermod groupadd chpasswd ln systemctl pacman-key mount df awk
+    require_programs pacman locale-gen mkinitcpio useradd usermod groupadd chpasswd ln systemctl pacman-key mount df awk find
 
     echo $$ > $build_dir/MY-PID
     PATH=$build_dir/fake:$PATH
@@ -1728,6 +1728,7 @@ do_stage_4_arch() {
         [[ -r /sys/kernel ]] || mount -t sysfs sysfs /sys 2>/dev/null || true
         ln -sf /proc/mounts /etc/mtab 2>/dev/null || true
         mkdir -p "$PACMAN_CACHE_DIR"
+        find "$PACMAN_CACHE_DIR" -maxdepth 1 -type f \( -name '*.part' -o -name '*.lck' \) -delete 2>/dev/null || true
         [[ -r /proc/mounts ]] || error "Missing /proc/mounts inside chroot (pacman may mis-detect disk space)"
     }
 
@@ -4156,6 +4157,7 @@ mount_deb_cache() {
 mount_pacman_cache() {
     local pacman_dir=$sqfs_dir/var/cache/pacman/pkg
     mkdir -p "$pacman_cache_dir"
+    $SUDO find "$pacman_cache_dir" -maxdepth 1 -type f \( -name '*.part' -o -name '*.lck' \) -delete 2>/dev/null || true
     bind_mount "$pacman_cache_dir" "$pacman_dir"
 }
 
