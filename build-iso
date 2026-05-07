@@ -887,12 +887,14 @@ do_stage_2() {
                         fatal "Missing Arch keyring file. On Debian/MX try: sudo apt install archlinux-keyring"
                     fi
                     say "Initialize host pacman keyring"
-                    $SUDO sh -c "pacman-key --init 2>&1 | tr '\r' '\n'"
-                    $SUDO sh -c "pacman-key --populate archlinux 2>&1 | tr '\r' '\n'"
+                    $SUDO bash -o pipefail -c "pacman-key --init 2>&1 | tr '\r' '\n'"
+                    $SUDO bash -o pipefail -c "pacman-key --populate archlinux 2>&1 | tr '\r' '\n'"
                 fi
 
                 # shellcheck disable=SC2086
                 $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
+                local pacstrap_ret=${PIPESTATUS[0]}
+                (( pacstrap_ret == 0 )) || fatal "pacstrap failed"
             fi
 
             end_timer "run pacstrap"
@@ -1730,10 +1732,13 @@ do_stage_4_arch() {
     }
 
     arch_pacman() {
+        local ret
         arch_ensure_proc_sys
         # Always noninteractive: pacman stops parsing options after the first
         # package name, so options must come first.
         pacman --noconfirm "$@" 2>&1 | tr '\r' '\n'
+        ret=${PIPESTATUS[0]}
+        return "$ret"
     }
 
     # PARTIAL file support (same semantics as Debian path)
@@ -1784,9 +1789,14 @@ do_stage_4_arch() {
     if do_part 2 "Update repos and do pacman -Syu"; then
         [[ -s /etc/pacman.d/mirrorlist ]] || error "Empty or missing /etc/pacman.d/mirrorlist"
         if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
+            local ret
             say "Initialize target pacman keyring"
             pacman-key --init 2>&1 | tr '\r' '\n'
+            ret=${PIPESTATUS[0]}
+            (( ret == 0 )) || error "pacman-key --init failed"
             pacman-key --populate archlinux 2>&1 | tr '\r' '\n'
+            ret=${PIPESTATUS[0]}
+            (( ret == 0 )) || error "pacman-key --populate failed"
         fi
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
@@ -2003,10 +2013,13 @@ do_stage_4_arch() {
             (
                 cd "$paru_build_dir/paru-bin" || exit
                 sudo -u "$aur_user" makepkg -si --noconfirm 2>&1 | tr '\r' '\n'
+                exit "${PIPESTATUS[0]}"
             )
+            local makepkg_ret=$?
 
             rm -rf "${paru_build_dir:?}"
 
+            (( makepkg_ret == 0 )) || error "Failed to build/install paru"
             if ! command -v paru >/dev/null 2>&1; then
                 error "Failed to bootstrap paru"
             fi
@@ -2019,8 +2032,9 @@ do_stage_4_arch() {
             say "Installing AUR packages as user $(pq "$aur_user")..."
             # Run paru as non-root user with sudo for pacman operations
             # --skipreview skips PKGBUILD review, --noconfirm for non-interactive
-            sudo -u "$aur_user" paru -S --needed --noconfirm --skipreview "${aur_pkgs[@]}" 2>&1 | tr '\r' '\n' \
-                || error "paru failed installing AUR packages"
+            sudo -u "$aur_user" paru -S --needed --noconfirm --skipreview "${aur_pkgs[@]}" 2>&1 | tr '\r' '\n'
+            local paru_ret=${PIPESTATUS[0]}
+            (( paru_ret == 0 )) || error "paru failed installing AUR packages"
         fi
         if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
 
