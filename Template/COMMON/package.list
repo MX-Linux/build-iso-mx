@@ -287,6 +287,7 @@ printer-driver-dymo
 printer-driver-escpr
 printer-driver-foo2zjs
 printer-driver-fujixerox
+printer-driver-gutenprint
 printer-driver-hpcups
 printer-driver-indexbraille
 printer-driver-m2300w
