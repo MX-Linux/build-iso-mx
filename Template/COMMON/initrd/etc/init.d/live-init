@@ -281,9 +281,9 @@ do_start() {
             if [ "$SAFE_VIDEO" ]; then
                 # If "nomodeset" was given then let's rely on it to work properly
                 [ -z "$NO_MODESET" ] && do_safe_video "$NUKE_VIDEO" "$hw_kms_modules"
-            else
+            #else
                 # May set XORG_DRIVER
-                detect_uxa_hardware "$hw_kms_modules"
+            #    detect_uxa_hardware "$hw_kms_modules"
             fi
 
         elif [ "$hw_video_modules" ]; then
