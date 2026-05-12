@@ -56,10 +56,6 @@ live_param_filter() {
         kernel=*);;
         extra=*);;
 
-        # Known liquorix kernel build-in boot parameter
-        amd_pstate=*);;
-        split_lock_detect=*);;
-
         # Most kernel codes from version 4.19 (plus additions)
         3c574_cs.*=*|3c589_cs.*=*|3c59x.*=*|3w-9xxx.*=*|3w-sas.*=*|8139cp.*=*|8139too.*=*|8250.*=*|8390.*=*);;
         842_compress.*=*|842_decompress.*=*|BusLogic.*=*|aacraid.*=*|abituguru.*=*|abituguru3.*=*|acenic.*=*);;
@@ -456,7 +452,7 @@ live_param_filter() {
 
         # No-X / disable flags
         gbpages|no4lvl|noapictimer|no_entry_flush|nofsgsbase|nogbpages|nohpet);;
-        nohugevmalloc|nopv|nopvspin|nosgx|novmcoredd|rdrand);;
+        nohugevmalloc|nopv|nopvspin|nosgx|novmcoredd|rdrand=*);;
 
         # NUMA
         numa=*);;
