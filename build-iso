@@ -5653,11 +5653,11 @@ update_lsb_release() {
     local lsb_version="$(echo "$DISTRO_VERSION" | sed -r 's/^([0-9._-]+).*/\1/' | cut -d_ -f1)"
     local name="$DISTRO_NAME"
 
-    echo "PRETTY_NAME=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee $sqfs/etc/lsb-release
-    echo "DISTRIB_ID=$name" |$SUDO tee -a $sqfs/etc/lsb-release
-    echo "DISTRIB_RELEASE=$lsb_version" |$SUDO tee -a $sqfs/etc/lsb-release
-    echo "DISTRIB_CODENAME=$CODE_NAME" |$SUDO tee -a $sqfs/etc/lsb-release
-    echo "DISTRIB_DESCRIPTION=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee -a $sqfs/etc/lsb-release
+    echo "PRETTY_NAME=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee $sqfs_dir/etc/lsb-release
+    echo "DISTRIB_ID=$name" |$SUDO tee -a $sqfs_dir/etc/lsb-release
+    echo "DISTRIB_RELEASE=$lsb_version" |$SUDO tee -a $sqfs_dir/etc/lsb-release
+    echo "DISTRIB_CODENAME=$CODE_NAME" |$SUDO tee -a $sqfs_dir/etc/lsb-release
+    echo "DISTRIB_DESCRIPTION=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee -a $sqfs_dir/etc/lsb-release
 
 }
 
