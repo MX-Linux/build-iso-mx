@@ -2426,6 +2426,10 @@ do_stage_6() {
     local isolinux_dir="$iso_dir/boot/isolinux"
     local syslinux_dir="$iso_dir/boot/syslinux"
 
+    #remove %OPTIONS% from copied checkmedia.cfg
+    sed -i 's/%OPTIONS% //' $isolinux_dir/checkmedia.cfg
+    sed -i 's/%OPTIONS% //' $syslinux_dir/checkmedia.cfg
+
     # Directories with unpacked cpio archives
     local isolinux_cpio="$work_dir/isolinux-cpio"
     local syslinux_cpio="$work_dir/syslinux-cpio"
