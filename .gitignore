@@ -4,6 +4,6 @@
 /work
 Deb/
 Output/
-Remaster/
+Remaster
 doc-*.tar.bz2
 wget-log*
