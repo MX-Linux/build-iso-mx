@@ -2265,7 +2265,9 @@ do_stage_5() {
     done
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
-        (cd "$sqfs_dir"/var/log && $SUDO touch apt/history.log apt/term.log dpkg.log)
+        $SUDO mkdir -p "$sqfs_dir"/var/log/apt
+        $SUDO rm -f "$sqfs_dir"/var/log/apt/history.log "$sqfs_dir"/var/log/apt/term.log "$sqfs_dir"/var/log/dpkg.log
+        $SUDO touch "$sqfs_dir"/var/log/apt/history.log "$sqfs_dir"/var/log/apt/term.log "$sqfs_dir"/var/log/dpkg.log
     fi
 
     say "Delete $(pq "/dev/*") in chroot"
