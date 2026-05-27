@@ -431,6 +431,7 @@ main() {
                 # shellcheck disable=SC1090
                 [[ -r "$output_file" ]] && source "$output_file"
             done
+            output_file="$output_dir/stage-$stage.out"
         else
             for stage in $all_stages; do
                 output_file="$output_dir/stage-$stage.out"
