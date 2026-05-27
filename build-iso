@@ -5475,8 +5475,6 @@ copy_template_dir() {
             say "Only overwrite from Template: $(pq "$flav"/"$from")"
             only_overwrite "$dir" "$dest"
         else
-        	#ensure template files are read-only on group permission
-        	chmod -R g-w "$dir"/
             say "Copy from Template: $(pq "$flav"/"$from")"
             $sudo cp -R --preserve=link,mode "$dir"/* "$dest"/
         fi
