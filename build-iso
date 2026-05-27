@@ -2825,50 +2825,80 @@ do_stage_8() {
     say "Build the live $(pq "$iso_file") file"
 
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
-        require_programs grub-mkrescue
+        require_programs grub-mkrescue xorriso unshare mount umount find mktemp
         start_timer
         : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
         say "Using $(pq grub-mkrescue) to make ISO (label: $(pq "$ISO_LABEL"))"
 
-        # Temporarily overlay GRUB modules from squashfs for hybrid BIOS+UEFI ISO
-        # grub-mkrescue auto-detects platforms in /usr/lib/grub/, so we temporarily
-        # make squashfs modules available there
-        local host_grub_backup="/usr/lib/grub-host-backup-$$"
-        local restore_host_grub=false
+        # Create hybrid BIOS+UEFI ISO using grub-mkrescue.
+        # We use a mount namespace to safely overlay GRUB modules from the squashfs
+        # over the host's /usr/lib/grub without actually modifying the host filesystem.
+        say "Building ISO with grub-mkrescue (hybrid BIOS+UEFI)..."
+        local grub_module_dir=$sqfs_dir/usr/lib/grub
+        local xorriso_path
+        xorriso_path=$(PATH=$root_path command -v xorriso)
 
-        if [[ -d "$sqfs_dir/usr/lib/grub/i386-pc" ]]; then
-            say "Temporarily install GRUB modules from squashfs for hybrid BIOS+UEFI boot"
+        if [[ -d "$grub_module_dir/i386-pc" ]]; then
+            say "Use GRUB modules from squashfs for hybrid BIOS+UEFI boot"
+            say "  BIOS (i386-pc) modules available"
+            [[ -d "$grub_module_dir/x86_64-efi" ]] && say "  UEFI (x86_64-efi) modules available"
 
-            # Backup existing host GRUB if present
-            if [[ -d "/usr/lib/grub" ]]; then
-                $SUDO mv "/usr/lib/grub" "$host_grub_backup"
-                restore_host_grub=true
-            fi
+            # shellcheck disable=SC2016
+            $SUDO unshare -m --propagation private bash -c '
+                set -e
+                grub_module_dir=$1
+                xorriso_path=$2
+                full_iso_file=$3
+                iso_label=$4
+                iso_dir=$5
+                tmp_dir=
+                grub_src=
+                orig_lib=
+                mounted_usr_lib=
 
-            # Symlink squashfs GRUB modules to standard location
-            $SUDO ln -s "$sqfs_dir/usr/lib/grub" "/usr/lib/grub"
+                cleanup_grub_mounts() {
+                    local status=$?
+                    umount /usr/lib/grub 2>/dev/null || true
+                    [[ -n $mounted_usr_lib ]] && umount /usr/lib 2>/dev/null || true
+                    [[ -n $grub_src ]] && umount "$grub_src" 2>/dev/null || true
+                    [[ -n $orig_lib ]] && umount "$orig_lib" 2>/dev/null || true
+                    [[ -n $tmp_dir ]] && rm -rf "$tmp_dir"
+                    exit "$status"
+                }
+                trap cleanup_grub_mounts EXIT
 
-            [[ -d "/usr/lib/grub/i386-pc" ]] && say "  BIOS (i386-pc) modules available"
-            [[ -d "/usr/lib/grub/x86_64-efi" ]] && say "  UEFI (x86_64-efi) modules available"
+                if [[ -d /usr/lib/grub && ! -L /usr/lib/grub ]]; then
+                    mount --bind "$grub_module_dir" /usr/lib/grub
+                else
+                    tmp_dir=$(mktemp -d /tmp/build-iso-grub.XXXXXX)
+                    grub_src=$tmp_dir/grub-modules
+                    orig_lib=$tmp_dir/orig-lib
+                    merged_lib=$tmp_dir/merged-lib
+                    mkdir -p "$grub_src" "$orig_lib" "$merged_lib/grub"
+                    mount --bind "$grub_module_dir" "$grub_src"
+                    mount --bind /usr/lib "$orig_lib"
+                    find "$orig_lib" -mindepth 1 -maxdepth 1 ! -name grub \
+                        -exec ln -s "{}" "$merged_lib/" ";"
+                    mount --bind "$merged_lib" /usr/lib
+                    mounted_usr_lib=true
+                    mount --bind "$grub_src" /usr/lib/grub
+                fi
+
+                GRUB_MKRESCUE_XORRISO="$xorriso_path" grub-mkrescue \
+                    --modules="iso9660 normal" \
+                    -o "$full_iso_file" \
+                    -volid "$iso_label" \
+                    "$iso_dir" 2>&1
+            ' bash "$grub_module_dir" "$xorriso_path" "$full_iso_file" "$ISO_LABEL" "$iso_dir"
         else
             warn "Missing BIOS GRUB modules in squashfs - ISO will be UEFI-only"
+            GRUB_MKRESCUE_XORRISO="$xorriso_path" grub-mkrescue \
+                --modules="iso9660 normal" \
+                -o "$full_iso_file" \
+                -volid "$ISO_LABEL" \
+                "$iso_dir" 2>&1
         fi
-
-        # Create hybrid BIOS+UEFI ISO using auto-detected platforms
-        GRUB_MKRESCUE_XORRISO="$(which xorriso)" grub-mkrescue \
-            --modules="iso9660 normal" \
-            -o "$full_iso_file" \
-            -volid "$ISO_LABEL" \
-            "$iso_dir" 2>&1
         local mkrescue_result=$?
-
-        # Restore original host GRUB
-        if [[ -L "/usr/lib/grub" ]]; then
-            $SUDO rm "/usr/lib/grub"
-        fi
-        if [[ $restore_host_grub == true ]]; then
-            $SUDO mv "$host_grub_backup" "/usr/lib/grub"
-        fi
 
         [[ $mkrescue_result -eq 0 ]] || error "iso file creation failed"
         size=$(du_size "$full_iso_file")
