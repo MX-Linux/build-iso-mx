@@ -977,7 +977,7 @@ do_stage_2() {
         [[ -n "$exclude_list" ]] && args="$args --exclude=$exclude_list"
         [[ -n "$include_list" ]] && args="$args --include=$include_list"
         [[ -r "$keyring" ]] && args="$args --keyring=$keyring"
-        url="$(eval echo "$MIRROR_URL_TEMPLATE")"
+        url="${MIRROR_URL_TEMPLATE/\$LOCAL_MIRROR/$LOCAL_MIRROR}"
 
         check_errors_strict
         start_timer
@@ -2471,8 +2471,8 @@ do_stage_6() {
     # (5)
     say "Fill in bootloader template files"
     local bootloader_data=$output_dir/bootloader-data
-    # shellcheck disable=SC2154
-    eval local boot_options=\$"${DISTRO_NAME}"_LIVE_BOOT_OPTIONS
+    local _boot_var="${DISTRO_NAME}_LIVE_BOOT_OPTIONS"
+    local boot_options="${!_boot_var}"
     # shellcheck disable=SC2154
     cat << Bootloader_Data > "$bootloader_data"
       DISTRO_NAME="$DISTRO_NAME"
@@ -3123,9 +3123,10 @@ mount_tmpfs() {
         say "tmpfs is already in use"
         return
     fi
-    local cache free swap
-    # shellcheck disable=SC2046
-    eval $(get_cache_free_swap)
+    local cache free swap k v
+    while IFS='=' read -r k v; do
+        case $k in free|cache|swap) printf -v "$k" '%s' "$v" ;; esac
+    done < <(get_cache_free_swap)
     say "The tmpfs will require $(pqn ${needed}) meg of RAM"
     display_cache_free_swap "$cache" "$free" "$swap"
 
@@ -3508,8 +3509,12 @@ Get_Free
 
 display_cache_free_swap() {
     local cache=$1 free=$2 swap=$3
-    # shellcheck disable=SC2046
-    (( $# == 3 )) || eval $(get_cache_free_swap)
+    if (( $# != 3 )); then
+        local k v
+        while IFS='=' read -r k v; do
+            case $k in free|cache|swap) printf -v "$k" '%s' "$v" ;; esac
+        done < <(get_cache_free_swap)
+    fi
     say_fmt "Free Mem"  "$free"
     say_fmt "Free Swap" "$swap"
     say_fmt "Cached"    "$cache"
@@ -4502,8 +4507,8 @@ check_sqfs_dir() {
 # the string.
 #------------------------------------------------------------------------------
 has_word() {
-    local name=$1 part=$2
-    eval val=\$"$name"
+    local name=$1 part=$2 val
+    val="${!name}"
     case ,$val, in
             *,$part,*) return 0 ;;
         *,a,*|*,all,*) return 0 ;;
@@ -4548,7 +4553,7 @@ short_dir() {
 #==============================================================================
 start_timer() {
     local name=${1:-START_T}
-    eval "$name"=\"$EPOCHSECONDS\"
+    printf -v "$name" '%s' "$EPOCHSECONDS"
 }
 
 end_timer() {
@@ -4558,7 +4563,7 @@ end_timer() {
 _end_timer_() {
     local name=$1 title
     title=$(cprint_left 36 "$2")
-    eval local start_t=\$"$name"
+    local start_t="${!name}"
     echo  # Ensure we start on a fresh line
     # shellcheck disable=SC2154
     _say_ "${time_co}time for $text_co$title$nc $(pqn "$(elapsed "$start_t")")$nc"
@@ -4860,10 +4865,10 @@ Parts_Blurb
 expand_parts() {
     local val var
     for var; do
-        eval "val=\${$var:-}"
+        val="${!var:-}"
         [[ $val =~ - ]] || continue
         val=$(expand_range "$val")
-        eval "$var=\$val"
+        printf -v "$var" '%s' "$val"
     done
 }
 
@@ -4899,7 +4904,7 @@ choose() {
     local value title=$1 var=$2;
     shift 2;
 
-    eval value=\$"$var"
+    value="${!var}"
     [[ -n $value && -z $reset_mode ]] && return
 
     local prompt="${err_co}Enter a number$prompt_co>$nc "
@@ -4911,7 +4916,7 @@ choose() {
     # Strip first " (" and all that follows it (for ENABLE_LOCALES)
     # Quite a kludge but it seems to work okay.
     value=${value%% (*}
-    eval "$var"=\$value
+    printf -v "$var" '%s' "$value"
 
     update_default_file "$var" "$value"
 }
@@ -4950,7 +4955,7 @@ my_select() {
             continue
         fi
 
-        eval "$var"=\""$val"\"
+        printf -v "$var" '%s' "$val"
         break
     done
 }
@@ -4960,7 +4965,7 @@ my_select() {
 #------------------------------------------------------------------------------
 update_default() {
     local value var=$1
-    eval value=\$"$var"
+    value="${!var}"
     local orig_val=$value
     [[ -n $value && -z $reset_mode ]] && return
     echo -e "\n${text_co}Update default $(pq "$var"): $orig_val$nc"
@@ -5021,10 +5026,10 @@ load_defaults() {
 pick_prog() {
     local prog found var=$1
     shift
-    eval "$var"=
+    printf -v "$var" '%s' ""
     for prog; do
         which "$prog" &>/dev/null || continue
-        eval "$var"=\$prog
+        printf -v "$var" '%s' "$prog"
         found=true
         break
     done
@@ -5215,7 +5220,7 @@ global_names() {
 pretty_output() {
     local name value
     for name in $(global_names "$@"); do
-        eval value=\"\$"$name"\"
+        value="${!name}"
         # shellcheck disable=SC2059
         printf "$pretty_fmt" "$name" "$value"
     done
@@ -5265,7 +5270,7 @@ on_exit() {
 #------------------------------------------------------------------------------
 clear_pids() {
     for name in TAIL_PID_1 TAIL_PID_2; do
-        eval local pid=\$$name
+        local pid="${!name}"
         unset   $name
         [[ -z $pid ]] && continue
         disown  "$pid" 2>/dev/null
@@ -5467,7 +5472,7 @@ get_template_file() {
     for flav in $FLAV $RESPIN_INHERIT COMMON; do
         full=$template/$flav/$file
         [[ -r $full ]] || continue
-        eval "$var"=\$full
+        printf -v "$var" '%s' "$full"
         return 0
     done
 
