@@ -426,7 +426,7 @@ main() {
         if [[ -n $start_from ]]; then
             stage=$start_from
             # Source all previous stage files to get full state
-            for ((s=0; s<=stage; s++)); do
+            for ((s=0; s < stage; s++)); do
                 output_file="$output_dir/stage-$s.out"
                 # shellcheck disable=SC1090
                 [[ -r "$output_file" ]] && source "$output_file"
@@ -3628,13 +3628,14 @@ apt_get_packages() {
     local simulation_output
     local missing_packages=""
 
-    # Run simulation with -s flag
+    # Run simulation with -s flag and LC_ALL=C for consistent parsing
     # shellcheck disable=SC2086
-    echo "$pkg_list" | xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
+    echo "$pkg_list" | LC_ALL=C xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
     simulation_output=$(cat "$temp_output")
     rm -f "$temp_output"
 
     # Parse simulation output to find missing packages
+    # Patterns cover typical LC_ALL=C apt output
     missing_packages=$(sed -n -E "s/.*Unable to locate package ([^ ]+).*/\1/p" <<<"$simulation_output" | tr -d "'")
 
     # Try alternative patterns for missing packages
@@ -3698,8 +3699,9 @@ $missing_packages"
         local exit_code
 
         # Run apt-get with tee to show output in real-time and capture to file
+        # Enforce LC_ALL=C for consistent error identification
         # shellcheck disable=SC2086
-        echo "$remaining_packages" | xargs apt-get $APT_GET_OPTS "$@" 2>&1 | tee "$temp_output"
+        echo "$remaining_packages" | LC_ALL=C xargs apt-get $APT_GET_OPTS "$@" 2>&1 | tee "$temp_output"
         exit_code=${PIPESTATUS[1]}
 
         # Read the captured output for error parsing
@@ -5094,13 +5096,9 @@ my_exit() {
 #------------------------------------------------------------------------------
 # do_pretend
 # Report what the next stage to work on would be. Also display the name of
-# the stage and the global variables (if appropriate). BUG: there are cases
-# where the globals aren't 100% accurate if redo_mode or start_from are used.
+# the stage and the global variables (if appropriate).
 #------------------------------------------------------------------------------
 do_pretend() {
-    #[[ -n $redo_mode && $stage -gt 0 ]] && stage=$((stage - 1))
-    #[[ -n $start_from && $stage -gt $start_from ]] && stage=$start_from
-
     echo "$ME would next do stage: $bold_co$stage$nc"
 
     local stage_info
