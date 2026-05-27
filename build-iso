@@ -129,7 +129,7 @@ main() {
     # local live_files_list=$input_dir/live-files.list
     local strict_regex_file="$input_dir/strict-exceptions.regex"
     local lax_regex_file="$input_dir/lax-errors.regex"
-    local regex_files="$lax_regex_file $strict_regex_file"
+    local -a regex_files=("$lax_regex_file" "$strict_regex_file")
     local theme_dir="$script_dir/Themes"
     local root_path="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/bin"
     local template
@@ -1351,14 +1351,15 @@ do_stage_4() {
         end_part_lax
     fi
 
-    local debs cnt
-    debs=$(ls $build_dir/Deb/*.deb 2>/dev/null)
-    cnt=$(echo "$debs" | wc -w)
+    local -a debs
+    local cnt
+    mapfile -t debs < <(ls "$build_dir"/Deb/*.deb 2>/dev/null)
+    cnt=${#debs[@]}
     if (( cnt > 0 )) \
         && do_part 10 "Install latest antiX debs"; then
         psay "$cnt" "Install $(pqn %n) .deb package%s"
 
-        for deb in $debs; do
+        for deb in "${debs[@]}"; do
             say "install $(pq "${deb##*/}")"
             apt-get install "$deb"
         done
@@ -3867,23 +3868,20 @@ collect_live_files() {
     local list_file=$1 dest_dir=$sqfs_dir$2
     [[ -r $list_file ]] || return
     echo "Collecting Live-files"
-    local list
-    list="$(grep -v "^\s*#\s*" "$list_file" | sed 's/\s*#.*//' \
-        | grep "^/" | sed "s=^=$sqfs_dir=")"
 
     $SUDO mkdir -p "$dest_dir"
     # This hard-codes the live-files dir but it is safer in case
     # $dest_dir is empty.
     $SUDO rm -rf "$(dirname "${dest_dir:?}")"/live-files/*
 
-    local file dest
-    # shellcheck disable=SC2086
-    for file in $list; do
+    local file dest dest_file
+    grep -v "^\s*#\s*" "$list_file" | sed 's/\s*#.*//' | grep "^/" | while read -r file; do
+        file="$sqfs_dir$file"
         [[ -e $file ]] || continue
         dest_file=${file#"$sqfs_dir"}
-        dest=$dest_dir$dest_file
-        $SUDO mkdir -p "$(dirname $dest)"
-        $SUDO cp -a $file $dest
+        dest="$dest_dir$dest_file"
+        $SUDO mkdir -p "$(dirname "$dest")"
+        $SUDO cp -a "$file" "$dest"
     done
 }
 
@@ -3899,13 +3897,13 @@ has_option() {
 
 make_uefi_iso() {
     local prog=$1 uefi=$2  file=$3 dir=$4
-    local cmd="$prog -l -V antiXlive -R -J -pad -no-emul-boot
+    local -a cmd=("$prog" -l -V antiXlive -R -J -pad -no-emul-boot
     -boot-load-size 4  -boot-info-table -b boot/isolinux/isolinux.bin
-    -eltorito-alt-boot $uefi boot/grub/efi.img -no-emul-boot
-    -quiet -c boot/isolinux/isolinux.cat -o $file $dir"
+    -eltorito-alt-boot "$uefi" boot/grub/efi.img -no-emul-boot
+    -quiet -c boot/isolinux/isolinux.cat -o "$file" "$dir")
 
-    echo "$cmd"
-    $cmd 2>&1 || error "iso file creation failed"
+    echo "${cmd[*]}"
+    "${cmd[@]}" 2>&1 || error "iso file creation failed"
     isohybrid --uefi "$file"
 }
 
@@ -3916,19 +3914,18 @@ make_xorriso_iso() {
     fi
     local prog=$1 file=$2 dir=$3
     local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
-    local opts_1="-hfsplus on -as mkisofs -quiet -l"
+    local -a opts=("-hfsplus" "on" "-as" "mkisofs" "-quiet" "-l"
+                   "-R" "-J" "-iso-level" "3" "-pad" "-partition_cyl_align" "on"
+                   "-c" "boot/isolinux/isolinux.cat"
+                   "-b" "boot/isolinux/isolinux.bin"
+                   "-no-emul-boot" "-boot-load-size" "4" "-boot-info-table"
+                   "-eltorito-alt-boot" "-e" "boot/grub/efi.img" "-no-emul-boot"
+                   "-isohybrid-apm-hfsplus" "-isohybrid-gpt-basdat")
 
-    local opts_2="-R -J -iso-level 3 -pad -partition_cyl_align on"
-    opts_2="$opts_2 -c boot/isolinux/isolinux.cat"
-    opts_2="$opts_2 -b boot/isolinux/isolinux.bin"
-    opts_2="$opts_2 -no-emul-boot -boot-load-size 4 -boot-info-table"
-    opts_2="$opts_2 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
-    opts_2="$opts_2 -isohybrid-apm-hfsplus -isohybrid-gpt-basdat"
+    local -a cmd=("$prog" "${opts[@]}" -V "$label" -o "$file" "$dir")
+    echo "${cmd[*]}"
 
-    cmd="$prog $opts_1 -V $label $opts_2 -o $file $dir"
-    echo "$cmd"
-
-    $cmd 2>&1 || error "iso file creation failed"
+    "${cmd[@]}" 2>&1 || error "iso file creation failed"
     isohybrid --uefi "$file"
 }
 
@@ -3940,18 +3937,17 @@ make_xorriso_iso_grub_only() {
     $SUDO sed -i '/^[^#]*switch_to_syslinux/s/^/#/' "$work_dir"/iso/boot/grub/config/bootmenu.cfg
     local prog=$1 file=$2 dir=$3
     local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
-    local opts_1="-hfsplus on -as mkisofs -quiet -l"
+    local -a opts=("-hfsplus" "on" "-as" "mkisofs" "-quiet" "-l"
+                   "-R" "-J" "-iso-level" "3" "-pad" "-partition_cyl_align" "on"
+                   "-b" "boot/grub/i386-pc/eltorito.img"
+                   "-no-emul-boot" "-boot-load-size" "4" "-boot-info-table" "--grub2-boot-info"
+                   "-eltorito-alt-boot" "-e" "boot/grub/efi.img" "-no-emul-boot"
+                   "-isohybrid-apm-hfsplus" "-isohybrid-gpt-basdat")
 
-    local opts_2="-R -J -iso-level 3 -pad -partition_cyl_align on"
-    opts_2="$opts_2 -b boot/grub/i386-pc/eltorito.img"
-    opts_2="$opts_2 -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info"
-    opts_2="$opts_2 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot"
-    opts_2="$opts_2 -isohybrid-apm-hfsplus -isohybrid-gpt-basdat"
+    local -a cmd=("$prog" "${opts[@]}" -V "$label" -o "$file" "$dir")
+    echo "${cmd[*]}"
 
-    cmd="$prog $opts_1 -V $label $opts_2 -o $file $dir"
-    echo "$cmd"
-
-    $cmd 2>&1 || error "iso file creation failed"
+    "${cmd[@]}" 2>&1 || error "iso file creation failed"
     #isohybrid not needed for grub2 legacy boot
     #isohybrid --uefi "$file"
 }
@@ -4140,10 +4136,11 @@ busybox_depmod() {
     [[ -d $mod_dir ]]          || fatal "Could not find /lib/modules"
     [[ -d $k_dir ]]            || fatal "Could not find $k_dir"
 
+    local -a to_delete=()
     local proc_dir=$targ/proc
     if ! [[ -e $proc_dir ]]; then
         mkdir "$proc_dir"
-        to_delete="$proc_dir $to_delete"
+        to_delete+=("$proc_dir")
     fi
 
     touch "$proc_dir"/modules
@@ -4151,11 +4148,11 @@ busybox_depmod() {
     fake_dir=$mod_dir/$(uname -r)
     if [[ $fake_dir != "$k_dir" ]]; then
         ln -s "$kernel" "$fake_dir" || error "Error creating $fake_dir symlink"
-        to_delete="$fake_dir $to_delete"
+        to_delete+=("$fake_dir")
     fi
 
     $SUDO chroot "$targ" /bin/depmod
-    for file in $to_delete; do
+    for file in "${to_delete[@]}"; do
         echo "delete $file"
         rm -r "$file"
     done
@@ -4295,21 +4292,22 @@ make_build_dir() {
     mkdir "$b_dir"
 
     mkdir -p "$b_dir"/Deb
-    local deb_files
-    deb_files=$(gather_deb)
-    # shellcheck disable=SC2086
-    [[ -n $deb_files ]] && cp --target-directory="$b_dir"/Deb $deb_files
+    local -a deb_files=()
+    mapfile -t deb_files < <(gather_deb)
+    if (( ${#deb_files[@]} > 0 )); then
+        cp --target-directory="$b_dir"/Deb "${deb_files[@]}"
+    fi
 
     # Copy Arch packages if building for Arch
     if [[ $DISTRO_FAMILY = arch ]]; then
-        local arch_pkgs
-        arch_pkgs=$(gather_arch_pkg)
-        # shellcheck disable=SC2086
-        [[ -n $arch_pkgs ]] && cp --target-directory="$b_dir"/Deb $arch_pkgs
+        local -a arch_pkgs=()
+        mapfile -t arch_pkgs < <(gather_arch_pkg)
+        if (( ${#arch_pkgs[@]} > 0 )); then
+            cp --target-directory="$b_dir"/Deb "${arch_pkgs[@]}"
+        fi
     fi
 
-    # shellcheck disable=SC2086
-    cp -r "$0" Input "$tools" $regex_files "$b_dir"
+    cp -r "$0" Input "$tools" "${regex_files[@]}" "$b_dir"
 
     #make custom user-defaults file defaults in chroot, if it exists and switch was used
     if [[ -n $user_defaults ]]; then
@@ -5046,7 +5044,8 @@ check_theme_dir() {
 # Return failure only if user says no to clearing files.
 #------------------------------------------------------------------------------
 clear_outputs() {
-    local names files stop=${1:-0} pretend=$2 delete=$3
+    local names stop=${1:-0} pretend=$2 delete=$3
+    local -a files=()
     # shellcheck disable=SC2086
     for i in $(reverse $all_stages); do
         (( i < stop )) && break
@@ -5054,21 +5053,20 @@ clear_outputs() {
         local file=$output_dir/$name
         [[ -f $file ]] || continue
         names="$names$name\n"
-        files="$files $file"
+        files+=("$file")
     done
     local col_names
     col_names=$(echo -e "$names" | sort | expand \
         | sed -e "s/^/$high_co/" -e "s/$/$nc/")
 
-    [[ -n $files ]] || return 0
+    (( ${#files[@]} > 0 )) || return 0
 
     if [[ -n $pretend ]]; then
         echo -e "$ME would clear:\n$col_names\n"
         return 0
 
     elif [[ -n $delete ]]; then
-        # shellcheck disable=SC2086
-        rm -f $files
+        rm -f "${files[@]}"
         return 0
 
     else
@@ -5079,11 +5077,9 @@ clear_outputs() {
         if [[ -n $work_dir && -d $work_dir ]]; then
             local save_out=$work_dir/Output
             mkdir -p "$save_out"
-            # shellcheck disable=SC2086
-            mv -f $files "$save_out"/
+            mv -f "${files[@]}" "$save_out"/
         else
-            # shellcheck disable=SC2086
-            rm -f $files
+            rm -f "${files[@]}"
         fi
     fi
     return 0
@@ -5664,17 +5660,17 @@ update_template_file() {
 }
 
 update_list_names() {
-    local list
-    list=$(find Template -name "*-list")
-    [[ -n $list ]] || return;
+    local -a list=()
+    mapfile -d '' list < <(find Template -name "*-list" -print0)
+    (( ${#list[@]} > 0 )) || return
     echo "Rename *-list file names to *.list"
 
     YES_no_loud "Rename these files?" || vexit "Must update to continue"
 
-    for old in $list; do
+    for old in "${list[@]}"; do
         new=${old/-list/.list}
         [[ -n $new ]] || continue
-        echo "Renaming $old"
+        echo "Renaming $old to $new"
         mv "$old" "$new"
     done
 }
