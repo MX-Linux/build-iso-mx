@@ -1059,12 +1059,22 @@ do_stage_3() {
 
     prep_chroot
 
+    # This stage must fail if the next stage fails
+    rm "$output_file"
+
     # Put saved PARTIAL file back in the build directory
     [[ -e "$work_dir/$partial_name" ]] \
         && $SUDO mv "$work_dir/$partial_name" "$sqfs_dir$partial_file"
 
-    # This stage must fail if the next stage fails
-    rm "$output_file"
+    # Resolve/Pin kernel wildcard now that chroot is prepped and mounted.
+    # This prevents a 'resolution race' where the version could change if
+    # Stage 4 is resumed later, and ensures subsequent stages see the pinned name.
+    # We do this AFTER removing the output_file so it persists into the clean state.
+    if [[ $K_NAME =~ \* ]]; then
+        search_for_k_name
+        # Persist the resolved name for this build
+        echo "K_NAME=\"$K_NAME\"" > "$output_file"
+    fi
 
     # Get realtime log updates from the chroot
     (tail --pid=$$ -n 0 -f "$sqfs_output_dir/$ME.log" >> "$log_file") &
@@ -1164,12 +1174,10 @@ do_stage_4() {
 
     [[ -n $K_NAME ]] || error "No K_NAME specified"
 
-    # Resolve kernel wildcard using target repository
-    if [[ $K_NAME =~ \* ]] && do_part 1 "Search for complete kernel name"; then
+    # Kernel wildcard resolution is now handled in Stage 3 to ensure persistence.
+    # We still check here just in case Stage 3 was bypassed or failed to pin it.
+    if [[ $K_NAME =~ \* ]]; then
         search_for_k_name
-        end_part_strict
-    else
-        skip_part 1 "Search for complete kernel name"
     fi
 
     if ! [[ -r $manual_selections_template ]]; then
@@ -1254,10 +1262,13 @@ do_stage_4() {
         end_part_lax
     fi
 
-    if [[ $K_NAME =~ \* ]]; then
-        skip_part 2 "Search for complete kernel name (deferred to Stage 4)"
+    # Kernel wildcard resolution is now handled in Stage 3 to ensure persistence.
+    # We still check here just in case Stage 3 was bypassed or failed to pin it.
+    if [[ $K_NAME =~ \* ]] && do_part 2 "Search for complete kernel name (fallback)"; then
+        search_for_k_name
+        end_part_strict
     else
-        skip_part 2 "Search for complete kernel name"
+        skip_part 2 "Search for complete kernel name (already resolved or not needed)"
     fi
 
     : "${LOCALE:=en_US.UTF-8}"
@@ -1501,7 +1512,7 @@ do_stage_4() {
         check_errors_lax
     fi
 
-    if do_part 16 "!Update Timezone and hostname"; then
+    if do_part 17 "!Update Timezone and hostname"; then
         if [[  -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
             say "Set timezone and localtime to $(pq "$TIME_ZONE")"
             echo "$TIME_ZONE" > /etc/timezone
@@ -1523,7 +1534,7 @@ do_stage_4() {
         end_part_strict
     fi
 
-    if do_part 17 "!Set up live user accounts"; then
+    if do_part 18 "!Set up live user accounts"; then
         local user
         user=${LIVE_USER:-demo}
         if ! grep -q "^$user:" /etc/passwd; then
@@ -1553,7 +1564,7 @@ do_stage_4() {
         end_part_strict
     fi
 
-    if do_part 18 "Run second apt-get -f install"; then
+    if do_part 19 "Run second apt-get -f install"; then
 
         if [[ $DEBIAN_RELEASE != "wheezy" ]] && is_antiX; then
             # shellcheck disable=SC2086
@@ -3552,12 +3563,22 @@ search_for_k_name() {
             my_exit
         fi
     else
-        # We're outside chroot - fallback to host system
-        say "Running on host system, using host package cache"
-        name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | grep -vE "\-(dbg|unsigned|signed-template|cloud|rt)" | sort -V | tail -1)
+        # We're outside chroot - use chroot to search target repository
+        say "Outside chroot, using target system's package cache"
+        if [[ -d "$sqfs_dir/var/lib/apt/lists" ]]; then
+            # Ensure the chroot has an updated cache if possible
+            $SUDO chroot "$sqfs_dir" apt-get update -qq 2>/dev/null || true
+            name=$($SUDO chroot "$sqfs_dir" apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | grep -vE "\-(dbg|unsigned|signed-template|cloud|rt)" | sort -V | tail -1)
+        fi
+
         if [[ -z $name ]]; then
-            warn "No kernel matching $(pqw "$K_NAME") found. Possible kernels:"
-            apt-cache search linux-image-.\*-antix | cut -d" " -f1
+            # Fallback to host system if chroot search failed
+            say "Falling back to host system package cache"
+            name=$(apt-cache search "^linux-image-$search_name$" | cut -d" " -f1 | grep -vE "\-(dbg|unsigned|signed-template|cloud|rt)" | sort -V | tail -1)
+        fi
+
+        if [[ -z $name ]]; then
+            warn "No kernel matching $(pqw "$K_NAME") found."
             my_exit
         fi
     fi
