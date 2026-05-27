@@ -2780,9 +2780,11 @@ do_stage_7() {
     #                                                    262144 = 0x40000
     #$SUDO mksquashfs $sqfs_dir $linuxfs_file -comp xz -b 262144
 
-#also capture uncompressed filesystem output into a variable and place that in a file in the SQFILE_DIR location
-
-    local output="/tmp/mksquashfs_$work_name"
+    # Also capture uncompressed filesystem output into a variable and place
+    # that in a file in the SQFILE_DIR location.
+    local output
+    output=$(mktemp --tmpdir "mksquashfs_$work_name.XXXXXX") \
+        || error "Could not create mksquashfs temporary output file"
     local UNCOMPRESSEDSIZE_FILE UNCOMPRESSEDSIZE
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         UNCOMPRESSEDSIZE_FILE="$iso_dir/arch/$ARCH/airootfs.info"
@@ -2792,7 +2794,7 @@ do_stage_7() {
     $SUDO unbuffer -p mksquashfs "$sqfs_dir" "$linuxfs_file" "${mksquash_opts[@]}" -progress | tee "$output"
     UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
-    rm "$output"
+    rm -f "$output"
     local size
     size=$(du_size "$linuxfs_file")
     end_timer "create $(pqn "$size") squashfs file"
