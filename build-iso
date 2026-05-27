@@ -1067,12 +1067,12 @@ do_stage_3() {
     rm "$output_file"
 
     # Get realtime log updates from the chroot
-    (tail -n 0 -f "$sqfs_output_dir/$ME.log" >> "$log_file") &
+    (tail --pid=$$ -n 0 -f "$sqfs_output_dir/$ME.log" >> "$log_file") &
     export TAIL_PID_1=$!
 
     if [[ -z $no_log_errors ]]; then
         touch "$err_file"
-        (tail -n 0 -f "$err_file" > "$sqfs_output_dir/$ME.err") &
+        (tail --pid=$$ -n 0 -f "$err_file" > "$sqfs_output_dir/$ME.err") &
         export TAIL_PID_2=$!
     fi
     HOST_HOSTNAME=$(hostname)
