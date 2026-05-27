@@ -5627,8 +5627,14 @@ is_distro_flav() {
         esac
         return 1
     fi
-    #
-    return 0
+
+    # For other distributions, validate against the list of available templates
+    local f
+    while read -r f; do
+        [[ "$f" = "$flav" ]] && return 0
+    done < <(flavour_list)
+
+    return 1
 }
 
 #==============================================================================
