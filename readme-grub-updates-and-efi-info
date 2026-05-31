@@ -54,3 +54,17 @@ set prefix=($root)/boot/grub
 put core.img in boot/grub/i386-pc of the template (Template/COMMON/iso in build-iso)
 
 6.  copy all other modules and such from /usr/lib/grub into the Template/COMMON/iso /boot/grub folders
+
+
+
+###to boot grub on legacy, generate an eltorito.img
+
+# Navigate to your ISO root directory first
+cd build-iso-mx/Remaster/work/MX-25.2_Xfce_alpha1-x64-trixie/iso
+
+# Create the directory if it doesn't exist (it does)
+mkdir -p boot/grub/i386-pc
+
+# Generate the BIOS El Torito image
+grub-mkimage -O i386-pc-eltorito -o boot/grub/i386-pc/eltorito.img \
+    -p /boot/grub biosdisk iso9660 search test loadenv

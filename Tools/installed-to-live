@@ -346,7 +346,6 @@ do_exclude() {
 
     for file; do
         [ -z "${file##/*}" -o -z "${file##.*}" ] || file="$EXCLUDES_DIR/$file"
-        #echo "file: $file"
         if ! test -f $file; then
             error "Exclude file $file does not exist"
             ecnt=$((ecnt + 1))

@@ -18,7 +18,7 @@ copy_file ufw.conf		/etc/ufw/			--create
 copy_file zramswap.service	/etc/systemd/system/
 
 # Enable services
-systemctl enable sddm 2>&1 | tr '\r' '\n'
+systemctl enable plasmalogin 2>&1 | tr '\r' '\n'
 systemctl enable systemd-resolved 2>&1 | tr '\r' '\n'
 
 exit 0

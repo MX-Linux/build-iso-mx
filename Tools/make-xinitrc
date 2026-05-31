@@ -328,8 +328,6 @@ desktop_cmd() {
     [ -z "$file" ] && file=$(grep -i -l "^Name=$wm_any session$" $xs_dir/* | head -n 1)
 
     [ "$file" ] || error "No file found in $xs_dir with \"Name=$wm\""
-    #[ "$(echo "$file" | wc -w)" = "1" ] || error "Two or more $xs_dir files contain \"Name=$wm\""
-   
     local cmd=$(grep ^Exec= "$file" | cut -d= -f2)
     [ "$cmd" ] || error "Could not find \"Exec=\" in file $file"
     DESKTOP_CMD=$cmd

@@ -24,8 +24,6 @@ RELEASE_DATE="April 40, 2025"
 # system defaults, these end up inside the squash file system mostly
 DEBIAN_RELEASE="trixie"
 
-LIVE_USER="demo"
-NEW_HOSTNAME="mx1"
 
 # kernel
 # ahs

@@ -112,8 +112,6 @@ main() {
 $(find $dir -name "*.ko" -printf "%f\n" | sed 's/\.ko//')"
     done
 
-    #echo "$list1" ; exit
-
     repeats=$(echo "$list1" | sed 's/_/-/g' | sort | uniq --repeated | grep .)
     if [ "$repeats" -a -z "$VERY_QUIET" ]; then
         local cnt=$(echo "$repeats" | wc -l)

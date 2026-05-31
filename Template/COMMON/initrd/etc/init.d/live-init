@@ -281,9 +281,9 @@ do_start() {
             if [ "$SAFE_VIDEO" ]; then
                 # If "nomodeset" was given then let's rely on it to work properly
                 [ -z "$NO_MODESET" ] && do_safe_video "$NUKE_VIDEO" "$hw_kms_modules"
-            else
+            #else
                 # May set XORG_DRIVER
-                detect_uxa_hardware "$hw_kms_modules"
+            #    detect_uxa_hardware "$hw_kms_modules"
             fi
 
         elif [ "$hw_video_modules" ]; then
@@ -1076,12 +1076,17 @@ write_issue_file() {
     local distro=${1:-Linux}  force=$2  file=${3:-/etc/issue}
     [ "$force" -o ! -e $file ] || return
 
-    local pretty_name  installer=cli-installer  cli_cc=antiX-cli-cc
+    local pretty_name  installer=cli-installer  cli_cc=antiX-cli-cc account="root"
     read pretty_name 2>/dev/null </live/config/pretty-name
     : ${pretty_name:=$distro}
 
     which $installer &>/dev/null || installer=
     which $cli_cc    &>/dev/null || cli_cc=
+	
+	if [ -x "/usr/bin/minstall-launcher" ]; then
+		installer="/usr/bin/minstall-launcher"
+		account="demo"
+	fi
 
     local issue_co=$CYAN  bold_co=$YELLOW  nc_co=$NO_COLOR
 
@@ -1091,9 +1096,9 @@ write_issue_file() {
         if [ -n "$installer" ]; then
             echo
             if test -e /live/config/persist-root; then
-                imsg "For command line install, login as %s." "$(iq root)"
+                imsg "For command line install, login as %s." "$(iq $account)"
             else
-                imsg "For command line install, login as %s (password=%s)." "$(iq root)" "$(iq root)"
+                imsg "For command line install, login as %s (password=%s)." "$(iq $account)" "$(iq $account)"
             fi
             imsg "Enter the command %s.  Follow the instructions." "$(iq $installer)"
         fi

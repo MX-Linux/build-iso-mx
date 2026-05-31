@@ -27,8 +27,7 @@ else
 fi
 
 do_start () {
- 
-# Trap SIGINT so that we can handle user interupt of fsck.
+	# Trap SIGINT so that we can handle user interupt of fsck.
 	trap "" INT
 
 	# See if we're on AC Power.  If not, we're not gonna run our

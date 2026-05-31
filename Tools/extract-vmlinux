@@ -31,7 +31,6 @@ try_decompress()
 	do
 		pos=${pos%%:*}
 		tail -c+$pos "$img" | $3 > $tmp 2> /dev/null
-        #echo $3 >&2
 		check_vmlinux $tmp
 	done
 }

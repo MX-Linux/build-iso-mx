@@ -6,6 +6,7 @@ alsa-tools
 alsa-utils
 at-spi2-core
 autoconf
+automake
 bc
 binutils
 btrfs-progs
@@ -38,6 +39,7 @@ f2fs-tools
 fakeroot
 fastfetch
 fastfetch
+fd
 file
 firefox
 fish
@@ -52,7 +54,6 @@ glib-networking
 gocr
 groff
 gsettings-desktop-schemas
-haveged
 hdparm
 hexedit
 hplip
@@ -100,10 +101,13 @@ patch
 pciutils
 pkgconfig
 plocate
+progress
 psmisc
 psutils
 pv
 read-edid
+reflector
+ripgrep
 rpcbind
 rsync
 samba

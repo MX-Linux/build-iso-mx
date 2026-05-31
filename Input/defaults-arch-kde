@@ -2,12 +2,12 @@
 # Use with: ./build-iso --user-default defaults-arch-mx64
 
 DISTRO_FAMILY="arch"
-RELEASE_DATE="February 1, 2026"
 
 # ISO identity
 DISTRO_NAME="MXarch"
-DISTRO_VERSION="26.02"
+DISTRO_VERSION="26.05"
 CODE_NAME="Infinity Arch"
+RELEASE_DATE="May 6, 2026"
 
 # Arch uses x86_64 naming; keep this consistent across templates/iso naming.
 ARCH="x86_64"

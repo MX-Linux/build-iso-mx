@@ -7,7 +7,6 @@ start_theme "$@"
 copy_file grub                  /etc/default/
 copy_file 55-tweak-override.conf /etc/polkit-1/localauthority.conf.d/	--create
 copy_dir extra/               	/usr/share/fonts/extra       	--create
-copy_file rc.local              /etc/
 copy_file libuser.conf          /etc/
 copy_file modules               /etc/
 copy_file timezone		/etc/

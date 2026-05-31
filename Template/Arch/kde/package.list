@@ -29,6 +29,7 @@ frameworkintegration
 gimp
 git
 gsfonts
+gwenview
 hicolor-icon-theme
 hunspell-en_gb
 hunspell-en_us
@@ -86,6 +87,7 @@ plasma-browser-integration
 plasma-desktop
 plasma-firewall
 plasma-integration
+plasma-login-manager
 plasma-nm
 plasma-pa
 plasma-systemmonitor
@@ -100,8 +102,6 @@ qbittorrent
 qt6-imageformats
 qt6-virtualkeyboard
 rdesktop
-sddm
-sddm-kcm
 signon-plugin-oauth2
 skanpage
 smb4k

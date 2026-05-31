@@ -9,7 +9,7 @@
 # Description:
 ### END INIT INFO
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
 . /lib/init/vars.sh
 
 . /lib/lsb/init-functions
@@ -23,14 +23,14 @@ do_stop () {
 	TMPFS_MTPTS=""
 	while read -r DEV MTPT FSTYPE REST
 	do
-		echo "$PROTECTED_MOUNTS" | grep -qs "^$DEV $MTPT " && continue
+		echo "$PROTECTED_MOUNTS" | grep -qsF "$DEV $MTPT " && continue
 		case "$MTPT" in
 		  /|/usr|/proc|/dev|/.dev|/dev/pts|/dev/shm|/dev/.static/dev|/proc/*|/sys|/sys/*|/run|/run/lock|/run/shm|/run/rpc_pipefs|/dev/vcs)
 			continue
 			;;
 		esac
 		case "$FSTYPE" in
-		  proc|procfs|linprocfs|sysfs|usbfs|usbdevfs|devpts)
+		  proc|procfs|linprocfs|sysfs|securityfs|usbfs|usbdevfs|devpts)
 			continue
 			;;
 		  tmpfs)

@@ -7,7 +7,8 @@
 # which has the highest
 #----------------------------------------------------------------------
 
-DISTRO_VERSION="25.1_CLI"
+DISTRO_VERSION="25.2_CLI"
+RELEASE_DATE="May 31, 2026"
 
 ARCH="amd64"
 ISO_FLAV="mxcli64"
@@ -18,5 +19,5 @@ ENABLE_LOCALES="single"
 COMPRESSION_TYPE="xz"
 COMPRESSION_TYPE_CODE="-comp xz -b 262144"
 
-MX_LIVE_BOOT_OPTIONS="quiet nosplash"
+MX_LIVE_BOOT_OPTIONS="quiet splasht= nosplash"
 

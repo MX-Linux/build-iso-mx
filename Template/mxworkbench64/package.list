@@ -1,5 +1,4 @@
 abiword
-ack
 adduser
 alsa-topology-conf
 alsa-ucm-conf
@@ -76,6 +75,7 @@ expect
 ext3grep
 ext4magic
 fatresize
+fd-find
 fdisk
 featherpad
 feh
@@ -209,6 +209,7 @@ remmina-plugin-rdp
 remmina-plugin-secret
 remmina-plugin-vnc
 rename
+ripgrep
 rkhunter
 rtorrent
 safecopy

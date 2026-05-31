@@ -20,7 +20,7 @@ test -x $PROGRAM || exit 0
 
 case "$1" in
   start)
-	log_begin_msg "Setting sensors limits"
+	log_action_begin_msg "Setting sensors limits"
 	if [ "$VERBOSE" = "no" ]; then
 		/usr/bin/sensors -s 1> /dev/null 2> /dev/null
 		/usr/bin/sensors 1> /dev/null 2> /dev/null
@@ -30,7 +30,7 @@ case "$1" in
 		/usr/bin/sensors -s >$LOG_FILE 2>&1
 		/usr/bin/sensors > /dev/null 2>>$LOG_FILE
 	fi
-	log_end_msg 0
+	log_action_end_msg 0
 	;;
   stop)
 	;;

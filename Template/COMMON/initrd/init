@@ -214,6 +214,8 @@ main_wrapper() {
 
     set_live_dirs $LIVE_DIR
     mkdir -p $OUTPUT_DIR
+    #make cryptsetup folders
+    mkdir -p /run/cryptsetup
 
     trap "" $SIGNAL_LIST
 
@@ -7095,9 +7097,22 @@ prepare_switch_root() {
 
     mkdir -p -m 777 $new_root/run/lock
 
-    ##Move this to custom 8.sh files
-    #rm -f $new_root/etc/resolv.conf
-    #ln -s ../run/resolvconf/resolv.conf $new_root/etc/resolv.conf
+    #make sure a resolv.conf file exists as some setups don't create the file
+    #don't touch symlinks
+    if [ ! -e $new_root/etc/resolv.conf ]; then
+        #check for resolvconf installation
+        if [ -d $new_root/usr/lib/resolvconf ]; then
+            #resolvconf probably installed, #link /etc/resolv.conf to /run/resolvconf.resolv.conf
+            mkdir -p $new_root/run/resolvconf
+            touch $new_root/run/resolvconf/resolv.conf
+            ln -nsf ../run/resolvconf/resolv.conf $new_root/etc/resolv.conf
+        else
+            #touch the file in place to create it.
+            touch $new_root/etc/resolv.conf
+        fi
+    fi
+
+
 
     [ -z "$NO_TMP_TMP" ] && $LIVE_BIN/mount -t tmpfs -o noatime tmpfs $new_root/tmp
 

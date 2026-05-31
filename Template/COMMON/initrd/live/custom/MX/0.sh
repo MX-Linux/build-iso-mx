@@ -50,6 +50,12 @@ live_param_filter() {
         live_swap=all-off)  ;;
         mk_swap_file=*)     ;;
 
+        nomodeset|*.modeset=*);;
+        splash=*|fbcon=*);;
+        grubsave);;
+        kernel=*);;
+        extra=*);;
+
         # Most kernel codes from version 4.19 (plus additions)
         3c574_cs.*=*|3c589_cs.*=*|3c59x.*=*|3w-9xxx.*=*|3w-sas.*=*|8139cp.*=*|8139too.*=*|8250.*=*|8390.*=*);;
         842_compress.*=*|842_decompress.*=*|BusLogic.*=*|aacraid.*=*|abituguru.*=*|abituguru3.*=*|acenic.*=*);;
@@ -375,12 +381,86 @@ live_param_filter() {
         xusbatm.*=*|yellowfin.*=*|yenta_socket.*=*|zd1201.*=*|zd1301.*=*|zd1301_demod.*=*|ziirave_wdt.*=*|zl10036.*=*);;
         zl10039.*=*|zl10353.*=*|zl6100.*=*|zr36016.*=*|zr36050.*=*|zr36060.*=*|zr36067.*=*|zr364xx.*=*|zram.*=*);;
         zswap.*=*);;
-        amd_pstate=*);;
-        nomodeset|*.modeset=*);;
-        splash=*|fbcon=*);;
-        grubsave);;
-        kernel=*);;
-        extra=*);;
+
+        # Additions from kernel 5.x / 6.x (security mitigations, new subsystems, new drivers)
+        # based on https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html
+        # and specifically upstream source file at:
+        # https://raw.githubusercontent.com/torvalds/linux/master/Documentation/admin-guide/kernel-parameters.txt
+        # The following categories have been excluded because they are not realistic on a live x86 boot:
+        # KFENCE, Workqueue tuning, IPE, SLAB, kho, liveupdate, RCU, and non-x86.
+
+        # Security mitigations
+        gather_data_sampling=*|indirect_target_selection=*|l1d_flush|lockdown=*|mds=*);;
+        mitigations=*|mmio_stale_data=*|nospectre_bhb|reg_file_data_sampling=*|retbleed=*);;
+        sev=*|spec_rstack_overflow=*|spectre_bhi=*|split_lock_detect=*|srbds=*|svm=*|tsx=*|tsx_async_abort=*);;
+        no_uaccess_flush);;
+
+        # AMD CPU / P-state
+        amd_dynamic_epp=*|amd_prefcore=*|amd_pstate=*);;
+
+        # Memory management
+        accept_memory=*|cma_pernuma=*|early_page_ext|hugetlb_cma=*|hugetlb_cma_only);;
+        hugetlb_free_vmemmap=*|hugepage_alloc_threads=*|init_on_alloc=*|init_on_free=*);;
+        initrdmem=*|memory_hotplug.memmap_on_memory=*|numa_cma=*);;
+        page_alloc.shuffle=*|page_reporting.page_reporting_order=*|ramdisk_start=*);;
+        reserve_mem=*|stack_depot_disable|stack_depot_max_pools=*);;
+
+        # Scheduler / CPU hotplug / microcode
+        apicpmtimer|cpufreq.default_governor=*|cpuhp.parallel=*|microcode=*|possible_cpus=*|preempt=*);;
+        rt_group_sched|sched_proxy_exec=*|sched_thermal_decay_shift=*|sched_verbose);;
+
+        # Boot / init / misc kernel
+        bootconfig|cfi=*|csdlock_debug=*|delayacct|fred|ia32_emulation=*);;
+        initramfs_async|initramfs_options=*|ipcmni_extend);;
+        random.trust_bootloader=*|randomize_kstack_offset=*|rseq_debug|rseq_slice_ext=*);;
+        sysctl.*=*|thp_anon=*|thp_shmem=*|transparent_hugepage_shmem=*|transparent_hugepage_tmpfs=*);;
+        tsc_early_khz=*);;
+
+        # ACPI / power management
+        acpi_no_watchdog|acpi.poweroff_on_fatal=*|bgrt_disable|hibernate.compressor=*);;
+        hibernate_compression_threads=*|hibernate.pm_test_delay=*|hw_protection=*);;
+        pm_async=*|pm_debug_messages);;
+
+        # KVM
+        kvm.eager_page_split=*|kvm.enable_pmu=*|kvm.enable_virt_at_load=*);;
+        kvm.nx_huge_pages=*|kvm.nx_huge_pages_recovery_period_ms=*|kvm.nx_huge_pages_recovery_ratio=*);;
+        kvm_cma_resv_ratio=*|kvm-amd.ciphertext_hiding_asids=*);;
+
+        # Debugging / tracing
+        check_pages=*|clocksource.verify_n_cpus=*|clocksource-wdtest.holdoff=*);;
+        cgroup_favordynmods|cgroup_v1_proc|debugfs=*|fail_skb_realloc=*|fail_usercopy=*);;
+        ftrace_boot_snapshot|hash_pointers|kprobe_event=*|kunit.enable=*);;
+        module.enable_dups_trace|no_hash_pointers|panic_console_replay|panic_force_cpu=*);;
+        panic_on_taint=*|panic_sys_info=*|pmu_override=*|printk.console_no_auto_verbose=*);;
+        printk.debug_non_panic_cpus=*|proc_mem.force_override=*|smp.csd_lock_timeout=*);;
+        smp.panic_on_ipistall=*|tp_printk_stop_on_boot|trace_clock=*|trace_instance=*);;
+        trace_trigger=*|traceoff_after_boot|unwind_debug|vmscape|watchdog_thresh=*);;
+
+        # IOMMU
+        iommu.debug_pagealloc=*|iommu.forcedac=*);;
+
+        # Devices / drivers
+        bdev_allow_write_mounted=*|dell_smm_hwmon.fan_max=*|dell_smm_hwmon.fan_mult=*);;
+        dell_smm_hwmon.force=*|dell_smm_hwmon.ignore_dmi=*|dell_smm_hwmon.power_status=*);;
+        dell_smm_hwmon.restricted=*|dm_verity.keyring_unsealed=*|fb_tunnels=*);;
+        fw_devlink=*|fw_devlink.strict=*|fw_devlink.sync_state=*|i2c_touchscreen_props=*);;
+        i8042.probe_defer|idxd.sva=*|idxd.tc_override=*|irqhandler.duration_warn_us=*);;
+        irqchip.gicv3_pseudo_nmi=*|kgdboc_earlycon=*|nmi_backtrace.backtrace_idle=*);;
+        nvme.quirks=*|pata_platform.pio_mask=*|regulator_ignore_unused|sdw_mclk_divider=*);;
+        trusted.dcp_skip_zk_test|trusted.dcp_use_otp_key|trusted.rng=*|trusted.source=*);;
+        tsa|writecombine);;
+
+        # No-X / disable flags
+        gbpages|no4lvl|noapictimer|no_entry_flush|nofsgsbase|nogbpages|nohpet);;
+        nohugevmalloc|nopv|nopvspin|nosgx|novmcoredd|rdrand=*);;
+
+        # NUMA
+        numa=*);;
+
+        # Xen new params
+        xen.balloon_boot_timeout=*|xen_console_io|xen.event_eoi_delay=*);;
+        xen.event_loop_timeout=*|xen.fifo_events=*|xen_legacy_crash|xen_mc_debug);;
+        xen_msr_safe|xen_no_vector_callback|xen_timer_slop=*);;
 
 
         *) printf "%s " "$param" ;;

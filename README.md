@@ -12,6 +12,7 @@
 - squashfs-tools
 - zsync
 - expect
+- uc-tool-mx (recommended for micrcode injection)
 
 
 ## Running
