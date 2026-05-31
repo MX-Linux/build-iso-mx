@@ -8,7 +8,7 @@
 #----------------------------------------------------------------------
 
 DISTRO_VERSION="25.2_minimal"
-RELEASE_DATE="May 30, 2026"
+RELEASE_DATE="May 31, 2026"
 
 ARCH="amd64"
 ISO_FLAV="mxmin64"
