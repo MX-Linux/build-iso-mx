@@ -1,4 +1,6 @@
+amd64-microcode
 ceni
+intel-microcode
 iso-snapshot-cli
 iw
 linux-headers-amd64
