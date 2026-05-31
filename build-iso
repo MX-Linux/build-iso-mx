@@ -1022,7 +1022,11 @@ do_stage_2() {
 
         umount_chroot
 
-        [[ -e "$sqfs_dir/bin/bash" ]] || error "debootstrap failed"
+        # Must be fatal: a partial debootstrap (e.g. interrupted after fetching
+        # the package lists but before unpacking the base) leaves a rootfs with
+        # no /bin/bash. If we only warn here, create_cache below would archive
+        # that broken tree, poisoning the shared deboot cache for every flavor.
+        [[ -e "$sqfs_dir/bin/bash" ]] || fatal "debootstrap failed (missing /bin/bash); not caching broken base"
     fi
 
     report_size "$sqfs_dir"
