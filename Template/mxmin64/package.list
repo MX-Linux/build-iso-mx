@@ -5,6 +5,7 @@ featherpad
 gparted
 gstreamer1.0-plugins-bad
 gstreamer1.0-pulseaudio
+gvfs
 lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-mx

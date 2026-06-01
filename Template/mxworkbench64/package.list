@@ -109,6 +109,9 @@ gstreamer1.0-pulseaudio
 gthumb
 gtk2-engines-murrine
 guymager
+gvfs
+gvfs-backends
+gvfs-fuse
 gzip
 hardinfo2
 hashcat
