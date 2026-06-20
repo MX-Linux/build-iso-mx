@@ -14,7 +14,7 @@ DISTRO_FAMILY="fedora"
 
 # ISO identity
 DISTRO_NAME="Fedora"
-DISTRO_VERSION="41"
+DISTRO_VERSION="44"
 CODE_NAME="Fedora Linux"
 
 # Fedora uses x86_64 naming
@@ -29,14 +29,14 @@ MAKE_ISO="xorriso"
 
 # Base packages for dnf --installroot in Stage 2 (outer build).
 # Keep this minimal; add desktop stacks via Template/Fedora/*.list.
-DNF_BOOTSTRAP_PACKAGES="filesystem fedora-release fedora-gpg-keys kernel-core dracut dracut-live dracut-network dracut-squash squashfs-tools glibc bash coreutils systemd dnf rpm"
+DNF_BOOTSTRAP_PACKAGES="filesystem fedora-release fedora-gpg-keys kernel-core dracut dracut-live dracut-network dracut-squash squashfs-tools glibc bash coreutils systemd dnf rpm shadow-utils gawk"
 
 # Always rebuild the /Build payload while support is experimental
 REFRESH_BUILD_DIR="1"
 
 # Host-side dnf configuration used by --installroot
 DNF_CONF="Input/fedora/dnf.conf"
-DNF_RELEASEVER="41"
+DNF_RELEASEVER="44"
 DNF_BASEREPO="Input/fedora/fedora.repo"
 
 # Kernel/initramfs naming for Fedora boot

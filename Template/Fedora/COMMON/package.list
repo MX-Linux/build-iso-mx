@@ -67,6 +67,7 @@ net-tools
 nfs-utils
 ntfs-3g
 openssl
+open-vm-tools
 os-prober
 pam
 parted

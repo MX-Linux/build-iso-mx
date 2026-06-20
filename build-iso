@@ -548,7 +548,22 @@ main_case() {
          1) do_stage_1   ;;
          2) do_stage_2   ;;
          3) do_stage_3   ;;
-         4) do_stage_4   ;;
+         4) # Auto-prep chroot if starting from -4 (skipping Stage 3)
+            if [[ $(readlink -f /proc/1/root) != / ]] && ! mountpoint -q "$sqfs_dir/proc" 2>/dev/null; then
+                say "Preparing chroot for stage 4"
+                cd "$script_dir"
+                prep_chroot
+                cd "$OLDPWD"
+                local args="-4"
+                [[ -n $auto_mode    ]] && args="$args --auto"
+                [[ -n $interactive  ]] && args="$args --interactive"
+                [[ -n $quiet_mode   ]] && args="$args --quiet"
+                [[ -n $manual_mode  ]] && args="$args --manual"
+                [[ $color_mode != high ]] && args="$args --COLOR=$color_mode"
+                $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args
+                my_exit
+            fi
+            do_stage_4   ;;
          5) do_stage_5   ;;
          6) do_stage_6   ;;
          7) do_stage_7   ;;
@@ -983,8 +998,8 @@ do_stage_2() {
             check_errors_strict
             start_timer
 
-            : "${DNF_RELEASEVER:=41}"
-            : "${DNF_BOOTSTRAP_PACKAGES:=filesystem fedora-release kernel-core dracut dracut-live squashfs-tools glibc bash coreutils systemd dnf rpm}"
+            : "${DNF_RELEASEVER:=44}"
+            : "${DNF_BOOTSTRAP_PACKAGES:=filesystem fedora-release kernel-core dracut dracut-live squashfs-tools glibc bash coreutils systemd dnf rpm shadow-utils gawk}"
             : "${DNF_CONF:=Input/fedora/dnf.conf}"
             : "${DNF_BASEREPO:=Input/fedora/fedora.repo}"
 
@@ -1280,6 +1295,11 @@ do_stage_4() {
     fi
 
     if [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        # Ensure chroot is prepared (in case we started from -4, skipping Stage 3)
+        if ! mountpoint -q "$sqfs_dir/proc" 2>/dev/null; then
+            say "Chroot not prepped — running prep_chroot before entering"
+            prep_chroot
+        fi
         do_stage_4_fedora
         my_exit
     fi
@@ -2314,14 +2334,19 @@ do_stage_4_fedora() {
     SIGN_OFF="$text_co$ME in chroot done$nc"
     vsay "DEBUG: SIGN_OFF set to: '$SIGN_OFF'"
 
-    : "${DNF_RELEASEVER:=41}"
+    : "${DNF_RELEASEVER:=44}"
     : "${DNF_CACHE_DIR:=/var/cache/dnf}"
     : "${MIN_FREE_MB:=2048}"
 
     # Ensure /proc/mounts for systemd/dnf
-    mkdir -p /proc /sys 2>/dev/null || true
-    [[ -r /proc/mounts ]] || mount -t proc proc /proc 2>/dev/null || true
-    [[ -r /sys/kernel ]] || mount -t sysfs sysfs /sys 2>/dev/null || true
+    if ! mountpoint -q /proc; then
+        mkdir -p /proc 2>/dev/null || true
+        mount -t proc proc /proc 2>/dev/null || true
+    fi
+    if ! mountpoint -q /sys; then
+        mkdir -p /sys 2>/dev/null || true
+        mount -t sysfs sysfs /sys 2>/dev/null || true
+    fi
     mkdir -p "$DNF_CACHE_DIR"
 
     local free_mb
@@ -2494,6 +2519,25 @@ do_stage_4_fedora() {
             hostname -F /etc/hostname
         fi
         end_part_strict
+    fi
+
+    if do_part 15 "!Pre-generate system users and disable first-boot wizard"; then
+        # Pre-generate system users defined in /usr/lib/sysusers.d/
+        if command -v systemd-sysusers >/dev/null 2>&1; then
+            say "Pre-generating system users via systemd-sysusers"
+            systemd-sysusers 2>/dev/null || true
+        fi
+        # Disable initial-setup (first-boot wizard)
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl disable initial-setup.service 2>/dev/null || true
+            systemctl disable initial-setup-graphical.service 2>/dev/null || true
+            systemctl mask initial-setup.service 2>/dev/null || true
+            systemctl mask initial-setup-graphical.service 2>/dev/null || true
+        fi
+        # Remove initial-setup configuration if it exists
+        rm -f /etc/sysconfig/initial-setup 2>/dev/null || true
+        rm -f /etc/reconfigSys 2>/dev/null || true
+        end_part_lax
     fi
 
     if do_part 13 "!Set up live user accounts"; then
