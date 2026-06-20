@@ -3459,6 +3459,7 @@ do_stage_8() {
         leave_stage
         echo "$text_co$ME$bold_co done$nc" > "$sign_off_file"
         [[ -n $full_auto ]]  || my_exit
+        return
     fi
 
     local file full
