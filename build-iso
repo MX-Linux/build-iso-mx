@@ -555,16 +555,16 @@ main_case() {
          4) # Auto-prep chroot if starting from -4 (skipping Stage 3)
             if [[ $(readlink -f /proc/1/root) != / ]] && ! mountpoint -q "$sqfs_dir/proc" 2>/dev/null; then
                 say "Preparing chroot for stage 4"
-                cd "$script_dir"
+                cd "$script_dir" || my_exit
                 prep_chroot
-                cd "$OLDPWD"
-                local args="-4"
-                [[ -n $auto_mode    ]] && args="$args --auto"
-                [[ -n $interactive  ]] && args="$args --interactive"
-                [[ -n $quiet_mode   ]] && args="$args --quiet"
-                [[ -n $manual_mode  ]] && args="$args --manual"
-                [[ $color_mode != high ]] && args="$args --COLOR=$color_mode"
-                $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args
+                cd "$OLDPWD" || my_exit
+                local -a args=(-4)
+                [[ -n $auto_mode    ]] && args+=(--auto)
+                [[ -n $interactive  ]] && args+=(--interactive)
+                [[ -n $quiet_mode   ]] && args+=(--quiet)
+                [[ -n $manual_mode  ]] && args+=(--manual)
+                [[ $color_mode != high ]] && args+=(--COLOR="$color_mode")
+                $SUDO chroot "$sqfs_dir" "$build_dir/$ME" "${args[@]}"
                 my_exit
             fi
             do_stage_4   ;;
@@ -2430,7 +2430,7 @@ do_stage_4_fedora() {
 
     # Resolve kernel version from /boot/
     local kernel_version
-    kernel_version=$(ls /boot/vmlinuz-* 2>/dev/null | head -n1 | sed 's|/boot/vmlinuz-||')
+    kernel_version=$(find /boot/ -maxdepth 1 -name 'vmlinuz-*' 2>/dev/null | sort | head -n1 | sed 's|/boot/vmlinuz-||')
     if [[ -z $kernel_version ]]; then
         error "No kernel found in /boot/"
     else
@@ -2856,8 +2856,8 @@ do_stage_6() {
     local syslinux_dir="$iso_dir/boot/syslinux"
 
     #remove %OPTIONS% from copied checkmedia.cfg
-    sed -i 's/%OPTIONS% //' $isolinux_dir/checkmedia.cfg
-    sed -i 's/%OPTIONS% //' $syslinux_dir/checkmedia.cfg
+    sed -i 's/%OPTIONS% //' "$isolinux_dir"/checkmedia.cfg
+    sed -i 's/%OPTIONS% //' "$syslinux_dir"/checkmedia.cfg
 
     # Directories with unpacked cpio archives
     local isolinux_cpio="$work_dir/isolinux-cpio"
@@ -3164,16 +3164,15 @@ do_stage_6_fedora() {
 
     # Copy kernel and initramfs from squashfs
     local kernel_ver
-    kernel_ver=$(ls "$sqfs_dir"/boot/vmlinuz-* 2>/dev/null | head -n1 | sed 's|.*/vmlinuz-||')
+    kernel_ver=$(find "$sqfs_dir"/boot/ -maxdepth 1 -name 'vmlinuz-*' 2>/dev/null | sort | head -n1 | sed 's|.*/vmlinuz-||')
     if [[ -z $kernel_ver ]]; then
         error "No kernel found in squashfs /boot/"
     fi
 
     local kimg=$sqfs_dir/boot/vmlinuz-$kernel_ver
     local initrd_img=$sqfs_dir/boot/initramfs-live.img
-    local fallback_initrd=$sqfs_dir/boot/initramfs-$kernel_ver.img
 
-    [[ -e "$kimg" ]] || error "Missing kernel image: $(pqw vmlinuz-$kernel_ver)"
+    [[ -e "$kimg" ]] || error "Missing kernel image: $(pqw "vmlinuz-$kernel_ver")"
 
     # Rebuild initramfs (dracut needs /dev/log which may not exist in the chroot)
     say "Rebuilding live initramfs..."
@@ -4680,15 +4679,15 @@ utf8_to_ascii() {
 }
 
 busybox_depmod() {
-    local targ=$1  kernel=$2  cmd=${3:-depmod}
+    local targ=$1  kernel=$2  depmod_cmd=${3:-depmod}
 
     local mod_dir=$targ/lib/modules
     local k_dir=$mod_dir/$kernel
     local to_delete
 
-    [[ -d $targ ]]             || fatal "Target $targ is not a directory"
-    [[ -x $targ/bin/busybox ]] || fatal "Could not find /bin/busybox"
-    [[ -x $targ/bin/$cmd ]]    || fatal "Could not find /bin/$cmd"
+    [[ -d $targ ]]                  || fatal "Target $targ is not a directory"
+    [[ -x $targ/bin/busybox ]]      || fatal "Could not find /bin/busybox"
+    [[ -x $targ/bin/$depmod_cmd ]]  || fatal "Could not find /bin/$depmod_cmd"
     [[ -d $mod_dir ]]          || fatal "Could not find /lib/modules"
     [[ -d $k_dir ]]            || fatal "Could not find $k_dir"
 
@@ -5761,18 +5760,18 @@ global_names() {
     prev=$((stage - 1))
 
     # Gather input files
-    local files=$normal_defaults
-    [[ -n $verbose_mode ]] && files=$all_defaults
+    local input_files=$normal_defaults
+    [[ -n $verbose_mode ]] && input_files=$all_defaults
 
     # Gather output files
     local s file
     for s in $(seq 0 $prev); do
         file=$output_dir/stage-$s.out
-        [[ -e $file ]] && files="$files $file"
+        [[ -e $file ]] && input_files="$input_files $file"
     done
 
     # shellcheck disable=SC2086
-    sed -n -r "s/^\s*([a-zA-Z_]+)=.*/\1/p" $files 2>/dev/null | sort -u
+    sed -n -r "s/^\\s*([a-zA-Z_]+)=.*/\\1/p" $input_files 2>/dev/null | sort -u
 }
 
 #------------------------------------------------------------------------------
@@ -6324,14 +6323,15 @@ update_list_names() {
 }
 
 update_lsb_release() {
-    local lsb_version="$(echo "$DISTRO_VERSION" | sed -r 's/^([0-9._-]+).*/\1/' | cut -d_ -f1)"
+    local lsb_version
+    lsb_version="$(echo "$DISTRO_VERSION" | sed -r 's/^([0-9._-]+).*/\1/' | cut -d_ -f1)"
     local name="$DISTRO_NAME"
 
-    echo "PRETTY_NAME=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee $sqfs_dir/etc/lsb-release
-    echo "DISTRIB_ID=$name" |$SUDO tee -a $sqfs_dir/etc/lsb-release
-    echo "DISTRIB_RELEASE=$lsb_version" |$SUDO tee -a $sqfs_dir/etc/lsb-release
-    echo "DISTRIB_CODENAME=$CODE_NAME" |$SUDO tee -a $sqfs_dir/etc/lsb-release
-    echo "DISTRIB_DESCRIPTION=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee -a $sqfs_dir/etc/lsb-release
+    echo "PRETTY_NAME=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee "$sqfs_dir"/etc/lsb-release
+    echo "DISTRIB_ID=$name" |$SUDO tee -a "$sqfs_dir"/etc/lsb-release
+    echo "DISTRIB_RELEASE=$lsb_version" |$SUDO tee -a "$sqfs_dir"/etc/lsb-release
+    echo "DISTRIB_CODENAME=$CODE_NAME" |$SUDO tee -a "$sqfs_dir"/etc/lsb-release
+    echo "DISTRIB_DESCRIPTION=\"$name $lsb_version $CODE_NAME\"" |$SUDO tee -a "$sqfs_dir"/etc/lsb-release
 
 }
 
