@@ -52,3 +52,6 @@ LIVE_USER="demo"
 ENABLE_LOCALES="Single"
 LOCALE="en_US.UTF-8"
 TIME_ZONE="America/New_York"
+
+# Enable cache types for Fedora builds
+CACHE="dnf_bootstrap,chroot"
