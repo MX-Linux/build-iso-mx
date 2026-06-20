@@ -1301,7 +1301,9 @@ do_stage_4() {
 
     if [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
         # Ensure chroot is prepared (in case we started from -4, skipping Stage 3)
-        if ! mountpoint -q "$sqfs_dir/proc" 2>/dev/null; then
+        # Inside the chroot, $sqfs_dir is a host path and won't resolve,
+        # so check /proc directly.
+        if ! mountpoint -q /proc 2>/dev/null; then
             say "Chroot not prepped — running prep_chroot before entering"
             prep_chroot
         fi
