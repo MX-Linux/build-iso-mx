@@ -468,6 +468,8 @@ main() {
         local deboot_cache_opts
         if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
             deboot_cache_opts="pacstrap $ARCH $sqfs_dir"
+        elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+            deboot_cache_opts="dnf_bootstrap $ARCH $sqfs_dir"
         else
             deboot_cache_opts="debootstrap $ARCH-$DEBIAN_RELEASE $sqfs_dir"
         fi
@@ -477,6 +479,8 @@ main() {
             debian) template="$script_dir/Template" ;;
               arch) template="$script_dir/Template/Arch"
                     [[ -d "$template" ]] || fatal "Missing Arch templates at $(pq "$template")" ;;
+             fedora) template="$script_dir/Template/Fedora"
+                    [[ -d "$template" ]] || fatal "Missing Fedora templates at $(pq "$template")" ;;
                  *) fatal "Unknown DISTRO_FAMILY: $(pqw "$DISTRO_FAMILY")" ;;
         esac
         local manual_selections_template=$template/COMMON/$manual_selections
@@ -620,6 +624,8 @@ Remaster_Blurb
         debian) template="$script_dir/Template" ;;
           arch) template="$script_dir/Template/Arch"
                 [[ -d "$template" ]] || error "Missing Arch templates at $(pq "$template")" ;;
+         fedora) template="$script_dir/Template/Fedora"
+                [[ -d "$template" ]] || error "Missing Fedora templates at $(pq "$template")" ;;
              *) error "Unknown DISTRO_FAMILY: $(pqw "$DISTRO_FAMILY")" ;;
     esac
 
@@ -627,6 +633,7 @@ Remaster_Blurb
     case $DISTRO_FAMILY in
         debian) require_programs debootstrap apt-get dpkg ;;
           arch) require_arch_host_tools ;;
+        fedora) require_fedora_host_tools ;;
     esac
 
     # Fill in default value
@@ -650,7 +657,7 @@ Remaster_Blurb
                     "Single (the one default locale)"
     fi
 
-    if [[ $DISTRO_FAMILY = arch ]]; then
+    if [[ $DISTRO_FAMILY = arch || $DISTRO_FAMILY = fedora ]]; then
         [[ ${ARCH:-} = x86_64 ]] || choose "arch" ARCH x86_64
     else
         [[ ${ARCH:-} = i386 || ${ARCH:-} = amd64 ]] || choose "arch" ARCH i386 amd64
@@ -756,8 +763,12 @@ Remaster_Blurb
     elif [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         # Create directories for Arch packages
         mkdir -p "$script_dir/Deb/Arch"
-        mkdir -p "$script_dir/Deb/ArchXfce"
         mkdir -p "$script_dir/Deb/ArchKDE"
+        mkdir -p "$script_dir/Deb/ArchXfce"
+    elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        # Create directories for Fedora RPMs
+        mkdir -p "$script_dir/Deb/FedoraXfce"
+        mkdir -p "$script_dir/Deb/FedoraKDE"
     fi
 
     local full_iso_file=$iso_file_dir/$iso_file
@@ -941,6 +952,97 @@ do_stage_2() {
 
         # pacstrap may emit warnings that are not actionable for our build; reset
         # error offset so Stage-level strict checking doesn't block progress.
+        check_errors_reset
+        leave_stage notime
+        return
+    fi
+
+    #------------------------------------------------------------------------------
+    # Fedora bootstrap (--installroot via dnf)
+    #------------------------------------------------------------------------------
+    if [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        say "Using dnf --installroot (Fedora; experimental)"
+
+        [[ $do_fast ]] && mount_tmpfs
+
+        if [[ -d "$sqfs_dir" ]]; then
+            say "Clear out existing files ..."
+            check_sqfs_dir
+            $SUDO rm -rf "$(dirname "${sqfs_dir:?}")"/squashfs/*
+        fi
+
+        # shellcheck disable=SC2086
+        if restore_cache $chroot_cache_opts; then
+            leave_stage
+            return
+        fi
+
+        # shellcheck disable=SC2086
+        if ! restore_cache $deboot_cache_opts; then
+            umount_chroot
+            check_errors_strict
+            start_timer
+
+            : "${DNF_RELEASEVER:=41}"
+            : "${DNF_BOOTSTRAP_PACKAGES:=filesystem fedora-release kernel-core dracut dracut-live squashfs-tools glibc bash coreutils systemd dnf rpm}"
+            : "${DNF_CONF:=Input/fedora/dnf.conf}"
+            : "${DNF_BASEREPO:=Input/fedora/fedora.repo}"
+
+            local dnf_conf_src=$script_dir/${DNF_CONF#./}
+            local repo_src=$script_dir/${DNF_BASEREPO#./}
+            [[ -r "$dnf_conf_src" ]] || fatal "Missing DNF_CONF: $(pqw "$DNF_CONF")"
+            [[ -r "$repo_src" ]] || fatal "Missing DNF_BASEREPO: $(pqw "$DNF_BASEREPO")"
+
+            local dnf_work=$work_dir/dnf
+            $SUDO mkdir -p "$dnf_work"
+            local dnf_conf=$dnf_work/dnf.conf
+            local yum_repos_dir=$dnf_work/yum.repos.d
+            $SUDO mkdir -p "$yum_repos_dir"
+            $SUDO cp "$repo_src" "$yum_repos_dir/fedora.repo"
+            $SUDO cp "$dnf_conf_src" "$dnf_conf"
+
+            say "dnf --installroot to $(pq "$sqfs_dir") with: $(pq $DNF_BOOTSTRAP_PACKAGES)"
+
+            # shellcheck disable=SC2086
+            $SUDO dnf --config="$dnf_conf" \
+                --releasever="$DNF_RELEASEVER" \
+                --setopt=reposdir="$yum_repos_dir" \
+                --installroot="$sqfs_dir" \
+                --setopt=cachedir="$sqfs_dir/var/cache/dnf" \
+                --nogpgcheck \
+                --assumeyes \
+                install $DNF_BOOTSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
+            local dnf_ret=${PIPESTATUS[0]}
+            (( dnf_ret == 0 )) || fatal "dnf --installroot failed"
+
+            # Basic post-bootstrap setup
+            # Set root password to empty (no password)
+            $SUDO sh -c "printf 'root::0:0:root:/root:/bin/bash\n' >> '$sqfs_dir/etc/passwd'"
+            $SUDO mkdir -p "$sqfs_dir/root"
+
+            # Copy host resolv.conf for chroot DNS
+            $SUDO mkdir -p "$sqfs_dir/etc"
+            $SUDO rm -f "$sqfs_dir/etc/resolv.conf"
+            $SUDO cp -L /etc/resolv.conf "$sqfs_dir/etc/resolv.conf"
+            $SUDO chmod 644 "$sqfs_dir/etc/resolv.conf" 2>/dev/null || true
+
+            # Install the repo config into the target for in-chroot dnf use
+            $SUDO mkdir -p "$sqfs_dir/etc/yum.repos.d"
+            $SUDO cp "$repo_src" "$sqfs_dir/etc/yum.repos.d/fedora.repo"
+
+            end_timer "run dnf --installroot"
+            check_errors_lax
+            umount_chroot
+            [[ -e "$sqfs_dir/bin/bash" ]] || fatal "dnf bootstrap failed (missing /bin/bash)"
+        fi
+
+        report_size "$sqfs_dir"
+        # shellcheck disable=SC2086
+        create_cache $deboot_cache_opts
+
+        say "Customize live system (Fedora)"
+        copy_template_dir squashfs "$sqfs_dir"
+
         check_errors_reset
         leave_stage notime
         return
@@ -1145,7 +1247,7 @@ do_stage_3() {
         [[ -r "$missing" ]] && cp "$missing" "$work_dir"
     done
 
-    cp "$sqfs_output_dir/package-list.out"        "$work_dir"
+    [[ -r "$sqfs_output_dir/package-list.out" ]] && cp "$sqfs_output_dir/package-list.out" "$work_dir"
     cp "$sqfs_input_dir/strict-exceptions.regex"  "$input_dir"
     cp "$sqfs_input_dir/lax-errors.regex"         "$input_dir"
     cp "$next_output_file"                        "$output_dir"
@@ -1174,6 +1276,11 @@ do_stage_4() {
 
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         do_stage_4_arch
+        my_exit
+    fi
+
+    if [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        do_stage_4_fedora
         my_exit
     fi
 
@@ -2187,6 +2294,254 @@ Output
     leave_stage
 }
 
+#------------------------------------------------------------------------------
+# Fedora in-chroot configuration (Stage 4)
+#------------------------------------------------------------------------------
+do_stage_4_fedora() {
+    say "Fedora in-chroot phase (experimental)"
+
+    require_programs dnf rpm dracut useradd usermod groupadd chpasswd ln systemctl mount df awk find
+
+    echo $$ > $build_dir/MY-PID
+    PATH=$build_dir/fake:$PATH
+
+    # shellcheck disable=SC1091
+    [[ -r "$script_dir/ENV_IN" ]] && source "$script_dir/ENV_IN"
+
+    say "Fedora template root: $(pq "$template")"
+    say "Fedora flavour: $(pq "$FLAV") (ISO_FLAV=$(pq "$ISO_FLAV")), base=$(pq "$ISO_RESPIN_OF")"
+
+    SIGN_OFF="$text_co$ME in chroot done$nc"
+    vsay "DEBUG: SIGN_OFF set to: '$SIGN_OFF'"
+
+    : "${DNF_RELEASEVER:=41}"
+    : "${DNF_CACHE_DIR:=/var/cache/dnf}"
+    : "${MIN_FREE_MB:=2048}"
+
+    # Ensure /proc/mounts for systemd/dnf
+    mkdir -p /proc /sys 2>/dev/null || true
+    [[ -r /proc/mounts ]] || mount -t proc proc /proc 2>/dev/null || true
+    [[ -r /sys/kernel ]] || mount -t sysfs sysfs /sys 2>/dev/null || true
+    mkdir -p "$DNF_CACHE_DIR"
+
+    local free_mb
+    free_mb=$(df -Pm "$DNF_CACHE_DIR" | awk 'NR==2{print $4}')
+    [[ -n $free_mb ]] || free_mb=0
+    if (( free_mb < MIN_FREE_MB )); then
+        error "Low free space: ${free_mb}MB available at $DNF_CACHE_DIR (need at least ${MIN_FREE_MB}MB)"
+    fi
+
+# dnf wrapper for use inside chroot
+    # dnf5 requires subcommand-level flags (--skip-unavailable must follow the subcommand)
+    # Only valid for: install, upgrade, remove, downgrade, reinstall, distro-sync
+    fedora_dnf() {
+        local subcmd="$1"
+        shift
+        case $subcmd in
+            install|upgrade|remove|downgrade|reinstall|distro-sync)
+                dnf --releasever="$DNF_RELEASEVER" --assumeyes "$subcmd" --skip-unavailable "$@" 2>&1 | tr '\r' '\n' ;;
+            *)
+                dnf --releasever="$DNF_RELEASEVER" --assumeyes "$subcmd" "$@" 2>&1 | tr '\r' '\n' ;;
+        esac
+        return "${PIPESTATUS[0]}"
+    }
+
+    # PARTIAL file support
+    if [[ ! -f "$script_dir/../Output/$work_name/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+        rm -f "$partial_file"
+        skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
+    elif [[ -s "$partial_file" ]] && do_part 0 "!Read PARTIAL file to skip parts done"; then
+        local add_skip
+        add_skip=$(join_lines "$partial_file" ",")
+        say "have already processed these parts: $(pq "$add_skip")"
+        if YES_no "Skip these parts this time"; then
+            SKIP_PART="$SKIP_PART${SKIP_PART:+,}$add_skip"
+        else
+            rm -f "$partial_file"
+        fi
+    else
+        skip_part 0 "Read PARTIAL file to skip parts done"
+    fi
+
+    if do_part 1 "!Update repos and do dnf update"; then
+        say "Upgrading all packages with dnf upgrade"
+        fedora_dnf upgrade
+        end_part_lax
+    fi
+
+    : "${LOCALE:=en_US.UTF-8}"
+    if do_part 2 "!Define locales"; then
+        say "Set locale to $(pq "$LOCALE")"
+        rm -rf /etc/locale.conf
+        echo "LANG=$LOCALE" > /etc/locale.conf
+        # Ensure locale is generated
+        localedef -i "${LOCALE%%.*}" -f UTF-8 "$LOCALE" 2>/dev/null || true
+        end_part_lax
+    fi
+
+    if gather_any basic-package && do_part 3 "Install basic packages"; then
+        gather_say basic-package "Install $(pqn %n) basic package%s"
+        # shellcheck disable=SC2206,SC2207
+        local pkgs=( $(compile_pkg_list basic-package exclude-chroot) )
+        if (( ${#pkgs[@]} > 0 )); then
+            fedora_dnf install "${pkgs[@]}" || error "dnf failed installing basic packages"
+        fi
+        end_part_strict
+    else
+        skip_part 3 "Install basic packages"
+    fi
+
+    if do_part 4 "Install kernel & headers"; then
+        : "${K_PKG:=kernel-core}"
+        : "${K_HEADERS_PKG:=kernel-devel}"
+        fedora_dnf install "$K_PKG" "$K_HEADERS_PKG"
+        end_part_strict
+    fi
+
+    # Resolve kernel version from /boot/
+    local kernel_version
+    kernel_version=$(ls /boot/vmlinuz-* 2>/dev/null | head -n1 | sed 's|/boot/vmlinuz-||')
+    if [[ -z $kernel_version ]]; then
+        error "No kernel found in /boot/"
+    else
+        say "Detected kernel version: $(pq "$kernel_version")"
+        K_MODVER=$kernel_version
+    fi
+
+    if gather_any package && do_part 5 "Install flavour packages"; then
+        gather_say package "Install $(pqn %n) flavour package%s"
+        # shellcheck disable=SC2206,SC2207
+        local pkgs=( $(compile_pkg_list package exclude-chroot) )
+        if (( ${#pkgs[@]} > 0 )); then
+            fedora_dnf install "${pkgs[@]}" || error "dnf failed installing flavour packages"
+        fi
+        end_part_strict
+    else
+        skip_part 5 "Install flavour packages"
+    fi
+
+    if do_part 6 "Enable common live services"; then
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl enable NetworkManager.service 2>&1 | tr '\r' '\n' || true
+        fi
+        end_part_lax
+    fi
+
+    if do_part 7 "Build live initramfs with dracut"; then
+        say "Building live initramfs with dracut (${kernel_version})"
+
+        # Ensure dracut live modules are installed
+        say "Ensuring dracut-live and dracut-squash are installed"
+        fedora_dnf install dracut-live dracut-squash 2>&1 | tail -5 || true
+
+        # Mount /run tmpfs so dracut doesn't fail on host-only detection
+        mkdir -p /run
+        mount -t tmpfs tmpfs /run 2>/dev/null || true
+
+        # Note: initramfs is rebuilt in Stage 6 with proper /dev/log setup;
+        # this is a best-effort first pass.
+        dracut --force --no-hostonly --add dmsquash-live \
+            /boot/initramfs-live.img "$kernel_version" 2>&1 | tr '\r' '\n' || true
+        end_part_lax
+    fi
+
+    if gather_any remove && do_part 8 "Remove some packages"; then
+        # shellcheck disable=SC2206,SC2207
+        local pkgs=( $(gather remove) )
+        (( ${#pkgs[@]} > 0 )) && fedora_dnf remove "${pkgs[@]}"
+        end_part_strict
+    fi
+
+    if gather_any add && do_part 9 "Add some packages"; then
+        # shellcheck disable=SC2206,SC2207
+        local pkgs=( $(compile_pkg_list add exclude-chroot) )
+        (( ${#pkgs[@]} > 0 )) && fedora_dnf install "${pkgs[@]}"
+        end_part_lax
+    fi
+
+    # Install local RPMs from /Deb directory (analogous to Arch pkg.tar.zst)
+    local rpms cnt
+    rpms=()
+    for rpm in "$build_dir"/Deb/*.rpm; do
+        [[ $rpm != *'*'* ]] && rpms+=("$rpm")
+    done
+    cnt=${#rpms[@]}
+    if (( cnt > 0 )) && do_part 10 "Install RPM packages from /Deb"; then
+        psay "$cnt" "Install $(pqn %n) RPM package%s"
+        for rpm in "${rpms[@]}"; do
+            say "install $(pq "${rpm##*/}")"
+            rpm --force -U "$rpm" 2>&1 | tr '\r' '\n' || true
+        done
+        end_part_lax
+    else
+        skip_part 10 "Install RPM packages from /Deb"
+    fi
+
+    if do_part 11 "Run dnf clean"; then
+        fedora_dnf clean all
+        rm -rf "${DNF_CACHE_DIR:?}"/* 2>/dev/null || true
+        end_part_lax
+    fi
+
+    if do_part 12 "!Update Timezone and hostname"; then
+        if [[ -n $TIME_ZONE && -e /usr/share/zoneinfo/$TIME_ZONE ]]; then
+            ln -sf "/usr/share/zoneinfo/$TIME_ZONE" /etc/localtime
+        fi
+
+        : "${NEW_HOSTNAME:=federalive}"
+        echo "$NEW_HOSTNAME" > /etc/hostname
+        if command -v hostname >/dev/null 2>&1; then
+            hostname -F /etc/hostname
+        fi
+        end_part_strict
+    fi
+
+    if do_part 13 "!Set up live user accounts"; then
+        local user
+        user=${LIVE_USER:-demo}
+        if ! grep -q "^$user:" /etc/passwd; then
+            say "Set up live user account $(pq "$user")"
+            grep -q "^$user:" /etc/group || groupadd "$user"
+            useradd -m -s "${ISO_SHELL:=/bin/bash}" -g "$user" "$user"
+        fi
+
+        gather_say user-groups "Add $(pq "$user") to $(pqn %n) group%s"
+        local group
+        for group in $(gather user-groups); do
+            usermod -a -G "$group" "$user"
+        done
+
+        # No password for live user
+        printf "%s:%s\n" "$user" "" | chpasswd -e 2>/dev/null || true
+        end_part_strict
+    fi
+
+    if do_part 14 "!Clean up dnf and system"; then
+        fedora_dnf clean all 2>/dev/null || true
+        rm -rf /tmp/* 2>/dev/null || true
+        rm -rf /var/tmp/* 2>/dev/null || true
+        # Remove machine-id so it's regenerated on first boot
+        rm -f /etc/machine-id 2>/dev/null || true
+        rm -f /var/lib/dbus/machine-id 2>/dev/null || true
+        # Generate package list for debugging / Stage 6 use
+        rpm -qa --queryformat '%{NAME}\n' 2>/dev/null | sort > "$output_dir/package-list.out" || true
+        end_part_strict
+    fi
+
+    # Write kernel info for Stage 7 (depmod)
+    if [[ -n $kernel_version ]]; then
+        K_MODVER=$kernel_version
+        K_NAME=$kernel_version
+        cat > "$output_file" << Output
+K_NAME="$kernel_version"
+K_MODVER="$kernel_version"
+Output
+    fi
+
+    rm -f "$partial_file"
+    leave_stage
+}
+
 apply_theme() {
     export ISO_ARCH
     local theme=${1:-$THEME}
@@ -2419,6 +2774,12 @@ do_stage_6() {
 
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         do_stage_6_arch
+        leave_stage
+        return
+    fi
+
+    if [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        do_stage_6_fedora
         leave_stage
         return
     fi
@@ -2734,6 +3095,110 @@ Bootloader_Data
 }
 
 #------------------------------------------------------------------------------
+# Fedora ISO directory preparation (Stage 6)
+#------------------------------------------------------------------------------
+do_stage_6_fedora() {
+    require_programs grub-mkrescue
+
+    # Minimal Fedora Live layout:
+    #   /LiveOS/squashfs.img   (created in Stage 7)
+    #   /boot/vmlinuz-linux
+    #   /boot/initramfs-live.img
+    local liveos_dir=$iso_dir/LiveOS
+    local boot_iso_dir=$iso_dir/boot
+
+    mkdir -p "$liveos_dir" "$boot_iso_dir" "$iso_dir/boot/grub"
+
+    # Copy GRUB theme and configuration from template
+    say "Copy GRUB theme and configuration for Fedora ISO"
+    copy_template_dir -u iso "$iso_dir"
+
+    # Copy kernel and initramfs from squashfs
+    local kernel_ver
+    kernel_ver=$(ls "$sqfs_dir"/boot/vmlinuz-* 2>/dev/null | head -n1 | sed 's|.*/vmlinuz-||')
+    if [[ -z $kernel_ver ]]; then
+        error "No kernel found in squashfs /boot/"
+    fi
+
+    local kimg=$sqfs_dir/boot/vmlinuz-$kernel_ver
+    local initrd_img=$sqfs_dir/boot/initramfs-live.img
+    local fallback_initrd=$sqfs_dir/boot/initramfs-$kernel_ver.img
+
+    [[ -e "$kimg" ]] || error "Missing kernel image: $(pqw vmlinuz-$kernel_ver)"
+
+    # Rebuild initramfs (dracut needs /dev/log which may not exist in the chroot)
+    say "Rebuilding live initramfs..."
+    prep_chroot
+    # Write helper scripts for creating /dev/log and building initramfs
+    $SUDO tee "$sqfs_dir/tmp/mkdevlog.py" > /dev/null << 'PYEOF'
+import socket, os
+try:
+    os.unlink("/dev/log")
+except:
+    pass
+s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+s.bind("/dev/log")
+os.chmod("/dev/log", 0o666)
+PYEOF
+    $SUDO tee "$sqfs_dir/tmp/build-initrd.sh" > /dev/null << 'INITEOF'
+#!/bin/bash
+kver=$(ls /boot/vmlinuz-* 2>/dev/null | head -n1 | sed 's|/boot/vmlinuz-||')
+if [ -L /dev/log ]; then rm -f /dev/log; fi
+python3 /tmp/mkdevlog.py &
+sleep 0.3
+rm -f /boot/initramfs-live.img /tmp/initrd.img
+dracut --force --no-hostonly --add "dmsquash-live" /tmp/initrd.img "$kver" 2>&1
+if [ -f /tmp/initrd.img ] && [ -s /tmp/initrd.img ]; then
+    cp /tmp/initrd.img /boot/initramfs-live.img
+    chmod 644 /boot/initramfs-live.img
+fi
+INITEOF
+    $SUDO chmod +x "$sqfs_dir/tmp/build-initrd.sh"
+    $SUDO chroot "$sqfs_dir" /bin/bash /tmp/build-initrd.sh
+    [[ -s "$sqfs_dir/boot/initramfs-live.img" ]] || error "dracut failed to build initramfs"
+
+    # Copy boot files with archiso-compatible names for unified grub.cfg
+    $SUDO cp "$kimg" "$boot_iso_dir/vmlinuz-linux"
+    $SUDO cp "$initrd_img" "$boot_iso_dir/initramfs-live.img"
+
+    # Provide package list (useful for debugging/remaster workflows)
+    if [[ -r "$work_dir/package-list.out" ]]; then
+        cp "$work_dir/package-list.out" "$liveos_dir/pkglist.txt"
+    fi
+
+    # Process bootloader template variables in grub.cfg
+    : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
+    say "Fill in bootloader template files"
+    local bootloader_data=$output_dir/bootloader-data
+    cat << Bootloader_Data > "$bootloader_data"
+      DISTRO_NAME="$DISTRO_NAME"
+   DISTRO_VERSION="$DISTRO_VERSION"
+ FULL_DISTRO_NAME="$full_distro_name"
+         ISO_ARCH="$ISO_ARCH"
+        CODE_NAME="$CODE_NAME"
+             ARCH="$ARCH"
+        ISO_LABEL="$ISO_LABEL"
+     RELEASE_DATE="$RELEASE_DATE"
+Bootloader_Data
+
+    # Apply template substitutions to grub.cfg and theme files
+    if [[ -f "$iso_dir/boot/grub/grub.cfg" ]]; then
+        "$tools"/bootloader-template -i --data="$bootloader_data" "$iso_dir/boot/grub/grub.cfg"
+    fi
+    if [[ -f "$iso_dir/boot/grub/theme/uefi.txt" ]]; then
+        sed -i "s/%DISTRO%/${DISTRO_NAME}/g" "$iso_dir/boot/grub/theme/uefi.txt"
+        sed -i "s/%ASCII_CODE_NAME%/${CODE_NAME}/g" "$iso_dir/boot/grub/theme/uefi.txt"
+    fi
+    if [[ -f "$iso_dir/boot/grub/theme/bios.txt" ]]; then
+        sed -i "s/%DISTRO%/${DISTRO_NAME}/g" "$iso_dir/boot/grub/theme/bios.txt"
+        sed -i "s/%ASCII_CODE_NAME%/${CODE_NAME}/g" "$iso_dir/boot/grub/theme/bios.txt"
+    fi
+    if [[ -f "$iso_dir/boot/grub/theme/help.txt" ]]; then
+        "$tools"/bootloader-template -i --data="$bootloader_data" "$iso_dir/boot/grub/theme/help.txt"
+    fi
+}
+
+#------------------------------------------------------------------------------
 # Stage 7 creates the squashfs file
 #------------------------------------------------------------------------------
 do_stage_7() {
@@ -2741,8 +3206,8 @@ do_stage_7() {
     umount_chroot
 
     say "Run depmod one last time"
-    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
-        [[ -n $K_MODVER ]] || error "Missing K_MODVER for Arch depmod"
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]] || [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        [[ -n $K_MODVER ]] || error "Missing K_MODVER for $(pqw "$DISTRO_FAMILY") depmod"
         $SUDO depmod --basedir "$sqfs_dir" "$K_MODVER"
     else
         $SUDO depmod --basedir "$sqfs_dir" "$K_NAME"
@@ -2765,7 +3230,7 @@ do_stage_7() {
         [[ -d $sqfs_dir/etc/skel/.cache/fontconfig ]] || $SUDO mkdir -p "$sqfs_dir"/etc/skel/.cache/fontconfig
 
         $SUDO rm -f "$sqfs_dir"/etc/skel/.cache/fontconfig/*
-        $SUDO cp "$sqfs_dir"/var/cache/fontconfig/* "$sqfs_dir"/etc/skel/.cache/fontconfig/
+        [[ -d "$sqfs_dir/var/cache/fontconfig" ]] && $SUDO cp "$sqfs_dir"/var/cache/fontconfig/* "$sqfs_dir"/etc/skel/.cache/fontconfig/
     fi
 
     if  [[ -n $zstd_override ]]; then
@@ -2788,6 +3253,11 @@ do_stage_7() {
         $SUDO mkdir -p "$(dirname "$linuxfs_file")"
         say "Exclude /Build from Arch squashfs payload"
         mksquash_opts+=(-e Build)
+    elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        linuxfs_file=$iso_dir/LiveOS/squashfs.img
+        $SUDO mkdir -p "$(dirname "$linuxfs_file")"
+        say "Exclude /Build from Fedora squashfs payload"
+        mksquash_opts+=(-e Build)
     else
         linuxfs_file=$iso_dir/antiX/linuxfs
     fi
@@ -2805,6 +3275,8 @@ do_stage_7() {
     local UNCOMPRESSEDSIZE_FILE UNCOMPRESSEDSIZE
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         UNCOMPRESSEDSIZE_FILE="$iso_dir/arch/$ARCH/airootfs.info"
+    elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        UNCOMPRESSEDSIZE_FILE="$iso_dir/LiveOS/squashfs.img.info"
     else
         UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     fi
@@ -2818,6 +3290,9 @@ do_stage_7() {
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         # archiso boot hooks verify airootfs.sfs using airootfs.sha512
         (cd "$(dirname "$linuxfs_file")" && sha512sum "$(basename "$linuxfs_file")" > airootfs.sha512)
+    elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        # Use SHA256 for Fedora (common Fedora Live practice)
+        (cd "$(dirname "$linuxfs_file")" && sha256sum "$(basename "$linuxfs_file")" > squashfs.img.sha256)
     else
         md5sum_file "$linuxfs_file"
     fi
@@ -2843,7 +3318,7 @@ do_stage_8() {
     local full_iso_file=$iso_file_dir/$iso_file
     say "Build the live $(pq "$iso_file") file"
 
-    if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+    if [[ ${DISTRO_FAMILY:-debian} = arch ]] || [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
         require_programs grub-mkrescue xorriso unshare mount umount find mktemp
         start_timer
         : "${ISO_LABEL:=${DISTRO_NAME}-Live}"
@@ -4233,6 +4708,18 @@ mount_pacman_cache() {
 }
 
 #------------------------------------------------------------------------------
+# mount_dnf_cache
+# Bind mount the DNF package cache directory for reuse across chroot runs.
+#------------------------------------------------------------------------------
+mount_dnf_cache() {
+    local dnf_dir=$sqfs_dir/var/cache/dnf
+    local host_dnf_cache=/var/cache/dnf
+    mkdir -p "$host_dnf_cache"
+    $SUDO find "$host_dnf_cache" -maxdepth 1 -type f \( -name '*.part' -o -name '*.lck' \) -delete 2>/dev/null || true
+    bind_mount "$host_dnf_cache" "$dnf_dir"
+}
+
+#------------------------------------------------------------------------------
 # bind_mount old_mp new_mp
 # Common code for bind outside mounting directories in the chroot.
 #------------------------------------------------------------------------------
@@ -4254,6 +4741,7 @@ prep_chroot() {
     umount_chroot
     [[ ${DISTRO_FAMILY:-debian} = debian ]] && mount_deb_cache
     [[ ${DISTRO_FAMILY:-debian} = arch ]] && mount_pacman_cache
+    [[ ${DISTRO_FAMILY:-debian} = fedora ]] && mount_dnf_cache
 
     for fs in proc sys; do
         say "Mounting $(pq /$fs) in chroot"
@@ -4284,6 +4772,11 @@ prep_chroot() {
     # Ensure DNS works inside chroot. On Arch rootfs, /etc/resolv.conf may be a
     # symlink to a /run/* path that does not exist in our chroot.
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
+        $SUDO mkdir -p "$sqfs_dir/etc"
+        $SUDO rm -f "$sqfs_dir/etc/resolv.conf"
+        $SUDO cp -L /etc/resolv.conf "$sqfs_dir/etc/resolv.conf"
+        $SUDO chmod 644 "$sqfs_dir/etc/resolv.conf" 2>/dev/null || true
+    elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
         $SUDO mkdir -p "$sqfs_dir/etc"
         $SUDO rm -f "$sqfs_dir/etc/resolv.conf"
         $SUDO cp -L /etc/resolv.conf "$sqfs_dir/etc/resolv.conf"
@@ -4337,6 +4830,19 @@ make_build_dir() {
         fi
     fi
 
+    # Copy RPM packages if building for Fedora
+    if [[ $DISTRO_FAMILY = fedora ]]; then
+        local -a rpm_pkgs=()
+        while IFS= read -r -d '' f; do
+            rpm_pkgs+=("$f")
+        done < <(find "$script_dir/Deb/Fedora"* -maxdepth 0 -type d 2>/dev/null | while IFS= read -r dir; do
+            find "$dir" -maxdepth 1 -name '*.rpm' -print0 2>/dev/null
+        done)
+        if (( ${#rpm_pkgs[@]} > 0 )); then
+            cp --target-directory="$b_dir"/Deb "${rpm_pkgs[@]}"
+        fi
+    fi
+
     cp -r "$0" Input "$tools" "${regex_files[@]}" "$b_dir"
 
     #make custom user-defaults file defaults in chroot, if it exists and switch was used
@@ -4360,6 +4866,9 @@ make_build_dir() {
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         template_tree="Template/Arch"
         [[ -d "$script_dir/$template_tree" ]] || fatal "Missing Arch templates at $(pq "$template_tree")"
+    elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
+        template_tree="Template/Fedora"
+        [[ -d "$script_dir/$template_tree" ]] || fatal "Missing Fedora templates at $(pq "$template_tree")"
     fi
     (cd "$script_dir" && tar cf -          \
         --exclude iso                    \
@@ -5363,6 +5872,51 @@ require_arch_host_tools() {
         fi
         if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }For mformat/mcopy try: sudo apt install mtools"
+        fi
+    fi
+    fatal "Missing these required programs: $(pqw "$missing").${hint:+ $hint}"
+}
+
+#------------------------------------------------------------------------------
+# require_fedora_host_tools
+# Check for required tools on the host for Fedora builds.
+#------------------------------------------------------------------------------
+require_fedora_host_tools() {
+    local missing
+    missing=$(missing_programs dnf grub-mkrescue xorriso mformat mcopy rpm)
+    [[ -z $missing ]] && return 0
+
+    local hint=""
+    if which dnf >/dev/null 2>&1; then
+        # On Fedora host
+        if [[ $missing =~ (^|[[:space:]])grub-mkrescue($|[[:space:]]) ]]; then
+            hint=" On Fedora try: sudo dnf install grub2-tools-extra"
+        fi
+        if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo dnf install xorriso"
+        fi
+        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo dnf install mtools"
+        fi
+        if [[ $missing =~ (^|[[:space:]])rpm($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }sudo dnf install rpm"
+        fi
+    elif which apt-get >/dev/null 2>&1; then
+        # On Debian/MX hosts
+        if [[ $missing =~ (^|[[:space:]])dnf($|[[:space:]]) ]]; then
+            hint=" For dnf try: sudo apt install dnf"
+        fi
+        if [[ $missing =~ (^|[[:space:]])grub-mkrescue($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For grub-mkrescue try: sudo apt install grub2-common (or grub-common on older versions)"
+        fi
+        if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For xorriso try: sudo apt install xorriso"
+        fi
+        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For mformat/mcopy try: sudo apt install mtools"
+        fi
+        if [[ $missing =~ (^|[[:space:]])rpm($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For rpm try: sudo apt install rpm"
         fi
     fi
     fatal "Missing these required programs: $(pqw "$missing").${hint:+ $hint}"

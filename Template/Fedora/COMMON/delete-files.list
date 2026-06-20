@@ -1,0 +1,15 @@
+# Files to delete from the squashfs root.
+boot/*
+etc/group-
+etc/gshadow-
+etc/issue
+etc/issue.net
+etc/machine-id
+etc/passwd-
+etc/shadow-
+etc/subgid-
+etc/subuid-
+root/*
+root/.*
+tmp/*
+var/cache/dnf/*

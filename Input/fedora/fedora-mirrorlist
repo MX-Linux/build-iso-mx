@@ -1,0 +1,4 @@
+# Fedora mirrorlist
+# Geo-mirror selection via Fedora's metalink API
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-41&arch=$basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f41&arch=$basearch

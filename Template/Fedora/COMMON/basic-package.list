@@ -1,0 +1,12 @@
+# Base Fedora packages installed at bootstrap (beyond DNF_BOOTSTRAP_PACKAGES).
+# These are installed via dnf inside the chroot as the 'basic-package' part.
+# Keep this list small; add desktop stacks in flavour-specific package.list.
+sudo
+NetworkManager
+openssh-server
+man-db
+man-pages
+hostname
+fedora-logos
+glibc-minimal-langpack
+python3

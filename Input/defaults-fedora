@@ -1,0 +1,54 @@
+# Experimental Fedora Live profile.
+# Use with: ./build-iso --user-default defaults-fedora
+#
+# Fedora uses dnf with --installroot to bootstrap the base system,
+# then dnf inside chroot for further package installation.
+#
+# ISO creation uses grub-mkrescue (same approach as Arch).
+#
+# NOTE: This requires dnf and grub-mkrescue installed on the host.
+# On Debian/MX: sudo apt install dnf xorriso grub2-common
+# On Fedora host: these are pre-installed.
+
+DISTRO_FAMILY="fedora"
+
+# ISO identity
+DISTRO_NAME="Fedora"
+DISTRO_VERSION="41"
+CODE_NAME="Fedora Linux"
+
+# Fedora uses x86_64 naming
+ARCH="x86_64"
+
+# Flavour template directory (Template/Fedora/<flavour>/)
+ISO_FLAV="xfce"
+THEME="none"
+
+# ISO authoring via grub-mkrescue
+MAKE_ISO="xorriso"
+
+# Base packages for dnf --installroot in Stage 2 (outer build).
+# Keep this minimal; add desktop stacks via Template/Fedora/*.list.
+DNF_BOOTSTRAP_PACKAGES="filesystem fedora-release fedora-gpg-keys kernel-core dracut dracut-live dracut-network dracut-squash squashfs-tools glibc bash coreutils systemd dnf rpm"
+
+# Always rebuild the /Build payload while support is experimental
+REFRESH_BUILD_DIR="1"
+
+# Host-side dnf configuration used by --installroot
+DNF_CONF="Input/fedora/dnf.conf"
+DNF_RELEASEVER="41"
+DNF_BASEREPO="Input/fedora/fedora.repo"
+
+# Kernel/initramfs naming for Fedora boot
+K_PKG="kernel-core"
+K_HEADERS_PKG="kernel-devel"
+K_BOOT_IMAGE="vmlinuz-*"
+K_INITRAMFS_IMAGE="initramfs-*.img"
+
+# Default live user
+LIVE_USER="demo"
+
+# Locale / timezone
+ENABLE_LOCALES="Single"
+LOCALE="en_US.UTF-8"
+TIME_ZONE="America/New_York"

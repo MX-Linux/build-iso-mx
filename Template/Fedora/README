@@ -1,0 +1,18 @@
+README: Template/Fedora/
+=======================
+
+This directory mirrors the role of `Template/Arch/` but for Fedora-based builds.
+
+- `COMMON/`: lists and overlay content shared by all Fedora flavours.
+- `<flavour>/`: per-flavour package lists (examples: `xfce/`, `kde/`).
+
+List files follow the same rules as other templates:
+- `*.list` contains one item per line, `#` starts a comment.
+- The builder combines `COMMON/` + `<flavour>/` and dedupes.
+
+Fedora uses `dnf` for package management. Package names are the standard
+Fedora/RPM names (e.g. `NetworkManager`, `firefox`, `kernel-core`).
+
+Boot: Uses GRUB + grub-mkrescue for hybrid BIOS+UEFI ISO creation.
+Initramfs: Uses dracut with the live module (`dracut-live` package).
+Live filesystem: Squashfs containing a minimal Fedora root at /squashfs/...
