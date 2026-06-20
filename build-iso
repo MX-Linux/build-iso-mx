@@ -116,6 +116,7 @@ main() {
     local iso_file_dir="$remaster_dir/iso-files"
     local deb_cache_dir="$remaster_dir/deb-cache/archives"
     local pacman_cache_dir="$remaster_dir/pacman-cache/pkg"
+    local dnf_cache_dir="$remaster_dir/dnf-cache"
     local manual_selections=manual-selections
     local exit_file="$output_dir/MUST-EXIT"
     local sign_off_file="$output_dir/SIGN-OFF"
@@ -4757,10 +4758,9 @@ mount_pacman_cache() {
 #------------------------------------------------------------------------------
 mount_dnf_cache() {
     local dnf_dir=$sqfs_dir/var/cache/dnf
-    local host_dnf_cache=/var/cache/dnf
-    mkdir -p "$host_dnf_cache"
-    $SUDO find "$host_dnf_cache" -maxdepth 1 -type f \( -name '*.part' -o -name '*.lck' \) -delete 2>/dev/null || true
-    bind_mount "$host_dnf_cache" "$dnf_dir"
+    mkdir -p "$dnf_cache_dir"
+    $SUDO find "$dnf_cache_dir" -maxdepth 1 -type f \( -name '*.part' -o -name '*.lck' \) -delete 2>/dev/null || true
+    bind_mount "$dnf_cache_dir" "$dnf_dir"
 }
 
 #------------------------------------------------------------------------------
