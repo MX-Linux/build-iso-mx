@@ -13,9 +13,11 @@
 DISTRO_FAMILY="fedora"
 
 # ISO identity
-DISTRO_NAME="Fedora"
+DISTRO_NAME="MX-Bowler"
 DISTRO_VERSION="44"
 CODE_NAME="Fedora Linux"
+
+COMPRESSION_TYPE="lz4"
 
 # Fedora uses x86_64 naming
 ARCH="x86_64"

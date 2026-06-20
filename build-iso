@@ -311,6 +311,7 @@ main() {
     set_output_paths() {
         # shellcheck disable=SC2153
         local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH"
+        work_name="${work_name// /_}"
         [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
         [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
         output_dir="$script_dir/Output/$work_name"
@@ -444,10 +445,12 @@ main() {
 
         # Variables derived from output files
         local full_distro_name="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
+        full_distro_name="${full_distro_name// /_}"
         [[ "$DISTRO_NAME" = antiX ]] && full_distro_name="$full_distro_name-$ISO_FLAV"
 
         local fancy_name="$full_distro_name $CODE_NAME $RELEASE_DATE"
         local work_name="$DISTRO_NAME-${DISTRO_VERSION}-$ISO_ARCH"
+        work_name="${work_name// /_}"
         [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
         [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
         local work_dir="$remaster_dir/work/$work_name"
@@ -768,6 +771,7 @@ Remaster_Blurb
     : > "$did_stage_file"
 
     local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
+    full_distro_name=${full_distro_name// /_}
     [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
     local iso_file=$full_distro_name.iso
 
