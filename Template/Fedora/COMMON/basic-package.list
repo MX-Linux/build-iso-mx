@@ -9,4 +9,5 @@ man-pages
 hostname
 fedora-logos
 glibc-minimal-langpack
+glibc-langpack-en
 python3
