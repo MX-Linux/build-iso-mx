@@ -3,6 +3,9 @@
 
 DISTRO_FAMILY="arch"
 
+# Cache settings: pacstrap for bootstrap caching, chroot for chroot caching
+CACHE="pacstrap,chroot"
+
 # ISO identity
 DISTRO_NAME="MXarch"
 DISTRO_VERSION="26.05"
