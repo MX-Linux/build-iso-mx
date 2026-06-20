@@ -1031,16 +1031,6 @@ do_stage_2() {
             local dnf_ret=${PIPESTATUS[0]}
             (( dnf_ret == 0 )) || fatal "dnf --installroot failed"
 
-            # Copy downloaded packages to persistent cache for future builds
-            local dnf_cache_host=$remaster_dir/dnf-cache
-            local dnf_cache_src=$sqfs_dir/var/cache/dnf
-            if [[ -d "$dnf_cache_src" ]] && [[ -z "$(find "$dnf_cache_src" -maxdepth 0 -empty 2>/dev/null)" ]]; then
-                mkdir -p "$dnf_cache_host"
-                $SUDO rsync -a "$dnf_cache_src"/ "$dnf_cache_host"/ 2>/dev/null || \
-                $SUDO cp -an "$dnf_cache_src"/* "$dnf_cache_host"/ 2>/dev/null || true
-                say "Cached bootstrap packages to $(pq "$dnf_cache_host")"
-            fi
-
             # Basic post-bootstrap setup
             # Set root password to empty (no password)
             $SUDO sh -c "printf 'root::0:0:root:/root:/bin/bash\n' >> '$sqfs_dir/etc/passwd'"
@@ -4767,10 +4757,10 @@ mount_pacman_cache() {
 # Bind mount the DNF package cache directory for reuse across chroot runs.
 #------------------------------------------------------------------------------
 mount_dnf_cache() {
-    local dnf_dir=$sqfs_dir/var/cache/dnf
+    local libdnf5_dir=$sqfs_dir/var/cache/libdnf5
     mkdir -p "$dnf_cache_dir"
     $SUDO find "$dnf_cache_dir" -maxdepth 1 -type f \( -name '*.part' -o -name '*.lck' \) -delete 2>/dev/null || true
-    bind_mount "$dnf_cache_dir" "$dnf_dir"
+    bind_mount "$dnf_cache_dir" "$libdnf5_dir"
 }
 
 #------------------------------------------------------------------------------
@@ -5187,7 +5177,7 @@ _cache_() {
     local ctype=$1; shift
     local type=$1 subtype=$2 dir=$3
 
-    local cache_exclude="^/Build|^/proc/|^/sys/|^/var/cache/apt/archives/|^/var/cache/pacman/pkg/"
+    local cache_exclude="^/Build|^/proc/|^/sys/|^/var/cache/apt/archives/|^/var/cache/pacman/pkg/|^/var/cache/libdnf5/"
 
     echo "$dir" | grep -q "^$remaster_dir" || fatal "Refusing to cache suspicious directory: $dir"
 
