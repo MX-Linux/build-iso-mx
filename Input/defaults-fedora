@@ -22,7 +22,7 @@ ARCH="x86_64"
 
 # Flavour template directory (Template/Fedora/<flavour>/)
 ISO_FLAV="xfce"
-THEME="mx"
+THEME="none"
 
 # ISO authoring via grub-mkrescue
 MAKE_ISO="xorriso"
