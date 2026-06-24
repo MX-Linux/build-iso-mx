@@ -230,7 +230,7 @@ mx-rofi-manager
 mx-select-sound
 mx-tour
 mx-usb-unmounter
-mx-viewer
+#mx-viewer
 mx-welcome
 # mx21-archive-keyring
 mx25-artwork

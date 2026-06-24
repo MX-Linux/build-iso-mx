@@ -229,7 +229,7 @@ mx-system-sounds
 #mx-timeset-gui
 mx-tour
 mx-usb-unmounter
-mx-viewer
+#mx-viewer
 mx-welcome
 mx25-artwork
 mythes-en-us

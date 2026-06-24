@@ -179,7 +179,7 @@ mx-select-sound
 mx-sound-theme-borealis
 mx-sound-theme-fresh-and-clean
 mx-tour
-mx-viewer
+#mx-viewer
 mx-welcome
 mx25-artwork
 mythes-en-us
