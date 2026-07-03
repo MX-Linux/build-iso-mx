@@ -4187,10 +4187,12 @@ apt_get_packages() {
     temp_output=$(mktemp)
     local simulation_output
     local missing_packages=""
+    local sim_code=0
 
     # Run simulation with -s flag and LC_ALL=C for consistent parsing
     # shellcheck disable=SC2086
     echo "$pkg_list" | LC_ALL=C xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
+    sim_code=$?
     simulation_output=$(cat "$temp_output")
     rm -f "$temp_output"
 
@@ -4240,6 +4242,27 @@ $missing_packages"
             echo "$missing_pkg"
         done > /Build/missing-"$label".list
         pkg_list="$available_packages"
+
+        # Re-run the simulation on the pruned list: apt aborts at "Unable to
+        # locate" before resolving dependencies, so dependency problems only
+        # surface once the missing packages are removed
+        temp_output=$(mktemp)
+        # shellcheck disable=SC2086
+        echo "$pkg_list" | LC_ALL=C xargs apt-get $APT_GET_OPTS -s "$@" > "$temp_output" 2>&1
+        sim_code=$?
+        simulation_output=$(cat "$temp_output")
+        rm -f "$temp_output"
+    fi
+
+    # A simulation that still fails means apt can locate every package but
+    # cannot install the set, typically due to unmet/conflicting dependencies
+    if (( sim_code != 0 )); then
+        local unmet
+        unmet=$(sed -n '/unmet dependencies/,$p' <<<"$simulation_output")
+        [[ -n $unmet ]] || unmet=$simulation_output
+        echo "$unmet" > /Build/unmet-"$label".txt
+        say_in "$high_co" "$unmet"
+        fatal "Cannot install $label packages due to the dependency problems above"
     fi
 
     local remaining_packages="$pkg_list"
