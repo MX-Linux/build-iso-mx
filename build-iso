@@ -4324,9 +4324,27 @@ $missing_packages"
                 sed "s/Package '\\([^']*\\)' has no installation candidate/\\1/")
         fi
 
+        # Try pattern for a fetch failure (stale repo index, e.g. the pool
+        # file was replaced/removed after our apt-get update but before this
+        # install ran): "E: Failed to fetch .../pool/.../pkg_version_arch.deb  404  Not Found [...]"
         if [[ -z $problem_pkg ]]; then
-            # Can't identify specific problem package, show error and exit
-            echo "$install_output" >&2
+            problem_pkg=$(echo "$install_output" | \
+                grep -oE "Failed to fetch [^ ]+\.deb" | \
+                head -1 | \
+                sed -E "s#.*/([a-zA-Z0-9.+-]+)_[^_/]+_[^_/]+\.deb\$#\\1#")
+        fi
+
+        if [[ -z $problem_pkg ]]; then
+            # Can't identify specific problem package. The full output was
+            # already shown live via tee above, so only forward the actual
+            # apt error/warning lines to stderr (for check_errors_lax to
+            # pick up from $err_file) instead of re-dumping everything --
+            # doing the latter races with the YES_no prompt below because
+            # main_case's stderr is routed through a separate tee/sed pipe
+            # (see the fd-juggling in the run_stages loop) that can flush
+            # out of order with direct stdout, making the prompt look like
+            # it's being flooded before it can be answered.
+            echo "$install_output" | grep -E "^(E|W): " >&2
             error "Package installation failed and couldn't identify problematic package"
             return 1
         fi
