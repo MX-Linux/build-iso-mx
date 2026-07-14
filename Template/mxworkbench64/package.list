@@ -182,6 +182,7 @@ network-manager-openconnect-gnome
 network-manager-openvpn-gnome
 nmap
 nmon
+nvme-cli
 onboard
 open-vm-tools
 openipmi
