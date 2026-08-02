@@ -94,7 +94,7 @@ read_args() {
             -help|h)    do_usage                     ;;
 
           -prefix|p)      PREFIX=$val                ;;
-       -prefix=*p=*)      PREFIX=$val                ;;
+       -prefix=*|p=*)     PREFIX=$val                ;;
            -quiet|q)       QUIET=true                ;;
 
          -version|v)    do_version                   ;;
