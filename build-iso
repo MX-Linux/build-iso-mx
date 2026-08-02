@@ -3554,9 +3554,10 @@ do_stage_9() {
 
     enter_stage 9 "Clean up and prepare to start over"
 
-    local s links
+    local s
+    local -a links=()
     for s in initrd iso sqfs work; do
-        [[ -L $script_dir/$s ]] && links="$links $script_dir/$s"
+        [[ -L $script_dir/$s ]] && links+=("$script_dir/$s")
     done
 
     umount_tmpfs
@@ -3567,7 +3568,7 @@ do_stage_9() {
     if [[ -n $delete_all ]]; then
         say "Delete entire work directory $(pq "$rel_work_dir")"
         $SUDO rm -rf "${work_dir:?}"
-        [[ -n $links ]] && rm "$links"
+        rm -f "${links[@]}"
 
     elif [[ -n $delete_mode ]]; then
         say "Delete squashfs directory $(pq "$rel_work_dir"/squashfs)"
@@ -3576,12 +3577,12 @@ do_stage_9() {
 
         if yes_NO "Delete everything else in $(pq "$rel_work_dir")"; then
             $SUDO rm -rf "${work_dir:?}"
-            [[ -n $links ]] && rm "$links"
+            rm -f "${links[@]}"
         fi
 
     elif yes_NO "Delete entire work directory $(pq "$rel_work_dir")"; then
         $SUDO rm -rf "${work_dir:?}"
-        [[ -n $links ]] && rm "$links"
+        rm -f "${links[@]}"
 
     elif yes_NO "Delete squashfs directory $(pq "$rel_work_dir"/squashfs)"; then
         $SUDO rm -rf "${sqfs_dir:?}"
