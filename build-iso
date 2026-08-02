@@ -2429,7 +2429,7 @@ do_stage_4_fedora() {
 
     # Resolve kernel version from /boot/
     local kernel_version
-    kernel_version=$(find /boot/ -maxdepth 1 -name 'vmlinuz-*' 2>/dev/null | sort | head -n1 | sed 's|/boot/vmlinuz-||')
+    kernel_version=$(find /boot/ -maxdepth 1 -name 'vmlinuz-*' 2>/dev/null | sort -V | tail -n1 | sed 's|/boot/vmlinuz-||')
     if [[ -z $kernel_version ]]; then
         error "No kernel found in /boot/"
     else
