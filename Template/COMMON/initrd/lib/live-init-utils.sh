@@ -161,7 +161,7 @@ load_translation() {
 }
 
 get_init_lang() {
-    local lang=$1 do_eror=$2
+    local lang=$1 do_error=$2
     [ "$lang" ] || return
 
     load_translation live-init-utils.sh
@@ -220,4 +220,3 @@ first_write() {
 
     return 1
 }
-
