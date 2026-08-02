@@ -1189,11 +1189,11 @@ do_stage_3() {
     # Resolve/Pin kernel wildcard now that chroot is prepped and mounted.
     # This prevents a 'resolution race' where the version could change if
     # Stage 4 is resumed later, and ensures subsequent stages see the pinned name.
-    # We do this AFTER removing the output_file so it persists into the clean state.
+    local resolved_kernel_file=$sqfs_output_dir/resolved-kernel-name
+    rm -f "$resolved_kernel_file"
     if [[ $K_NAME =~ \* ]]; then
         search_for_k_name
-        # Persist the resolved name for this build
-        echo "K_NAME=\"$K_NAME\"" > "$output_file"
+        printf 'K_NAME=%q\n' "$K_NAME" > "$resolved_kernel_file"
     fi
 
     # Get realtime log updates from the chroot
@@ -1277,6 +1277,10 @@ do_stage_3() {
 # variables.
 #------------------------------------------------------------------------------
 do_stage_4() {
+    local resolved_kernel_file=$output_dir/resolved-kernel-name
+    # shellcheck disable=SC1090
+    [[ -r "$resolved_kernel_file" ]] && source "$resolved_kernel_file"
+
     enter_stage 4 "!Inside of chroot"
     _say_ "$num_co===============================================================$nc"
 
