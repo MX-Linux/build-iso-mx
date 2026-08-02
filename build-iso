@@ -877,6 +877,16 @@ do_stage_2() {
             return
         fi
 
+        local pacman_conf_src mirror_src
+        if ! is_arch_host; then
+            : "${PACMAN_CONF:=Input/arch/pacman.conf}"
+            : "${PACMAN_MIRRORLIST:=Input/arch/mirrorlist}"
+            pacman_conf_src=$script_dir/${PACMAN_CONF#./}
+            mirror_src=$script_dir/${PACMAN_MIRRORLIST#./}
+            [[ -r "$pacman_conf_src" ]] || fatal "Missing PACMAN_CONF: $(pqw "$PACMAN_CONF")"
+            [[ -r "$mirror_src" ]] || fatal "Missing PACMAN_MIRRORLIST: $(pqw "$PACMAN_MIRRORLIST")"
+        fi
+
         # shellcheck disable=SC2086
         if ! restore_cache $deboot_cache_opts; then
             umount_chroot
@@ -897,13 +907,6 @@ do_stage_2() {
                 $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
             else
                 # On Debian/MX host, provide dedicated config + mirrors
-                : "${PACMAN_CONF:=Input/arch/pacman.conf}"
-                : "${PACMAN_MIRRORLIST:=Input/arch/mirrorlist}"
-                local pacman_conf_src=$script_dir/${PACMAN_CONF#./}
-                local mirror_src=$script_dir/${PACMAN_MIRRORLIST#./}
-                [[ -r "$pacman_conf_src" ]] || fatal "Missing PACMAN_CONF: $(pqw "$PACMAN_CONF")"
-                [[ -r "$mirror_src" ]] || fatal "Missing PACMAN_MIRRORLIST: $(pqw "$PACMAN_MIRRORLIST")"
-
                 local pacman_work=$work_dir/pacman
                 $SUDO mkdir -p "$pacman_work"
                 local pacman_conf=$pacman_work/pacman.conf
