@@ -425,23 +425,13 @@ main() {
     while true; do
 
         # Read previous output files and set the stage
-        if [[ -n $start_from ]]; then
-            stage=$start_from
-            # Source all previous stage files to get full state
-            for ((s=0; s < stage; s++)); do
-                output_file="$output_dir/stage-$s.out"
-                # shellcheck disable=SC1090
-                [[ -r "$output_file" ]] && source "$output_file"
-            done
+        for stage in $all_stages; do
             output_file="$output_dir/stage-$stage.out"
-        else
-            for stage in $all_stages; do
-                output_file="$output_dir/stage-$stage.out"
-                [[ -r "$output_file" ]] || break
-                # shellcheck disable=SC1090
-                source "$output_file"
-            done
-        fi
+            [[ -r "$output_file" ]] || break
+            [[ -n $start_from ]] && (( stage == start_from )) && break
+            # shellcheck disable=SC1090
+            source "$output_file"
+        done
 
         # Variables derived from output files
         local full_distro_name="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
