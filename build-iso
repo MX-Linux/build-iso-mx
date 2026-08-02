@@ -2635,8 +2635,8 @@ do_stage_5() {
 
     if [[ $FLAV = "base" ]]; then
         say "Change fluxbox and icewm menu-applications files"
-        sudo mv -f "$sqfs_dir"/usr/share/desktop-menu/.fluxbox/menu-applications-fb "$sqfs_dir"/usr/share/desktop-menu/.fluxbox/menu-applications
-        sudo mv -f "$sqfs_dir"/usr/share/desktop-menu/.icewm/menu-applications-ice "$sqfs_dir"/usr/share/desktop-menu/.icewm/menu-applications
+        $SUDO mv -f "$sqfs_dir"/usr/share/desktop-menu/.fluxbox/menu-applications-fb "$sqfs_dir"/usr/share/desktop-menu/.fluxbox/menu-applications
+        $SUDO mv -f "$sqfs_dir"/usr/share/desktop-menu/.icewm/menu-applications-ice "$sqfs_dir"/usr/share/desktop-menu/.icewm/menu-applications
     fi
 
     local f wm
