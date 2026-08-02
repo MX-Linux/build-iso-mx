@@ -3824,6 +3824,8 @@ _check_errors_() {
 
         elif [[ $type = STRICT ]]; then
             errors=$(tail -n +"$ERROR_OFFSET" "$err_file" | grep -Ev ${flag:+"$flag"} "^\s*$")
+        else
+            errors=
         fi
 
         [[ -z $errors ]] && check_errors_reset && return
@@ -3842,6 +3844,10 @@ _check_errors_() {
         [[ -n $ask_errors ]] || break
         YES_no "Retry"    || break
         read_error_regexes
+        case $type in
+            STRICT) regex=$STRICT_EXCEPTIONS ;;
+               LAX) regex=$LAX_ERRORS ;;
+        esac
     done
 
     check_errors_reset
