@@ -5770,7 +5770,7 @@ do_stats() {
     done
 
     local regex="core|base|full"
-    ! is_antiX && regex="$regex|mx32|mx64|mxahs|mxkd"
+    ! is_antiX && regex="$regex|mx32|mx64|mxahs|mxkde"
     for FLAV in $(flavour_list | grep -Ev "^($regex)$"); do
         for ISO_RESPIN_OF in core full; do
             yell "\n$FLAV/$ISO_RESPIN_OF$high_co:"
