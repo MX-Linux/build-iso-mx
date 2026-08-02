@@ -8,5 +8,5 @@ fi
 package_to_remove="$1"
 
 grep -rl "$package_to_remove" . | while read -r file; do
-  sed -i "/^$package_to_remove/d" "$file"
+  sed -i "/^$package_to_remove$/d" "$file"
 done
