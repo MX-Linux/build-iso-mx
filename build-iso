@@ -6195,7 +6195,7 @@ update_add_remove_lists() {
             file=$dir/$fname
             [[ -e $file ]] || continue
             pkgs=$(grep -v -e "^\s*#" -e "^\s*$" "$file" | sed 's/\s*#.*//')
-            [[ -n $pkgs ]] || next
+            [[ -n $pkgs ]] || continue
             cnt=$(echo "$pkgs" | wc -l)
             say "Found $(pqn "$cnt") packages in $flav/$fname"
             say_in "$high_co" "$pkgs"
