@@ -5948,7 +5948,7 @@ require_arch_host_tools() {
         if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }sudo pacman -S libisoburn"
         fi
-        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+        if [[ $missing =~ (^|[[:space:]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }sudo pacman -S mtools"
         fi
 
@@ -5972,7 +5972,7 @@ require_arch_host_tools() {
         if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }For xorriso try: sudo apt install xorriso"
         fi
-        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+        if [[ $missing =~ (^|[[:space:]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }For mformat/mcopy try: sudo apt install mtools"
         fi
     fi
@@ -5997,7 +5997,7 @@ require_fedora_host_tools() {
         if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }sudo dnf install xorriso"
         fi
-        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+        if [[ $missing =~ (^|[[:space:]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }sudo dnf install mtools"
         fi
         if [[ $missing =~ (^|[[:space:]])rpm($|[[:space:]]) ]]; then
@@ -6014,7 +6014,7 @@ require_fedora_host_tools() {
         if [[ $missing =~ (^|[[:space:]])xorriso($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }For xorriso try: sudo apt install xorriso"
         fi
-        if [[ $missing =~ (^|[[:space:]]])(mformat|mcopy)($|[[:space:]]) ]]; then
+        if [[ $missing =~ (^|[[:space:]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }For mformat/mcopy try: sudo apt install mtools"
         fi
         if [[ $missing =~ (^|[[:space:]])rpm($|[[:space:]]) ]]; then
