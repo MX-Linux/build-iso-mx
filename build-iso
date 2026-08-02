@@ -895,6 +895,8 @@ do_stage_2() {
                 say "Using host pacman configuration (Arch Linux)"
                 # shellcheck disable=SC2086
                 $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
+                local pacstrap_ret=${PIPESTATUS[0]}
+                (( pacstrap_ret == 0 )) || fatal "pacstrap failed"
             else
                 # On Debian/MX host, provide dedicated config + mirrors
                 local pacman_work=$work_dir/pacman
