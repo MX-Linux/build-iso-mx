@@ -296,6 +296,20 @@ main() {
     SUDO=sudo
     (( UID == 0 )) && SUDO=
 
+    # Speed up failed loopback connections during package installs: some
+    # postinst scripts poll a service (e.g. cups) that isn't running in the
+    # chroot, and on some hosts (seen on WSL2) a closed IPv4 loopback port
+    # doesn't get an instant refusal, so the default SYN-retry timeout can
+    # stretch a failed connect out to ~2 minutes. Lower it for the duration
+    # of this build; restored in on_exit(). Only the top-level (non-chroot)
+    # invocation does this -- the re-invoked chroot process (stage 4+) would
+    # otherwise restore it prematurely when *it* exits.
+    if [[ "$script_dir" != "$build_dir" ]]; then
+        ORIG_TCP_SYN_RETRIES=$(cat /proc/sys/net/ipv4/tcp_syn_retries 2>/dev/null)
+        [[ -n $ORIG_TCP_SYN_RETRIES ]] \
+            && $SUDO sysctl -q -w net.ipv4.tcp_syn_retries=2 2>/dev/null
+    fi
+
     [[ -n $show_parts || -n $show_stages ]] && exit
 
     local normal_defaults="$input_dir/defaults $input_dir/defaults-local"
@@ -3256,6 +3270,10 @@ do_stage_7() {
     enter_stage 7 "Create squashfs file"
     umount_chroot
 
+    # Remove the policy-rc.d installed in prep_chroot() so the shipped live
+    # system boots with normal service-start behavior.
+    $SUDO rm -f "$sqfs_dir/usr/sbin/policy-rc.d"
+
     say "Run depmod one last time"
     if [[ ${DISTRO_FAMILY:-debian} = arch ]] || [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
         [[ -n $K_MODVER ]] || error "Missing K_MODVER for $(pqw "$DISTRO_FAMILY") depmod"
@@ -4891,6 +4909,16 @@ prep_chroot() {
     # Always use local mirror when working in chroot
     [[ ${DISTRO_FAMILY:-debian} = debian ]] && set_chroot_mirror "$LOCAL_MIRROR" "LOCAL mirror"
 
+    # Block service actions during package installs. dpkg resets PATH for
+    # maintainer scripts, so the /Build/fake shadowing of invoke-rc.d doesn't
+    # apply there; invoke-rc.d checks this file directly regardless of PATH.
+    # Without it, postinst/trigger scripts can try to actually reload/restart
+    # a service that isn't running in the chroot (e.g. cups) and hang.
+    say "Install $(pq policy-rc.d) to block chroot service actions"
+    $SUDO mkdir -p "$sqfs_dir/usr/sbin"
+    printf '#!/bin/sh\nexit 101\n' | $SUDO tee "$sqfs_dir/usr/sbin/policy-rc.d" >/dev/null
+    $SUDO chmod 755 "$sqfs_dir/usr/sbin/policy-rc.d"
+
     # TERM helps nano to work in chroot, LC_ALL is for Deb
     export TERM=xterm LC_ALL=C
 }
@@ -5861,6 +5889,9 @@ on_exit() {
             $SUDO umount -l "$mp" 2>/dev/null || true
         done
     fi
+
+    [[ -n $ORIG_TCP_SYN_RETRIES ]] \
+        && $SUDO sysctl -q -w net.ipv4.tcp_syn_retries="$ORIG_TCP_SYN_RETRIES" 2>/dev/null
 
     [[ -n $exit_file ]] && rm -f "$exit_file"
 
