@@ -4403,7 +4403,7 @@ check_missing() {
 
     psay "$cnt" "Checking that $(pqn %n) $label package%s %were installed ..."
 
-    dpkg --get-selections | grep "install\(ed\)\?$" | sed 's/\t.*//' > "$installed".list
+    dpkg --get-selections | awk '$2 == "install" { print $1 }' > "$installed".list
     for pkg in $pkg_list; do
         [[ -r $known_missing ]] && grep -qxF "$pkg" "$known_missing" && continue
         grep -q "^$pkg\(:[A-Za-z0-9+-]\+\)\?$" "$installed".list || missing="$missing$pkg\n"
