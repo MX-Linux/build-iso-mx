@@ -2601,7 +2601,7 @@ apply_theme() {
     t_dir=$theme_dir/$THEME
     short_t=$(short_dir "$t_dir")
     [[ ! -d "$t_dir" ]] \
-        && error "Theme directory $(pq short_t) does not exist" && return
+        && error "Theme directory $(pq "$t_dir") does not exist" && return
 
     local script="$t_dir"/theme.sh short_script=$short_t/theme.sh
     [[ ! -e $script ]] && \
