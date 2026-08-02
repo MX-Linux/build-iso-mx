@@ -5232,7 +5232,7 @@ _cache_() {
     local ctype=$1; shift
     local type=$1 subtype=$2 dir=$3
 
-    local cache_exclude="^/Build|^/proc/|^/sys/|^/var/cache/apt/archives/|^/var/cache/pacman/pkg/|^/var/cache/libdnf5/"
+    local cache_exclude="^\./Build|^\./proc/|^\./sys/|^\./var/cache/apt/archives/|^\./var/cache/pacman/pkg/|^\./var/cache/libdnf5/"
 
     echo "$dir" | grep -q "^$remaster_dir" || fatal "Refusing to cache suspicious directory: $dir"
 
