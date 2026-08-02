@@ -6107,7 +6107,7 @@ compile_pkg_list() {
     pkg_list=$(gather "$1")
     exclude_list=$(gather "$2")
     for i in $pkg_list ; do
-        [[ ! $exclude_list =~ .*$i.* ]] && result="$result $i"
+        grep -Fxq -- "$i" <<<"$exclude_list" || result="$result $i"
     done
     echo "$result"
 }
