@@ -4228,7 +4228,7 @@ $missing_packages"
         local available_packages="$pkg_list"
         # Remove missing packages from the list
         for missing_pkg in $missing_packages; do
-            available_packages=$(sed -e "s/\b$missing_pkg\b//g" -e 's/  */ /g' -e 's/^ *//;s/ *$//' <<<"$available_packages")
+            available_packages=$(tr ' ' '\n' <<<"$available_packages" | grep -vxF -- "$missing_pkg" | tr '\n' ' ')
         done
 
         local available_cnt
@@ -4353,7 +4353,7 @@ $missing_packages"
         failed_packages="$failed_packages $problem_pkg"
 
         # Remove the problematic package from remaining list
-        remaining_packages=$(echo "$remaining_packages" | sed "s/\b$problem_pkg\b//g" | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+        remaining_packages=$(tr ' ' '\n' <<<"$remaining_packages" | grep -vxF -- "$problem_pkg" | tr '\n' ' ')
 
         attempt=$((attempt + 1))
 
