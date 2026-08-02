@@ -158,7 +158,7 @@ main() {
             [$short_stack][$short_stack]*)
                 if [[ $arg =~ ^[$short_stack]+$ ]]; then
                     # shellcheck disable=SC2046
-                    set -- $(sed -r 's/([a-zA-Z])/ -\1 /g' <<<"$arg") "$@"
+                    set -- $(sed -r 's/([a-zA-Z0-9])/ -\1 /g' <<<"$arg") "$@"
                     continue
                 fi;;
         esac
