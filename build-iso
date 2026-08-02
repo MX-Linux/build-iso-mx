@@ -6227,7 +6227,7 @@ update_remove_list() {
 
     local p tdir tfile tflav short preg regex
     for tdir in $targ_dirs; do
-        for tname in package basic-package pesky-packages; do
+        for tname in package basic-package pesky-package; do
             tfile=$tdir/$tname.list
             tflav=$(basename "$tdir")
             short=$tflav/$tname.list
