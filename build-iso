@@ -4413,7 +4413,8 @@ check_missing() {
         return
     fi
     dpkg --get-selections  >  "$installed".raw
-    echo -e "$missing"     >  /Build/missing-"$label".list
+    printf '%b' "$missing" >> "$known_missing"
+    sort -u -o "$known_missing" "$known_missing"
 
     local mcnt
     mcnt=$(echo -e "$missing" | wc -w)
