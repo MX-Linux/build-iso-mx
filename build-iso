@@ -933,8 +933,8 @@ do_stage_2() {
                 fi
 
                 # shellcheck disable=SC2086
-                $SUDO pacstrap -C "$pacman_conf" -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
-                local pacstrap_ret=${PIPESTATUS[0]}
+                pacstrap_with_keyring_retry "$pacman_conf" "$sqfs_dir" $PACSTRAP_PACKAGES
+                local pacstrap_ret=$?
                 (( pacstrap_ret == 0 )) || fatal "pacstrap failed"
             fi
 
@@ -6071,6 +6071,59 @@ ensure_archlinux_keyring_layout() {
         fi
     done
     [[ -r "$arch_keyrings/archlinux.gpg" ]]
+}
+
+# Run pacstrap on a non-Arch host.  A Debian/MX archlinux-keyring snapshot can
+# lag behind Arch package-signing key renewals.  Avoid a network refresh on
+# every build: only refresh the signer(s) named by an unknown-trust failure,
+# then retry pacstrap once.
+pacstrap_with_keyring_retry() {
+    local pacman_conf=$1 target=$2
+    shift 2
+
+    local output ret refresh_ret=0 signer
+    local -a signers=()
+    output=$(mktemp --tmpdir "$ME-pacstrap.XXXXXX") || return 1
+
+    $SUDO env LC_ALL=C pacstrap -C "$pacman_conf" -c -G -M "$target" "$@" 2>&1 | tr '\r' '\n' | tee "$output"
+    ret=${PIPESTATUS[0]}
+    if (( ret == 0 )); then
+        rm -f "$output"
+        return 0
+    fi
+
+    mapfile -t signers < <(sed -n -E \
+        's/.*signature from "([^"]+)" is unknown trust.*/\1/p' "$output" | sort -u)
+    if (( ${#signers[@]} == 0 )); then
+        rm -f "$output"
+        return "$ret"
+    fi
+
+    say "Refresh Arch signing keys after an unknown-trust failure"
+    for signer in "${signers[@]}"; do
+        say "Refresh signing key for $(pq "$signer")"
+        $SUDO pacman-key --refresh-keys "$signer" 2>&1 | tr '\r' '\n'
+        (( PIPESTATUS[0] == 0 )) || refresh_ret=1
+    done
+
+    if (( refresh_ret != 0 )); then
+        warn "Could not refresh all unknown Arch signing keys"
+        rm -f "$output"
+        return "$ret"
+    fi
+
+    $SUDO pacman-key --populate archlinux 2>&1 | tr '\r' '\n'
+    if (( PIPESTATUS[0] != 0 )); then
+        warn "Could not repopulate the Arch signing keyring"
+        rm -f "$output"
+        return "$ret"
+    fi
+
+    say "Retry pacstrap with the refreshed keyring"
+    $SUDO env LC_ALL=C pacstrap -C "$pacman_conf" -c -G -M "$target" "$@" 2>&1 | tr '\r' '\n'
+    ret=${PIPESTATUS[0]}
+    rm -f "$output"
+    return "$ret"
 }
 
 #==============================================================================
