@@ -51,7 +51,7 @@ gcc
 gdu
 ghostscript
 glib-networking
-gocr
+#gocr
 groff
 gsettings-desktop-schemas
 hdparm
