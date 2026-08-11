@@ -8,7 +8,7 @@ CACHE="pacstrap,chroot"
 
 # ISO identity
 DISTRO_NAME="MXarch"
-DISTRO_VERSION="26.05"
+DISTRO_VERSION="26.08"
 CODE_NAME="Infinity Arch"
 RELEASE_DATE="August 3, 2026"
 
