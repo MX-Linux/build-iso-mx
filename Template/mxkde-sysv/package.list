@@ -81,6 +81,7 @@ kate-data
 kcalc
 kde-cli-tools
 kde-cli-tools-data
+kde-config-flatpak
 kde-config-gtk-style
 kde-config-screenlocker
 kde-config-sddm
@@ -179,7 +180,6 @@ mx-select-sound
 mx-sound-theme-borealis
 mx-sound-theme-fresh-and-clean
 mx-tour
-#mx-viewer
 mx-welcome
 mx25-artwork
 mythes-en-us
@@ -204,6 +204,7 @@ plasma-dataengines-addons
 plasma-desktop
 plasma-desktop-data
 plasma-discover
+plasma-discover-backend-flatpak
 plasma-firewall
 plasma-framework
 plasma-integration
@@ -216,6 +217,7 @@ plasma-systemmonitor
 plasma-wallpapers-addons
 plasma-widgets-addons
 plasma-workspace
+plasma5-integration
 plymouth
 plymouth-themes
 plymouth-themes-mx
