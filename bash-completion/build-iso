@@ -1,0 +1,51 @@
+# Bash completion for build-iso
+#
+# To use, source this file from your shell (e.g. from ~/.bashrc):
+#   source /path/to/build-iso-mx/bash-completion/build-iso
+#
+# Or drop a symlink into /etc/bash_completion.d/ (as root):
+#   ln -s /path/to/build-iso-mx/bash-completion/build-iso /etc/bash_completion.d/build-iso
+
+_build_iso() {
+    local cur prev words cword
+    _init_completion || return
+
+    local long_opts="
+        --auto --AUTO --chroot --COLOR --delete --DELETE --error-ask --fast
+        --FAST-UMOUNT --help --iso-only --INTERACTIVE --jbb --manual
+        --no-error-check --NO-ERROR-LOG --pretend --quiet --reset --stats
+        --SAVE --update --UPDATE --VERBOSE --version --lz4 --user-default
+        --zstd --show-stages --show-parts --stop5 --stop8 --grub-only
+        --no-ucode
+    "
+    local short_opts="-a -A -c -C -d -D -e -f -F -h -i -I -j -m -n -N -p -q -r -s -S -u -U -v -V"
+
+    case "$prev" in
+        --user-default)
+            local input_dir
+            input_dir=$(dirname -- "${words[0]}")/Input
+            [[ -d $input_dir ]] || input_dir=Input
+            COMPREPLY=($(compgen -W "$(cd "$input_dir" 2>/dev/null && ls defaults* 2>/dev/null)" -- "$cur"))
+            return
+            ;;
+        --COLOR|--color|-C)
+            COMPREPLY=($(compgen -W "high low off" -- "$cur"))
+            return
+            ;;
+    esac
+
+    case "$cur" in
+        --COLOR=*|--color=*)
+            COMPREPLY=($(compgen -W "high low off" -- "${cur#*=}"))
+            COMPREPLY=("${COMPREPLY[@]/#/${cur%%=*}=}")
+            return
+            ;;
+        -*)
+            COMPREPLY=($(compgen -W "$long_opts $short_opts" -- "$cur"))
+            return
+            ;;
+    esac
+
+    COMPREPLY=($(compgen -W "0 1 2 3 4 5 6 7 8" -- "$cur"))
+} &&
+complete -F _build_iso build-iso ./build-iso

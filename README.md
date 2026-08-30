@@ -35,6 +35,12 @@ or whatever `defaults-*` file in the `Input/` directory.
 
 Refer to [README-Custom-Respin.md](README-Custom-Respin.md) for more on customizations.
 
+Bash completion for `build-iso` options is available in `bash-completion/build-iso`.
+Source it (e.g. from `~/.bashrc`) to enable it:
+````
+source /path/to/build-iso-mx/bash-completion/build-iso
+````
+
 
 ## Special notes
 
