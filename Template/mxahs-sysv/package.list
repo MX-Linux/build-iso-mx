@@ -191,8 +191,8 @@ lightdm-gtk-greeter
 lightdm-gtk-greeter-mx
 lightdm-gtk-greeter-settings
 lightdm-modified-init
-linux-image-liquorix-amd64
-linux-headers-liquorix-amd64
+linux-image-siduction-amd64
+linux-headers-siduction-amd64
 lo-main-helper
 luckybackup
 luckybackup-data
