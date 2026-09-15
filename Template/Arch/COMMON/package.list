@@ -148,3 +148,35 @@ xfsprogs
 yad
 zip
 zsync
+
+# MX packages, installed from the [mxarch] repository rather than built
+# from the AUR. See Input/arch/pacman.conf.
+conky-toggle-mx
+desktop-defaults-mx-common
+flags-common
+formatusb
+gazelle-installer
+gazelle-installer-data-mx
+grub-themes-mx
+job-scheduler
+mx-boot-options
+mx-cleanup
+mx-conky
+mx-conky-data
+mx-datetime
+mx-iso-template-arch
+mx-live-usb-maker
+mx-locale
+mx-packageinstaller
+mx-samba-config
+mx-service-manager
+mx-skel-fish-config
+mx-snapshot
+mx-tools
+mx-tweak
+mx-user
+papirus-mxblue
+quick-system-info-gui
+system-keyboard-qt
+uefi-manager
+update-notifier-qt

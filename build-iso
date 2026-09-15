@@ -1963,6 +1963,24 @@ do_stage_4_arch() {
             ret=${PIPESTATUS[0]}
             (( ret == 0 )) || error "pacman-key --populate failed"
         fi
+        # Trust the MX Arch repository's signing key. It is not part of
+        # archlinux-keyring, and the -Syu below reads that repository's database,
+        # so the key has to be in place first or pacman rejects it as an invalid
+        # signature. Idempotent: skipped once the key is already known.
+        : "${MXARCH_KEY_ID:=442D90008FE173AE}"
+        : "${MXARCH_KEY_URL:=https://arch.mxrepo.com/os/x86_64/mxarch.key}"
+        if ! pacman-key --list-keys "$MXARCH_KEY_ID" &>/dev/null; then
+            say "Import the MX Arch repository signing key"
+            if curl -fsSL "$MXARCH_KEY_URL" -o /tmp/mxarch.key; then
+                pacman-key --add /tmp/mxarch.key 2>&1 | tr '\r' '\n'
+                (( ${PIPESTATUS[0]} == 0 )) || error "pacman-key --add failed for the MX Arch key"
+                pacman-key --lsign-key "$MXARCH_KEY_ID" 2>&1 | tr '\r' '\n'
+                (( ${PIPESTATUS[0]} == 0 )) || error "pacman-key --lsign-key failed for $MXARCH_KEY_ID"
+                rm -f /tmp/mxarch.key
+            else
+                error "Could not fetch the MX Arch repository key from $MXARCH_KEY_URL"
+            fi
+        fi
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
         arch_pacman -Syu

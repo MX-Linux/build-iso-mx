@@ -124,3 +124,10 @@ wqy-microhei
 xdg-desktop-portal
 xdg-desktop-portal-kde
 yakuake
+
+# MX packages, installed from the [mxarch] repository rather than shipped
+# as prebuilt local packages in Deb/ArchKDE. See Input/arch/pacman.conf.
+desktop-defaults-mx-kde
+plasma-look-and-feel-theme-mx
+plasma-modified-defaults-mx
+quark-splash-dark
