@@ -1953,16 +1953,20 @@ do_stage_4_arch() {
 
     if do_part 2 "Update repos and do pacman -Syu"; then
         [[ -s /etc/pacman.d/mirrorlist ]] || error "Empty or missing /etc/pacman.d/mirrorlist"
-        if [[ ! -d /etc/pacman.d/gnupg ]] || [[ -z $(ls -A /etc/pacman.d/gnupg 2>/dev/null) ]]; then
-            local ret
-            say "Initialize target pacman keyring"
-            pacman-key --init 2>&1 | tr '\r' '\n'
-            ret=${PIPESTATUS[0]}
-            (( ret == 0 )) || error "pacman-key --init failed"
-            pacman-key --populate archlinux 2>&1 | tr '\r' '\n'
-            ret=${PIPESTATUS[0]}
-            (( ret == 0 )) || error "pacman-key --populate failed"
-        fi
+        # Unconditional: both commands are idempotent, and the guard this
+        # replaces tested whether /etc/pacman.d/gnupg was *empty* rather than
+        # whether it held a master signing key. A keyring with files but no
+        # master key skipped the init, and then every --lsign-key below failed,
+        # the MX Arch one included, for a reason its error message does not
+        # hint at.
+        local ret
+        say "Initialize target pacman keyring"
+        pacman-key --init 2>&1 | tr '\r' '\n'
+        ret=${PIPESTATUS[0]}
+        (( ret == 0 )) || error "pacman-key --init failed"
+        pacman-key --populate archlinux 2>&1 | tr '\r' '\n'
+        ret=${PIPESTATUS[0]}
+        (( ret == 0 )) || error "pacman-key --populate failed"
         # Trust the MX Arch repository's signing key. It is not part of
         # archlinux-keyring, and the -Syu below reads that repository's database,
         # so the key has to be in place first or pacman rejects it as an invalid
