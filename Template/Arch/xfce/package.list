@@ -159,6 +159,7 @@ lightdm
 lightdm-gtk-greeter
 lightdm-gtk-greeter-settings
 mugshot
+mx-usb-unmounter
 onboard
 orage
 pavucontrol
