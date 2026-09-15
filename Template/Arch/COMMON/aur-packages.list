@@ -4,10 +4,8 @@
 # These packages are installed using paru after regular packages.
 # paru must be available (either pre-built in Deb/Arch/ or will be bootstrapped).
 #
-# Only these remain: mx-boot-repair has no public git remote for OBS to
-# clone, and open-vm-tools-git and paru are third-party. Everything else
-# moved to package.list once it was in [mxarch].
+# Only these remain: open-vm-tools-git and paru are third-party. Every MX
+# package moved to package.list once it was in [mxarch].
 
-mx-boot-repair
 open-vm-tools-git
 paru

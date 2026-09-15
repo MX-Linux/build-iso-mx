@@ -160,6 +160,7 @@ gazelle-installer-data-mx
 grub-themes-mx
 job-scheduler
 mx-boot-options
+mx-boot-repair
 mx-cleanup
 mx-conky
 mx-conky-data
