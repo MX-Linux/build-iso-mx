@@ -76,6 +76,8 @@ Options:
     --stop8				Stop process at Stage 8 (iso generation)
     --grub-only         Use grub for legacy boot (eltorito.img must exist or this will fail)
     --no-ucode          Don't inject AMD/Intel microcode into initrd.gz
+    --alpha             EXPERIMENTAL build: name the iso ..._ALPHA_<timestamp>.iso
+    --beta              TEST build: name the iso ..._BETA_<timestamp>.iso
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -216,6 +218,8 @@ main() {
                -lz4)   lz4_override=true                        ;;
               -zstd)  zstd_override=true                        ;;
           -no-ucode)     no_ucode=true                        ;;
+             -alpha)     ISO_SUFFIX="ALPHA_$(date +%Y%m%d-%H%M)"      ;;
+              -beta)     ISO_SUFFIX="BETA_$(date +%Y%m%d-%H%M)"       ;;
              -stop5)         stop_5=true                        ;;
              -stop8)         stop_8=true                        ;;
              -grub-only)    GRUB_ONLY=true                     ;;
@@ -777,7 +781,7 @@ Remaster_Blurb
     local full_distro_name=$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH
     full_distro_name=${full_distro_name// /_}
     [[ $DISTRO_NAME = antiX ]] && full_distro_name=$full_distro_name-$ISO_FLAV
-    local iso_file=$full_distro_name.iso
+    local iso_file=$full_distro_name${ISO_SUFFIX:+_$ISO_SUFFIX}.iso
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
         local dir
@@ -3406,7 +3410,7 @@ do_stage_8() {
 
     report_size "$iso_dir"
 
-    local iso_file=$full_distro_name.iso
+    local iso_file=$full_distro_name${ISO_SUFFIX:+_$ISO_SUFFIX}.iso
     mkdir -p "$iso_file_dir"
     local full_iso_file=$iso_file_dir/$iso_file
     say "Build the live $(pq "$iso_file") file"
