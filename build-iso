@@ -3504,7 +3504,7 @@ do_stage_8() {
             local gpg_sudo
             is_antiX && gpg_sudo=$SUDO
             $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
-            $gpg_sudo gpg --clearsign "$full_iso_file".sha256
+            gpg_clearsign_file "$full_iso_file".sha256
         fi
 
         say2 "Your live $(pq "$iso_file") is in $(pq Remaster/iso-files) ready to be tested"
@@ -3550,17 +3550,18 @@ do_stage_8() {
     size=$(du_size "$full_iso_file")
     end_timer "create $(pqn "$size") iso file"
 
+    #md5sum_file $full_iso_file
+    sha256sum_file "$full_iso_file"
+    zsyncmake_file "$full_iso_file"
+
     if [[ $SIGN_FILES == true ]]; then
         say "Sign $(basename "$full_iso_file")"
         rm -f "$full_iso_file".sig 2>/dev/null
         local gpg_sudo
         is_antiX && gpg_sudo=$SUDO
         $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
+        gpg_clearsign_file "$full_iso_file".sha256
     fi
-
-    #md5sum_file $full_iso_file
-    sha256sum_file "$full_iso_file"
-    zsyncmake_file "$full_iso_file"
 
 
     if is_antiX && [[ -L "$ISO_SYMLINK" ]];then
@@ -6385,6 +6386,15 @@ sha256sum_file() {
     dir=$(dirname "$1")
     file=$(basename "$1")
     (cd "$dir" && sha256sum "$file" > "$file".sha256)
+}
+
+gpg_clearsign_file() {
+    local dir file gpg_sudo
+    dir=$(dirname "$1")
+    file=$(basename "$1")
+    is_antiX && gpg_sudo=$SUDO
+    (cd "$dir" && rm -f "$file".asc 2>/dev/null
+        $gpg_sudo gpg --clearsign --output "$file".asc "$file")
 }
 
 zsyncmake_file() {
