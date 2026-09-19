@@ -3504,6 +3504,7 @@ do_stage_8() {
             local gpg_sudo
             is_antiX && gpg_sudo=$SUDO
             $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
+            $gpg_sudo gpg --clearsign "$full_iso_file".sha256
         fi
 
         say2 "Your live $(pq "$iso_file") is in $(pq Remaster/iso-files) ready to be tested"
