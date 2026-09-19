@@ -5,6 +5,7 @@ source $THEME_DIR/../theme-functions.sh
 start_theme "$@"
 
 mkdir -p /etc/skel/.local/share/applications/
+mkdir -p /etc/skel/.config/autostart/
 copy_file conky.desktop  	/etc/skel/.config/autostart/
 copy_file grub                  /etc/default/
 copy_dir desktop-base/          /usr/share/desktop-base/	--create
