@@ -3328,6 +3328,16 @@ do_stage_7() {
         [[ -d "$sqfs_dir/var/cache/fontconfig" ]] && $SUDO cp "$sqfs_dir"/var/cache/fontconfig/* "$sqfs_dir"/etc/skel/.cache/fontconfig/
     fi
 
+    # The /etc and /usr directory nodes may carry a group/world-writable mode
+    # from the build host's umask (cp --preserve=mode in copy_template_dir
+    # keeps whatever the Template source had). Only normalize the top-level
+    # directories themselves, not their contents: live-boot's writable check
+    # tests these directory nodes specifically, and recursing further would
+    # also strip intentional group-write bits (e.g. Debian's root:staff 2775
+    # on /usr/local).
+    say "Ensure /etc and /usr are not group/world-writable"
+    $SUDO chmod 755 "$sqfs_dir"/etc "$sqfs_dir"/usr
+
     if  [[ -n $zstd_override ]]; then
         COMPRESSION_TYPE="zstd"
         COMPRESSION_TYPE_CODE="-comp zstd -Xcompression-level 15 -b 262144"
