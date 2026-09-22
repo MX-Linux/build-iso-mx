@@ -149,7 +149,7 @@ copy_file() {
     [ ! -e $src  ] && error "Could not find theme file: $(pqw $short_src)"   && return
     check_targ_dir $targ $create || return
     echo_run cp $COPY_ARGS $src $targ/
-    echo_run chmod go-w $targ/
+    [ -L $targ/$name ] || echo_run chmod go-w $targ/$name
 }
 
 copy_dir() {
@@ -168,7 +168,9 @@ copy_dir() {
     [ ! -d $src  ] && error "Is not a theme directory: $(pqw $short_src)"       && return
     check_targ_dir $targ $create || return
     echo_run cp --recursive $COPY_ARGS $src/* $targ/
-    echo_run chmod -R go-w $targ/
+    for f in $src/*; do 
+        echo_run chmod -R go-w $targ/${f##*/}
+    done
 }
 
 rm_file() {
