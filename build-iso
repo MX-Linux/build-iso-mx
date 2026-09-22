@@ -6293,7 +6293,7 @@ copy_template_dir() {
             say "Copy from Template: $(pq "$flav"/"$from")"
             $sudo cp -R --preserve=link,mode "$dir"/* "$dest"/
             #ensure template files are read-only on group and "other" permission
-            chmod -R go-w "$dest"/
+            $sudo chmod -R go-w "$dest"/
 
         fi
     done
