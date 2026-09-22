@@ -141,6 +141,7 @@ copy_file() {
 
     local short_src=$MISC_DIR/$1    short_targ=$2
     local      src=$THEME_DIR/$MISC_DIR/$1  targ=$PREFIX${2%/}
+    local     name=${1##*/}
     shift 2
 
     local create=$(local_create "$@")
@@ -168,8 +169,8 @@ copy_dir() {
     [ ! -d $src  ] && error "Is not a theme directory: $(pqw $short_src)"       && return
     check_targ_dir $targ $create || return
     echo_run cp --recursive $COPY_ARGS $src/* $targ/
-    for f in $src/*; do 
-        echo_run chmod -R go-w $targ/${f##*/}
+    for f in $src/*; do
+        [ -L $targ/${f##*/} ] || echo_run chmod -R go-w $targ/${f##*/}
     done
 }
 
