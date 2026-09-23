@@ -6291,10 +6291,11 @@ copy_template_dir() {
             only_overwrite "$dir" "$dest"
         else
             say "Copy from Template: $(pq "$flav"/"$from")"
-            $sudo cp -R --preserve=link,mode "$dir"/* "$dest"/
             #ensure template files are read-only on group and "other" permission
-            $sudo chmod -R go-w "$dest"/
-
+            #changing the template doesn't hose up the other folders created by the system, mainly /tmp
+            #this is the original method
+            $sudo chmod -R go-w "$dir"/
+            $sudo cp -R --preserve=link,mode "$dir"/* "$dest"/
         fi
     done
 }
