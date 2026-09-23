@@ -163,8 +163,8 @@ libreoffice-report-builder-bin
 libreoffice-sdbc-hsqldb
 libreoffice-style-sifr
 libreoffice-writer
-linux-headers-siduction-amd64
-linux-image-siduction-amd64
+linux-headers-liquorix-amd64
+linux-image-liquorix-amd64
 lo-main-helper
 manpages-dev
 media-player-info
