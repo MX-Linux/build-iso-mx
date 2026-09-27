@@ -954,26 +954,24 @@ do_stage_2() {
             [[ -e "$sqfs_dir/bin/bash" ]] || fatal "pacstrap failed"
         fi
 
-        # Ensure the target has a working pacman configuration and mirrorlist.
-        if is_arch_host; then
-            # On Arch host, pacstrap should have set up the target correctly
-            # But let's verify and fix if needed
-            if [[ ! -f "$sqfs_dir/etc/pacman.conf" ]]; then
-                say "Copying host pacman.conf to target"
-                $SUDO cp "/etc/pacman.conf" "$sqfs_dir/etc/pacman.conf"
-            fi
-            if [[ ! -f "$sqfs_dir/etc/pacman.d/mirrorlist" ]]; then
-                say "Copying host mirrorlist to target"
-                $SUDO cp "/etc/pacman.d/mirrorlist" "$sqfs_dir/etc/pacman.d/mirrorlist"
-            fi
-        else
-            # On Debian/MX hosts, pacstrap does not reliably set this up for the target.
+        # Install the configuration the bootstrap used, unconditionally.  The
+        # target's own copy, whether written by pacstrap or left over from a
+        # restored cache, is host dependent and on a Debian/MX host has no
+        # [mxarch] section, which is what the flavour package lists need.
+        if [[ -r "$pacman_conf_src" && -r "$mirror_src" ]]; then
+            say "Install $(pq "${PACMAN_CONF:-Input/arch/pacman.conf}") in target"
             $SUDO mkdir -p "$sqfs_dir/etc/pacman.d"
-            $SUDO cp "$mirror_src" "$sqfs_dir/etc/pacman.d/mirrorlist"
+            $SUDO cp "$mirror_src"      "$sqfs_dir/etc/pacman.d/mirrorlist"
             $SUDO cp "$pacman_conf_src" "$sqfs_dir/etc/pacman.conf"
-            if ! $SUDO grep -q '^\[extra\]' "$sqfs_dir/etc/pacman.conf"; then
-                fatal "Target pacman.conf is missing repository sections (e.g. [extra]). Check $(pqw "$PACMAN_CONF")"
-            fi
+        else
+            # Arch host without Input/arch overrides: fall back to its own files.
+            say "Copying host pacman.conf and mirrorlist to target"
+            $SUDO mkdir -p "$sqfs_dir/etc/pacman.d"
+            $SUDO cp "/etc/pacman.conf"         "$sqfs_dir/etc/pacman.conf"
+            $SUDO cp "/etc/pacman.d/mirrorlist" "$sqfs_dir/etc/pacman.d/mirrorlist"
+        fi
+        if ! $SUDO grep -q '^\[extra\]' "$sqfs_dir/etc/pacman.conf"; then
+            fatal "Target pacman.conf is missing repository sections (e.g. [extra]). Check $(pqw "${PACMAN_CONF:-Input/arch/pacman.conf}")"
         fi
 
         # Avoid mkinitcpio warnings about missing vconsole config in minimal installs.
