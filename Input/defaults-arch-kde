@@ -8,9 +8,9 @@ CACHE="pacstrap,chroot"
 
 # ISO identity
 DISTRO_NAME="MXarch"
-DISTRO_VERSION="26.08"
+DISTRO_VERSION="26.09"
 CODE_NAME="Infinity Arch"
-RELEASE_DATE="August 3, 2026"
+RELEASE_DATE="September 27, 2026"
 
 # Arch uses x86_64 naming; keep this consistent across templates/iso naming.
 ARCH="x86_64"
