@@ -1,12 +1,12 @@
 # Arch Support (Porting Notes)
 
-This repository is designed around the antiX/MX live stack (Debian-family bootstrap + a custom initrd that mounts `antiX/linuxfs`). Arch support is being added using the “B” approach: keep the stage pipeline and ISO layout, but swap Debian-specific tooling for Arch where possible.
+This repository is designed around the antiX/MX live stack (Debian-family bootstrap + a custom initrd that mounts `antiX/linuxfs`). Arch support uses the “B” approach: keep the stage pipeline and ISO layout, but swap Debian-specific tooling for Arch where possible.
 
 ## Current Status
 - Stage 0: supports `DISTRO_FAMILY=arch` and uses `Template/Arch/`.
 - Stage 2: uses `pacstrap` to create the root filesystem.
 - Stage 4 (in chroot): uses `pacman` + `mkinitcpio`, builds an `archiso.img`, generates locales, and creates the live user.
-- Stage 6–8: create an archiso-style ISO layout and build the ISO via `grub-mkrescue` (experimental).
+- Stage 6–8: create an archiso-style ISO layout and build the ISO via `grub-mkrescue`.
 
 ## Debian → Arch command mapping
 - Bootstrap: `debootstrap` → `pacstrap` (from `arch-install-scripts`)
@@ -17,8 +17,8 @@ This repository is designed around the antiX/MX live stack (Debian-family bootst
 - Initramfs: `initramfs-tools` → `mkinitcpio -P`
 - Locale: `update-locale` → write `/etc/locale.conf` + run `locale-gen`
 
-## What’s still missing (bootable Arch ISO)
-To boot an Arch-based live system, we must implement an Arch-compatible initramfs + boot parameters that can:
+## Boot requirements
+A bootable Arch-based live system needs an Arch-compatible initramfs + boot parameters that can:
 1) discover the ISO medium,
 2) mount the squashfs (`antiX/linuxfs`) or change the ISO layout to an Arch-compatible one,
 3) set up overlay/persistence (optional),
@@ -34,7 +34,7 @@ Practical options:
 - persistence helpers (after adapting mount/layout expectations),
 - squashfs tooling wrappers.
 
-## Validation Checklist (once Stage 6+ is implemented)
+## Validation Checklist
 - Debian/MX host needs extra pacman pieces: `pacman-package-manager`, `makepkg`, `archlinux-keyring` (Debian installs keyrings under `/usr/share/keyrings`; the builder links them into `/usr/share/pacman/keyrings`).
 - Build host has: `pacstrap`, `pacman`, `mksquashfs`, ISO tool (`xorriso` or `genisoimage`), bootloader tooling used by this repo.
 - Stage 2 creates a bootable rootfs: `/etc/pacman.d/mirrorlist` exists, `pacman -Q` works in chroot.

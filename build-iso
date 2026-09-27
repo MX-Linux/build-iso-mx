@@ -869,7 +869,7 @@ do_stage_2() {
     enter_stage 2 "Bootstrap root filesystem"
 
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
-        say "Using pacstrap (Arch; experimental)"
+        say "Using pacstrap (Arch)"
 
         [[ $do_fast ]] && mount_tmpfs
 
@@ -1867,7 +1867,7 @@ do_stage_4() {
 }
 
 do_stage_4_arch() {
-    say "Arch in-chroot phase (experimental)"
+    say "Arch in-chroot phase"
 
     require_programs pacman locale-gen mkinitcpio useradd usermod groupadd chpasswd ln systemctl pacman-key mount df awk find
 

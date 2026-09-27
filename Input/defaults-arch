@@ -1,4 +1,4 @@
-# Experimental Arch Linux profile (work in progress).
+# Arch Linux profile.
 # Use with: ./build-iso --user-default defaults-arch
 
 DISTRO_FAMILY="arch"
@@ -26,8 +26,8 @@ MAKE_ISO="xorriso"
 # Keep this minimal; add desktop stacks via Template/Arch/*.list.
 PACSTRAP_PACKAGES="base linux linux-firmware archlinux-keyring archiso mkinitcpio-archiso"
 
-# While Arch support is experimental, always rebuild the `/Build` payload so
-# changes to scripts/templates propagate into the chroot.
+# Always rebuild the `/Build` payload so changes to scripts/templates propagate
+# into the chroot.
 REFRESH_BUILD_DIR="1"
 
 # Host-side pacman configuration used by pacstrap (especially important on Debian/MX).
