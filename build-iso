@@ -911,6 +911,7 @@ do_stage_2() {
             if is_arch_host; then
                 # On Arch host, use native pacman configuration
                 say "Using host pacman configuration (Arch Linux)"
+                import_mxarch_key
                 # shellcheck disable=SC2086
                 $SUDO pacstrap -c -G -M "$sqfs_dir" $PACSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
                 local pacstrap_ret=${PIPESTATUS[0]}
@@ -935,6 +936,11 @@ do_stage_2() {
                     $SUDO bash -o pipefail -c "pacman-key --init 2>&1 | tr '\r' '\n'"
                     $SUDO bash -o pipefail -c "pacman-key --populate archlinux 2>&1 | tr '\r' '\n'"
                 fi
+
+                # pacstrap verifies the synced databases (the [mxarch] one
+                # included) with the host keyring, so the MX Arch key has to be
+                # trusted here too -- the in-chroot import happens much later.
+                import_mxarch_key
 
                 # shellcheck disable=SC2086
                 pacstrap_with_keyring_retry "$pacman_conf" "$sqfs_dir" $PACSTRAP_PACKAGES
@@ -1974,21 +1980,8 @@ do_stage_4_arch() {
         # Trust the MX Arch repository's signing key. It is not part of
         # archlinux-keyring, and the -Syu below reads that repository's database,
         # so the key has to be in place first or pacman rejects it as an invalid
-        # signature. Idempotent: skipped once the key is already known.
-        : "${MXARCH_KEY_ID:=442D90008FE173AE}"
-        : "${MXARCH_KEY_URL:=https://arch.mxrepo.com/os/x86_64/mxarch.key}"
-        if ! pacman-key --list-keys "$MXARCH_KEY_ID" &>/dev/null; then
-            say "Import the MX Arch repository signing key"
-            if curl -fsSL "$MXARCH_KEY_URL" -o /tmp/mxarch.key; then
-                pacman-key --add /tmp/mxarch.key 2>&1 | tr '\r' '\n'
-                (( ${PIPESTATUS[0]} == 0 )) || error "pacman-key --add failed for the MX Arch key"
-                pacman-key --lsign-key "$MXARCH_KEY_ID" 2>&1 | tr '\r' '\n'
-                (( ${PIPESTATUS[0]} == 0 )) || error "pacman-key --lsign-key failed for $MXARCH_KEY_ID"
-                rm -f /tmp/mxarch.key
-            else
-                error "Could not fetch the MX Arch repository key from $MXARCH_KEY_URL"
-            fi
-        fi
+        # signature.
+        import_mxarch_key
         # For -Syu we do not need --needed, but it's harmless; keep the wrapper
         # to guarantee --noconfirm and mount setup.
         arch_pacman -Syu
@@ -5999,7 +5992,7 @@ require_programs_fatal() {
 
 require_arch_host_tools() {
     local missing
-    missing=$(missing_programs pacstrap pacman pacman-key makepkg grub-mkrescue xorriso mformat mcopy)
+    missing=$(missing_programs pacstrap pacman pacman-key makepkg grub-mkrescue xorriso mformat mcopy curl)
     [[ -z $missing ]] && return 0
 
     local hint=""
@@ -6043,6 +6036,9 @@ require_arch_host_tools() {
         fi
         if [[ $missing =~ (^|[[:space:]])(mformat|mcopy)($|[[:space:]]) ]]; then
             hint="${hint:+$hint; }For mformat/mcopy try: sudo apt install mtools"
+        fi
+        if [[ $missing =~ (^|[[:space:]])curl($|[[:space:]]) ]]; then
+            hint="${hint:+$hint; }For curl (fetches the MX Arch signing key) try: sudo apt install curl"
         fi
     fi
     fatal "Missing these required programs: $(pqw "$missing").${hint:+ $hint}"
@@ -6109,6 +6105,47 @@ ensure_archlinux_keyring_layout() {
         fi
     done
     [[ -r "$arch_keyrings/archlinux.gpg" ]]
+}
+
+#------------------------------------------------------------------------------
+# import_mxarch_key
+# Trust the MX Arch repository signing key in the pacman keyring.  The key is not
+# part of archlinux-keyring, so every pacman run that syncs the [mxarch]
+# repository database fails with `key "<id>" is unknown` (pacman then tries, and
+# also fails, to look the key up on a keyserver) until the key is added and
+# locally signed.  Called on the host as well as inside the chroot because
+# pacstrap verifies the synced databases against the *host* keyring.
+# Idempotent: skipped once the key is already in the keyring.
+#------------------------------------------------------------------------------
+import_mxarch_key() {
+    local key_file
+    : "${MXARCH_KEY_ID:=442D90008FE173AE}"
+    : "${MXARCH_KEY_URL:=https://arch.mxrepo.com/os/x86_64/mxarch.key}"
+
+    $SUDO pacman-key --list-keys "$MXARCH_KEY_ID" &>/dev/null && return 0
+
+    say "Import the MX Arch repository signing key"
+    key_file=$(mktemp) || fatal "Could not create a temp file for the MX Arch key"
+    if ! curl -fsSL "$MXARCH_KEY_URL" -o "$key_file"; then
+        rm -f "$key_file"
+        error "Could not fetch the MX Arch repository key from $MXARCH_KEY_URL"
+        return 1
+    fi
+
+    $SUDO pacman-key --add "$key_file" 2>&1 | tr '\r' '\n'
+    if (( ${PIPESTATUS[0]} != 0 )); then
+        rm -f "$key_file"
+        error "pacman-key --add failed for the MX Arch key"
+        return 1
+    fi
+
+    $SUDO pacman-key --lsign-key "$MXARCH_KEY_ID" 2>&1 | tr '\r' '\n'
+    if (( ${PIPESTATUS[0]} != 0 )); then
+        rm -f "$key_file"
+        error "pacman-key --lsign-key failed for $MXARCH_KEY_ID"
+        return 1
+    fi
+    rm -f "$key_file"
 }
 
 # Run pacstrap on a non-Arch host.  A Debian/MX archlinux-keyring snapshot can
