@@ -16,6 +16,7 @@ copy_file pc-speaker.conf	/etc/modprobe.d/
 copy_file plymouthd.conf	/etc/plymouth/			--create
 copy_file ufw.conf		/etc/ufw/			--create
 copy_file zramswap.service	/etc/systemd/system/
+copy_file autologin.conf	/etc/plasmalogin.conf.d/	--create
 
 # Enable services
 systemctl enable plasmalogin 2>&1 | tr '\r' '\n'
