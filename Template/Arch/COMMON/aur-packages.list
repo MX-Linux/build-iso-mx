@@ -1,11 +1,10 @@
 # AUR (Arch User Repository) packages to install.
 # One package per line. Comments start with #.
 #
-# These packages are installed using paru after regular packages.
-# paru must be available (either pre-built in Deb/Arch/ or will be bootstrapped).
+# These packages are installed using paru after regular packages. paru itself
+# comes from [mxarch] through package.list.
 #
-# Only these remain: open-vm-tools-git and paru are third-party. Every MX
-# package moved to package.list once it was in [mxarch].
+# Only open-vm-tools-git remains: every MX package, and paru, moved to
+# package.list once it was in [mxarch].
 
 open-vm-tools-git
-paru

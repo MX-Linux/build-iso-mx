@@ -2176,40 +2176,9 @@ do_stage_4_arch() {
             error "AUR installation requires user '$aur_user' (should be created in Part 17)"
         fi
 
-        # Check if paru is available
-        if ! command -v paru >/dev/null 2>&1; then
-            say "paru not found, bootstrapping from AUR..."
-
-            # Install base-devel if not present (needed for makepkg)
-            if ! pacman -Qq base-devel >/dev/null 2>&1; then
-                arch_pacman -S --needed base-devel git
-            fi
-
-            # Create build directory
-            local paru_build_dir="/tmp/paru-build"
-            mkdir -p "$paru_build_dir"
-            chown "$aur_user:$aur_user" "$paru_build_dir"
-
-            # Clone and build paru-bin (binary release, faster to build)
-            say "Cloning paru-bin from AUR..."
-            sudo -u "$aur_user" git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$paru_build_dir/paru-bin"
-
-            say "Building paru-bin..."
-            (
-                cd "$paru_build_dir/paru-bin" || exit
-                sudo -u "$aur_user" makepkg -si --noconfirm 2>&1 | tr '\r' '\n'
-                exit "${PIPESTATUS[0]}"
-            )
-            local makepkg_ret=$?
-
-            rm -rf "${paru_build_dir:?}"
-
-            (( makepkg_ret == 0 )) || error "Failed to build/install paru"
-            if ! command -v paru >/dev/null 2>&1; then
-                error "Failed to bootstrap paru"
-            fi
-            say "paru bootstrapped successfully"
-        fi
+        # paru comes from [mxarch] through package.list, installed before this part.
+        command -v paru >/dev/null 2>&1 \
+            || error "paru is not installed: add it to package.list (it comes from [mxarch])"
 
         # shellcheck disable=SC2206,SC2207
         local aur_pkgs=( $(compile_pkg_list aur-packages exclude-chroot) )

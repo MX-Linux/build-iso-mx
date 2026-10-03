@@ -183,3 +183,7 @@ quick-system-info-gui
 system-keyboard-qt
 uefi-manager
 update-notifier-qt
+
+# Third-party packages MX builds into [mxarch] because they are not in the
+# official repositories.
+paru
