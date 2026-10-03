@@ -92,6 +92,11 @@ noto-fonts-emoji
 ntfs-3g
 nvim
 nvme-cli
+# VMware guest support. gtkmm3 and libxtst are its optional dependencies for
+# copy/paste and drag-and-drop (both) and screen resizing (libxtst).
+open-vm-tools
+gtkmm3
+libxtst
 openssl
 orca
 os-prober

@@ -4,7 +4,5 @@
 # These packages are installed using paru after regular packages. paru itself
 # comes from [mxarch] through package.list.
 #
-# Only open-vm-tools-git remains: every MX package, and paru, moved to
-# package.list once it was in [mxarch].
-
-open-vm-tools-git
+# Empty: every package moved to package.list once it was in [mxarch] or the
+# official repositories. With no entries the AUR part is skipped.

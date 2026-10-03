@@ -2066,9 +2066,14 @@ do_stage_4_arch() {
     fi
 
      if do_part 9 "Enable common live services"; then
-         if [[ -e /usr/lib/systemd/system/NetworkManager.service ]]; then
-             systemctl enable NetworkManager.service 2>&1 | tr '\r' '\n'
-         fi
+         # open-vm-tools ships its units disabled; both carry
+         # ConditionVirtualization=vmware, so they stay inactive elsewhere.
+         local unit
+         for unit in NetworkManager.service vmtoolsd.service vmware-vmblock-fuse.service; do
+             if [[ -e /usr/lib/systemd/system/$unit ]]; then
+                 systemctl enable "$unit" 2>&1 | tr '\r' '\n'
+             fi
+         done
          end_part_lax
      fi
 
