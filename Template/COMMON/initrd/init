@@ -680,6 +680,21 @@ main_core() {
 
     prepare_switch_root $NEW_ROOT $LIVE_DIR $FINAL_DIR
 
+    # Fresh machine-id for every live boot (the ISO ships none).
+    # systemd: a MISSING id means "first boot" -> preset-all re-enables units
+    # the user had disabled; a valid id avoids that. sysvinit: /etc/machine-id
+    # is there from the start (dbus only creates /var/lib/dbus/machine-id).
+    # The machine-id is an identifier, not a secret: reading the kernel's
+    # random uuid this early is fine (same source systemd would use).
+    if [ ! -s $NEW_ROOT/etc/machine-id ]; then
+        local machine_id
+        machine_id=$(tr -d '-' < /proc/sys/kernel/random/uuid)
+        echo $machine_id > $NEW_ROOT/etc/machine-id
+        # same id for dbus, like the installer does (never two different ids)
+        [ -d $NEW_ROOT/var/lib/dbus ] \
+            && echo $machine_id > $NEW_ROOT/var/lib/dbus/machine-id
+    fi
+
     breakpoint 7 "after prepare switch_root"
 
     write_ntfs_pids $FINAL_DIR/aufs/run/sendsigs.omit.d/initrd-ntfs-3g
