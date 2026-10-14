@@ -686,7 +686,7 @@ main_core() {
     # is there from the start (dbus only creates /var/lib/dbus/machine-id).
     # The machine-id is an identifier, not a secret: reading the kernel's
     # random uuid this early is fine (same source systemd would use).
-    if [ ! -s $NEW_ROOT/etc/machine-id ]; then
+    if [ ! -s $NEW_ROOT/etc/machine-id ] || grep -q uninitialized $NEW_ROOT/etc/machine-id; then
         local machine_id
         machine_id=$(tr -d '-' < /proc/sys/kernel/random/uuid)
         echo $machine_id > $NEW_ROOT/etc/machine-id
