@@ -16,6 +16,11 @@
 # 5) do a recursive umount
 # 6) Delete touched files and created directories from the *original* FS
 
+##For custom live-files under /etc/live-files, both the /etc/live-files/files/
+# and /etc/live-files/general-files/ folders must exist for the template to be used in favor
+# of the the templates under /usr/share/live-files/
+# if the /etc/live-files templates exist and are valid, files under /usr/share/live-files are ignored
+
 
 ME=${0##*/}
 
@@ -32,6 +37,10 @@ VERSION_FILE=/etc/live/version/linuxfs.ver
 CONF_FILE=$WORK_DIR/cleanup.conf
 
 TEMPLATE_DIR=/usr/share/live-files
+#check for both a custom /etc/live-files and a /etc/live-files/general-files for template to be valid
+if [ -d /etc/live-files/files ] && [ -d /etc/live-files/general-files ]; then
+    TEMPLATE_DIR=/etc/live-files
+fi
 
 DEF_TZ="America/New_York"
 DEF_REPO="us"
@@ -50,6 +59,7 @@ PW_FILES="/etc/passwd /etc/shadow /etc/gshadow /etc/group $SUBID_FILES"
 MUNGE_FILES="/etc/slim.conf /etc/lightdm/lightdm.conf"
 BIND_FILES="$PW_FILES"
 
+#PREDEFINE AS FALLBACK
 LIVE_FILE_LIST="
 /etc/desktop-session/startup
 /etc/fstab
@@ -90,11 +100,17 @@ LIVE_FILE_LIST="
 /usr/share/applications/antix/remaster.desktop
 "
 
+if [ -d ${TEMPLATE_DIR}/files ]; then
+    LIVE_FILE_LIST="$(find ${TEMPLATE_DIR}/files \( -type f -o -type l \) -printf '%P\n')"
+fi
+
+#PREDEFINE AS FALLBACK
 GENERAL_LIVE_FILE_LIST="
 /etc/adjtime
 /etc/default/*
 /etc/dhcp/dhclient.conf
 /etc/dnsmasq.conf
+/etc/hosts
 /etc/hostname
 /etc/init.d/ifplugd
 /etc/init.d/networking
@@ -106,6 +122,10 @@ GENERAL_LIVE_FILE_LIST="
 /etc/slim.conf
 /lib/udev/ifupdown-hotplug
 "
+
+if [ -d ${TEMPLATE_DIR}/general-files ]; then
+    GENERAL_LIVE_FILE_LIST="$(find ${TEMPLATE_DIR}/general-files \( -type f -o -type l \) -printf '%P\n')"
+fi
 
 usage() {
     local ret=${1:-0}
@@ -346,6 +366,7 @@ do_exclude() {
 
     for file; do
         [ -z "${file##/*}" -o -z "${file##.*}" ] || file="$EXCLUDES_DIR/$file"
+        #echo "file: $file"
         if ! test -f $file; then
             error "Exclude file $file does not exist"
             ecnt=$((ecnt + 1))
