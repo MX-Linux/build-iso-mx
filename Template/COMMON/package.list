@@ -189,6 +189,7 @@ libnss-mdns
 libnss-myhostname
 libpam-fprintd
 libparted-i18n
+libunrar5t64
 linux-base
 linux-libc-dev
 live-kernel-updater
