@@ -3001,6 +3001,8 @@ Bootloader_Data
         error "No $initrd_src/ or $initrd_src.gz found"
     fi
 
+    initrd_busybox "$initrd_dir"
+
     say "Write initrd_release file"
     write_initrd_release "$initrd_dir"
 
@@ -6283,6 +6285,47 @@ get_template_file() {
 #
 # Option -o means only copy if the original file already exists
 #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Add busybox and its applet links to the initrd, unless the Template already
+# has a bin/busybox.  They are taken from template-initrd.gz of the
+# mx-iso-template package installed in the squashfs (mx-snapshot depends on
+# it), so they match $ARCH and are the same as mx-snapshot uses.  Since
+# mx-iso-template 26.10.2 this busybox comes from the live-busybox package.
+#------------------------------------------------------------------------------
+initrd_busybox() {
+    local dir=$1  tmp=$work_dir/template-initrd  f  n=0
+    local tgz=$sqfs_dir/usr/lib/iso-template/template-initrd.gz
+
+    if [[ -e $dir/bin/busybox ]]; then
+        say "Initrd: busybox from Template: $(busybox_banner "$dir/bin/busybox")"
+        return 0
+    fi
+
+    [[ -r $tgz ]] || error "No $(pqw "${tgz#"$sqfs_dir"}") in the squashfs (is mx-iso-template installed?)"
+
+    rm -rf "${tmp:?}"
+    mkdir -p "$tmp"
+    (cd "$tmp" && zcat "$tgz" | cpio -idm --quiet 'bin/*') \
+        || error "Could not unpack $(pqw "${tgz#"$sqfs_dir"}")"
+    [[ -f $tmp/bin/busybox ]] || error "No bin/busybox in $(pqw "${tgz#"$sqfs_dir"}")"
+
+    mkdir -p "$dir/bin"
+    install -m 0755 "$tmp/bin/busybox" "$dir/bin/busybox"
+    for f in "$tmp"/bin/*; do
+        [[ -L $f && $(readlink "$f") = busybox ]]       || continue
+        [[ -e $dir/bin/${f##*/} || -L $dir/bin/${f##*/} ]] && continue
+        cp -P "$f" "$dir/bin/" && n=$((n + 1))
+    done
+    rm -rf "${tmp:?}"
+
+    say "Initrd: busybox from mx-iso-template: $(busybox_banner "$dir/bin/busybox"), $n applet links"
+}
+
+# Print the version banner of a busybox binary without running it
+busybox_banner() {
+    grep -aoE -m1 'BusyBox v[0-9][^)]*\)' "$1" | head -n1
+}
+
 copy_template_dir() {
     local sudo=$SUDO  only_overwrite
     [[ $1 == "-u" ]] && sudo="" && shift ;
