@@ -6288,15 +6288,19 @@ get_template_file() {
 #------------------------------------------------------------------------------
 # Add busybox and its applet links to the initrd.  Sources, first found wins:
 #  1. bin/busybox already in the Template: kept as it is
-#  2. live-busybox installed in the squashfs (add it to a package list)
-#  3. template-initrd.gz of mx-iso-template (iso-template-antix on antiX)
+#  2. busybox/$ISO_ARCH/template-initrd.gz in the build-iso directory
+#     (busybox/x64, busybox/386), outside the chroot: needs neither an
+#     iso-template nor the MX repos in the squashfs
+#  3. live-busybox installed in the squashfs (add it to a package list)
+#  4. template-initrd.gz of mx-iso-template (iso-template-antix on antiX)
 #     installed in the squashfs; mx-snapshot/iso-snapshot depend on it.
 #     It is the same busybox as mx-snapshot uses; since mx-iso-template
 #     26.10.2 it comes from the live-busybox package.
-# 2 and 3 come from the squashfs, so they match $ARCH.
+# 3 and 4 come from the squashfs, so they match $ARCH.
 #------------------------------------------------------------------------------
 initrd_busybox() {
-    local dir=$1  tmp=$work_dir/template-initrd  f  a  n=0
+    local dir=$1  a  n=0
+    local own=$script_dir/busybox/$ISO_ARCH/template-initrd.gz
     local lbb=$sqfs_dir/usr/lib/live-busybox
     local tgz=$sqfs_dir/usr/lib/iso-template/template-initrd.gz
 
@@ -6306,6 +6310,12 @@ initrd_busybox() {
     fi
 
     mkdir -p "$dir/bin"
+
+    if [[ -e $own ]]; then
+        busybox_from_tgz "$own" "$dir" "busybox/$ISO_ARCH" || return 1
+        busybox_check_arch "$dir/bin/busybox"
+        return 0
+    fi
 
     if [[ -f $lbb/bin/busybox && -r $lbb/busybox.links ]]; then
         install -m 0755 "$lbb/bin/busybox" "$dir/bin/busybox"
@@ -6317,17 +6327,26 @@ initrd_busybox() {
         return 0
     fi
 
-    if ! [[ -r $tgz ]]; then
-        error "No busybox for the initrd: install mx-iso-template (or iso-template-antix)" \
-            "or live-busybox in the squashfs, or put one into Template/COMMON/initrd/bin"
-        return 1
+    if [[ -r $tgz ]]; then
+        busybox_from_tgz "$tgz" "$dir" "iso-template" || return 1
+        return 0
     fi
+
+    error "No busybox for the initrd: put a template-initrd.gz into busybox/$ISO_ARCH/," \
+        "or install mx-iso-template (or iso-template-antix) or live-busybox in the squashfs," \
+        "or put a busybox into Template/COMMON/initrd/bin"
+    return 1
+}
+
+# Copy busybox and its applet links from bin/ of a template-initrd.gz
+busybox_from_tgz() {
+    local tgz=$1  dir=$2  label=$3  tmp=$work_dir/template-initrd  f  n=0
 
     rm -rf "${tmp:?}"
     mkdir -p "$tmp"
     if ! (cd "$tmp" && zcat "$tgz" | cpio -idm --quiet 'bin/*') || ! [[ -f $tmp/bin/busybox ]]; then
         rm -rf "${tmp:?}"
-        error "No bin/busybox in $(pqw "${tgz#"$sqfs_dir"}")"
+        error "No bin/busybox in $(pqw "$tgz")"
         return 1
     fi
 
@@ -6339,7 +6358,20 @@ initrd_busybox() {
     done
     rm -rf "${tmp:?}"
 
-    say "Initrd: busybox from iso-template: $(busybox_banner "$dir/bin/busybox"), $n applet links"
+    say "Initrd: busybox from $label: $(busybox_banner "$dir/bin/busybox"), $n applet links"
+}
+
+# Warn if a busybox does not match $ISO_ARCH (32/64 bit, from the ELF header)
+busybox_check_arch() {
+    local class want
+    class=$(od -An -tu1 -j4 -N1 "$1" 2>/dev/null | tr -d ' ')
+    case $ISO_ARCH in
+        x64) want=2 ;;
+        386) want=1 ;;
+        *)   return 0 ;;
+    esac
+    [[ $class == "$want" ]] && return 0
+    warn "Initrd: busybox is $( [[ $class == 1 ]] && echo 32 || echo 64)-bit, but ISO_ARCH is $ISO_ARCH"
 }
 
 # Print the version banner of a busybox binary without running it
