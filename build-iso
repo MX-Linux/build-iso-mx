@@ -6286,14 +6286,18 @@ get_template_file() {
 # Option -o means only copy if the original file already exists
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-# Add busybox and its applet links to the initrd, unless the Template already
-# has a bin/busybox.  They are taken from template-initrd.gz of the
-# mx-iso-template package installed in the squashfs (mx-snapshot depends on
-# it), so they match $ARCH and are the same as mx-snapshot uses.  Since
-# mx-iso-template 26.10.2 this busybox comes from the live-busybox package.
+# Add busybox and its applet links to the initrd.  Sources, first found wins:
+#  1. bin/busybox already in the Template: kept as it is
+#  2. live-busybox installed in the squashfs (add it to a package list)
+#  3. template-initrd.gz of mx-iso-template (iso-template-antix on antiX)
+#     installed in the squashfs; mx-snapshot/iso-snapshot depend on it.
+#     It is the same busybox as mx-snapshot uses; since mx-iso-template
+#     26.10.2 it comes from the live-busybox package.
+# 2 and 3 come from the squashfs, so they match $ARCH.
 #------------------------------------------------------------------------------
 initrd_busybox() {
-    local dir=$1  tmp=$work_dir/template-initrd  f  n=0
+    local dir=$1  tmp=$work_dir/template-initrd  f  a  n=0
+    local lbb=$sqfs_dir/usr/lib/live-busybox
     local tgz=$sqfs_dir/usr/lib/iso-template/template-initrd.gz
 
     if [[ -e $dir/bin/busybox ]]; then
@@ -6301,15 +6305,32 @@ initrd_busybox() {
         return 0
     fi
 
-    [[ -r $tgz ]] || error "No $(pqw "${tgz#"$sqfs_dir"}") in the squashfs (is mx-iso-template installed?)"
+    mkdir -p "$dir/bin"
+
+    if [[ -f $lbb/bin/busybox && -r $lbb/busybox.links ]]; then
+        install -m 0755 "$lbb/bin/busybox" "$dir/bin/busybox"
+        for a in $(sed 's|.*/||' "$lbb/busybox.links"); do
+            [[ -e $dir/bin/$a || -L $dir/bin/$a ]] && continue
+            ln -s busybox "$dir/bin/$a" && n=$((n + 1))
+        done
+        say "Initrd: busybox from live-busybox: $(busybox_banner "$dir/bin/busybox"), $n applet links"
+        return 0
+    fi
+
+    if ! [[ -r $tgz ]]; then
+        error "No busybox for the initrd: install mx-iso-template (or iso-template-antix)" \
+            "or live-busybox in the squashfs, or put one into Template/COMMON/initrd/bin"
+        return 1
+    fi
 
     rm -rf "${tmp:?}"
     mkdir -p "$tmp"
-    (cd "$tmp" && zcat "$tgz" | cpio -idm --quiet 'bin/*') \
-        || error "Could not unpack $(pqw "${tgz#"$sqfs_dir"}")"
-    [[ -f $tmp/bin/busybox ]] || error "No bin/busybox in $(pqw "${tgz#"$sqfs_dir"}")"
+    if ! (cd "$tmp" && zcat "$tgz" | cpio -idm --quiet 'bin/*') || ! [[ -f $tmp/bin/busybox ]]; then
+        rm -rf "${tmp:?}"
+        error "No bin/busybox in $(pqw "${tgz#"$sqfs_dir"}")"
+        return 1
+    fi
 
-    mkdir -p "$dir/bin"
     install -m 0755 "$tmp/bin/busybox" "$dir/bin/busybox"
     for f in "$tmp"/bin/*; do
         [[ -L $f && $(readlink "$f") = busybox ]]       || continue
@@ -6318,7 +6339,7 @@ initrd_busybox() {
     done
     rm -rf "${tmp:?}"
 
-    say "Initrd: busybox from mx-iso-template: $(busybox_banner "$dir/bin/busybox"), $n applet links"
+    say "Initrd: busybox from iso-template: $(busybox_banner "$dir/bin/busybox"), $n applet links"
 }
 
 # Print the version banner of a busybox binary without running it
