@@ -184,7 +184,7 @@ update_grub2() {
 
     # the sed uncomments our custom entry (if needed) and remove any existing default lines
     done<<Read_File
-$(sed -e "s/^\s*$CUSTOM_COMMENT\s*//" -e "s/\s+$//" -e "/\s*(set\s+)?default\>.*/d" $file)
+$(sed -r -e "s/^\s*$CUSTOM_COMMENT\s*//" -e "s/\s+$//" -e "/^\s*(set\s+)?default\>/d" $file)
 Read_File
 
     # Fill in the number for the first Custom entry as the default entry

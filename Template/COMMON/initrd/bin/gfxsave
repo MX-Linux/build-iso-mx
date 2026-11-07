@@ -118,7 +118,8 @@ main() {
         vmsg 7 "        conf file: %s" "$(pq $conf_file)"
 
         # find the gfx-cpio file to modify from the kernel*.cfg file
-        cpio_file=$(sed -rn "0,/^UI/ s/^UI\s+gfxboot\s+([a-z0-9_-]+)\s+.*/\1/p" "$conf_file")
+        # first "UI gfxboot <name> ..." line (portable: no GNU-only 0,/re/)
+        cpio_file=$(sed -rn "/^UI\s+gfxboot\s+/{s/^UI\s+gfxboot\s+([a-z0-9_-]+)\s+.*/\1/p;q}" "$conf_file")
         [[ -z $cpio_file ]] && fatal "Could not find gfx-cpio file in config file"
         vmsg 7 "    gfx cpio file: %s" "$(pq $cpio_file)"
 
@@ -454,7 +455,8 @@ reset_conf_file() {
     [[ -z $cmd_temp ]] && cp "$file" "$temp"
 
     # Remove all default lines
-    sed -i -r "/^\s*default\>/Id" "$temp"
+    # (case-insensitive, portable: busybox sed has no /re/I address flag)
+    sed -i -r "/^\s*[Dd][Ee][Ff][Aa][Uu][Ll][Tt]\>/d" "$temp"
 
     # Add a new default line if asked to
     set_conf_default "$temp" "$default"

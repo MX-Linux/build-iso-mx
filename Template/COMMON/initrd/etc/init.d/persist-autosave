@@ -121,10 +121,11 @@ do_stop() {
 #------------------------------------------------------------------------------
 tsplash_clear() {
     if [ -n "$DO_TSPLASH" ]; then
-        [ "$TSPLASH_CLEARED" ] && return
-        TSPLASH_CLEARED=true
-        clear
-        sleep .2
+        if [ -z "$TSPLASH_CLEARED" ]; then
+            TSPLASH_CLEARED=true
+            clear
+            sleep .2
+        fi
     fi
     chvt 1
 }

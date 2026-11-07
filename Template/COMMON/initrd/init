@@ -414,6 +414,34 @@ main_wrapper() {
 
     else
         : ${INIT_COMMAND:=${INIT_PROG:=/sbin/init}}
+
+        # Runlevel for sysvinit.
+        # The kernel gives /init as arguments only those command line words
+        # that it does not use itself and that have no "=" (e.g. "3",
+        # "single", "pw"); "$@" below hands them on to the init program.
+        # Each init=... makes the kernel drop all such words given BEFORE
+        # it (init/main.c, init_setup()), and the boot menus put init=...
+        # last, so they never arrive here.
+        # Only sysvinit needs these arguments, for its runlevel/boot mode
+        # (main() in sysvinit's init.c): a runlevel digit, S, s, single, -s,
+        # emergency, -b, auto, -a.  No other boot parameter is lost: kernel
+        # and module parameters are used by the kernel itself, words with
+        # "=" go to the environment, and /proc/cmdline keeps the full line
+        # for everybody else (this script, the live and boot scripts,
+        # systemd).
+        # So: if we got no arguments, take the runlevel (1-5, S, s, single,
+        # emergency) from /proc/cmdline and pass it on.  Nothing else is
+        # added or changed.
+        if [ $# -eq 0 ]; then
+            local p
+            for p in $(cat /proc/cmdline 2>/dev/null); do
+                case $p in
+                    [1-5]|[Ss]|single|emergency) set -- $p ;;
+                esac
+            done
+            [ $# -gt 0 ] && vmsg 6 "Pass runlevel %s to %s" $(pq $1) $(pq $INIT_COMMAND)
+        fi
+
         breakpoint i "befor switch root"
         vmsg 6  "Start %s process" $(pq $INIT_COMMAND)
 
@@ -561,7 +589,9 @@ main_core() {
     RW_MODE=rw
     # FIXME: this makes debugging persist_makefs simpler
     #[ "$PERSIST_FILES" ] && mount -o remount,rw $SQFILE_DEV
-    mount -o remount,rw $SQFILE_DEV
+    # BusyBox >= 1.33: "-o rw" no longer falls back to ro, so this fails
+    # (harmless) on read-only media; silence it like the other remounts
+    mount -o remount,rw $SQFILE_DEV 2>/dev/null
 
     #breakpoint 4 "after mounting linuxfs file"
 
@@ -573,7 +603,11 @@ main_core() {
     dmesg | grep 'Warning.*ehci' >&2
 
 
-    if [ -n "$MADE_PERSIST_FILE" -a ! -e $SWAP_FILE ]; then
+    # Only offer the swap file when its directory (the boot device) is
+    # writable.  With pdev=/plab=/puuid= the persistence may be on another
+    # device while the boot device is read-only (ISO, Ventoy, CD).
+    if [ -n "$MADE_PERSIST_FILE" -a ! -e $SWAP_FILE ] \
+        && dir_has_param "$(dirname $SWAP_FILE)" rw; then
         # FIXME check free space
         YES_no  "$_Create_a_live_usb_swap_file_" && : ${SWAP_FILE_SIZE:=choose}
     fi
@@ -1937,6 +1971,9 @@ _find_files() {
             # Only sleep long enough so total time through loop is constant
             [ $usleep -gt 0 ] && usleep $usleep
         else
+            # No real delay during the first second, but do not busy-wait:
+            # with bdev= each pass is very cheap (hundreds of passes)
+            usleep 10000
             [ $(($(get_time) - start_t)) -gt 99 ] && do_delay=true
         fi
 
@@ -2594,7 +2631,7 @@ find_crypt_or_linuxfs() {
 
     #check_luks_version "$crypt_dev"
 
-    mount -o remount,rw $BIOS_DEV
+    mount -o remount,rw $BIOS_DEV 2>/dev/null
 
     local phrase_full=$BIOS_MP/$boot_dir/$PHRASE_FNAME
     if test -f $phrase_full; then
@@ -3292,12 +3329,12 @@ should_fsck() {
 
     [ $SB_CHECKINTERVAL -gt 0 ] || return 1
 
-    [ $((SB_LASTCHECK + SB_CHECKINTERVAL)) -ge $(date +%s) ] || return 1
+    # Not yet due: last check + interval is still in the future
+    [ $((SB_LASTCHECK + SB_CHECKINTERVAL)) -ge $(date +%s) ] && return 1
 
     # <boot> device <device-name> has not been checked in <100> days.  Check forced.
     warn  "%s device %s has not been checked in %s days.  Check forced." \
         $(pqw $name) $(pqw $sdev) "$(nqw $days)"
-    return 1
     return 0
 }
 
@@ -3324,7 +3361,11 @@ do_fsck() {
 
     rm -f $fifo
 
-    ld_path /sbin/tune2fs -C 1 $dev
+    # Reset the mount count only when the filesystem was found clean or
+    # was repaired; otherwise check again on the next boot
+    case $ret in
+        0|1) ld_path /sbin/tune2fs -C 1 $dev ;;
+    esac
 
     #breakpoint F "After fsck"
 
@@ -3359,7 +3400,8 @@ fsck_any_device() {
     should_fsck $dev $lab || return
 
     log_cmd mount -o remount,ro $dev
-    do_fsck "$lab device" $dev -n
+    # -f: really check; without it e2fsck only says "clean" and exits
+    do_fsck "$lab device" $dev -fn
 }
 
 #==============================================================================
@@ -3625,6 +3667,8 @@ get_seconds() {
 bogo_meter() {
     local width=${1:-$SCREEN_WIDTH} delay=60  dot=.
     local cnt=$(( width * 80 / 100 ))
+    # "stty size" gives 0 on a serial console
+    [ "$cnt" -gt 0 ] 2>/dev/null || cnt=$(( DEF_SCREEN_WIDTH * 80 / 100 ))
     local sleep=$(( 1000000 * delay / cnt ))
     while true; do
         for s in $(seq 1 $cnt); do
@@ -5833,6 +5877,11 @@ makefs() {
     esac
     sync
     ld_path /sbin/mkfs.$fstype -q -F $fs_label $file 1>> $MY_LOG 2>> $MY_LOG || return 3
+    # Periodic check: persistence files get mounted 2-3 times per boot,
+    # so 60 mounts is about every 20-30 boots, or monthly at the latest
+    case $fstype in
+        ext*) ld_path /sbin/tune2fs -c 60 -i 1m $file 1>> $MY_LOG 2>> $MY_LOG ;;
+    esac
     return 0
 }
 
@@ -5945,7 +5994,7 @@ _fsck_persist_dev() {
         return 0
     fi
 
-    do_fsck  "$_persist_device_" $dev -p
+    do_fsck  "$_persist_device_" $dev -fp
     try_mount $dev $mp && return 0
 
     non_fatal  "Could not remount the persistence device"
@@ -6041,7 +6090,7 @@ mount_persist_file() {
     fi
 
     if should_fsck $full "$type file"; then
-        do_fsck "$file file" $full -p filefs || return 1
+        do_fsck "$file file" $full -fp filefs || return 1
     fi
 
     heading  "$_mount_persistence_file_X_at_Y_" "$(fq $file)" "$(fq $mpnt)"
