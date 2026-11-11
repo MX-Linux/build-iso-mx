@@ -78,6 +78,13 @@ Options:
     --no-ucode          Don't inject AMD/Intel microcode into initrd.gz
     --alpha             EXPERIMENTAL build: name the iso ..._ALPHA_<timestamp>.iso
     --beta              TEST build: name the iso ..._BETA_<timestamp>.iso
+    --sign-only[=FILE]  Only sign the existing iso (or FILE) with gpg, then exit
+                        (also when SIGN_FILES is empty; see SIGN_* in defaults-system;
+                        use it with the same --user-default as the build)
+    --sign-key[=]ID     Sign with this gpg key (fingerprint or long key ID),
+                        overrides SIGN_KEY from the defaults files
+    --no-sign           Don't sign the iso in this run (overrides SIGN_FILES);
+                        sign it later with --sign-only
 
 Short options stack: -up0 == -u -p -0 == --update --pretend -0
 
@@ -182,6 +189,11 @@ main() {
                         && fatal "Default file not found -$arg: $(pqw "$val")"
 
                     shift         ;;
+        -sign-key)  (( $# < 1 )) && fatal "Expected a parameter after: $(pqw -"$arg")"
+                    val=$1
+                    [[ $val =~ ^- ]] \
+                        && fatal "Suspicious argument after -$arg: $(pqw "$val")"
+                    shift         ;;
               *=*)  val=${arg#*=} ;;
                 *)  val="???"     ;;
         esac
@@ -223,6 +235,10 @@ main() {
              -stop5)         stop_5=true                        ;;
              -stop8)         stop_8=true                        ;;
              -grub-only)    GRUB_ONLY=true                     ;;
+             -sign-only)    sign_only=true                     ;;
+           -sign-only=*)    sign_only=true ; sign_file=$val    ;;
+  -sign-key|-sign-key=*)    sign_key_opt=$val                  ;;
+            -no-sign)    no_sign=true                       ;;
 
               [0-8]) [[ $start_from ]] && fatal "Can only set starting stage once"
                      start_from=$arg ;;
@@ -231,6 +247,8 @@ main() {
                   *) fatal "Unknown parameter -$arg" ;;
         esac
     done
+
+    [[ -n $no_sign && -n $sign_only ]] && fatal "Use either --no-sign or --sign-only, not both"
 
     is_antiX && apt_yes=
 
@@ -307,8 +325,9 @@ main() {
     # stretch a failed connect out to ~2 minutes. Lower it for the duration
     # of this build; restored in on_exit(). Only the top-level (non-chroot)
     # invocation does this -- the re-invoked chroot process (stage 4+) would
-    # otherwise restore it prematurely when *it* exits.
-    if [[ "$script_dir" != "$build_dir" ]]; then
+    # otherwise restore it prematurely when *it* exits.  Not needed for
+    # --sign-only.
+    if [[ "$script_dir" != "$build_dir" && -z $sign_only ]]; then
         ORIG_TCP_SYN_RETRIES=$(cat /proc/sys/net/ipv4/tcp_syn_retries 2>/dev/null)
         [[ -n $ORIG_TCP_SYN_RETRIES ]] \
             && $SUDO sysctl -q -w net.ipv4.tcp_syn_retries=2 2>/dev/null
@@ -426,6 +445,23 @@ main() {
 
     # Always start out with a clean slate
     rm -f "$exit_file" "$sign_off_file"
+
+    # --sign-only: sign the existing iso as at the end of stage 8, then exit
+    if [[ -n $sign_only ]]; then
+        local f sign_iso
+        for f in "$output_dir"/stage-[0-8].out; do
+            # shellcheck disable=SC1090
+            [[ -r $f ]] && source "$f"
+        done
+        sign_iso="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
+        sign_iso="${sign_iso// /_}"
+        [[ "$DISTRO_NAME" = antiX ]] && sign_iso="$sign_iso-$ISO_FLAV"
+        sign_iso=${sign_file:-$iso_file_dir/$sign_iso${ISO_SUFFIX:+_$ISO_SUFFIX}.iso}
+        [[ -f $sign_iso ]] || fatal "No iso file to sign: $(pqw "$sign_iso")"
+        [[ -s $sign_iso.sha256 ]] || sha256sum_file "$sign_iso"
+        SIGN_FILES=true sign_iso_files "$sign_iso"
+        my_exit 0
+    fi
 
     update_template_file basic-applications.list basic-package.list
     update_template_file pesky-packages.list     pesky-package.list
@@ -3393,6 +3429,17 @@ do_stage_8() {
     local iso_file=$full_distro_name${ISO_SUFFIX:+_$ISO_SUFFIX}.iso
     mkdir -p "$iso_file_dir"
     local full_iso_file=$iso_file_dir/$iso_file
+    # Signatures of a previous iso would not match the new one (e.g. a
+    # rebuild with --no-sign): remove them, sign_iso_files() makes new ones.
+    # Removing needs a writable directory; else (or if rm fails anyway) sudo.
+    local f
+    for f in "$full_iso_file".sig "$full_iso_file".sha256.asc; do
+        [[ -e $f || -L $f ]] || continue
+        if [[ -w $iso_file_dir ]] && rm -f "$f" 2>/dev/null; then
+            continue
+        fi
+        $SUDO rm -f "$f" || warn "Could not remove the old $(pq "$(basename "$f")")"
+    done
     say "Build the live $(pq "$iso_file") file"
 
     if [[ ${DISTRO_FAMILY:-debian} = arch ]] || [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
@@ -3478,14 +3525,7 @@ do_stage_8() {
         sha256sum_file "$full_iso_file"
         zsyncmake_file "$full_iso_file"
 
-        if [[ $SIGN_FILES == true ]]; then
-            say "Sign $(basename "$full_iso_file")"
-            rm -f "$full_iso_file".sig 2>/dev/null
-            local gpg_sudo
-            is_antiX && gpg_sudo=$SUDO
-            $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
-            gpg_clearsign_file "$full_iso_file".sha256
-        fi
+        sign_iso_files "$full_iso_file"
 
         say2 "Your live $(pq "$iso_file") is in $(pq Remaster/iso-files) ready to be tested"
 
@@ -3534,14 +3574,7 @@ do_stage_8() {
     sha256sum_file "$full_iso_file"
     zsyncmake_file "$full_iso_file"
 
-    if [[ $SIGN_FILES == true ]]; then
-        say "Sign $(basename "$full_iso_file")"
-        rm -f "$full_iso_file".sig 2>/dev/null
-        local gpg_sudo
-        is_antiX && gpg_sudo=$SUDO
-        $gpg_sudo gpg --output "$full_iso_file".sig --detach-sign "$full_iso_file"
-        gpg_clearsign_file "$full_iso_file".sha256
-    fi
+    sign_iso_files "$full_iso_file"
 
 
     if is_antiX && [[ -L "$ISO_SYMLINK" ]];then
@@ -5673,6 +5706,10 @@ load_defaults() {
         # shellcheck disable=SC1090
         source "$file"
     done
+    # command line overrides the defaults files
+    [[ -n $sign_key_opt ]] && SIGN_KEY=$sign_key_opt
+    [[ -n $no_sign      ]] && SIGN_FILES=
+    return 0
 }
 
 pick_prog() {
@@ -6510,13 +6547,135 @@ sha256sum_file() {
     (cd "$dir" && sha256sum "$file" > "$file".sha256)
 }
 
+# Sign with gpg, writing gpg's output to file $1.  Builder settings
+# (defaults-local), independent of the kind of ISO being built:
+#  SIGN_AS   user whose keyring signs.  Empty: the user who started
+#            build-iso, so "sudo ./build-iso" signs as $SUDO_USER (root
+#            normally has no key), a normal-user run as that user, and a
+#            root login as root.  SIGN_AS="root": root's keyring.
+#  SIGN_KEY  key in that keyring (fingerprint or long key ID).  Empty:
+#            gpg's default key of that user.
+#  SIGN_PINENTRY  how gpg asks for the passphrase.  Empty/"auto": the
+#            desktop dialog (gpg-agent's pinentry) if a desktop is reachable
+#            (DISPLAY or WAYLAND_DISPLAY set, not an ssh session), else in
+#            the terminal.  "terminal": always in the terminal.  "gui":
+#            always the agent's pinentry.
+# gpg writes to stdout and this shell writes the file, so a root-owned
+# iso-files directory needs no permission changes.  gpg's messages are
+# captured (not stderr, so no STRICT error): on failure they are printed
+# to stdout for sign_iso_files() and no output file is left behind.
+sign_as_user() { echo "${SIGN_AS:-${SUDO_USER:-$(id -un)}}"; }
+
+sign_tty() {   # the terminal, or nothing ("tty" prints "not a tty" otherwise)
+    local t=$GPG_TTY
+    [[ -n $t ]] || t=$(tty 2>/dev/null) || return 0
+    echo "$t"
+}
+
+# How gpg asks for the passphrase, in the order to try:
+# "loopback": gpg asks in the terminal itself; "pinentry": the agent's
+# pinentry (a desktop dialog, or its own terminal fallback).  The agent
+# caches the passphrase either way.  If the agent forbids loopback
+# (no-allow-loopback-pinentry), gpg_sign_to tries once more with pinentry.
+sign_modes() {
+    [[ -n $(sign_tty) ]] || { echo "pinentry"; return; }
+    case ${SIGN_PINENTRY:-auto} in
+        gui)      echo "pinentry" ;;
+        terminal) echo "loopback pinentry" ;;
+        *)        if [[ -n $DISPLAY$WAYLAND_DISPLAY && -z $SSH_CONNECTION$SSH_TTY ]]; then
+                      echo "pinentry"
+                  else
+                      echo "loopback pinentry"
+                  fi ;;
+    esac
+}
+
+# Put the signature from temp file $1 in place as $2, owned like the file it
+# signs ($3).  If the directory is not writable for us (e.g. root-owned
+# iso-files in a normal-user run), use sudo for that.  Messages to stdout.
+sign_put() {
+    local tmp=$1  out=$2  ref=$3  run=()
+    [[ -w $(dirname "$out") ]] || run=(sudo)
+    {   "${run[@]}" rm -f "$out" \
+        && "${run[@]}" install -m 0644 "$tmp" "$out" \
+        && if (( UID == 0 )) || (( ${#run[@]} )); then
+               "${run[@]}" chown --reference="$ref" "$out"
+           fi
+    } 2>&1
+}
+
+gpg_sign_to() {
+    local out=$1  as  cmd  msg  mode  v  envs=()  tty  tmp
+    shift
+    as=$(sign_as_user)
+    tty=$(sign_tty)
+    # pass the terminal and the desktop on to gpg (sudo -u drops them)
+    for v in GPG_TTY DISPLAY WAYLAND_DISPLAY XAUTHORITY; do
+        [[ $v == GPG_TTY ]] && { [[ -n $tty ]] && envs+=("GPG_TTY=$tty"); continue; }
+        [[ -n ${!v} ]] && envs+=("$v=${!v}")
+    done
+    tmp=$(mktemp) || return 1
+    for mode in $(sign_modes); do
+        cmd=(env "${envs[@]}" gpg)
+        [[ $mode == loopback ]] && cmd+=(--pinentry-mode loopback)
+        [[ -n $SIGN_KEY ]] && cmd+=(--local-user "$SIGN_KEY")
+        cmd+=(--output - "$@")
+        [[ $as != "$(id -un)" ]] && cmd=(sudo -H -u "$as" "${cmd[@]}")
+        if msg=$("${cmd[@]}" 2>&1 > "$tmp"); then
+            msg=$(sign_put "$tmp" "$out" "${!#}") && { rm -f "$tmp"; return 0; }
+            msg="cannot write $out"$'\n'"$msg"
+            break
+        fi
+        [[ $mode == loopback && $msg == *"pinentry mode 'loopback' failed"* ]] || break
+    done
+    rm -f "$tmp"
+    echo "$msg"
+    return 1
+}
+
 gpg_clearsign_file() {
-    local dir file gpg_sudo
+    local dir file
     dir=$(dirname "$1")
     file=$(basename "$1")
-    is_antiX && gpg_sudo=$SUDO
-    (cd "$dir" && rm -f "$file".asc 2>/dev/null
-        $gpg_sudo gpg --clearsign --output "$file".asc "$file")
+    (cd "$dir" && gpg_sign_to "$file".asc --clearsign "$file")
+}
+
+# Sign the iso (.sig) and its checksum file (.sha256.asc) if SIGN_FILES is
+# true.  A failure is a warning with the likely reason, not an error: the
+# ISO itself is complete.
+sign_iso_files() {
+    local iso=$1  msg  why  as  key
+    if [[ $SIGN_FILES != true ]]; then
+        [[ -n $no_sign ]] && say "Not signed (--no-sign); sign it later with --sign-only"
+        return 0
+    fi
+    as=$(sign_as_user)
+    key=${SIGN_KEY:-the default key}
+    say "Sign $(basename "$iso")"
+    # gpg's own terminal prompt is just "Enter passphrase:"; under sudo it
+    # could be taken for the sudo password
+    [[ $(sign_modes) == loopback* ]] \
+        && yell "  gpg asks for the passphrase of $key of user $as (not the sudo password), if not cached"
+    msg=$(gpg_sign_to "$iso".sig --detach-sign "$iso") \
+        && msg=$(gpg_clearsign_file "$iso".sha256) && return 0
+
+    local hint="Set SIGN_AS / SIGN_KEY in Input/defaults-local, or SIGN_FILES=\"\" to skip signing."
+    case $msg in
+        "cannot write "*)         why="could not write the signature files to $(dirname "$iso")"
+                                  hint="Make that directory writable (or run with sudo), then: --sign-only" ;;
+        *"sudo: "*)               why="could not run gpg as user $as (SIGN_AS)" ;;
+        *"skipped \""*)           why="key $SIGN_KEY (SIGN_KEY) not found in the gpg keyring of $as" ;;
+        *"no default secret key"*) why="no usable secret key in the gpg keyring of $as (none, or expired)" ;;
+        *"Bad passphrase"*)       why="wrong passphrase for $key of $as" ;;
+        *"Operation cancelled"*|*"Inappropriate ioctl"*|*"No pinentry"*|*"No passphrase given"*)
+                                  why="passphrase for $key of $as not entered (cancelled, or no terminal/pinentry to ask)" ;;
+        *)                        why="gpg failed as user $as" ;;
+    esac
+    rm -f "$iso".sig "$iso".sha256.asc 2>/dev/null
+    warn "$(basename "$iso") is NOT signed: $why"
+    grep -vE 'keybox .* created|directory .* created' <<<"$msg" | sed 's/^/    /'
+    say "    $hint"
+    return 0
 }
 
 zsyncmake_file() {

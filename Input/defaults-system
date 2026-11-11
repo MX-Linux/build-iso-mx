@@ -74,6 +74,20 @@ COMPRESSION_TYPE_CODE="-comp zstd -Xcompression-level 15 -b 262144"
 
 # sign isos
 SIGN_FILES="true"
+# Who signs and with which key: builder settings, set them in defaults-local.
+# SIGN_AS: user whose gpg keyring signs.  Empty: the user who started
+# build-iso (also under "sudo ./build-iso"); "root": root's keyring.
+SIGN_AS=""
+# SIGN_KEY: key to sign with (gpg --local-user): best the full fingerprint,
+# or the long key ID (see: gpg --list-secret-keys --keyid-format long).
+# Empty: gpg's default key of that user (default-key in ~/.gnupg/gpg.conf,
+# else the first secret key).
+SIGN_KEY=""
+# SIGN_PINENTRY: how gpg asks for the passphrase.  Empty/"auto": desktop
+# dialog if a desktop is reachable (DISPLAY/WAYLAND_DISPLAY set, no ssh
+# session), else in the terminal; "terminal": always in the terminal;
+# "gui": always gpg-agent's pinentry.
+SIGN_PINENTRY=""
 
 # legacy variables that don't change
 USE_UEFI=true
