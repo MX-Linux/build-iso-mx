@@ -7,8 +7,9 @@
 #   ln -s /path/to/build-iso-mx/bash-completion/build-iso /etc/bash_completion.d/build-iso
 
 _build_iso() {
-    local cur prev words cword
-    _init_completion || return
+    local cur prev words cword split
+    # -s: split --opt=value into prev=--opt and cur=value
+    _init_completion -s || return
 
     local long_opts="
         --auto --AUTO --chroot --COLOR --delete --DELETE --error-ask --fast
@@ -16,7 +17,7 @@ _build_iso() {
         --no-error-check --NO-ERROR-LOG --pretend --quiet --reset --stats
         --SAVE --update --UPDATE --VERBOSE --version --lz4 --user-default
         --zstd --show-stages --show-parts --stop5 --stop8 --grub-only
-        --no-ucode
+        --no-ucode --alpha --beta --sign-only --sign-only= --sign-key --sign-key= --no-sign
     "
     local short_opts="-a -A -c -C -d -D -e -f -F -h -i -I -j -m -n -N -p -q -r -s -S -u -U -v -V"
 
@@ -32,6 +33,20 @@ _build_iso() {
             COMPREPLY=($(compgen -W "high low off" -- "$cur"))
             return
             ;;
+        --sign-only)
+            # --sign-only=FILE: iso files and directories
+            # (plain --sign-only: continue below)
+            if $split; then
+                _filedir iso
+                return
+            fi
+            ;;
+        --sign-key)
+            # --sign-key ID / --sign-key=ID: fingerprints of the user's secret keys
+            COMPREPLY=($(compgen -W "$(gpg --batch --with-colons --list-secret-keys 2>/dev/null \
+                | awk -F: '$1 == "sec" {s=1; next} s && $1 == "fpr" {print $10; s=0}')" -- "$cur"))
+            return
+            ;;
     esac
 
     case "$cur" in
@@ -42,6 +57,7 @@ _build_iso() {
             ;;
         -*)
             COMPREPLY=($(compgen -W "$long_opts $short_opts" -- "$cur"))
+            [[ ${#COMPREPLY[@]} == 1 && ${COMPREPLY[0]} == *= ]] && compopt -o nospace
             return
             ;;
     esac
