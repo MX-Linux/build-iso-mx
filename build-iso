@@ -443,8 +443,10 @@ main() {
         echo -e "directory: $script_dir\n"
     } >> "$log_file"
 
-    # Always start out with a clean slate
-    rm -f "$exit_file" "$sign_off_file"
+    # Always start out with a clean slate, except when previewing signing.
+    if [[ -z $sign_only || -z $pretend_mode ]]; then
+        rm -f "$exit_file" "$sign_off_file"
+    fi
 
     # --sign-only: sign the existing iso as at the end of stage 8, then exit
     if [[ -n $sign_only ]]; then
@@ -457,8 +459,30 @@ main() {
         sign_iso="${sign_iso// /_}"
         [[ "$DISTRO_NAME" = antiX ]] && sign_iso="$sign_iso-$ISO_FLAV"
         sign_iso=${sign_file:-$iso_file_dir/$sign_iso${ISO_SUFFIX:+_$ISO_SUFFIX}.iso}
+        if [[ -n $pretend_mode ]]; then
+            # No build resources were acquired; leave output markers alone too.
+            trap - EXIT
+            if [[ ! -f $sign_iso ]]; then
+                _say_ "No iso file to sign: $(pqw "$sign_iso")"
+                exit 1
+            fi
+            say "Would refresh the checksum and sign $(pqw "$sign_iso")"
+            exit 0
+        fi
         [[ -f $sign_iso ]] || fatal "No iso file to sign: $(pqw "$sign_iso")"
-        [[ -s $sign_iso.sha256 ]] || sha256sum_file "$sign_iso"
+        # Always hash the current ISO, even when an older checksum exists.
+        # Build outputs may be root-owned, so publish with the signing helper.
+        local checksum_tmp checksum_msg
+        checksum_tmp=$(mktemp) || fatal "Could not create a temporary checksum file"
+        if ! (cd "$(dirname "$sign_iso")" && sha256sum "$(basename "$sign_iso")") > "$checksum_tmp"; then
+            rm -f "$checksum_tmp"
+            fatal "Could not checksum $(pqw "$sign_iso")"
+        fi
+        if ! checksum_msg=$(sign_put "$checksum_tmp" "$sign_iso.sha256" "$sign_iso"); then
+            rm -f "$checksum_tmp"
+            fatal "Could not write checksum: $checksum_msg"
+        fi
+        rm -f "$checksum_tmp"
         SIGN_FILES=true sign_iso_files "$sign_iso"
         my_exit 0
     fi
@@ -6671,7 +6695,10 @@ sign_iso_files() {
                                   why="passphrase for $key of $as not entered (cancelled, or no terminal/pinentry to ask)" ;;
         *)                        why="gpg failed as user $as" ;;
     esac
-    rm -f "$iso".sig "$iso".sha256.asc 2>/dev/null
+    local run=()
+    [[ -w $(dirname "$iso") ]] || run=(sudo)
+    "${run[@]}" rm -f "$iso".sig "$iso".sha256.asc 2>/dev/null \
+        || warn "Could not remove old signatures for $(pqw "$iso")"
     warn "$(basename "$iso") is NOT signed: $why"
     grep -vE 'keybox .* created|directory .* created' <<<"$msg" | sed 's/^/    /'
     say "    $hint"
