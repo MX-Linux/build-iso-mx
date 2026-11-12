@@ -1791,7 +1791,7 @@ from_filter() {
 
             b) cd_devs="$cd_devs $dev" ;;
 
-            3|8|16|b3|ca|fe|103)
+            3|8|16|b3|ca|fd|fe|103)
                 if is_usb_or_removable $dev; then
                     usb_devs="$usb_devs $dev"
                 else
