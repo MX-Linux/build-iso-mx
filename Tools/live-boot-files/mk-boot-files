@@ -1,0 +1,382 @@
+#!/bin/bash
+#
+# mk-boot-files - build the GRUB/shim boot file set of an MX live ISO from
+#                 ONE GRUB version, straight from Debian's packages.
+#
+# Usage:
+#   mk-boot-files -o OUTDIR [--suite SUITE]... [--mirror URL] [--debs DIR]
+#                 [--grub VERSION] [--shim VERSION] [--shim-helpers VERSION]
+#                 [--bootia32 debian|standalone] [--cores full|minimal]
+#                 [--efi-cfg FILE] [--mac [LABEL]] [--force]
+#
+#   -o OUTDIR        e.g. out/2.12-9+deb13u4 (created)
+#   Where the packages come from (always signature-checked by apt):
+#     (default)      this host's apt sources: `apt-get download`
+#     --suite SUITE  a Debian release other than the host's, e.g. forky,
+#                    trixie, trixie-security; repeatable. A private apt
+#                    setup in OUTDIR/.apt (no root, the host's apt is not
+#                    touched), checked against debian-archive-keyring.
+#                    *-security suites use security.debian.org.
+#     --mirror URL   Debian mirror for --suite (default http://deb.debian.org/debian)
+#     --debs DIR     take the .deb files from DIR (no download)
+#   Versions (default: what apt offers as candidate - with --debs: the
+#   versions found in DIR):
+#     --grub V         grub2 version, e.g. 2.12-9+deb13u4
+#     --shim V         shim-signed version
+#     --shim-helpers V shim-helpers-amd64-signed version
+#   --bootia32 M     debian:     Debian's unsigned gcdia32.efi (default)
+#                    standalone: grub-mkstandalone (as mk-efi-img.sh does)
+#   --efi-cfg FILE   grub.cfg inside efi.img (default: mk-efi-img.sh's:
+#                    search /.disk/info with a hint for the boot device,
+#                    then "source" the MX grub.cfg - menu stays top-level,
+#                    Esc does not drop to grub>)
+#   --mac [LABEL]    also the files for booting on Intel Macs, the way
+#                    grub-mkrescue does it: System/Library/CoreServices/
+#                    boot.efi (bootia32.efi + grubx64.efi glued into one
+#                    "universal" EFI file, grub-glue-efi), .disk_label (+
+#                    .contentDetails, the name in the Mac boot picker,
+#                    grub-render-label; default LABEL "MX Linux"),
+#                    SystemVersion.plist, and an empty /mach_kernel.
+#                    The ISO command must add HFS+/APM and "bless" boot.efi
+#                    (build-iso: see README-LIVE-BOOT-FILES.txt, section 7).
+#   --cores P        module set built into eltorito.img and core.img:
+#                    full (default): build-eltorito.sh profile "full" -
+#                         filesystems, RAID/LVM/LUKS, loaders, video; the
+#                         rescue menus switch $prefix to a FOUND system
+#                         (or start core.img from another stick), then
+#                         every module must already be in the core
+#                    minimal: the small lists as used by MX-25.3
+#                         (mid Nov 2026)
+#   --force          replace an existing build in OUTDIR
+#
+# Result in OUTDIR:
+#   iso-tree/                     the set, paths as in the ISO / template tree:
+#     EFI/boot/{bootx64,grubx64,mmx64,bootia32}.efi
+#     boot/grub/efi.img
+#     boot/grub/{i386-pc,x86_64-efi,i386-efi}/   complete Debian module dirs
+#     boot/grub/i386-pc/{eltorito,core}.img      built here (grub-mkimage)
+#     boot/grub/boot-files/{MANIFEST,SHA256SUMS}
+#   live-boot-files-<grub>.tar (+ .sha256)   iso-tree/ as one tar
+#   debs/                          the packages used (when downloaded)
+#   VERIFY.txt                     inventory-boot-files: every file checked
+#                                  against the packages (no version mix)
+#
+# Reproducible: no root, no host GRUB. grub-mkimage comes from the GRUB
+# packages of the SAME version (grub-common, or grub2-common since 2.14);
+# all times are the grub2
+# changelog date (SOURCE_DATE_EPOCH, UTC). Same packages -> same SHA256SUMS
+# (except bootia32 standalone: mkstandalone stamps its memdisk).
+# Needs: apt (or --debs), dpkg-deb, mtools, dosfstools, python3, xorriso,
+# squashfs-tools (unsquashfs, for VERIFY), tar.
+#
+set -euo pipefail
+
+ME=${0##*/}
+TOOLS=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
+GRUB='' SHIM='' SHIMH='' SUITES=() MIRROR=http://deb.debian.org/debian
+OUT='' DEBS='' IA32MODE=debian EFICFG='' FORCE='' CORES=full MAC='' MACLABEL='MX Linux'
+
+die()  { printf '%s: ERROR: %s\n' "$ME" "$*" >&2; exit 1; }
+say()  { printf '%s\n' "$*"; }
+usage() { sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit "${1:-0}"; }
+
+while (($#)); do
+    case $1 in
+        -o) OUT=${2:?}; shift ;;
+        --debs) DEBS=${2:?}; shift ;;
+        --suite) SUITES+=("${2:?}"); shift ;;
+        --mirror) MIRROR=${2:?}; shift ;;
+        --grub) GRUB=${2:?}; shift ;;
+        --shim) SHIM=${2:?}; shift ;;
+        --shim-helpers) SHIMH=${2:?}; shift ;;
+        --bootia32) IA32MODE=${2:?}; shift ;;
+        --efi-cfg) EFICFG=$(readlink -f "${2:?}"); shift ;;
+        --force) FORCE=1 ;;
+        --cores) CORES=${2:?}; shift ;;
+        --mac) MAC=1
+               if [[ ${2:-} && $2 != -* ]]; then MACLABEL=$2; shift; fi ;;
+        -h|--help) usage 0 ;;
+        *) die "unknown argument: $1" ;;
+    esac
+    shift
+done
+[[ -n $OUT ]] || usage 1
+case $IA32MODE in debian|standalone) ;; *) die "--bootia32 debian|standalone" ;; esac
+for t in dpkg-deb mkfs.fat mcopy python3 tar sha256sum; do
+    command -v "$t" >/dev/null || die "$t not found"
+done
+[[ -z $EFICFG || -f $EFICFG ]] || die "--efi-cfg: no such file"
+
+[[ -z $DEBS || ${#SUITES[@]} -eq 0 ]] || die "use --debs or --suite, not both"
+
+# --- output dir -----------------------------------------------------------
+mkdir -p "$OUT"
+OUT=$(cd "$OUT" && pwd)
+T=$OUT/iso-tree
+X=$OUT/.unpacked
+if [[ -e $T || -e $X ]]; then
+    [[ -n $FORCE ]] || die "$OUT has a build already (--force replaces it)"
+    rm -rf -- "${T:?}" "${X:?}" "${OUT:?}"/live-boot-files-*.tar "${OUT:?}"/live-boot-files-*.tar.sha256 "${OUT:?}/VERIFY.txt"
+fi
+mkdir -p "$T" "$X/root"
+
+# --- 1. packages ------------------------------------------------------------
+# apt: the host's, or a private one for --suite (Debian's archive keyring)
+APTO=()
+if ((${#SUITES[@]})); then
+    A=$OUT/.apt
+    KEYRING=/usr/share/keyrings/debian-archive-keyring.gpg
+    [[ -r $KEYRING ]] || die "$KEYRING missing (package debian-archive-keyring)"
+    mkdir -p "$A"/{etc/parts,etc/prefs,state/lists/partial,cache/archives/partial}
+    : > "$A/status"
+    for s in "${SUITES[@]}"; do
+        m=$MIRROR
+        [[ $s == *-security ]] && m=http://security.debian.org/debian-security
+        echo "deb [signed-by=$KEYRING] $m $s main"
+    done > "$A/etc/sources.list"
+    APTO=(-o Dir::Etc::SourceList="$A/etc/sources.list" -o Dir::Etc::SourceParts="$A/etc/parts"
+          -o Dir::Etc::Preferences="$A/etc/prefs/none" -o Dir::Etc::PreferencesParts="$A/etc/prefs"
+          -o Dir::State="$A/state" -o Dir::State::status="$A/status" -o Dir::Cache="$A/cache"
+          -o APT::Architecture=amd64 -o APT::Architectures::=amd64
+          -o Acquire::Languages=none -o Debug::NoLocking=1)
+    say "apt: private setup for ${SUITES[*]} ($A)"
+    apt-get "${APTO[@]}" -q update >/dev/null || die "apt-get update for ${SUITES[*]} failed"
+fi
+candidate() { apt-cache "${APTO[@]}" policy "$1" 2>/dev/null | sed -n 's/^ *Candidate: //p'; }
+from_debs() { local f; for f in "$DEBS/$1"_*.deb; do [[ -f $f ]] && dpkg-deb -f "$f" Version; done | sort -V | tail -n1; }
+if [[ -n $DEBS ]]; then
+    DEBS=$(cd "$DEBS" && pwd)
+    GRUB=${GRUB:-$(from_debs grub-pc-bin)}
+    SHIM=${SHIM:-$(from_debs shim-signed)}
+    SHIMH=${SHIMH:-$(from_debs shim-helpers-amd64-signed)}
+else
+    GRUB=${GRUB:-$(candidate grub-pc-bin)}
+    SHIM=${SHIM:-$(candidate shim-signed)}
+    SHIMH=${SHIMH:-$(candidate shim-helpers-amd64-signed)}
+fi
+[[ -n $GRUB && -n $SHIM && -n $SHIMH && $GRUB != "(none)" ]] \
+    || die "no GRUB/shim version found (grub=$GRUB shim=$SHIM shim-helpers=$SHIMH)"
+
+# signed package version "1+2.12+9+deb13u4" from grub2 "2.12-9+deb13u4"
+GRUB_SIGNED=1+${GRUB//-/+}
+# package -> version (all GRUB parts from the same grub2 build);
+# grub-common and grub2-common: grub-mkimage & co. (moved in 2.14)
+declare -A PKGS=(
+    [grub-common]=$GRUB
+    [grub2-common]=$GRUB
+    [grub-pc-bin]=$GRUB
+    [grub-efi-amd64-bin]=$GRUB
+    [grub-efi-ia32-bin]=$GRUB
+    [grub-efi-ia32-unsigned]=$GRUB
+    [grub-efi-amd64-signed]=$GRUB_SIGNED
+    [shim-signed]=$SHIM
+    [shim-helpers-amd64-signed]=$SHIMH
+)
+ORDER=(grub-common grub2-common grub-pc-bin grub-efi-amd64-bin grub-efi-ia32-bin
+       grub-efi-ia32-unsigned grub-efi-amd64-signed shim-signed shim-helpers-amd64-signed)
+
+if [[ -z $DEBS ]]; then
+    DEBS=$OUT/debs
+    mkdir -p "$DEBS"
+    want=()
+    for p in "${ORDER[@]}"; do
+        compgen -G "$DEBS/${p}_${PKGS[$p]//:/%3a}_*.deb" >/dev/null || want+=("$p=${PKGS[$p]}")
+    done
+    if ((${#want[@]})); then
+        say "Downloading (apt-get download, signature-checked by apt): ${want[*]}"
+        (cd "$DEBS" && apt-get "${APTO[@]}" download "${want[@]}") || die "apt-get download failed"
+    fi
+fi
+
+declare -A DEB
+for p in "${ORDER[@]}"; do
+    v=${PKGS[$p]}
+    f=''
+    for c in "$DEBS/${p}"_*.deb; do
+        [[ -f $c ]] || continue
+        [[ $(dpkg-deb -f "$c" Package) == "$p" && $(dpkg-deb -f "$c" Version) == "$v" ]] && f=$c
+    done
+    [[ -n $f ]] || die "no ${p}_${v} .deb in $DEBS"
+    DEB[$p]=$f
+done
+# the signed GRUB must be built from the same grub2
+bu=$(dpkg-deb -f "${DEB[grub-efi-amd64-signed]}" Built-Using)
+[[ $bu == *"grub2 (= $GRUB)"* ]] || die "grub-efi-amd64-signed is built from '$bu', not grub2 $GRUB"
+say "Packages: OK (grub2 $GRUB, shim-signed $SHIM)"
+
+for p in "${ORDER[@]}"; do
+    dpkg-deb -x "${DEB[$p]}" "$X/root"
+done
+R=$X/root
+
+# --- 2. reproducibility: time = grub2 changelog date ---------------------
+cl=''
+for c in grub-common grub2-common grub-pc-bin; do
+    [[ -f $R/usr/share/doc/$c/changelog.Debian.gz ]] && { cl=$R/usr/share/doc/$c/changelog.Debian.gz; break; }
+done
+[[ -n $cl ]] || die "no grub2 changelog in the packages"
+cldate=$(zcat "$cl" | sed -n '0,/^ -- /s/^ -- .*>  //p')
+SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-$(date -d "$cldate" +%s)}
+export SOURCE_DATE_EPOCH TZ=UTC LC_ALL=C
+umask 022
+say "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH ($(date -u -d "@$SOURCE_DATE_EPOCH" '+%F %T UTC'), grub2 changelog)"
+
+MKIMAGE=$R/usr/bin/grub-mkimage
+[[ -x $MKIMAGE ]] || die "no usr/bin/grub-mkimage in grub-common/grub2-common $GRUB"
+ver=$("$MKIMAGE" --version 2>&1) \
+    || die "grub-mkimage $GRUB does not run on this host: $ver"$'\n'"(packages of a newer Debian release may need a newer C library: build on a host or in a chroot of that release)"
+[[ $ver == *"$GRUB"* ]] || die "$MKIMAGE is not $GRUB ($ver)"
+
+# --- 3. module dirs: complete copies of Debian's -------------------------
+G=$T/boot/grub
+mkdir -p "$G" "$T/EFI/boot"
+for plat in i386-pc x86_64-efi i386-efi; do
+    mkdir -p "$G/$plat"
+    find "$R/usr/lib/grub/$plat" -maxdepth 1 -type f -exec cp -t "$G/$plat/" {} +
+    say "  boot/grub/$plat/: $(find "$G/$plat" -name '*.mod' | wc -l) modules"
+done
+
+# --- 4. BIOS cores (same module lists / configs as MX ships today) --------
+case $CORES in
+    full)
+        # one list for both cores, from build-eltorito.sh (single home)
+        ELTORITO_MODS=$("$TOOLS/build-eltorito.sh" -L -p full -d "$G/i386-pc" | tail -n1)
+        CORE_MODS=$ELTORITO_MODS ;;
+    minimal)
+        # as used by MX-25.3 (mid Nov 2026)
+        ELTORITO_MODS="biosdisk iso9660 search search_fs_uuid search_fs_file search_label test loadenv"
+        CORE_MODS="biosdisk ext2 iso9660 fat part_gpt part_msdos normal search configfile test ls cat help all_video gfxmenu jpeg png gfxterm" ;;
+    *) die "--cores full|minimal" ;;
+esac
+CORE_CFG=$X/core.cfg
+printf '%s\n' 'search --no-floppy --file --set=root /antiX/vmlinuz' 'set prefix=($root)/boot/grub' > "$CORE_CFG"
+# shellcheck disable=SC2086
+"$MKIMAGE" -d "$G/i386-pc" -O i386-pc-eltorito -p /boot/grub \
+    -o "$G/i386-pc/eltorito.img" $ELTORITO_MODS
+# shellcheck disable=SC2086
+"$MKIMAGE" -d "$G/i386-pc" -O i386-pc -p '($root)/boot/grub' -c "$CORE_CFG" \
+    -o "$G/i386-pc/core.img" $CORE_MODS
+say "  boot/grub/i386-pc/eltorito.img, core.img: grub-mkimage $GRUB"
+
+# --- 5. EFI files --------------------------------------------------------
+cp "$R/usr/lib/shim/shimx64.efi.signed" "$T/EFI/boot/bootx64.efi"
+cp "$R/usr/lib/shim/mmx64.efi.signed" "$T/EFI/boot/mmx64.efi"
+cp "$R/usr/lib/grub/x86_64-efi-signed/gcdx64.efi.signed" "$T/EFI/boot/grubx64.efi"
+efiargs=(-o "$G/efi.img" --efi-src "$R" --x64-dir "$G/x86_64-efi")
+[[ -n $EFICFG ]] && efiargs+=(--cfg "$EFICFG")
+if [[ $IA32MODE == debian ]]; then
+    cp "$R/usr/lib/grub/i386-efi/monolithic/gcdia32.efi" "$T/EFI/boot/bootia32.efi"
+    efiargs+=(--ia32-efi "$T/EFI/boot/bootia32.efi")
+else
+    efiargs+=(--ia32-dir "$G/i386-efi")
+fi
+PATH=$R/usr/bin:$PATH "$TOOLS/mk-efi-img.sh" "${efiargs[@]}" | sed 's/^/  /'
+if [[ $IA32MODE == standalone ]]; then
+    MTOOLS_SKIP_CHECK=1 mcopy -m -i "$G/efi.img" ::/EFI/boot/bootia32.efi "$T/EFI/boot/bootia32.efi"
+fi
+EFICFG_USED=$X/efi-grub.cfg
+MTOOLS_SKIP_CHECK=1 mtype -i "$G/efi.img" ::/boot/grub/grub.cfg > "$EFICFG_USED"
+
+# --- 5b. Intel Mac files (grub-mkrescue style), optional -----------------
+if [[ $MAC ]]; then
+    C=$T/System/Library/CoreServices
+    mkdir -p "$C"
+    # one EFI file with both architectures: old 32-bit EFI Macs + 64-bit Macs
+    "$R/usr/bin/grub-glue-efi" -3 "$T/EFI/boot/bootia32.efi" -6 "$T/EFI/boot/grubx64.efi" \
+        -o "$C/boot.efi"
+    "$R/usr/bin/grub-render-label" -f "$R/usr/share/grub/unicode.pf2" -t "$MACLABEL" \
+        -o "$C/.disk_label"
+    printf '%s\n' "$MACLABEL" > "$C/.disk_label.contentDetails"
+    cat > "$C/SystemVersion.plist" <<PLIST
+<plist version="1.0">
+<dict>
+        <key>ProductBuildVersion</key>
+        <string></string>
+        <key>ProductName</key>
+        <string>$MACLABEL</string>
+        <key>ProductVersion</key>
+        <string>GRUB $GRUB</string>
+</dict>
+</plist>
+PLIST
+    : > "$T/mach_kernel"
+    say "  System/Library/CoreServices/boot.efi (+ label, plist), mach_kernel: Intel Mac (--mac)"
+fi
+
+# --- 6. MANIFEST + SHA256SUMS -------------------------------------------
+M=$G/boot-files
+mkdir -p "$M"
+from() { printf '    %-36s %s\n' "$1" "$2"; }
+{
+    echo "MX live boot files - MANIFEST"
+    echo "GRUB: grub2 $GRUB    shim: $SHIM"
+    echo "Built by mk-boot-files (build-iso Tools/live-boot-files), SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH"
+    echo "Rebuild: mk-boot-files -o DIR${SUITES:+ --suite ${SUITES[*]}} --grub $GRUB --shim $SHIM --shim-helpers $SHIMH --bootia32 $IA32MODE --cores $CORES${EFICFG:+ --efi-cfg ${EFICFG##*/}}${MAC:+ --mac \"$MACLABEL\"}"
+    echo "         -> must give the same SHA256SUMS."
+    echo
+    echo "Packages (Debian, SHA256 of the .deb):"
+    for p in "${ORDER[@]}"; do
+        f=${DEB[$p]}
+        printf '    %s  %s\n' "$(sha256sum < "$f" | cut -d' ' -f1)" "${f##*/}"
+    done
+    echo
+    echo "Files:"
+    from EFI/boot/bootx64.efi "shim-signed: usr/lib/shim/shimx64.efi.signed"
+    from EFI/boot/mmx64.efi "shim-helpers-amd64-signed: usr/lib/shim/mmx64.efi.signed"
+    from EFI/boot/grubx64.efi "grub-efi-amd64-signed: usr/lib/grub/x86_64-efi-signed/gcdx64.efi.signed"
+    if [[ $IA32MODE == debian ]]; then
+        from EFI/boot/bootia32.efi "grub-efi-ia32-unsigned: usr/lib/grub/i386-efi/monolithic/gcdia32.efi"
+    else
+        from EFI/boot/bootia32.efi "grub-mkstandalone -O i386-efi -d boot/grub/i386-efi (mk-efi-img.sh)"
+    fi
+    from boot/grub/i386-pc/ "grub-pc-bin: usr/lib/grub/i386-pc/* (complete)"
+    from boot/grub/x86_64-efi/ "grub-efi-amd64-bin: usr/lib/grub/x86_64-efi/* (complete)"
+    from boot/grub/i386-efi/ "grub-efi-ia32-bin: usr/lib/grub/i386-efi/* (complete)"
+    from boot/grub/i386-pc/eltorito.img "grub-mkimage -O i386-pc-eltorito -p /boot/grub"
+    from "" "  $ELTORITO_MODS"
+    from boot/grub/i386-pc/core.img "grub-mkimage -O i386-pc -p (\$root)/boot/grub -c core.cfg"
+    from "" "  $CORE_MODS"
+    from "" "  core.cfg: $(paste -sd';' "$CORE_CFG")"
+    if [[ $MAC ]]; then
+        from System/Library/CoreServices/boot.efi "grub-glue-efi -3 EFI/boot/bootia32.efi -6 EFI/boot/grubx64.efi"
+        from "" "  + .disk_label (grub-render-label \"$MACLABEL\"), .disk_label.contentDetails,"
+        from "" "    SystemVersion.plist, /mach_kernel (empty) - ISO: HFS+/APM, bless boot.efi"
+    fi
+    from boot/grub/efi.img "mk-efi-img.sh: FAT with EFI/boot/{bootx64,grubx64,mmx64,bootia32}.efi"
+    from "" "  + boot/grub/grub.cfg:"
+    sed 's/^/                                           | /' "$EFICFG_USED"
+    echo
+    echo "Embedded modules of the built images (incl. dependencies):"
+    for img in eltorito core; do
+        printf '    %s.img: %s\n' "$img" "$("$TOOLS/build-eltorito.sh" -l "$G/i386-pc/$img.img" | sed -n 's/^modules: //p')"
+    done
+} > "$M/MANIFEST"
+
+# fixed times and modes for everything, then the checksums
+find "$T" -type d -exec chmod 755 {} + -o -type f -exec chmod 644 {} +
+find "$T" -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
+(cd "$T" && find . -type f ! -path ./boot/grub/boot-files/SHA256SUMS -printf '%P\n' | sort |
+    xargs -d '\n' sha256sum) > "$M/SHA256SUMS"
+touch -h -d "@$SOURCE_DATE_EPOCH" "$M/SHA256SUMS" "$M"
+
+# --- 7. verify: every file against the packages --------------------------
+python3 -I "$TOOLS/inventory-boot-files" -s -r "$GRUB=$R" "$T" > "$OUT/VERIFY.txt" 2>&1 \
+    || die "inventory-boot-files failed, see $OUT/VERIFY.txt"
+if grep -E 'MIXED|UNKNOWN' "$OUT/VERIFY.txt"; then
+    die "version mix found, see $OUT/VERIFY.txt"
+fi
+bad=$(grep -E 'no reference match' "$OUT/VERIFY.txt" |
+      grep -vE 'boot/grub/efi\.img|eltorito\.img|core\.img|efi\.img:boot/grub/grub\.cfg' |
+      { [[ $IA32MODE == standalone ]] && grep -v bootia32 || cat; } || true)
+[[ -z $bad ]] || die "files not from the packages:"$'\n'"$bad"
+say "Verify: OK (all files from grub2 $GRUB / shim, cores = $GRUB modules) -> VERIFY.txt"
+
+# --- 8. tar -----------------------------------------------------------------
+TAR=$OUT/live-boot-files-$GRUB.tar
+tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner \
+    --format=gnu -C "$T" -cf "$TAR" EFI boot ${MAC:+System mach_kernel}
+(cd "$OUT" && sha256sum "${TAR##*/}" > "${TAR##*/}.sha256")
+rm -rf -- "${X:?}"
+say "Built: $T"
+say "       $TAR"
+say "       $(cut -c1-16 "$TAR.sha256")...  (same packages -> same hash)"

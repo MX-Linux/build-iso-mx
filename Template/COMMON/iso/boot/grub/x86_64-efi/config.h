@@ -55,9 +55,9 @@
 /* Version number of package.  */
 #  define VERSION "2.12"
 /* Define to the full name and version of this package. */
-#  define PACKAGE_STRING "GRUB 2.12-9"
+#  define PACKAGE_STRING "GRUB 2.12-9+deb13u4"
 /* Define to the version of this package. */
-#  define PACKAGE_VERSION "2.12-9"
+#  define PACKAGE_VERSION "2.12-9+deb13u4"
 /* Define to the full name of this package. */
 #  define PACKAGE_NAME "GRUB"
 /* Define to the address where bug reports for this package should be sent. */

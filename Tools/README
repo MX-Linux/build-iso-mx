@@ -27,6 +27,13 @@ extract-vmlinux
 get-error-msgs
     Print all fatal and non-fatal error messages
 
+live-boot-files/
+    USED
+    The GRUB/shim boot files of the live ISO (EFI/boot/*.efi, efi.img,
+    GRUB cores and modules in Template/COMMON/iso*): mk-boot-files builds
+    the whole set from Debian's packages (one GRUB version, MANIFEST,
+    reproducible). How and when: live-boot-files/README-LIVE-BOOT-FILES.txt
+
 isolinux-to-grub.pl
     USED
     convert an isolinux menu into a Grub menu.
