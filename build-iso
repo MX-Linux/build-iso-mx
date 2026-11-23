@@ -4634,7 +4634,10 @@ make_xorriso_iso() {
         -blank as_needed                         # replace an existing file
         -volid "$label"                          # volume label (max 32 chars)
         -joliet on                               # + Joliet names (Windows)
-        -compliance iso_9660_level=3             # files > 4 GiB allowed (linuxfs)
+        -compliance iso_9660_level=3:no_emul_toc # files > 4 GiB allowed (linuxfs);
+                                                 # no emulated TOC (as -as mkisofs)
+        -padding included                        # padding inside the image: the
+                                                 # backup GPT ends up in the last sector
         -map "$dir" /                            # the iso dir -> ISO root
         -chown_r 0 / --                          # owner root ...
         -chgrp_r 0 / --                          # ... and group root
@@ -4648,8 +4651,11 @@ make_xorriso_iso() {
             -find /System/Library/CoreServices/boot.efi
                 -exec set_hfs_bless intel_bootfile --
                                                  # "bless": the file the Mac boots
+        )
+        # name in the Mac boot picker - only if present (xorriso aborts on a missing path)
+        [[ -f $dir/System/Library/CoreServices/.disk_label ]] && cmd+=(
             -find /System/Library/CoreServices/.disk_label
-                -exec set_hfs_crtp chrp tbxj --  # name in the Mac boot picker
+                -exec set_hfs_crtp chrp tbxj --
         )
     fi
 
