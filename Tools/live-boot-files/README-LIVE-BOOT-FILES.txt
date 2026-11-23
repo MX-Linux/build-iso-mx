@@ -141,7 +141,8 @@ from the downloaded packages of the same version.
         Tools/live-boot-files/mk-boot-files -o ~/live-boot-files/<grub-version>
     (any dir outside the git tree; below: OUT = that dir)
     It downloads the packages with apt-get download (apt checks the
-    signatures), unpacks them, builds eltorito.img, core.img, efi.img,
+    signatures; .debs kept from an earlier run are reused only when their
+    SHA256 matches apt's index), unpacks them, builds eltorito.img, core.img, efi.img,
     writes MANIFEST + SHA256SUMS, checks itself and packs the tar.
     Last lines:
         Verify: OK (all files from grub2 <version> / shim, cores = <version> modules)
@@ -276,7 +277,9 @@ Secure Boot: "SBAT self-check failed" / "Security Policy Violation"
 9a. mk-boot-files options
     -o OUTDIR             output dir (created; e.g. ~/live-boot-files/<grub-version>)
     --suite S / --mirror  another Debian release (section 6)
-    --debs DIR            use .debs from DIR (no download)
+    --debs DIR            use .debs from DIR (no download); each is checked
+                          against apt's index when apt knows the version,
+                          else a WARNING
     --grub V --shim V --shim-helpers V   pin versions
     --bootia32 debian|standalone   Debian's gcdia32.efi (default) or a
                           grub-mkstandalone image

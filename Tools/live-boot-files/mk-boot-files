@@ -10,7 +10,8 @@
 #                 [--efi-cfg FILE] [--mac [LABEL]] [--force]
 #
 #   -o OUTDIR        e.g. out/2.12-9+deb13u4 (created)
-#   Where the packages come from (always signature-checked by apt):
+#   Where the packages come from (every .deb is checked against the SHA256
+#   in apt's signed package index - InRelease -> Packages):
 #     (default)      this host's apt sources: `apt-get download`
 #     --suite SUITE  a Debian release other than the host's, e.g. forky,
 #                    trixie, trixie-security; repeatable. A private apt
@@ -18,7 +19,8 @@
 #                    touched), checked against debian-archive-keyring.
 #                    *-security suites use security.debian.org.
 #     --mirror URL   Debian mirror for --suite (default http://deb.debian.org/debian)
-#     --debs DIR     take the .deb files from DIR (no download)
+#     --debs DIR     take the .deb files from DIR (no download); checked the
+#                    same way when apt knows that version, else a WARNING
 #   Versions (default: what apt offers as candidate - with --debs: the
 #   versions found in DIR):
 #     --grub V         grub2 version, e.g. 2.12-9+deb13u4
@@ -175,11 +177,27 @@ declare -A PKGS=(
 ORDER=(grub-common grub2-common grub-pc-bin grub-efi-amd64-bin grub-efi-ia32-bin
        grub-efi-ia32-unsigned grub-efi-amd64-signed shim-signed shim-helpers-amd64-signed)
 
+# SHA256 of PKG=VERSION in apt's signed package index (empty: apt does not know it)
+apt_sha256() { apt-cache "${APTO[@]}" show "$1=$2" 2>/dev/null | sed -n 's/^SHA256: //p'; }
+# deb_ok FILE PKG VERSION: the file is exactly the one apt's index lists
+deb_ok() {
+    local sum
+    sum=$(sha256sum "$1" | cut -d' ' -f1)
+    apt_sha256 "$2" "$3" | grep -qx "$sum"
+}
+
+AUTO_DEBS=
 if [[ -z $DEBS ]]; then
+    AUTO_DEBS=1
     DEBS=$OUT/debs
     mkdir -p "$DEBS"
     want=()
     for p in "${ORDER[@]}"; do
+        # reuse a .deb from an earlier run only if apt's index has its SHA256
+        for c in "$DEBS/${p}_${PKGS[$p]//:/%3a}"_*.deb; do
+            [[ -f $c ]] || continue
+            deb_ok "$c" "$p" "${PKGS[$p]}" || { say "  ${c##*/}: SHA256 not in apt's index - downloading again"; rm -f -- "$c"; }
+        done
         compgen -G "$DEBS/${p}_${PKGS[$p]//:/%3a}_*.deb" >/dev/null || want+=("$p=${PKGS[$p]}")
     done
     if ((${#want[@]})); then
@@ -199,6 +217,17 @@ for p in "${ORDER[@]}"; do
     [[ -n $f ]] || die "no ${p}_${v} .deb in $DEBS"
     DEB[$p]=$f
 done
+# every .deb used must be the one apt's signed index lists
+for p in "${ORDER[@]}"; do
+    v=${PKGS[$p]}
+    if [[ -z $(apt_sha256 "$p" "$v") ]]; then
+        [[ -n $AUTO_DEBS ]] && die "apt does not know $p=$v (apt-get update?)"
+        say "WARNING: $p=$v is not in apt's package index - ${DEB[$p]##*/} NOT verified"
+    elif ! deb_ok "${DEB[$p]}" "$p" "$v"; then
+        die "${DEB[$p]##*/}: SHA256 differs from apt's index for $p=$v"
+    fi
+done
+say "Packages: SHA256 checked against apt's index"
 # the signed GRUB must be built from the same grub2
 bu=$(dpkg-deb -f "${DEB[grub-efi-amd64-signed]}" Built-Using)
 [[ $bu == *"grub2 (= $GRUB)"* ]] || die "grub-efi-amd64-signed is built from '$bu', not grub2 $GRUB"

@@ -2905,6 +2905,18 @@ do_stage_6() {
     # (0) Populate iso dir with boilerplate files
     # (1) Copy flavour-dependent bootloader.cfg files via inheritance
 
+    # The boot file set is replaced as a whole: an existing iso dir (earlier
+    # run) must not keep old boot files the new template no longer has -
+    # e.g. EFI/BOOT next to the new EFI/boot, or .mod files a newer GRUB
+    # dropped (a GRUB core only works with modules of the same build)
+    if [[ $iso_dir == "$remaster_dir"/work/* ]]; then
+        local old
+        for old in EFI boot/grub/i386-pc boot/grub/x86_64-efi boot/grub/i386-efi \
+                   System mach_kernel; do
+            [[ -e $iso_dir/$old ]] && $SUDO rm -rf -- "${iso_dir:?}/$old"
+        done
+    fi
+
     #copy correct iso folder for multi-init if present
     if [[ -d "$template/COMMON/iso-multi" ]]; then
         if [[ -e "$sqfs_dir/usr/lib/sysvinit/init" ]] && [[ -e "$sqfs_dir/usr/lib/systemd/systemd" ]]; then
@@ -4724,6 +4736,10 @@ make_xorriso_iso() {
         -boot_image any partition_cyl_align=off  # no padding to a cylinder size
         -boot_image any iso_mbr_part_type=0x00   # MBR type of partition 1 (as Debian)
     )
+
+    # -outdev does not truncate an existing file: an old, bigger ISO of the
+    # same name would keep its tail (and the checksums would cover it)
+    rm -f -- "$file" 2>/dev/null || $SUDO rm -f -- "$file"
 
     echo "${cmd[*]}"
     "${cmd[@]}" 2>&1 || error "iso file creation failed"

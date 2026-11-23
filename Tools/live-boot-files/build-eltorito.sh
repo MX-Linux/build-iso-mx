@@ -162,7 +162,6 @@ esac
 MODS="$MODS $EXTRA_MODS"
 
 [[ -n $ISO_TREE && -n $OUT ]] && { echo "use either -t or -o, not both" >&2; exit 1; }
-command -v grub-mkimage >/dev/null || { echo "grub-mkimage not found (package grub-common)" >&2; exit 1; }
 
 TMP=
 cleanup() { if [[ -n $TMP ]]; then rm -rf -- "$TMP"; fi; }
@@ -205,6 +204,9 @@ if [[ -n $PRINT_MODS ]]; then
     echo $MODS
     exit 0
 fi
+
+# building an image needs grub-mkimage (-L above only prints the module list)
+command -v grub-mkimage >/dev/null || { echo "grub-mkimage not found (package grub-common)" >&2; exit 1; }
 
 # --- with -t: replace the ISO tree's module set by the one we build from ---
 if [[ -n $ISO_TREE ]]; then
