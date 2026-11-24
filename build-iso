@@ -2910,11 +2910,8 @@ do_stage_6() {
     # e.g. EFI/BOOT next to the new EFI/boot, or .mod files a newer GRUB
     # dropped (a GRUB core only works with modules of the same build)
     if [[ $iso_dir == "$remaster_dir"/work/* ]]; then
-        local old
-        for old in EFI boot/grub/i386-pc boot/grub/x86_64-efi boot/grub/i386-efi \
-                   System mach_kernel; do
-            [[ -e $iso_dir/$old ]] && $SUDO rm -rf -- "${iso_dir:?}/$old"
-        done
+        $SUDO rm -rf -- "${iso_dir:?}/EFI" "$iso_dir"/boot/grub/{i386-pc,x86_64-efi,i386-efi} \
+            "$iso_dir/System" "$iso_dir/mach_kernel" || fatal "Could not clear old boot files in $(pq "$iso_dir")"
     fi
 
     #copy correct iso folder for multi-init if present
@@ -3584,9 +3581,7 @@ do_stage_8() {
     chown_opts="-uid 0 -gid 0"
     say "Using $(pq "$(basename "$MAKE_ISO")") to make iso file"
     if [[ -z ${MAKE_ISO%%*xorriso} ]]; then
-        $SUDO chown -R root:root "$iso_dir"
         make_xorriso_iso "$MAKE_ISO" "$full_iso_file" "$iso_dir"
-        $SUDO chown -R $UID "$iso_dir"
 
     elif has_option "$MAKE_ISO" -e; then
         make_uefi_iso "$MAKE_ISO" "$chown_opts -e" "$full_iso_file" "$iso_dir"
@@ -4739,10 +4734,14 @@ make_xorriso_iso() {
 
     # -outdev does not truncate an existing file: an old, bigger ISO of the
     # same name would keep its tail (and the checksums would cover it)
-    rm -f -- "$file" 2>/dev/null || $SUDO rm -f -- "$file"
+    rm -f -- "$file" 2>/dev/null || $SUDO rm -f -- "$file" || fatal "Could not remove existing ISO $(pq "$file")"
 
     echo "${cmd[*]}"
-    "${cmd[@]}" 2>&1 || error "iso file creation failed"
+    local status=0
+    $SUDO chown -R root:root "$dir"
+    "${cmd[@]}" 2>&1 || status=$?
+    $SUDO chown -R "$UID" "$dir"
+    (( status == 0 )) || error "iso file creation failed"
 }
 
 unpack_gfx_cpio() {
