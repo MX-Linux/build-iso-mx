@@ -3552,7 +3552,7 @@ do_stage_8() {
         fi
         local mkrescue_result=$?
 
-        [[ $mkrescue_result -eq 0 ]] || error "iso file creation failed"
+        [[ $mkrescue_result -eq 0 ]] || fatal "grub-mkrescue failed to create $(pq "$full_iso_file")"
         size=$(du_size "$full_iso_file")
         end_timer "create $(pqn "$size") iso file"
 
@@ -3594,10 +3594,10 @@ do_stage_8() {
         $MAKE_ISO -l -V antiXlive -R -J -pad -no-emul-boot -boot-load-size 4  \
             -boot-info-table -gid 0 -uid 0 -b boot/isolinux/isolinux.bin      \
             -c boot/isolinux/isolinux.cat -o "$full_iso_file" "$iso_dir" 2>&1 \
-            || error "iso file creation failed"
+            || fatal "Could not create ISO $(pq "$full_iso_file")"
 
-            require_programs isohybrid
-            isohybrid "$full_iso_file"
+        require_programs isohybrid
+        isohybrid "$full_iso_file" || fatal "isohybrid failed for $(pq "$full_iso_file")"
     fi
 
     size=$(du_size "$full_iso_file")
@@ -4605,8 +4605,8 @@ make_uefi_iso() {
     -quiet -c boot/isolinux/isolinux.cat -o "$file" "$dir")
 
     echo "${cmd[*]}"
-    "${cmd[@]}" 2>&1 || error "iso file creation failed"
-    isohybrid --uefi "$file"
+    "${cmd[@]}" 2>&1 || fatal "Could not create ISO $(pq "$file")"
+    isohybrid --uefi "$file" || fatal "isohybrid failed for $(pq "$file")"
 }
 
 # isolinux's hybrid MBR boot code (package isolinux / syslinux)
@@ -4741,7 +4741,11 @@ make_xorriso_iso() {
     $SUDO chown -R root:root "$dir"
     "${cmd[@]}" 2>&1 || status=$?
     $SUDO chown -R "$UID" "$dir"
-    (( status == 0 )) || error "iso file creation failed"
+    if (( status != 0 )); then
+        rm -f -- "$file" 2>/dev/null || $SUDO rm -f -- "$file" \
+            || fatal "xorriso exited with status $status and could not remove incomplete ISO $(pq "$file")"
+        fatal "xorriso exited with status $status while creating $(pq "$file")"
+    fi
 }
 
 unpack_gfx_cpio() {
