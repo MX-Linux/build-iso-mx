@@ -1,0 +1,48 @@
+MX live boot files - MANIFEST
+GRUB: grub2 2.12-9+deb13u4    shim: 1.51~1+deb13u1+16.1-2~deb13u1
+Built by mk-boot-files (build-iso Tools/live-boot-files), SOURCE_DATE_EPOCH=1793965712
+Rebuild: mk-boot-files -o DIR --grub 2.12-9+deb13u4 --shim 1.51~1+deb13u1+16.1-2~deb13u1 --shim-helpers 1+16.1+2~deb13u1 --bootia32 debian --cores full
+         -> must give the same SHA256SUMS.
+
+Packages (Debian, SHA256 of the .deb):
+    bb246af29765f5e96d27291f473995eb251ff8485320df9ef9fff565a563deec  grub-common_2.12-9+deb13u4_amd64.deb
+    323c8a7a8505d5e26580aadc31cb78eefda6af5591023fa254736c7360867a80  grub2-common_2.12-9+deb13u4_amd64.deb
+    f8f78f08e57bb90cb030d70303286bc71a759bad1ec89eac2e3e20916d5c42cd  grub-pc-bin_2.12-9+deb13u4_amd64.deb
+    6c8fc627b5f0886fd785d623bb9a3494bfa44365cfc7186e135601634ada39f4  grub-efi-amd64-bin_2.12-9+deb13u4_amd64.deb
+    11f486c6ddd17be53d1d5c16e09e15707324b2cdfcfe2b5c40c23ab4c17984b8  grub-efi-ia32-bin_2.12-9+deb13u4_amd64.deb
+    d07b9b0dfa8f60db144ea47f4615870b851889f1eb70995d236d474630a9abb5  grub-efi-ia32-unsigned_2.12-9+deb13u4_amd64.deb
+    9090ac76b1bb4d009298583c6e5af1e7b2cae8bce96a40d42a271eb2f750b536  grub-efi-amd64-signed_1+2.12+9+deb13u4_amd64.deb
+    3c802fa303c0e6bf126adee74028d1042e3120360d159c2c05181dc9b2f61005  shim-signed_1.51~1+deb13u1+16.1-2~deb13u1_amd64.deb
+    7e950d75d5a40ecc0a99f727452ce35780b47a04d9a2cc3b1ff7c2bb316c033e  shim-helpers-amd64-signed_1+16.1+2~deb13u1_amd64.deb
+
+Files:
+    EFI/boot/bootx64.efi                 shim-signed: usr/lib/shim/shimx64.efi.signed
+    EFI/boot/mmx64.efi                   shim-helpers-amd64-signed: usr/lib/shim/mmx64.efi.signed
+    EFI/boot/grubx64.efi                 grub-efi-amd64-signed: usr/lib/grub/x86_64-efi-signed/gcdx64.efi.signed
+    EFI/boot/bootia32.efi                grub-efi-ia32-unsigned: usr/lib/grub/i386-efi/monolithic/gcdia32.efi
+    boot/grub/i386-pc/                   grub-pc-bin: usr/lib/grub/i386-pc/* (complete)
+    boot/grub/x86_64-efi/                grub-efi-amd64-bin: usr/lib/grub/x86_64-efi/* (complete)
+    boot/grub/i386-efi/                  grub-efi-ia32-bin: usr/lib/grub/i386-efi/* (complete)
+    boot/grub/i386-pc/eltorito.img       grub-mkimage -O i386-pc-eltorito -p /boot/grub
+                                           biosdisk iso9660 search search_fs_uuid search_fs_file search_label test loadenv part_msdos part_gpt configfile normal echo part_apple ext2 fat exfat ntfs ntfscomp btrfs xfs f2fs jfs reiserfs hfsplus udf squash4 lvm mdraid09 mdraid1x raid5rec raid6rec diskfilter cryptodisk luks luks2 gcry_rijndael gcry_sha256 gcry_sha512 gzio xzio lzopio zstd regexp probe cat ls help sleep keystatus true halt reboot minicmd loopback linux linux16 multiboot multiboot2 chain ntldr all_video video_bochs video_cirrus vbe vga gfxterm gfxterm_background gfxmenu font png jpeg tga gettext
+    boot/grub/i386-pc/core.img           grub-mkimage -O i386-pc -p ($root)/boot/grub -c core.cfg
+                                           biosdisk iso9660 search search_fs_uuid search_fs_file search_label test loadenv part_msdos part_gpt configfile normal echo part_apple ext2 fat exfat ntfs ntfscomp btrfs xfs f2fs jfs reiserfs hfsplus udf squash4 lvm mdraid09 mdraid1x raid5rec raid6rec diskfilter cryptodisk luks luks2 gcry_rijndael gcry_sha256 gcry_sha512 gzio xzio lzopio zstd regexp probe cat ls help sleep keystatus true halt reboot minicmd loopback linux linux16 multiboot multiboot2 chain ntldr all_video video_bochs video_cirrus vbe vga gfxterm gfxterm_background gfxmenu font png jpeg tga gettext
+                                           core.cfg: search --no-floppy --file --set=root /antiX/vmlinuz;set prefix=($root)/boot/grub
+    boot/grub/efi.img                    mk-efi-img.sh: FAT with EFI/boot/{bootx64,grubx64,mmx64,bootia32}.efi
+                                           + boot/grub/grub.cfg:
+                                           | # efi.img boot/grub/grub.cfg: find the live ISO on the boot device, then source its menu.
+                                           | # Debian's signed GRUB sets $fw_path ($cmdpath stays empty); other GRUB builds set $cmdpath.
+                                           | set efi_bootpath="$fw_path"
+                                           | if [ -z "$efi_bootpath" ]; then set efi_bootpath="$cmdpath"; fi
+                                           | if regexp --set=1:efi_bootdev '^\(([^)]+)\)' "$efi_bootpath"; then
+                                           |     regexp --set=1:efi_bootdisk '^([^,]+)' "$efi_bootdev"
+                                           |     search --no-floppy --set=root --file /.disk/info --hint="$efi_bootdisk" --hint="$efi_bootdev"
+                                           | else
+                                           |     search --no-floppy --set=root --file /.disk/info
+                                           | fi
+                                           | set prefix=($root)/boot/grub
+                                           | source ($root)/boot/grub/grub.cfg
+
+Embedded modules of the built images (incl. dependencies):
+    eltorito.img: biosdisk fshelp iso9660 search_label search_fs_uuid search_fs_file extcmd search test disk loadenv part_msdos part_gpt verifiers terminal priority_queue datetime bufio boot net gettext crypto normal configfile echo part_apple ext2 fat exfat ntfs ntfscomp zstd diskfilter raid6rec lzopio gcry_crc gzio btrfs xfs f2fs jfs reiserfs hfsplus udf xzio squash4 lvm mdraid09 mdraid1x raid5rec archelp procfs cryptodisk pbkdf2 afsplitter luks json luks2 gcry_rijndael gcry_sha256 gcry_sha512 regexp probe cat ls help sleep keystatus true mmap acpi halt relocator reboot minicmd loopback video video_fb vbe linux linux16 lsapm elf multiboot multiboot2 chain ntldr pci video_cirrus video_bochs vga all_video font gfxterm video_colors bitmap bitmap_scale gfxterm_background trig gfxmenu png jpeg tga
+    core.img: biosdisk fshelp iso9660 search_label search_fs_uuid search_fs_file extcmd search test disk loadenv part_msdos part_gpt verifiers terminal priority_queue datetime bufio boot net gettext crypto normal configfile echo part_apple ext2 fat exfat ntfs ntfscomp zstd diskfilter raid6rec lzopio gcry_crc gzio btrfs xfs f2fs jfs reiserfs hfsplus udf xzio squash4 lvm mdraid09 mdraid1x raid5rec archelp procfs cryptodisk pbkdf2 afsplitter luks json luks2 gcry_rijndael gcry_sha256 gcry_sha512 regexp probe cat ls help sleep keystatus true mmap acpi halt relocator reboot minicmd loopback video video_fb vbe linux linux16 lsapm elf multiboot multiboot2 chain ntldr pci video_cirrus video_bochs vga all_video font gfxterm video_colors bitmap bitmap_scale gfxterm_background trig gfxmenu png jpeg tga

@@ -1,0 +1,90 @@
+#!/bin/bash
+# snapshot-deb - download an OLD Debian .deb from snapshot.debian.org, verified
+#
+# usage: snapshot-deb -o DIR PKG=VERSION[:ARCH]...      (ARCH default amd64)
+#
+# For packages no longer in the configured apt repos (for current ones use
+# `apt-get download PKG=VERSION`, apt verifies that itself). Chain of trust,
+# the same apt uses:
+#   1. dists/<suite>/InRelease of the snapshot the .deb first appeared in,
+#      signature checked with gpgv against debian-archive-keyring
+#   2. main/binary-ARCH/Packages.xz: SHA256 must equal the one in InRelease
+#   3. the .deb: SHA256 must equal the one in that Packages stanza
+# Any mismatch -> the .deb is deleted and the script fails.
+# Writes DIR/<deb> and appends "sha256  deb  suite@timestamp" to DIR/VERIFIED.
+# Needs: curl, gpgv, xz, python3, debian-archive-keyring.
+set -euo pipefail
+
+KEYRING=/usr/share/keyrings/debian-archive-keyring.gpg
+SNAP=https://snapshot.debian.org
+die() { echo "snapshot-deb: $*" >&2; exit 1; }
+
+OUT=''
+args=()
+while (($#)); do
+    case $1 in
+        -o) OUT=${2:?}; shift ;;
+        -h|--help) sed -n '2,/^set -e/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit 0 ;;
+        *) args+=("$1") ;;
+    esac
+    shift
+done
+[[ -n $OUT && ${#args[@]} -gt 0 ]] || die "usage: snapshot-deb -o DIR PKG=VERSION[:ARCH]..."
+[[ -r $KEYRING ]] || die "$KEYRING missing (package debian-archive-keyring)"
+mkdir -p "$OUT"
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+
+# first_seen + archive of the .deb for this arch, from the snapshot API
+locate() {   # pkg ver arch -> "archive first_seen filename"
+    curl -fsSL "$SNAP/mr/binary/$1/$(python3 -I -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$2")/binfiles?fileinfo=1" |
+    python3 -I -c '
+import json, sys
+d = json.load(sys.stdin); arch = sys.argv[1]
+for r in d["result"]:
+    if r["architecture"] == arch:
+        i = sorted(d["fileinfo"][r["hash"]], key=lambda x: x["first_seen"])[0]
+        print(i["archive_name"], i["first_seen"], i["name"]); break
+else:
+    sys.exit("no %s build" % arch)' "$3"
+}
+
+for spec in "${args[@]}"; do
+    pkg=${spec%%=*}; rest=${spec#*=}
+    [[ $pkg != "$spec" ]] || die "$spec: want PKG=VERSION[:ARCH]"
+    ver=${rest%%:*}; arch=amd64
+    [[ $rest == *:* ]] && arch=${rest##*:}
+    read -r archive ts name < <(locate "$pkg" "$ver" "$arch") || die "$spec: not on snapshot"
+    case $archive in
+        debian-security) suites='trixie-security bookworm-security' ;;
+        *) suites='trixie trixie-proposed-updates trixie-updates bookworm bookworm-proposed-updates bookworm-updates sid' ;;
+    esac
+    found=''
+    for suite in $suites; do
+        base=$SNAP/archive/$archive/$ts/dists/$suite
+        curl -fsSL -o "$tmp/InRelease" "$base/InRelease" 2>/dev/null || continue
+        gpgv --keyring "$KEYRING" "$tmp/InRelease" 2>"$tmp/gpgv.log" \
+            || { cat "$tmp/gpgv.log" >&2; die "$suite@$ts: InRelease signature BAD"; }
+        want=$(awk -v f="main/binary-$arch/Packages.xz" '
+            /^SHA256:/ {s=1; next} /^[^ ]/ {s=0} s && $3==f {print $1}' "$tmp/InRelease")
+        [[ -n $want ]] || continue
+        curl -fsSL -o "$tmp/Packages.xz" "$base/main/binary-$arch/Packages.xz"
+        [[ $(sha256sum < "$tmp/Packages.xz" | cut -d' ' -f1) == "$want" ]] \
+            || die "$suite@$ts: Packages.xz SHA256 differs from InRelease"
+        stanza=$(xz -dc "$tmp/Packages.xz" | awk -v p="$pkg" -v v="$ver" -v a="$arch" '
+            BEGIN {RS=""} {
+              if ($0 ~ "(^|\n)Package: " p "\n" && index($0, "\nVersion: " v "\n") &&
+                  index($0, "\nArchitecture: " a "\n") && !done) {print; done=1} }')
+        [[ -n $stanza ]] || continue
+        found=$suite; break
+    done
+    [[ -n $found ]] || die "$spec: not in a signed index at $archive@$ts ($suites)"
+    file=$(sed -n 's/^Filename: //p' <<<"$stanza")
+    sum=$(sed -n 's/^SHA256: //p' <<<"$stanza")
+    deb=$OUT/${file##*/}
+    curl -fsSL -o "$deb" "$SNAP/archive/$archive/$ts/$file"
+    got=$(sha256sum < "$deb" | cut -d' ' -f1)
+    if [[ $got != "$sum" ]]; then
+        rm -f "$deb"; die "$spec: .deb SHA256 differs from signed Packages"
+    fi
+    echo "$got  ${deb##*/}  $found@$ts" | tee -a "$OUT/VERIFIED"
+done

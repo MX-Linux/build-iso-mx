@@ -673,7 +673,8 @@ do_stage_0() {
     # shellcheck disable=SC2086
     pick_prog GZIP     $GZIP_PROGS
 
-    require_programs chroot isohybrid mksquashfs md5sum sudo tee zsync \
+    # isohybrid: only for mkisofs/genisoimage (make_uefi_iso); xorriso does it itself
+    require_programs chroot mksquashfs md5sum sudo tee zsync \
         pkill expand strings iconv unbuffer
 
     mkdir -p "$output_dir" || my_exit
@@ -2904,6 +2905,18 @@ do_stage_6() {
     # (0) Populate iso dir with boilerplate files
     # (1) Copy flavour-dependent bootloader.cfg files via inheritance
 
+    # The boot file set is replaced as a whole: an existing iso dir (earlier
+    # run) must not keep old boot files the new template no longer has -
+    # e.g. EFI/BOOT next to the new EFI/boot, or .mod files a newer GRUB
+    # dropped (a GRUB core only works with modules of the same build)
+    if [[ $iso_dir == "$remaster_dir"/work/* ]]; then
+        local old
+        for old in EFI boot/grub/i386-pc boot/grub/x86_64-efi boot/grub/i386-efi \
+                   System mach_kernel; do
+            [[ -e $iso_dir/$old ]] && $SUDO rm -rf -- "${iso_dir:?}/$old"
+        done
+    fi
+
     #copy correct iso folder for multi-init if present
     if [[ -d "$template/COMMON/iso-multi" ]]; then
         if [[ -e "$sqfs_dir/usr/lib/sysvinit/init" ]] && [[ -e "$sqfs_dir/usr/lib/systemd/systemd" ]]; then
@@ -3588,6 +3601,7 @@ do_stage_8() {
             -c boot/isolinux/isolinux.cat -o "$full_iso_file" "$iso_dir" 2>&1 \
             || error "iso file creation failed"
 
+            require_programs isohybrid
             isohybrid "$full_iso_file"
     fi
 
@@ -4589,6 +4603,7 @@ has_option() {
 
 make_uefi_iso() {
     local prog=$1 uefi=$2  file=$3 dir=$4
+    require_programs isohybrid
     local -a cmd=("$prog" -l -V antiXlive -R -J -pad -no-emul-boot
     -boot-load-size 4  -boot-info-table -b boot/isolinux/isolinux.bin
     -eltorito-alt-boot "$uefi" boot/grub/efi.img -no-emul-boot
@@ -4599,49 +4614,135 @@ make_uefi_iso() {
     isohybrid --uefi "$file"
 }
 
-make_xorriso_iso() {
-    if [[ "$GRUB_ONLY" = "true" ]]; then
-        make_xorriso_iso_grub_only "$@"
-        return
-    fi
-    local prog=$1 file=$2 dir=$3
-    local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
-    local -a opts=("-hfsplus" "on" "-as" "mkisofs" "-quiet" "-l"
-                   "-R" "-J" "-iso-level" "3" "-pad" "-partition_cyl_align" "on"
-                   "-c" "boot/isolinux/isolinux.cat"
-                   "-b" "boot/isolinux/isolinux.bin"
-                   "-no-emul-boot" "-boot-load-size" "4" "-boot-info-table"
-                   "-eltorito-alt-boot" "-e" "boot/grub/efi.img" "-no-emul-boot"
-                   "-isohybrid-apm-hfsplus" "-isohybrid-gpt-basdat")
-
-    local -a cmd=("$prog" "${opts[@]}" -V "$label" -o "$file" "$dir")
-    echo "${cmd[*]}"
-
-    "${cmd[@]}" 2>&1 || error "iso file creation failed"
-    isohybrid --uefi "$file"
+# isolinux's hybrid MBR boot code (package isolinux / syslinux)
+find_isohdpfx() {
+    local f
+    for f in /usr/lib/ISOLINUX/isohdpfx.bin /usr/lib/syslinux/bios/isohdpfx.bin \
+             /usr/lib/syslinux/isohdpfx.bin /usr/share/syslinux/isohdpfx.bin; do
+        [[ -f $f ]] && { echo "$f"; return 0; }
+    done
+    return 1
 }
 
-make_xorriso_iso_grub_only() {
-    #currently experimental
-    #generate eltorito.img
-    $SUDO grub-mkimage -O i386-pc-eltorito -o "$work_dir"/iso/boot/grub/i386-pc/eltorito.img     -p /boot/grub biosdisk iso9660 search test loadenv
-    #comment out syslinux menus
-    $SUDO sed -i '/^[^#]*switch_to_syslinux/s/^/#/' "$work_dir"/iso/boot/grub/config/bootmenu.cfg
+#------------------------------------------------------------------------------
+# make_xorriso_iso PROG FILE DIR
+# One native xorriso run makes the hybrid ISO: DVD + USB stick, BIOS + UEFI.
+# No separate isohybrid step. The boot files come from the template
+# (boot/grub/boot-files/MANIFEST; Tools/live-boot-files/README-LIVE-BOOT-FILES.txt).
+#   BIOS: isolinux (default), or GRUB's eltorito.img with --grub-only
+#   UEFI: boot/grub/efi.img as El Torito image and as EFI partition
+#   Intel Macs: automatically when the set has
+#         System/Library/CoreServices/boot.efi (mk-boot-files --mac)
+#------------------------------------------------------------------------------
+make_xorriso_iso() {
     local prog=$1 file=$2 dir=$3
     local label="${ISO_LABEL:-$DISTRO_NAME-Live}"
-    local -a opts=("-hfsplus" "on" "-as" "mkisofs" "-quiet" "-l"
-                   "-R" "-J" "-iso-level" "3" "-pad" "-partition_cyl_align" "on"
-                   "-b" "boot/grub/i386-pc/eltorito.img"
-                   "-no-emul-boot" "-boot-load-size" "4" "-boot-info-table" "--grub2-boot-info"
-                   "-eltorito-alt-boot" "-e" "boot/grub/efi.img" "-no-emul-boot"
-                   "-isohybrid-apm-hfsplus" "-isohybrid-gpt-basdat")
+    local mbr
 
-    local -a cmd=("$prog" "${opts[@]}" -V "$label" -o "$file" "$dir")
+    local -a cmd=(
+        "$prog"
+        -report_about UPDATE                     # progress, no chatter
+        -outdev "$file"                          # write the new ISO to this file
+        -blank as_needed                         # replace an existing file
+        -volid "$label"                          # volume label (max 32 chars)
+        -joliet on                               # + Joliet names (Windows)
+        -compliance iso_9660_level=3:no_emul_toc # files > 4 GiB allowed (linuxfs);
+                                                 # no emulated TOC (as -as mkisofs)
+        -padding included                        # padding inside the image: the
+                                                 # backup GPT ends up in the last sector
+        -map "$dir" /                            # the iso dir -> ISO root
+        -chown_r 0 / --                          # owner root ...
+        -chgrp_r 0 / --                          # ... and group root
+    )
+
+    # Intel Macs (grub-mkrescue style), only when the set has the Mac files
+    if [[ -f $dir/System/Library/CoreServices/boot.efi ]]; then
+        cmd+=(
+            -hfsplus on                          # + an HFS+ filesystem (Macs read it)
+            -boot_image any apm_block_size=2048  # + Apple Partition Map
+            -find /System/Library/CoreServices/boot.efi
+                -exec set_hfs_bless intel_bootfile --
+                                                 # "bless": the file the Mac boots
+        )
+        # name in the Mac boot picker - only if present (xorriso aborts on a missing path)
+        [[ -f $dir/System/Library/CoreServices/.disk_label ]] && cmd+=(
+            -find /System/Library/CoreServices/.disk_label
+                -exec set_hfs_crtp chrp tbxj --
+        )
+    fi
+
+    # Boot: first El Torito entry (BIOS) + MBR boot code for USB sticks
+    if [[ "$GRUB_ONLY" = "true" ]]; then
+        [[ -f $dir/boot/grub/i386-pc/eltorito.img ]] \
+            || error "--grub-only: boot/grub/i386-pc/eltorito.img is missing in the template"
+        mbr=$dir/boot/grub/i386-pc/boot_hybrid.img
+        [[ -f $mbr ]] || error "--grub-only: boot/grub/i386-pc/boot_hybrid.img is missing in the template"
+        # no isolinux on this ISO: drop the "Switch to Syslinux" menu entries
+        $SUDO sed -i '/^[^#]*switch_to_syslinux/s/^/#/' "$dir"/boot/grub/config/bootmenu.cfg
+        cmd+=(
+            -boot_image grub grub2_mbr="$mbr"    # GRUB's MBR boot code -> BIOS from USB
+                                                 # (same GRUB build as eltorito.img)
+            -boot_image any partition_table=on   # MBR partition table
+            -boot_image any cat_path=/boot/grub/boot.cat
+                                                 # El Torito boot catalog file
+            -boot_image grub bin_path=/boot/grub/i386-pc/eltorito.img
+                                                 # BIOS from DVD: start GRUB
+            -boot_image grub grub2_boot_info=on  # patch the image location into
+                                                 # eltorito.img and the MBR code
+        )
+    else
+        mbr=$(find_isohdpfx) || error "isohdpfx.bin not found (package isolinux)"
+        cmd+=(
+            -boot_image isolinux system_area="$mbr"
+                                                 # MBR boot code -> BIOS from USB
+            -boot_image isolinux partition_table=on
+                                                 # MBR partition table (isohybrid style)
+            -boot_image any cat_path=/boot/isolinux/isolinux.cat
+                                                 # El Torito boot catalog file
+            -boot_image isolinux bin_path=/boot/isolinux/isolinux.bin
+                                                 # BIOS from DVD: start isolinux
+        )
+    fi
+    cmd+=(
+        -boot_image any emul_type=no_emulation   # BIOS image: no floppy emulation
+        -boot_image any load_size=2048           # BIOS loads 2 KiB (4 sectors)
+        -boot_image any boot_info_table=on       # patch a boot info table into it
+    )
+
+    # Boot: second El Torito entry (UEFI) + EFI partition for USB sticks
+    cmd+=(
+        -boot_image any next                     # start the next El Torito entry
+        -boot_image any efi_path=/boot/grub/efi.img
+                                                 # UEFI from DVD: the FAT image
+    )
+    if [[ "$GRUB_ONLY" = "true" ]]; then
+        cmd+=(
+            -append_partition 2 0xef "$dir/boot/grub/efi.img"
+                                                 # UEFI from USB: copy of efi.img as
+                                                 # MBR partition 2, type EFI
+        )
+    else
+        cmd+=(
+            -boot_image isolinux partition_entry=gpt_basdat
+                                                 # UEFI from USB: efi.img as a
+                                                 # partition (GPT + MBR)
+        )
+    fi
+
+    # Partition layout
+    cmd+=(
+        -boot_image any partition_offset=16      # partition 1 at 32 KiB (sector 64), not
+                                                 # over MBR/GPT: clean for fdisk/parted
+        -boot_image any partition_cyl_align=off  # no padding to a cylinder size
+        -boot_image any iso_mbr_part_type=0x00   # MBR type of partition 1 (as Debian)
+    )
+
+    # -outdev does not truncate an existing file: an old, bigger ISO of the
+    # same name would keep its tail (and the checksums would cover it)
+    rm -f -- "$file" 2>/dev/null || $SUDO rm -f -- "$file"
+
     echo "${cmd[*]}"
-
     "${cmd[@]}" 2>&1 || error "iso file creation failed"
-    #isohybrid not needed for grub2 legacy boot
-    #isohybrid --uefi "$file"
 }
 
 unpack_gfx_cpio() {

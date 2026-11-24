@@ -1,0 +1,409 @@
+#!/usr/bin/python3 -I
+"""inventory-boot-files - which GRUB / shim build is in a live ISO boot file set
+
+usage: inventory-boot-files [-r NAME=DIR]... [-s] SOURCE...
+
+SOURCE  an ISO tree (dir with boot/grub), an .iso, or a template archive
+        (.tar/.tar.gz/.tar.xz; every tree inside with boot/grub is listed)
+-r NAME=DIR  reference: root of unpacked Debian packages (dpkg-deb -x DEB DIR),
+             or / for the host's installed packages (check with dpkg -V first)
+-s      summary only (no per-module detail)
+
+For every boot file: size, sha256, SBAT (EFI), and which reference has the
+identical file. GRUB core images (eltorito.img, core.img, a standalone
+.efi) are self-built, so instead each module embedded in them (also the
+xz-compressed ones in a memdisk) is compared with the reference modules of
+the same name: "x86_64-efi 269/269 = u4" means all modules are byte-equal
+to reference u4. The end lists which sources share identical files.
+No root needed (uses xorriso, mtools, tar, unsquashfs).
+"""
+import hashlib, io, lzma, os, re, struct, subprocess, sys, tarfile, tempfile
+
+PLATS = ('i386-pc', 'x86_64-efi', 'i386-efi')
+REFS = []          # [(name, {'files': {sha: path}, 'mods': {plat: {mod: bytes}}})]
+SUMMARY = {}       # item label -> {source label: sha}
+SHORT = False
+
+
+def sha(b):
+    return hashlib.sha256(b).hexdigest()
+
+
+def load_ref(name, root):
+    files, mods = {}, {p: {} for p in PLATS}
+    for sub in ('usr/lib/grub', 'usr/lib/shim'):
+        top = os.path.join(root, sub)
+        for d, _, fs in os.walk(top):
+            for f in fs:
+                p = os.path.join(d, f)
+                if os.path.islink(p) or not os.path.isfile(p):
+                    continue
+                b = open(p, 'rb').read()
+                files.setdefault(sha(b), os.path.relpath(p, root))
+                plat = os.path.basename(d)
+                if plat in mods and f.endswith('.mod'):
+                    mods[plat][f[:-4]] = b
+    if not files:
+        sys.exit(f'reference {name}: nothing under {root}/usr/lib/grub or usr/lib/shim')
+    REFS.append((name, {'files': files, 'mods': mods}))
+
+
+def file_origin(b):
+    s = sha(b)
+    hits = [f'{n}:{r["files"][s]}' for n, r in REFS if s in r['files']]
+    return ', '.join(hits) if hits else 'no reference match'
+
+
+def mod_match(plat, name, body):
+    """refs whose module `name` equals body (body may carry zero padding)."""
+    out = []
+    for n, r in REFS:
+        ref = r['mods'][plat].get(name)
+        if ref is not None and body[:len(ref)] == ref and not body[len(ref):].strip(b'\0'):
+            out.append(n)
+    return out
+
+
+def tally(plat, mods, label, indent):
+    """mods: {name: bytes}. Print how many modules match each reference."""
+    cnt = {n: 0 for n, r in REFS if r['mods'][plat]}
+    none = []
+    for m, b in sorted(mods.items()):
+        hit = mod_match(plat, m, b)
+        for n in hit:
+            cnt[n] = cnt.get(n, 0) + 1
+        if not hit:
+            none.append(m)
+    total = len(mods)
+    full = [n for n in cnt if total and cnt[n] == total]
+    res = ' '.join(f'{n}={cnt[n]}' for n in cnt)
+    verdict = ('= ' + '/'.join(full)) if full else ('MIXED/UNKNOWN' if total else '')
+    print(f'{indent}{label}: {total} modules ({plat}); match {res} {verdict}')
+    if none and not SHORT:
+        print(f'{indent}  no match: {" ".join(none[:40])}{" ..." if len(none) > 40 else ""}')
+    return verdict
+
+
+def sbat(b):
+    i = b.find(b'sbat,1,')
+    if i < 0:
+        return []
+    return [l for l in b[i:b.find(b'\0', i)].decode(errors='replace').splitlines()
+            if not l.startswith('sbat,')]
+
+
+def modname(body):
+    """.modname of a GRUB ELF module (ELF32 or ELF64)."""
+    try:
+        if body[4] == 2:   # ELF64
+            shoff, = struct.unpack_from('<Q', body, 0x28)
+            shentsize, shnum, shstrndx = struct.unpack_from('<HHH', body, 0x3a)
+            def sh(i):
+                h = struct.unpack_from('<IIQQQQ', body, shoff + i * shentsize)
+                return h[0], h[4], h[5]
+        else:
+            shoff, = struct.unpack_from('<I', body, 0x20)
+            shentsize, shnum, shstrndx = struct.unpack_from('<HHH', body, 0x2e)
+            def sh(i):
+                h = struct.unpack_from('<IIIIII', body, shoff + i * shentsize)
+                return h[0], h[4], h[5]
+        stro = sh(shstrndx)[1]
+        for i in range(shnum):
+            n, off, size = sh(i)
+            if body[stro + n:].split(b'\0')[0] == b'.modname':
+                return body[off:off + size].split(b'\0')[0].decode()
+    except (struct.error, IndexError):
+        pass
+    return None
+
+
+def objects(raw):
+    """GRUB module area (grub_module_info32/64 'mimg') -> [(type, body)]."""
+    magic = b'mimg'          # 0x676d696d little endian
+    for m in reversed([m.start() for m in re.finditer(re.escape(magic), raw)]):
+        o32, s32 = struct.unpack_from('<II', raw, m + 4)
+        if o32 in (12, 16) and m + s32 <= len(raw):
+            q, end = m + o32, m + s32
+        else:
+            pad, o64, s64 = struct.unpack_from('<IQQ', raw, m + 4)
+            if pad or o64 != 24 or m + s64 > len(raw):
+                continue
+            q, end = m + o64, m + s64
+        objs = []
+        while q + 8 <= end:
+            t, s = struct.unpack_from('<II', raw, q)
+            if s < 8:
+                break
+            objs.append((t, raw[q + 8:q + s]))
+            q += s
+        if objs:
+            return objs
+    return []
+
+
+def unxz(b):
+    return lzma.decompress(b) if b.startswith(b'\xfd7zXZ') else b
+
+
+def memdisk_files(body):
+    """memdisk -> (kind, {path: bytes}): squashfs (Debian's gcd/grub images),
+    FAT image, or tar (grub-mkstandalone; files maybe xz-compressed)."""
+    if body[:4] == b'hsqs':
+        with tempfile.TemporaryDirectory() as t:
+            img, x = os.path.join(t, 'memdisk.sqfs'), os.path.join(t, 'x')
+            open(img, 'wb').write(body)
+            r = subprocess.run(['unsquashfs', '-no-xattrs', '-n', '-d', x, img],
+                               capture_output=True, text=True)
+            if r.returncode:
+                raise OSError(f'unsquashfs: {r.stderr.strip()}')
+            mem = {}
+            for d, _, fs in os.walk(x):
+                for f in fs:
+                    q = os.path.join(d, f)
+                    if os.path.isfile(q) and not os.path.islink(q):
+                        mem[os.path.relpath(q, x)] = open(q, 'rb').read()
+            return 'squashfs', mem
+    if body[510:512] == b'\x55\xaa' and body[54:59] in (b'FAT12', b'FAT16') or body[82:87] == b'FAT32':
+        with tempfile.TemporaryDirectory() as t:
+            img = os.path.join(t, 'memdisk.img')
+            open(img, 'wb').write(body)
+            os.mkdir(os.path.join(t, 'x'))
+            r = subprocess.run(['mcopy', '-s', '-n', '-i', img, '::/', os.path.join(t, 'x')],
+                               capture_output=True, text=True)
+            if r.returncode:
+                raise OSError(f'mcopy: {r.stderr.strip()}')
+            mem = {}
+            for d, _, fs in os.walk(os.path.join(t, 'x')):
+                for f in fs:
+                    q = os.path.join(d, f)
+                    mem[os.path.relpath(q, os.path.join(t, 'x'))] = open(q, 'rb').read()
+            return 'FAT', mem
+    tf = tarfile.open(fileobj=io.BytesIO(body))
+    return 'tar', {ti.name: unxz(tf.extractfile(ti).read()) for ti in tf.getmembers() if ti.isfile()}
+
+
+def core(label, b, plat, indent):
+    """Report a GRUB core image: embedded config/prefix, modules, memdisk."""
+    raw = b
+    if plat == 'i386-pc':   # lzma-compressed after cdboot.img/diskboot.img
+        raw = None
+        for off in range(0, 16384):
+            try:
+                d = lzma.LZMADecompressor(format=lzma.FORMAT_RAW, filters=[
+                    {'id': lzma.FILTER_LZMA1, 'lc': 3, 'lp': 0, 'pb': 2, 'dict_size': 1 << 24}])
+                out = d.decompress(b[off:], max_length=8 << 20)
+            except lzma.LZMAError:
+                continue
+            if len(out) > 20000:
+                raw = out
+                break
+        if raw is None:
+            print(f'{indent}(compressed core not found)')
+            return 'UNKNOWN'
+    objs = objects(raw)
+    if not objs:
+        print(f'{indent}(no GRUB module area found)')
+        return 'UNKNOWN'
+    mods, verdicts = {}, []
+    for t, body in objs:
+        if t == 0:
+            n = modname(body)
+            if n:
+                mods[n] = body
+        elif t == 3:
+            print(f'{indent}prefix: {body.rstrip(bytes(1)).decode(errors="replace")}')
+        elif t == 2 and not SHORT:
+            cfg = body.rstrip(b'\0').decode(errors='replace').strip()
+            print(f'{indent}embedded config:')
+            for l in cfg.splitlines():
+                print(f'{indent}  | {l}')
+        elif t == 1:   # memdisk: tar (grub-mkstandalone), files maybe xz
+            try:
+                kind, mem = memdisk_files(body)
+            except (tarfile.TarError, lzma.LZMAError, OSError) as e:
+                print(f'{indent}memdisk: {len(body)} bytes, not readable ({str(e).splitlines()[0]})')
+                continue
+            print(f'{indent}memdisk: {kind}, {len(mem)} files')
+            for p in PLATS:
+                mm = {os.path.basename(k)[:-4]: v for k, v in mem.items()
+                      if k.endswith('.mod') and f'/{p}/' in f'/{k}'}
+                if mm:
+                    verdicts.append(tally(p, mm, 'memdisk modules', indent + '  '))
+            for k, v in sorted(mem.items()):
+                if not k.endswith('.mod') and not k.endswith('.lst') and k.endswith('.cfg') and not SHORT:
+                    print(f'{indent}  memdisk {k}:')
+                    for l in v.decode(errors='replace').strip().splitlines():
+                        print(f'{indent}    | {l}')
+    if mods:
+        if not SHORT:
+            print(f'{indent}built-in: {" ".join(sorted(mods))}')
+        verdicts.insert(0, tally(plat, mods, 'built-in modules', indent))
+    return ' + '.join(v for v in verdicts if v)
+
+
+def efi_plat(b):
+    try:
+        pe, = struct.unpack_from('<I', b, 0x3c)
+        m, = struct.unpack_from('<H', b, pe + 4)
+        return {0x8664: 'x86_64-efi', 0x14c: 'i386-efi'}.get(m)
+    except struct.error:
+        return None
+
+
+def item(src, label, b, indent='  '):
+    """Report one file; remember its sha for the cross-source summary."""
+    s = sha(b)
+    SUMMARY.setdefault(label, {})[src] = s
+    origin = file_origin(b)
+    print(f'{indent}{label}  {len(b)} bytes  {s[:16]}  {origin}')
+    if label.lower().endswith('.efi'):
+        for l in sbat(b):
+            print(f'{indent}  sbat: {l}')
+        p = efi_plat(b)
+        if p and origin == 'no reference match' and b'mimg' in b:
+            v = core(label, b, p, indent + '  ')
+            SUMMARY[label][src] = f'{s} ({v})'
+    elif label.endswith(('eltorito.img', 'core.img')):
+        v = core(label, b, 'i386-pc', indent + '  ')
+        SUMMARY[label][src] = f'{s} ({v})'
+
+
+def efi_img(src, path, indent):
+    with tempfile.TemporaryDirectory() as t:
+        r = subprocess.run(['mcopy', '-s', '-n', '-i', path, '::/', t],
+                           capture_output=True, text=True)
+        if r.returncode:
+            print(f'{indent}(mcopy failed: {r.stderr.strip()})')
+            return
+        for d, _, fs in sorted(os.walk(t)):
+            for f in sorted(fs):
+                p = os.path.join(d, f)
+                rel = os.path.relpath(p, t)
+                b = open(p, 'rb').read()
+                if rel.endswith('.cfg'):
+                    SUMMARY.setdefault('efi.img:' + rel, {})[src] = sha(b)
+                    print(f'{indent}efi.img:{rel}  {len(b)} bytes  {sha(b)[:16]}')
+                    if not SHORT:
+                        for l in b.decode(errors='replace').strip().splitlines():
+                            print(f'{indent}  | {l}')
+                else:
+                    item(src, 'efi.img:' + rel, b, indent)
+
+
+def tree(src, root):
+    print(f'\n=== {src}')
+    g = os.path.join(root, 'boot/grub')
+    efidirs = [os.path.join(root, d, s) for d in os.listdir(root) if d.upper() == 'EFI'
+               for s in os.listdir(os.path.join(root, d))
+               if os.path.isdir(os.path.join(root, d, s))]
+    for d in efidirs:
+        for f in sorted(os.listdir(d)):
+            if f.lower().endswith('.efi'):
+                item(src, os.path.relpath(os.path.join(d, f), root),
+                     open(os.path.join(d, f), 'rb').read())
+    if not efidirs:
+        print('  (no EFI/ dir in the tree)')
+    ei = os.path.join(g, 'efi.img')
+    if os.path.isfile(ei):
+        item(src, 'boot/grub/efi.img', open(ei, 'rb').read())
+        efi_img(src, ei, '    ')
+    for p in PLATS:
+        d = os.path.join(g, p)
+        if not os.path.isdir(d):
+            print(f'  boot/grub/{p}: missing')
+            continue
+        mods = {f[:-4]: open(os.path.join(d, f), 'rb').read()
+                for f in os.listdir(d) if f.endswith('.mod')}
+        info = ''
+        mi = os.path.join(d, 'modinfo.sh')
+        if os.path.isfile(mi):
+            v = re.search(r'grub_package_version="([^"]*)"', open(mi).read())
+            info = f' (modinfo.sh: {v.group(1)})' if v else ''
+        v = tally(p, mods, f'boot/grub/{p}/*.mod{info}', '  ')
+        SUMMARY.setdefault(f'boot/grub/{p}/*.mod', {})[src] = \
+            sha(''.join(sorted(sha(b) + n for n, b in mods.items())).encode()) + f' ({v})'
+        for f in sorted(os.listdir(d)):
+            if f.endswith('.img'):
+                item(src, f'boot/grub/{p}/{f}', open(os.path.join(d, f), 'rb').read())
+
+
+def source(arg):
+    with tempfile.TemporaryDirectory() as t:
+        if os.path.isdir(arg):
+            tree(arg, arg)
+        elif arg.endswith('.iso'):
+            r = subprocess.run(['xorriso', '-osirrox', 'on', '-indev', arg,
+                                '-extract', '/boot/grub', t + '/boot/grub',
+                                '-extract', '/EFI', t + '/EFI'],
+                               capture_output=True, text=True)
+            if not os.path.isdir(t + '/boot/grub'):
+                err = [l for l in r.stderr.splitlines() if 'FAILURE' in l][:1]
+                print(f'\n=== {os.path.basename(arg)}\n  SKIPPED: no /boot/grub ({err[0] if err else "xorriso failed"})')
+                return
+            tree(os.path.basename(arg), t)
+        elif re.search(r'\.tar(\.\w+)?$', arg):
+            subprocess.run(['tar', '-xf', arg, '-C', t, '--no-same-owner',
+                            '--no-same-permissions', '--wildcards',
+                            '*boot/grub/*', '*EFI/*'], check=False,
+                           stderr=subprocess.DEVNULL)
+            roots = sorted({d[:-len('/boot/grub')] for d, _, _ in os.walk(t)
+                            if d.endswith('/boot/grub')})
+            if not roots:
+                sys.exit(f'{arg}: no boot/grub inside')
+            for r in roots:
+                rel = os.path.relpath(r, t)
+                tree(os.path.basename(arg) + ('' if rel == '.' else ':' + rel), r)
+        else:
+            sys.exit(f'{arg}: not a dir, .iso or .tar*')
+
+
+def summary():
+    allsrc = list(dict.fromkeys(x for v in SUMMARY.values() for x in v))
+    print('\n=== Same file in which sources (A, B, ... = identical content)')
+    print('sources:\n' + ''.join(f'  {i + 1:2} {x}\n' for i, x in enumerate(allsrc)))
+    for label in sorted(SUMMARY):
+        groups = {}
+        for src, s in SUMMARY[label].items():
+            groups.setdefault(s, []).append(src)
+        missing = [str(allsrc.index(x) + 1) for x in allsrc if x not in SUMMARY[label]]
+        miss = f'; missing in {",".join(missing)}' if missing else ''
+        if len(groups) == 1:
+            s, srcs = next(iter(groups.items()))
+            print(f'{label}: {s[:16]} {s[64:].strip()} in {len(srcs)}/{len(allsrc)} sources{miss}')
+            continue
+        print(f'{label}: {len(groups)} different{miss}')
+        for i, (s, srcs) in enumerate(groups.items()):
+            tag = chr(ord('A') + i) if i < 26 else '?'
+            extra = s[64:].strip()
+            print(f'  {tag} {s[:16]} {extra}')
+            print('      in ' + ','.join(str(allsrc.index(x) + 1) for x in srcs))
+
+
+def main(argv):
+    global SHORT
+    args = []
+    it = iter(argv)
+    for a in it:
+        if a == '-r':
+            n, _, d = next(it, '').partition('=')
+            if not d:
+                sys.exit('-r NAME=DIR')
+            load_ref(n, d)
+        elif a == '-s':
+            SHORT = True
+        elif a in ('-h', '--help'):
+            print(__doc__)
+            return
+        else:
+            args.append(a)
+    if not args:
+        sys.exit(__doc__)
+    print('references: ' + (', '.join(n for n, _ in REFS) or 'none'))
+    for a in args:
+        source(a)
+    if len(args) > 1 or len(SUMMARY) and len({s for v in SUMMARY.values() for s in v}) > 1:
+        summary()
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

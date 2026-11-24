@@ -108,12 +108,15 @@ PACKAGES=(
     debootstrap          # builds the base chroot
     squashfs-tools       # mksquashfs
     xorriso              # MAKE_ISO_PROGS, and grub-mkrescue needs it
-    syslinux-utils       # isohybrid
+    isolinux             # isohdpfx.bin: hybrid MBR for xorriso (make_xorriso_iso)
+    syslinux-utils       # isohybrid (only the mkisofs/genisoimage fallback)
     grub2-common         # grub-mkrescue
     grub-pc-bin          # BIOS modules for grub-mkrescue
     grub-efi-amd64-bin   # UEFI modules for grub-mkrescue
     mtools               # mformat/mcopy, used to build the EFI image
-    dosfstools           # mkfs.vfat, used by Tools/make-efi-img
+    dosfstools           # mkfs.fat, Tools/live-boot-files/mk-efi-img.sh
+    python3              # Tools/live-boot-files/inventory-boot-files
+    debian-archive-keyring  # Tools/live-boot-files/mk-boot-files --suite
     zsync                # zsync/zsyncmake
     expect               # unbuffer
     binutils             # strings
@@ -145,11 +148,12 @@ fi
 # ---------------------------------------------------------------------------
 # 3. Verify exactly what build-iso requires
 # ---------------------------------------------------------------------------
-# From build-iso: require_programs chroot isohybrid mksquashfs md5sum sudo tee
+# From build-iso: require_programs chroot mksquashfs md5sum sudo tee
 # zsync pkill expand strings iconv unbuffer / debootstrap apt-get dpkg /
 # grub-mkrescue xorriso unshare mount umount find mktemp
+# (isohybrid only for the mkisofs/genisoimage fallback)
 REQUIRED_PROGS=(
-    chroot isohybrid mksquashfs md5sum sudo tee zsync pkill expand strings
+    chroot mksquashfs md5sum sudo tee zsync pkill expand strings
     iconv unbuffer debootstrap apt-get dpkg grub-mkrescue xorriso unshare
     mount umount find mktemp mkfs.vfat mcopy mformat gpg
 )
