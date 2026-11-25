@@ -1441,7 +1441,7 @@ do_stage_4() {
     require_programs apt-get
 
     # Skip PARTIAL file check if we have no stage output files (clean build)
-    if [[ ! -f "$script_dir/../Output/$work_name/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+    if [[ ! -f "$output_dir/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
         rm -f "$partial_file"
         skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
     elif [[ -s "$partial_file" ]]  \
@@ -1985,7 +1985,7 @@ do_stage_4_arch() {
     }
 
     # PARTIAL file support (same semantics as Debian path)
-    if [[ ! -f "$script_dir/../Output/$work_name/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+    if [[ ! -f "$output_dir/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
         rm -f "$partial_file"
         skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
     elif [[ -s "$partial_file" ]] && do_part 0 "!Read PARTIAL file to skip parts done"; then
