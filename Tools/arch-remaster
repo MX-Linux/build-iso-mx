@@ -66,8 +66,14 @@ need grub-mkrescue
 need xorriso
 need md5sum
 
-[[ -n ${WORK} ]] || WORK=$(mktemp -d -t arch-remaster.XXXXXXXX)
-cleanup() { [[ -n ${WORK:-} ]] && rm -rf "$WORK"; }
+if [[ -n $WORK ]]; then
+    mkdir -p -- "$WORK"
+    work_parent=$(cd -- "$WORK" && pwd -P)
+    WORK=$(mktemp -d -- "$work_parent/arch-remaster.XXXXXXXX")
+else
+    WORK=$(mktemp -d -t arch-remaster.XXXXXXXX)
+fi
+cleanup() { rm -rf -- "$WORK"; }
 trap cleanup EXIT
 
 ISO_DIR=$WORK/iso
