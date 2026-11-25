@@ -2308,7 +2308,6 @@ do_stage_4_arch() {
             if command -v plymouth >/dev/null 2>&1 && ! grep -q "plymouth" "$archiso_conf"; then
                 sed -i -r 's/(HOOKS=\([^)]*block[[:space:]]+)/\1plymouth /' "$archiso_conf"
             fi
-             mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img 2>&1 | tr '\r' '\n'
         else
             # Fallback: synthesize a minimal archiso mkinitcpio config.
             # Avoid autodetect in chroot (it can error due to missing real rootfs metadata).
@@ -2335,17 +2334,10 @@ MKINITCPIO
                 error "archiso mkinitcpio hooks not found under /usr/lib/initcpio (install mkinitcpio-archiso?)"
             fi
 
-             if ! mkinitcpio -c "$archiso_conf" -k "$kpath" -g /boot/archiso.img 2>&1 | tr '\r' '\n'; then
-                say "mkinitcpio diagnostics:"
-                # shellcheck disable=SC2012
-                ls -la /usr/lib/initcpio/hooks 2>&1 | tail -n 30 || true
-                # shellcheck disable=SC2012
-                ls -la /usr/lib/initcpio/install 2>&1 | tail -n 30 || true
-                error "Failed to build /boot/archiso.img"
-            fi
         fi
-        chmod 0644 /boot/archiso.img 2>/dev/null || true
-        [[ -r /boot/archiso.img ]] || error "Missing /boot/archiso.img after mkinitcpio"
+
+        generate_archiso_image "$archiso_conf" "$kpath" /boot/archiso.img \
+            || fatal "Failed to build /boot/archiso.img"
         end_part_strict
     fi
 
@@ -3149,6 +3141,15 @@ Bootloader_Data
     leave_stage
 }
 
+generate_archiso_image() (
+    local conf=$1 kernel=$2 image=$3 tmp
+    tmp=$(mktemp "${image}.XXXXXX") || exit 1
+    trap 'rm -f -- "$tmp"' EXIT
+    set -o pipefail
+    mkinitcpio -c "$conf" -k "$kernel" -g "$tmp" 2>&1 | tr '\r' '\n' || exit 1
+    [[ -s $tmp ]] && chmod 0644 "$tmp" && mv -fT -- "$tmp" "$image"
+)
+
 do_stage_6_arch() {
     require_programs grub-mkrescue
 
@@ -3169,13 +3170,13 @@ do_stage_6_arch() {
     local kimg=$sqfs_dir/boot/${K_BOOT_IMAGE:-vmlinuz-linux}
     local initrd_img=$sqfs_dir/boot/archiso.img
     [[ -e "$kimg" ]] || error "Missing kernel image in squashfs: $(pqw "${kimg#"$sqfs_dir"}")"
-    if ! [[ -r "$initrd_img" ]]; then
+    if ! [[ -s "$initrd_img" ]]; then
         say "Missing $(pq /boot/archiso.img) in squashfs; attempting to build it now"
         prep_chroot
         # shellcheck disable=SC2016
-        $SUDO chroot "$sqfs_dir" /bin/bash -lc '
+        $SUDO chroot "$sqfs_dir" /bin/bash -lc "$(declare -f generate_archiso_image)"'
             set -euo pipefail
-            kpath="/boot/'"${K_BOOT_IMAGE:-vmlinuz-linux}"'"
+            kpath="/boot/$1"
             if ! [[ -r "$kpath" ]]; then
                 kpath="$(ls -1 /boot/vmlinuz-* 2>/dev/null | head -n 1 || true)"
             fi
@@ -3197,11 +3198,10 @@ COMPRESSION="zstd"
 MKINITCPIO
             fi
 
-            mkinitcpio -c "$conf" -k "$kpath" -g /boot/archiso.img
-            chmod 0644 /boot/archiso.img 2>/dev/null || true
-        ' || true
+            generate_archiso_image "$conf" "$kpath" /boot/archiso.img
+        ' bash "${K_BOOT_IMAGE:-vmlinuz-linux}" || fatal "Failed to build /boot/archiso.img"
     fi
-    [[ -e "$initrd_img" ]] || error "Missing archiso initramfs in squashfs: $(pqw "${initrd_img#"$sqfs_dir"}")"
+    [[ -s "$initrd_img" ]] || fatal "Missing archiso initramfs in squashfs: $(pqw "${initrd_img#"$sqfs_dir"}")"
 
     $SUDO cp "$kimg" "$boot_dir/vmlinuz-linux"
     $SUDO cp "$initrd_img" "$boot_dir/archiso.img"
