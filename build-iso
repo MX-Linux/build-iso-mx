@@ -318,21 +318,6 @@ main() {
     SUDO=sudo
     (( UID == 0 )) && SUDO=
 
-    # Speed up failed loopback connections during package installs: some
-    # postinst scripts poll a service (e.g. cups) that isn't running in the
-    # chroot, and on some hosts (seen on WSL2) a closed IPv4 loopback port
-    # doesn't get an instant refusal, so the default SYN-retry timeout can
-    # stretch a failed connect out to ~2 minutes. Lower it for the duration
-    # of this build; restored in on_exit(). Only the top-level (non-chroot)
-    # invocation does this -- the re-invoked chroot process (stage 4+) would
-    # otherwise restore it prematurely when *it* exits.  Not needed for
-    # --sign-only.
-    if [[ "$script_dir" != "$build_dir" && -z $sign_only ]]; then
-        ORIG_TCP_SYN_RETRIES=$(cat /proc/sys/net/ipv4/tcp_syn_retries 2>/dev/null)
-        [[ -n $ORIG_TCP_SYN_RETRIES ]] \
-            && $SUDO sysctl -q -w net.ipv4.tcp_syn_retries=2 2>/dev/null
-    fi
-
     [[ -n $show_parts || -n $show_stages ]] && exit
 
     local normal_defaults="$input_dir/defaults $input_dir/defaults-local"
@@ -419,8 +404,24 @@ main() {
             || fatal "$(pq --auto) requires sudo access (or run as root)"
     fi
 
+    local ORIG_TCP_SYN_RETRIES=
     trap on_exit       EXIT
     trap "echo; exit"  INT
+
+    # Speed up failed loopback connections during package installs: some
+    # postinst scripts poll a service (e.g. cups) that isn't running in the
+    # chroot, and on some hosts (seen on WSL2) a closed IPv4 loopback port
+    # doesn't get an instant refusal, so the default SYN-retry timeout can
+    # stretch a failed connect out to ~2 minutes. Lower it for the duration
+    # of this build; restored in on_exit(). Only the top-level (non-chroot)
+    # invocation does this -- the re-invoked chroot process (stage 4+) would
+    # otherwise restore it prematurely when *it* exits.  Not needed for
+    # --sign-only.
+    if [[ "$script_dir" != "$build_dir" && -z $sign_only && -z $pretend_mode ]]; then
+        ORIG_TCP_SYN_RETRIES=$(cat /proc/sys/net/ipv4/tcp_syn_retries 2>/dev/null)
+        [[ -n $ORIG_TCP_SYN_RETRIES ]] \
+            && $SUDO sysctl -q -w net.ipv4.tcp_syn_retries=2 2>/dev/null
+    fi
 
     if [[ -n $pretend_mode || -n $chroot_mode || -n $stats_mode ]]; then
         log_file=/dev/null
