@@ -5498,15 +5498,19 @@ _cache_() {
         say "Found cache $(pq "$name"$ext)"
         YES_no "Restore from this cache" || return 1
 
-        if [[ -d "$dir" && "$(find "$dir" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
-            say "Clear out existing files"
-            find "$dir" -mindepth 1 -delete
-        fi
-        mkdir -p "$dir"
+        mkdir -p "$dir" || fatal "Could not create cache restore directory: $dir"
+        $SUDO find "$dir" -mindepth 1 -delete || fatal "Could not clear $dir for restore"
 
         say "Restore $(pq "$type" "$subtype") from cache"
         start_timer
-        (cd "$dir" && gunzip -c "$file" | $SUDO cpio -idum --quiet)
+        if ! (set -o pipefail; cd "$dir" && gunzip -c "$file" | $SUDO cpio -idum --quiet); then
+            $SUDO find "$dir" -mindepth 1 -delete || fatal "Could not clear partial restore in $dir"
+            local failed_file
+            failed_file=$(mktemp "$file.failed.XXXXXXXX") && mv -fT -- "$file" "$failed_file" \
+                || fatal "Could not set aside failed cache $file"
+            warn "Restore failed. Saved archive at $failed_file"
+            return 1
+        fi
         end_timer "Restore cache"
         say "Restored $(pqn "$(du_size "$dir")") bytes of data"
         ;;
@@ -5528,8 +5532,21 @@ _cache_() {
         $SUDO echo >/dev/null
         start_timer
 
-        (cd "$dir" && $SUDO find . -depth | grep -vE "$cache_exclude" \
-            | $SUDO cpio -oa -H newc --quiet | $GZIP -3) > "$file"
+        (
+            set -o pipefail
+            local tmp
+            tmp=$(mktemp "$file.partial.XXXXXXXX") || exit 1
+            trap 'rm -f -- "$tmp"' EXIT
+            cd "$dir" || exit 1
+            $SUDO find . -depth | grep -vE "$cache_exclude" \
+                | $SUDO cpio -oa -H newc --quiet | $GZIP -3 > "$tmp" || exit 1
+            if [[ -e $file ]]; then
+                chmod --reference="$file" -- "$tmp" || exit 1
+            else
+                chmod =rw -- "$tmp" || exit 1
+            fi
+            mv -fT -- "$tmp" "$file"
+        ) || fatal "Could not create cache $file"
 
         end_timer "Create cache"
         ;;
