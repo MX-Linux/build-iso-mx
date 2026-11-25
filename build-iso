@@ -5252,7 +5252,10 @@ copy_theme_dir() {
     local b_theme_dir
     b_theme_dir=$b_dir/"$(basename "$theme_dir")"
     mkdir -p "$b_theme_dir"/"$THEME"
-    cp -a "$t_dir"/* "$b_theme_dir"/"$THEME"/
+    local copy_opts=-a
+    # Arch Xfce shares its top-level misc and extra directories with mx.
+    [[ $THEME == archxfce ]] && copy_opts=-aH
+    cp "$copy_opts" "$t_dir"/* "$b_theme_dir"/"$THEME"/ || fatal "Could not stage theme $THEME"
     cp -a "$theme_dir"/*.sh "$b_theme_dir"/
 }
 
