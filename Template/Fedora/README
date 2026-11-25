@@ -16,3 +16,12 @@ Fedora/RPM names (e.g. `NetworkManager`, `firefox`, `kernel-core`).
 Boot: Uses GRUB + grub-mkrescue for hybrid BIOS+UEFI ISO creation.
 Initramfs: Uses dracut with the live module (`dracut-live` package).
 Live filesystem: Squashfs containing a minimal Fedora root at /squashfs/...
+
+The bootstrap trusts the release-specific public key in Input/fedora/.
+The Fedora 44 primary key was exported from https://fedoraproject.org/fedora.gpg
+with fingerprint 36F6 12DC F27F 7D1A 48A8 35E4 DBFC F71C 6D9F 90A6.
+When changing DNF_RELEASEVER, verify the new fingerprint against Fedora's
+published keys and add RPM-GPG-KEY-fedora-<release>-primary first.
+To replace a build started before signature verification was enabled, restart
+from Stage 2. Old bootstrap caches are bypassed and full chroot caches must
+carry the matching verified-bootstrap record.

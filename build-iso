@@ -557,8 +557,6 @@ main() {
         local deboot_cache_opts
         if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
             deboot_cache_opts="pacstrap $ARCH $sqfs_dir"
-        elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
-            deboot_cache_opts="dnf_bootstrap $ARCH $sqfs_dir"
         fi
 
         # Select template root for all stages (not just Stage 0).
@@ -1089,19 +1087,32 @@ do_stage_2() {
             $SUDO rm -rf "$(dirname "${sqfs_dir:?}")"/squashfs/*
         fi
 
+        : "${DNF_RELEASEVER:=44}"
+        local release_key="$script_dir/Input/fedora/RPM-GPG-KEY-fedora-$DNF_RELEASEVER-primary"
+        [[ $DNF_RELEASEVER =~ ^[0-9]+$ && -s $release_key ]] || fatal "Missing trusted Fedora $DNF_RELEASEVER signing key"
+        local trust_marker="$sqfs_dir/var/lib/build-iso/fedora-bootstrap-key"
+        local key_hash
+        key_hash=$(sha256sum < "$release_key") || fatal "Cannot read Fedora signing key"
+        key_hash=${key_hash%% *}
+        local -a fedora_cache=(dnf_bootstrap "$ARCH-$DNF_RELEASEVER-$key_hash" "$sqfs_dir")
+
+        # Full chroot caches can also originate from an older unsigned bootstrap.
         # shellcheck disable=SC2086
         if restore_cache $chroot_cache_opts; then
-            leave_stage
-            return
+            if grep -Fxq -- "$key_hash" "$trust_marker" 2>/dev/null; then
+                leave_stage
+                return
+            fi
+            say "Discarding chroot cache without a verified Fedora $DNF_RELEASEVER bootstrap"
+            check_sqfs_dir
+            $SUDO find "$sqfs_dir" -mindepth 1 -delete || fatal "Could not clear obsolete Fedora cache"
         fi
 
-        # shellcheck disable=SC2086
-        if ! restore_cache $deboot_cache_opts; then
+        if ! restore_cache "${fedora_cache[@]}"; then
             umount_chroot
             check_errors_strict
             start_timer
 
-            : "${DNF_RELEASEVER:=44}"
             : "${DNF_BOOTSTRAP_PACKAGES:=filesystem fedora-release kernel-core dracut dracut-live squashfs-tools glibc bash coreutils systemd dnf rpm shadow-utils gawk}"
             : "${DNF_CONF:=Input/fedora/dnf.conf}"
             : "${DNF_BASEREPO:=Input/fedora/fedora.repo}"
@@ -1112,12 +1123,13 @@ do_stage_2() {
             [[ -r "$repo_src" ]] || fatal "Missing DNF_BASEREPO: $(pqw "$DNF_BASEREPO")"
 
             local dnf_work=$work_dir/dnf
-            $SUDO mkdir -p "$dnf_work"
             local dnf_conf=$dnf_work/dnf.conf
             local yum_repos_dir=$dnf_work/yum.repos.d
-            $SUDO mkdir -p "$yum_repos_dir"
-            $SUDO cp "$repo_src" "$yum_repos_dir/fedora.repo"
-            $SUDO cp "$dnf_conf_src" "$dnf_conf"
+            $SUDO install -Dm644 "$repo_src" "$yum_repos_dir/fedora.repo" || fatal "Cannot stage Fedora repositories"
+            $SUDO install -m644 "$dnf_conf_src" "$dnf_conf" || fatal "Cannot stage DNF configuration"
+
+            $SUDO mkdir -p "$sqfs_dir" || fatal "Cannot create Fedora installroot"
+            $SUDO rpm --root "$sqfs_dir" --import "$release_key" || fatal "Cannot import Fedora signing key"
 
             say "dnf --installroot to $(pq "$sqfs_dir") with: $(pq $DNF_BOOTSTRAP_PACKAGES)"
 
@@ -1127,15 +1139,20 @@ do_stage_2() {
                 --setopt=reposdir="$yum_repos_dir" \
                 --installroot="$sqfs_dir" \
                 --setopt=cachedir="$sqfs_dir/var/cache/dnf" \
-                --nogpgcheck \
+                --setopt=localpkg_gpgcheck=1 \
+                --setopt=gpgcheck=1 \
+                --setopt='*.gpgcheck=1' \
+                --setopt='*.gpgkey=' \
                 --assumeyes \
                 install $DNF_BOOTSTRAP_PACKAGES 2>&1 | tr '\r' '\n'
             local dnf_ret=${PIPESTATUS[0]}
             (( dnf_ret == 0 )) || fatal "dnf --installroot failed"
 
-            # Basic post-bootstrap setup
-            # Set root password to empty (no password)
-            $SUDO sh -c "printf 'root::0:0:root:/root:/bin/bash\n' >> '$sqfs_dir/etc/passwd'"
+            # Fedora supplies the root account and its shadow password policy.
+            awk -F: '$1 == "root" { n++; if ($3 != "0") exit 1 } END { if (n != 1) exit 1 }' "$sqfs_dir/etc/passwd" \
+                || fatal "Expected exactly one Fedora root account with UID 0"
+            $SUDO install -d "${trust_marker%/*}" || fatal "Cannot create Fedora bootstrap record"
+            printf '%s\n' "$key_hash" | $SUDO tee "$trust_marker" >/dev/null || fatal "Cannot record verified Fedora bootstrap"
             $SUDO mkdir -p "$sqfs_dir/root"
 
             # Copy host resolv.conf for chroot DNS
@@ -1155,8 +1172,7 @@ do_stage_2() {
         fi
 
         report_size "$sqfs_dir"
-        # shellcheck disable=SC2086
-        create_cache $deboot_cache_opts
+        create_cache "${fedora_cache[@]}"
 
         say "Customize live system (Fedora)"
         copy_template_dir squashfs "$sqfs_dir"
@@ -2462,7 +2478,7 @@ do_stage_4_fedora() {
     }
 
     # PARTIAL file support
-    if [[ ! -f "$script_dir/../Output/$work_name/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
+    if [[ ! -f "$output_dir/stage-1.out" ]] && [[ -s "$partial_file" ]]; then
         rm -f "$partial_file"
         skip_part 0 "Read PARTIAL file to skip parts done (clean build)"
     elif [[ -s "$partial_file" ]] && do_part 0 "!Read PARTIAL file to skip parts done"; then
@@ -2517,7 +2533,7 @@ do_stage_4_fedora() {
     local kernel_version
     kernel_version=$(find /boot/ -maxdepth 1 -name 'vmlinuz-*' 2>/dev/null | sort -V | tail -n1 | sed 's|/boot/vmlinuz-||')
     if [[ -z $kernel_version ]]; then
-        error "No kernel found in /boot/"
+        fatal "No Fedora kernel found in /boot/"
     else
         say "Detected kernel version: $(pq "$kernel_version")"
         K_MODVER=$kernel_version
@@ -2542,21 +2558,8 @@ do_stage_4_fedora() {
         end_part_lax
     fi
 
-    if do_part 7 "Build live initramfs with dracut"; then
-        say "Building live initramfs with dracut (${kernel_version})"
-
-        # Ensure dracut live modules are installed
-        say "Ensuring dracut-live and dracut-squash are installed"
-        fedora_dnf install dracut-live dracut-squash 2>&1 | tail -5 || true
-
-        # Mount /run tmpfs so dracut doesn't fail on host-only detection
-        mkdir -p /run
-        mount -t tmpfs tmpfs /run 2>/dev/null || true
-
-        # Note: initramfs is rebuilt in Stage 6 with proper /dev/log setup;
-        # this is a best-effort first pass.
-        dracut --force --no-hostonly --add dmsquash-live \
-            /boot/initramfs-live.img "$kernel_version" 2>&1 | tr '\r' '\n' || true
+    if do_part 7 "Install live initramfs modules"; then
+        fedora_dnf install dracut-live dracut-squash || fatal "Could not install Fedora live initramfs modules"
         end_part_lax
     fi
 
@@ -2585,7 +2588,8 @@ do_stage_4_fedora() {
         psay "$cnt" "Install $(pqn %n) RPM package%s"
         for rpm in "${rpms[@]}"; do
             say "install $(pq "${rpm##*/}")"
-            rpm --force -U "$rpm" 2>&1 | tr '\r' '\n' || true
+            rpm --force -U "$rpm" 2>&1 | tr '\r' '\n'
+            (( PIPESTATUS[0] == 0 )) || fatal "Could not install local package: $rpm"
         done
         end_part_lax
     else
@@ -3285,52 +3289,24 @@ do_stage_6_fedora() {
     say "Copy GRUB theme and configuration for Fedora ISO"
     copy_template_dir -u iso "$iso_dir"
 
-    # Copy kernel and initramfs from squashfs
-    local kernel_ver
-    kernel_ver=$(find "$sqfs_dir"/boot/ -maxdepth 1 -name 'vmlinuz-*' 2>/dev/null | sort | head -n1 | sed 's|.*/vmlinuz-||')
-    if [[ -z $kernel_ver ]]; then
-        error "No kernel found in squashfs /boot/"
-    fi
+    local kernel_ver=${K_MODVER:-}
+    [[ -n $kernel_ver && $kernel_ver != */* ]] || fatal "Missing or invalid Fedora kernel version from Stage 4"
+    local kimg="$sqfs_dir/boot/vmlinuz-$kernel_ver"
+    [[ -s $kimg && -d $sqfs_dir/usr/lib/modules/$kernel_ver ]] || fatal "Missing Fedora kernel or modules for $kernel_ver"
 
-    local kimg=$sqfs_dir/boot/vmlinuz-$kernel_ver
-    local initrd_img=$sqfs_dir/boot/initramfs-live.img
-
-    [[ -e "$kimg" ]] || error "Missing kernel image: $(pqw "vmlinuz-$kernel_ver")"
-
-    # Rebuild initramfs (dracut needs /dev/log which may not exist in the chroot)
-    say "Rebuilding live initramfs..."
+    say "Building live initramfs for $kernel_ver"
     prep_chroot
-    # Write helper scripts for creating /dev/log and building initramfs
-    $SUDO tee "$sqfs_dir/tmp/mkdevlog.py" > /dev/null << 'PYEOF'
-import socket, os
-try:
-    os.unlink("/dev/log")
-except:
-    pass
-s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-s.bind("/dev/log")
-os.chmod("/dev/log", 0o666)
-PYEOF
-    $SUDO tee "$sqfs_dir/tmp/build-initrd.sh" > /dev/null << 'INITEOF'
-#!/bin/bash
-kver=$(ls /boot/vmlinuz-* 2>/dev/null | head -n1 | sed 's|/boot/vmlinuz-||')
-if [ -L /dev/log ]; then rm -f /dev/log; fi
-python3 /tmp/mkdevlog.py &
-sleep 0.3
-rm -f /boot/initramfs-live.img /tmp/initrd.img
-dracut --force --no-hostonly --add "dmsquash-live" /tmp/initrd.img "$kver" 2>&1
-if [ -f /tmp/initrd.img ] && [ -s /tmp/initrd.img ]; then
-    cp /tmp/initrd.img /boot/initramfs-live.img
-    chmod 644 /boot/initramfs-live.img
-fi
-INITEOF
-    $SUDO chmod +x "$sqfs_dir/tmp/build-initrd.sh"
-    $SUDO chroot "$sqfs_dir" /bin/bash /tmp/build-initrd.sh
-    [[ -s "$sqfs_dir/boot/initramfs-live.img" ]] || error "dracut failed to build initramfs"
+    $SUDO chroot "$sqfs_dir" /bin/bash -es -- "$kernel_ver" <<'Dracut' || fatal "dracut failed for Fedora kernel $kernel_ver"
+tmp=$(mktemp /boot/.initramfs-live.XXXXXXXX)
+trap 'rm -f -- "$tmp"' EXIT
+dracut --force --no-hostonly --add dmsquash-live "$tmp" "$1"
+test -s "$tmp"
+chmod 0644 "$tmp"
+mv -fT -- "$tmp" /boot/initramfs-live.img
+Dracut
 
-    # Copy boot files with archiso-compatible names for unified grub.cfg
-    $SUDO cp "$kimg" "$boot_iso_dir/vmlinuz-linux"
-    $SUDO cp "$initrd_img" "$boot_iso_dir/initramfs-live.img"
+    $SUDO cp "$kimg" "$boot_iso_dir/vmlinuz-linux" || fatal "Could not stage Fedora kernel"
+    $SUDO cp "$sqfs_dir/boot/initramfs-live.img" "$boot_iso_dir/initramfs-live.img" || fatal "Could not stage Fedora initramfs"
 
     # Provide package list (useful for debugging/remaster workflows)
     if [[ -r "$work_dir/package-list.out" ]]; then
