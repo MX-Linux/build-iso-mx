@@ -6147,15 +6147,17 @@ pretty_output() {
 # window title if it was set.
 #------------------------------------------------------------------------------
 on_exit() {
-    if [[ -z $UMOUNT_ERRORS ]]; then
-        umount_chroot
-    else
-        # umount_chroot already ran and hit errors; best-effort lazy sweep
-        # to avoid leaving stale mounts behind
-        for mp in $(mount | cut -d" " -f3 | grep "^$remaster_dir/work/.*/squashfs/"); do
-            [[ $mp == "$sqfs_dir" ]] && continue
-            $SUDO umount -l "$mp" 2>/dev/null || true
-        done
+    if [[ -z $sign_only ]]; then
+        if [[ -z $UMOUNT_ERRORS ]]; then
+            umount_chroot
+        else
+            # umount_chroot already ran and hit errors; best-effort lazy sweep
+            # to avoid leaving stale mounts behind
+            for mp in $(mount | cut -d" " -f3 | grep "^$remaster_dir/work/.*/squashfs/"); do
+                [[ $mp == "$sqfs_dir" ]] && continue
+                $SUDO umount -l "$mp" 2>/dev/null || true
+            done
+        fi
     fi
 
     [[ -n $ORIG_TCP_SYN_RETRIES ]] \
