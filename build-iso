@@ -456,13 +456,24 @@ main() {
             # shellcheck disable=SC1090
             [[ -r $f ]] && source "$f"
         done
-        sign_iso="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
-        sign_iso="${sign_iso// /_}"
-        [[ "$DISTRO_NAME" = antiX ]] && sign_iso="$sign_iso-$ISO_FLAV"
-        sign_iso=${sign_file:-$iso_file_dir/$sign_iso${ISO_SUFFIX:+_$ISO_SUFFIX}.iso}
+        if [[ -n $sign_file ]]; then
+            sign_iso=$sign_file
+        elif [[ -L $output_dir/last-built.iso ]]; then
+            sign_iso=$(readlink -- "$output_dir/last-built.iso") || fatal "Could not read the last ISO path"
+        elif [[ -f $output_dir/stage-8.out ]]; then
+            # Builds made before the output path was recorded.
+            sign_iso="$DISTRO_NAME-${DISTRO_VERSION}_$ISO_ARCH"
+            sign_iso="${sign_iso// /_}"
+            [[ "$DISTRO_NAME" = antiX ]] && sign_iso="$sign_iso-$ISO_FLAV"
+            sign_iso=$iso_file_dir/$sign_iso${ISO_SUFFIX:+_$ISO_SUFFIX}.iso
+        fi
+        # No build resources were acquired during a signing preview.
+        [[ -z $pretend_mode ]] || trap - EXIT
+        if [[ -z $sign_iso ]]; then
+            _say_ "No successfully mastered ISO recorded. Use --sign-only=FILE."
+            exit 1
+        fi
         if [[ -n $pretend_mode ]]; then
-            # No build resources were acquired; leave output markers alone too.
-            trap - EXIT
             if [[ ! -f $sign_iso ]]; then
                 _say_ "No iso file to sign: $(pqw "$sign_iso")"
                 exit 1
@@ -3474,6 +3485,11 @@ do_stage_7() {
 #------------------------------------------------------------------------------
 # Stage 8 creates the iso file.
 #------------------------------------------------------------------------------
+remember_built_iso() {
+    [[ -s $1 ]] || fatal "Missing or empty ISO: $1"
+    ln -sfnT -- "$1" "$output_dir/last-built.iso" || fatal "Could not record the mastered ISO path"
+}
+
 do_stage_8() {
 
 	if [[ $stop_8 ]]; then
@@ -3487,6 +3503,11 @@ do_stage_8() {
     local iso_file=$full_distro_name${ISO_SUFFIX:+_$ISO_SUFFIX}.iso
     mkdir -p "$iso_file_dir"
     local full_iso_file=$iso_file_dir/$iso_file
+    # A failed same-name rebuild may leave a partial ISO at the recorded path.
+    if [[ ! -L $output_dir/last-built.iso || $output_dir/last-built.iso -ef $full_iso_file ||
+          $(readlink -- "$output_dir/last-built.iso") == "$full_iso_file" ]]; then
+        rm -f -- "$output_dir/last-built.iso" || fatal "Could not clear the previous ISO record"
+    fi
     # Signatures of a previous iso would not match the new one (e.g. a
     # rebuild with --no-sign): remove them, sign_iso_files() makes new ones.
     # Removing needs a writable directory; else (or if rm fails anyway) sudo.
@@ -3577,6 +3598,7 @@ do_stage_8() {
         local mkrescue_result=$?
 
         [[ $mkrescue_result -eq 0 ]] || fatal "grub-mkrescue failed to create $(pq "$full_iso_file")"
+        remember_built_iso "$full_iso_file"
         size=$(du_size "$full_iso_file")
         end_timer "create $(pqn "$size") iso file"
 
@@ -3627,6 +3649,7 @@ do_stage_8() {
     size=$(du_size "$full_iso_file")
     end_timer "create $(pqn "$size") iso file"
 
+    remember_built_iso "$full_iso_file"
     #md5sum_file $full_iso_file
     sha256sum_file "$full_iso_file"
     zsyncmake_file "$full_iso_file"
