@@ -19,8 +19,8 @@ Options:
   --pacman-conf FILE    Pass --config FILE to pacman
 
 Recommended workflow (inside build chroot):
-  Tools/arch-port-package-list /Build/Template/COMMON/package.list \
-    --out /Build/Template/Arch/arch64/package.list
+  Tools/arch-port-package-list --out /tmp/arch-package.list \
+    /Build/Template/COMMON/package.list
 USAGE
 }
 

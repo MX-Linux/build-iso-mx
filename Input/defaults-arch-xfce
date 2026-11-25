@@ -1,5 +1,5 @@
-# Arch Linux profile using the `mx64` Arch template flavour.
-# Use with: ./build-iso --user-default defaults-arch-mx64
+# Arch Linux profile using the `xfce` Arch template flavour.
+# Use with: ./build-iso --user-default defaults-arch-xfce
 
 DISTRO_FAMILY="arch"
 
@@ -14,7 +14,7 @@ CODE_NAME="Infinity Arch"
 # Arch uses x86_64 naming; keep this consistent across templates/iso naming.
 ARCH="x86_64"
 
-# Use `Template/Arch/mx64/` for flavour lists/overlays.
+# Use `Template/Arch/xfce/` for flavour lists/overlays.
 ISO_FLAV="xfce"
 THEME="archxfce"
 

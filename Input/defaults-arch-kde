@@ -1,5 +1,5 @@
-# Arch Linux profile using the `mx64` Arch template flavour.
-# Use with: ./build-iso --user-default defaults-arch-mx64
+# Arch Linux profile using the `kde` Arch template flavour.
+# Use with: ./build-iso --user-default defaults-arch-kde
 
 DISTRO_FAMILY="arch"
 

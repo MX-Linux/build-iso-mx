@@ -15,7 +15,7 @@ CODE_NAME="arch"
 ARCH="x86_64"
 
 # Use the matching Arch template flavour directory (Template/Arch/*).
-ISO_FLAV="arch64"
+ISO_FLAV="xfce"
 THEME="none"
 
 # ISO authoring is done via `grub-mkrescue` for Arch builds, but Stage 0 still
