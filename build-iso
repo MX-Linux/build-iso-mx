@@ -1602,7 +1602,7 @@ do_stage_4() {
 
         for deb in "${debs[@]}"; do
             say "install $(pq "${deb##*/}")"
-            apt-get install "$deb"
+            apt-get install "$deb" || fatal "Could not install local package: $deb"
         done
         end_part_lax
     else
@@ -2162,7 +2162,7 @@ do_stage_4_arch() {
 
         for pkg in "${arch_pkgs[@]}"; do
             say "install $(pq "${pkg##*/}")"
-            arch_pacman --overwrite='*' -U "$pkg"
+            arch_pacman --overwrite='*' -U "$pkg" || fatal "Could not install local package: $pkg"
         done
         if [[ $PACMAN_CLEAR_CACHE == true ]] && ! mountpoint -q "$PACMAN_CACHE_DIR"; then rm -rf "${PACMAN_CACHE_DIR:?}"/* 2>/dev/null; fi
         end_part_lax
