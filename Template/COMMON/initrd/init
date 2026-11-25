@@ -1036,7 +1036,7 @@ read_cmdline_params()
             noumount|noumnt|noU) NO_UMOUNT=true                                  ;;
                           [1-6]) RUN_LEVEL=$val                                  ;;
                      nosavelogs) NO_SAVE_LOGS=true                               ;;
-                       notmptmp) $NO_TMP_TMP=true                                ;;
+                       notmptmp) NO_TMP_TMP=true                                ;;
 
         #----- These get interpreted late but we don't want them to be unknown
                 hwclock=*|hwc=*)  ;;
