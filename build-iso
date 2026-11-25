@@ -2923,6 +2923,11 @@ do_stage_6() {
         leave_stage
         return
     fi
+    local initrd_gz=$iso_dir/antiX/initrd.gz
+    if [[ -n $iso_only && ! ( -f $initrd_gz && -s $initrd_gz ) ]]; then
+        fatal "ISO-only rebuild requires the existing kernel initrd: $initrd_gz"
+    fi
+
     # (0) Populate iso dir with boilerplate files
     # (1) Copy flavour-dependent bootloader.cfg files via inheritance
 
@@ -3076,31 +3081,33 @@ Bootloader_Data
         md5sum_file "$vmlinuz"
     fi
 
-    # Create custom initrd.gz including modules from the squashfs kernel
-    if [[ -e $initrd_dir ]]; then
-        say "Clear out initrd directory"
-        rm -rf "${initrd_dir:?}"
-    fi
-
-    mkdir -p "$initrd_dir"
-
-    local initrd_src=$template/COMMON/initrd
-
-    if [[ -d $initrd_src ]]; then
-        copy_template_dir -u initrd "$initrd_dir"
-    else
-        error "No $initrd_src/ or $initrd_src.gz found"
-    fi
-
-    initrd_busybox "$initrd_dir"
-
-    say "Write initrd_release file"
-    write_initrd_release "$initrd_dir"
-
     say "Write lsb-release"
     update_lsb_release
 
-    if [[ -z $iso_only ]]; then
+    if [[ -n $iso_only ]]; then
+        say "Reuse existing initrd.gz"
+    else
+        # Create custom initrd.gz including modules from the squashfs kernel
+        if [[ -e $initrd_dir ]]; then
+            say "Clear out initrd directory"
+            rm -rf "${initrd_dir:?}"
+        fi
+
+        mkdir -p "$initrd_dir"
+
+        local initrd_src=$template/COMMON/initrd
+
+        if [[ -d $initrd_src ]]; then
+            copy_template_dir -u initrd "$initrd_dir"
+        else
+            error "No $initrd_src/ or $initrd_src.gz found"
+        fi
+
+        initrd_busybox "$initrd_dir"
+
+        say "Write initrd_release file"
+        write_initrd_release "$initrd_dir"
+
         say "Copy $(pq "$K_NAME") modules into initrd"
 
         rm -rf "${initrd_dir:?}/lib/modules/"
@@ -3110,21 +3117,20 @@ Bootloader_Data
 
         #anticap#$tools/copy-initrd-programs --to $initrd_dir --clean
         "$tools"/copy-initrd-programs --encrypt --quiet --to "$initrd_dir" --from "$sqfs_dir"
-    fi
 
-    local initrd_gz=$iso_dir/antiX/initrd.gz
-    say "Create initrd.gz"
-    (cd "$initrd_dir" && find . | cpio -o -H newc --owner root:root --quiet) \
-        | $GZIP -9 > "$initrd_gz"
+        say "Create initrd.gz"
+        (cd "$initrd_dir" && find . | cpio -o -H newc --owner root:root --quiet) \
+            | $GZIP -9 > "$initrd_gz"
 
-    if [[ -z "$no_ucode" ]]; then
-        if command -v uc-tool >/dev/null 2>&1; then
-            say "Inject ucode into initrd.gz"
-            local uc_color=; [[ $color_mode == "off" ]] && uc_color="--no-color"
-            uc-tool $uc_color -u amd,intel -F "$sqfs_dir/lib/firmware" -i "$initrd_gz" \
-                || warn "ucode injection failed -- initrd.gz may lack ucode"
-        else
-            say "uc-tool not found -- skipping ucode injection into initrd.gz"
+        if [[ -z "$no_ucode" ]]; then
+            if command -v uc-tool >/dev/null 2>&1; then
+                say "Inject ucode into initrd.gz"
+                local uc_color=; [[ $color_mode == "off" ]] && uc_color="--no-color"
+                uc-tool $uc_color -u amd,intel -F "$sqfs_dir/lib/firmware" -i "$initrd_gz" \
+                    || warn "ucode injection failed -- initrd.gz may lack ucode"
+            else
+                say "uc-tool not found -- skipping ucode injection into initrd.gz"
+            fi
         fi
     fi
 
