@@ -309,7 +309,7 @@ all_kms_modules() {
     grep -E "drm\.ko(|\.[[:alpha:]]+)" /lib/modules/$(uname -r)/modules.dep \
         | sed -r -e "s/:.*//"  \
         -e "s|.*/||"        \
-        -e "s/\.ko(|\.[[:alpha:]]+)$//"
+        -e "s/\.ko(|\.[[:alpha:]]+)$//" \
         | grep -v -E "^(drm|drm_kms_helper|ttm)$"   \
         | sort -u
 }
