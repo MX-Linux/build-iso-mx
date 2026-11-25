@@ -1188,9 +1188,10 @@ do_stage_2() {
         check_errors_strict
         start_timer
         $SUDO mkdir -p "$sqfs_dir/usr" "$sqfs_dir/etc"
-        local debian_frontend_env=""
+        local debootstrap_prog=debootstrap
+        local -a debootstrap_env=()
         if [[ -n $auto_mode ]]; then
-            debian_frontend_env="DEBIAN_FRONTEND=noninteractive"
+            debootstrap_env=(DEBIAN_FRONTEND=noninteractive)
             say "Running debootstrap in noninteractive mode (auto mode enabled)..."
         else
             say "Running debootstrap in interactive mode..."
@@ -1204,15 +1205,14 @@ do_stage_2() {
         # WSL workaround: patch debootstrap to replace 'sync' with 'true' to avoid hangs
         if grep -qi microsoft /proc/version 2>/dev/null; then
             say "WSL detected: creating patched debootstrap without sync..."
-            local patched_debootstrap="$work_dir/debootstrap-no-sync"
-            $SUDO sed 's/^\tsync$/\ttrue  # sync disabled for WSL/' /usr/sbin/debootstrap > "$patched_debootstrap"
-            $SUDO chmod +x "$patched_debootstrap"
-            # shellcheck disable=SC2086
-            $SUDO $debian_frontend_env "$patched_debootstrap" $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
-        else
-            # shellcheck disable=SC2086
-            $SUDO $debian_frontend_env debootstrap $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url"
+            debootstrap_prog="$work_dir/debootstrap-no-sync"
+            sed 's/^\tsync$/\ttrue  # sync disabled for WSL/' /usr/sbin/debootstrap > "$debootstrap_prog" \
+                && chmod +x "$debootstrap_prog" || fatal "Could not prepare debootstrap for WSL"
         fi
+
+        # shellcheck disable=SC2086
+        $SUDO env "${debootstrap_env[@]}" "$debootstrap_prog" $args "$DEBIAN_RELEASE" "$sqfs_dir" "$url" \
+            || fatal "debootstrap failed for $DEBIAN_RELEASE"
 
         say "debootstrap completed, checking results..."
         end_timer "run debootstrap \"$ARCH\" \"$DEBIAN_RELEASE\""
