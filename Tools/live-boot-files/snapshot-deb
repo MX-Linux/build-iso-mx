@@ -12,7 +12,7 @@
 #   3. the .deb: SHA256 must equal the one in that Packages stanza
 # Any mismatch -> the .deb is deleted and the script fails.
 # Writes DIR/<deb> and appends "sha256  deb  suite@timestamp" to DIR/VERIFIED.
-# Needs: curl, gpgv, xz, python3, debian-archive-keyring.
+# Needs: curl, gpgv, xz, python3, dpkg-architecture, debian-archive-keyring.
 set -euo pipefail
 
 KEYRING=/usr/share/keyrings/debian-archive-keyring.gpg
@@ -48,11 +48,24 @@ else:
     sys.exit("no %s build" % arch)' "$3"
 }
 
+known_arches=$(dpkg-architecture -L) || die "cannot list Debian architectures"
+
 for spec in "${args[@]}"; do
     pkg=${spec%%=*}; rest=${spec#*=}
     [[ $pkg != "$spec" ]] || die "$spec: want PKG=VERSION[:ARCH]"
-    ver=${rest%%:*}; arch=amd64
-    [[ $rest == *:* ]] && arch=${rest##*:}
+    ver=$rest
+    arch=amd64
+    if [[ $rest == *:* ]]; then
+        suffix=${rest##*:}
+        if [[ $suffix == all ]] || grep -Fxq -- "$suffix" <<<"$known_arches"; then
+            arch=$suffix
+            ver=${rest%:*}
+        fi
+    fi
+    [[ -n $pkg && -n $ver ]] || die "$spec: want PKG=VERSION[:ARCH]"
+    # Debian includes architecture-independent packages in native indexes.
+    index_arch=$arch
+    [[ $arch == all ]] && index_arch=amd64
     read -r archive ts name < <(locate "$pkg" "$ver" "$arch") || die "$spec: not on snapshot"
     case $archive in
         debian-security) suites='trixie-security bookworm-security' ;;
@@ -64,10 +77,10 @@ for spec in "${args[@]}"; do
         curl -fsSL -o "$tmp/InRelease" "$base/InRelease" 2>/dev/null || continue
         gpgv --keyring "$KEYRING" "$tmp/InRelease" 2>"$tmp/gpgv.log" \
             || { cat "$tmp/gpgv.log" >&2; die "$suite@$ts: InRelease signature BAD"; }
-        want=$(awk -v f="main/binary-$arch/Packages.xz" '
+        want=$(awk -v f="main/binary-$index_arch/Packages.xz" '
             /^SHA256:/ {s=1; next} /^[^ ]/ {s=0} s && $3==f {print $1}' "$tmp/InRelease")
         [[ -n $want ]] || continue
-        curl -fsSL -o "$tmp/Packages.xz" "$base/main/binary-$arch/Packages.xz"
+        curl -fsSL -o "$tmp/Packages.xz" "$base/main/binary-$index_arch/Packages.xz"
         [[ $(sha256sum < "$tmp/Packages.xz" | cut -d' ' -f1) == "$want" ]] \
             || die "$suite@$ts: Packages.xz SHA256 differs from InRelease"
         stanza=$(xz -dc "$tmp/Packages.xz" | awk -v p="$pkg" -v v="$ver" -v a="$arch" '
