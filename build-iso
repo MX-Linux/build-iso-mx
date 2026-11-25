@@ -929,6 +929,8 @@ do_stage_1() {
 do_stage_2() {
     enter_stage 2 "Bootstrap root filesystem"
 
+    umount_chroot
+
     if [[ ${DISTRO_FAMILY:-debian} = arch ]]; then
         say "Using pacstrap (Arch)"
 
@@ -3654,7 +3656,11 @@ do_stage_9() {
         [[ -L $script_dir/$s ]] && links+=("$script_dir/$s")
     done
 
+    umount_chroot
     umount_tmpfs
+    if mountpoint -q "$sqfs_dir"; then
+        vexit "Keeping the mounted squashfs directory"
+    fi
     clear_outputs
 
     local rel_work_dir
@@ -3801,12 +3807,12 @@ umount_tmpfs() {
     YES_no_loud "Clear out $name/ and umount it" || return 1
 
     check_sqfs_dir "$dir"
-    $SUDO rm -rf "$(dirname "${dir:?}")"/squashfs/*
     $SUDO umount "$dir"
-    mountpoint -q "$dir" || return
-    warn "name did not simply umount. Trying -l (lazy option)"
+    mountpoint -q "$dir" || return 0
+    warn "$name did not simply umount. Trying -l (lazy option)"
     $SUDO umount -l "$dir"
-    mountpoint -q "$dir" || error "Could not umount $name"
+    mountpoint -q "$dir" && fatal "Could not umount $name"
+    return 0
 
 }
 
@@ -3835,6 +3841,7 @@ check_all_tmpfs() {
 
     YES_no "Cache or umount any of these" || return 0
 
+    umount_chroot
     for name in $all_tmpfs; do
         echo
         local dir=$remaster_dir/work/$name/squashfs
@@ -3842,8 +3849,7 @@ check_all_tmpfs() {
         YES_no_loud "Cache chroot directory before umount" && force_cache chroot "$name" "$dir"
         YES_no "Clear and umount this directory" || continue
 
-        $SUDO rm -rf "$(dirname "${dir:?}")"/squashfs/*
-        $SUDO umount -l "$dir"
+        $SUDO umount -l "$dir" || fatal "Could not umount $dir"
     done
 
     return 0
@@ -5231,15 +5237,26 @@ copy_theme_dir() {
 # four times before giving up. If any such mountpoint is still a mountpoint
 # after four attempts to umount it then we error out at the end of the routine.
 #------------------------------------------------------------------------------
+read_chroot_mounts() {
+    local -n result=$1
+    local mp encoded
+    result=()
+    [[ -r /proc/self/mountinfo ]] || fatal "Cannot inspect chroot mounts"
+    while read -r _ _ _ _ encoded _; do
+        printf -v mp '%b' "$encoded"
+        [[ $mp == "$remaster_dir"/work/*/squashfs/* ]] || continue
+        result+=("$mp")
+    done < /proc/self/mountinfo
+}
+
 umount_chroot() {
-    # Pretend mode must not touch mounts.
     [[ -n $pretend_mode ]] && return 0
+    local mp name
+    local -a mounts
+    read_chroot_mounts mounts
+    for mp in "${mounts[@]}"; do
+        name=${err_co}chroot:$bold_co${mp##"$remaster_dir"/*/squashfs}
 
-    for mp in $(mount | cut -d" " -f3 | grep "^$remaster_dir/work/.*/squashfs/"); do
-        local name=${err_co}chroot:$bold_co${mp##"$remaster_dir"/*/squashfs}
-
-        # Don't umount the tmpfs
-        [[ $mp == "$sqfs_dir" ]] && continue
 
         $SUDO umount -l "$mp" 2>/dev/null
 
@@ -5253,10 +5270,13 @@ umount_chroot() {
 
         mountpoint -q "$mp" || continue
         warn "Still could not umount $name"
-        UMOUNT_ERRORS=true
     done
 
-    [[ -n $UMOUNT_ERRORS ]] && fatal "Umount errors!"
+    read_chroot_mounts mounts
+    if (( ${#mounts[@]} )); then
+        UMOUNT_ERRORS=true
+        fatal "Still mounted in chroot: ${mounts[*]}"
+    fi
 }
 
 #------------------------------------------------------------------------------
