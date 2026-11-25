@@ -732,7 +732,12 @@ Remaster_Blurb
 
     # Distro-specific tool requirements (outer build environment)
     case $DISTRO_FAMILY in
-        debian) require_programs debootstrap apt-get dpkg ;;
+        debian)
+            require_programs debootstrap apt-get dpkg
+            if [[ $MAKE_ISO == *xorriso && $GRUB_ONLY != true && -z $stop_5 && -z $stop_8 ]] \
+                && ! has_word SKIP_STAGE 8; then
+                require_isohdpfx
+            fi ;;
           arch) require_arch_host_tools ;;
         fedora) require_fedora_host_tools ;;
     esac
@@ -4651,14 +4656,18 @@ make_uefi_iso() {
     isohybrid --uefi "$file" || fatal "isohybrid failed for $(pq "$file")"
 }
 
-# isolinux's hybrid MBR boot code (package isolinux / syslinux)
-find_isohdpfx() {
+# Check the host's ISOLINUX MBR and optionally store its path in the named variable.
+require_isohdpfx() {
     local f
     for f in /usr/lib/ISOLINUX/isohdpfx.bin /usr/lib/syslinux/bios/isohdpfx.bin \
              /usr/lib/syslinux/isohdpfx.bin /usr/share/syslinux/isohdpfx.bin; do
-        [[ -f $f ]] && { echo "$f"; return 0; }
+        [[ -f $f && -r $f && -s $f ]] || continue
+        if [[ -n ${1:-} ]]; then
+            printf -v "$1" '%s' "$f"
+        fi
+        return 0
     done
-    return 1
+    fatal "Missing or unreadable isohdpfx.bin. Install it on the build host with: sudo apt install isolinux"
 }
 
 #------------------------------------------------------------------------------
@@ -4728,7 +4737,7 @@ make_xorriso_iso() {
                                                  # eltorito.img and the MBR code
         )
     else
-        mbr=$(find_isohdpfx) || error "isohdpfx.bin not found (package isolinux)"
+        require_isohdpfx mbr
         cmd+=(
             -boot_image isolinux system_area="$mbr"
                                                  # MBR boot code -> BIOS from USB
