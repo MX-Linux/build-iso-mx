@@ -3427,9 +3427,15 @@ do_stage_7() {
     else
         UNCOMPRESSEDSIZE_FILE="$iso_dir/antiX/linuxfs.info"
     fi
-    $SUDO unbuffer -p mksquashfs "$sqfs_dir" "$linuxfs_file" "${mksquash_opts[@]}" -progress | tee "$output"
+    # Expect's unbuffer loses signal deaths. Let sh turn those into an exit status.
+    $SUDO unbuffer sh -c '"$@"; exit $?' sh \
+        mksquashfs "$sqfs_dir" "$linuxfs_file" "${mksquash_opts[@]}" -progress | tee "$output"
     local mksquashfs_ret=${PIPESTATUS[0]}
-    (( mksquashfs_ret == 0 )) || fatal "mksquashfs failed"
+    if (( mksquashfs_ret != 0 )); then
+        $SUDO rm -f -- "$linuxfs_file"
+        rm -f -- "$output"
+        fatal "mksquashfs failed with status $mksquashfs_ret"
+    fi
     UNCOMPRESSEDSIZE=$(grep "uncompressed filesystem" "$output" | cut -d"(" -f2 | cut -d" " -f1)
     echo "UncompressedSizeKB=$UNCOMPRESSEDSIZE">"$UNCOMPRESSEDSIZE_FILE"
     rm -f "$output"
