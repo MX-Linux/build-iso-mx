@@ -107,7 +107,7 @@ main() {
 
     local chroot_stage=4
 
-    local stage output_file
+    local stage output_file chroot_marker
     local manual_mode pretend_mode auto_mode chroot_mode delete_mode delete_all
     local quiet_mode start_from reset_mode iso_only full_auto update_mode UPDATE_mode
     local show_parts show_stages interactive color_mode verbose_mode stats_mode
@@ -1256,10 +1256,6 @@ do_stage_3() {
 
     check_sqfs_dir
 
-    # We want to run stage N+1 inside the chroot so we need to signal
-    # that the current stage is done
-    leave_stage notime
-
     # Save the PARTIAL file from destruction but don't be fooled by older copies
     rm -f "$work_dir/$partial_name"
     [[ -e "$sqfs_dir$partial_file" ]] && cp "$sqfs_dir$partial_file" "$work_dir"
@@ -1269,8 +1265,8 @@ do_stage_3() {
 
     prep_chroot
 
-    # This stage must fail if the next stage fails
-    rm "$output_file"
+    # Only the inner build may advance to Stage 4 before this stage succeeds.
+    touch "$sqfs_output_dir/stage-$stage.out" || fatal "Could not prepare chroot stage marker"
 
     # Put saved PARTIAL file back in the build directory
     [[ -e "$work_dir/$partial_name" ]] \
@@ -1298,8 +1294,9 @@ do_stage_3() {
     HOST_HOSTNAME=$(hostname)
 
     local args
-    local next_output_file
+    local next_output_file chroot_status=0
     next_output_file=$sqfs_output_dir/stage-$((stage + 1)).out
+    $SUDO rm -f -- "$next_output_file" || fatal "Could not clear stale chroot stage marker"
 
     args="$args -$((stage + 1))"
     [[ -n $interactive     ]] && args="$args --interactive"
@@ -1315,11 +1312,12 @@ do_stage_3() {
 
     say "Run $(pq "$ME") in chroot"
     # shellcheck disable=SC2086
-    $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args
+    $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args || chroot_status=$?
 
     $SUDO hostname "$HOST_HOSTNAME"
 
-    if [[ ! -e "$next_output_file" && -n "$manual_mode" ]]; then
+    if [[ -n $manual_mode ]] && { (( chroot_status != 0 )) || [[ ! -f $next_output_file ]]; }; then
+        $SUDO rm -f -- "$next_output_file" || fatal "Could not reset chroot stage marker"
         say "The buld inside the chroot failed"
         say  "======================================================="
         say  "You are in a chroot environment."
@@ -1330,6 +1328,7 @@ do_stage_3() {
         say  "======================================================="
         $SUDO chroot "$sqfs_dir" /bin/bash -rcfile "$build_dir/bashrc" 2>&1
         say "Left chroot"
+        [[ -f $next_output_file ]] && chroot_status=0
     fi
 
     check_errors_reset
@@ -1337,7 +1336,7 @@ do_stage_3() {
     kill_chroot_procs
     umount_chroot
 
-    [[ -e "$next_output_file" ]] || fatal "Build inside chroot failed"
+    (( chroot_status == 0 )) && [[ -f $next_output_file ]] || fatal "Build inside chroot failed"
 
     local chroot_selections=$sqfs_dir$build_dir/$manual_selections
     if [[ -r "$chroot_selections" ]]; then
@@ -1353,7 +1352,7 @@ do_stage_3() {
     [[ -r "$sqfs_output_dir/package-list.out" ]] && cp "$sqfs_output_dir/package-list.out" "$work_dir"
     cp "$sqfs_input_dir/strict-exceptions.regex"  "$input_dir"
     cp "$sqfs_input_dir/lax-errors.regex"         "$input_dir"
-    cp "$next_output_file"                        "$output_dir"
+    cp "$next_output_file" "$output_dir/" || fatal "Could not copy completed chroot stage marker"
 
     leave_stage
 
@@ -1376,6 +1375,11 @@ do_stage_4() {
 
     #error-logchecking ASAP so we don't waste user's time
     [[ "$script_dir" == "$build_dir" ]] || fatal "We do not appear to be in a chroot environment"
+
+    # The stage functions write kernel data here. Publish it after the final check.
+    local chroot_marker=$output_file
+    local output_file=$chroot_marker.pending
+    : > "$output_file" || fatal "Could not prepare chroot stage data"
 
     # Set SIGN_OFF early to ensure it's available before any potential exits
     SIGN_OFF="$text_co$ME in chroot done$nc"
@@ -3739,11 +3743,15 @@ enter_stage() {
 }
 
 leave_stage() {
-    touch "$output_file"
-    (( $# > 0 )) && return
-    _end_timer_ STAGE_TIME "Stage $stage"
-    check_errors_strict
-    return 0
+    if (( $# == 0 )); then
+        _end_timer_ STAGE_TIME "Stage $stage"
+        check_errors_strict
+    fi
+    if [[ -n $chroot_marker ]]; then
+        mv -fT -- "$output_file" "$chroot_marker" || fatal "Could not publish chroot stage data"
+    else
+        touch "$output_file" || fatal "Could not publish stage marker"
+    fi
 }
 #==============================================================================
 # Routines for tmpfs mounts
