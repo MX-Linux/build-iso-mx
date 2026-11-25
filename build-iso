@@ -127,12 +127,12 @@ main() {
     local pacman_cache_dir="$remaster_dir/pacman-cache/pkg"
     local dnf_cache_dir="$remaster_dir/dnf-cache"
     local manual_selections=manual-selections
-    local exit_file="$output_dir/MUST-EXIT"
+    local exit_file
     local sign_off_file="$output_dir/SIGN-OFF"
 
     local first_time_file="$input_dir/first-time"
     local did_stage_file="$output_dir/did-stage"
-    local log_file="$output_dir/$ME.log"
+    local log_file=/dev/null
     local err_file="$output_dir/$ME.err"
     local make_xinitrc=/usr/share/antiX/lib/make-xinitrc
 
@@ -248,6 +248,12 @@ main() {
         esac
     done
 
+    # Parse all options before enabling writes, including on invalid invocations.
+    if [[ -z $pretend_mode ]]; then
+        exit_file="$output_dir/MUST-EXIT"
+        log_file="$output_dir/$ME.log"
+    fi
+
     [[ -n $no_sign && -n $sign_only ]] && fatal "Use either --no-sign or --sign-only, not both"
 
     is_antiX && apt_yes=
@@ -337,7 +343,7 @@ main() {
         [[ ${DISTRO_FAMILY:-debian} = debian ]] && work_name="$work_name-$DEBIAN_RELEASE"
         [[ "$DISTRO_NAME" = antiX ]] && work_name="$work_name-$ISO_FLAV"
         output_dir="$script_dir/Output/$work_name"
-        log_file="$output_dir/$ME.log"
+        [[ -n $pretend_mode ]] || log_file="$output_dir/$ME.log"
         err_file="$output_dir/$ME.err"
         did_stage_file="$output_dir/did-stage"
     }
@@ -399,13 +405,13 @@ main() {
 
     # In auto mode we need to cache sudo credentials to avoid mid-build prompts
     # (or run as root) to avoid confusing mid-build failures.
-    if (( UID != 0 )) && [[ -n $auto_mode ]]; then
+    if (( UID != 0 )) && [[ -n $auto_mode && -z $pretend_mode ]]; then
         sudo true >/dev/null 2>&1 \
             || fatal "$(pq --auto) requires sudo access (or run as root)"
     fi
 
     local ORIG_TCP_SYN_RETRIES=
-    trap on_exit       EXIT
+    [[ -n $pretend_mode ]] || trap on_exit EXIT
     trap "echo; exit"  INT
 
     # Speed up failed loopback connections during package installs: some
@@ -429,7 +435,7 @@ main() {
         mkdir -p "$(dirname "$log_file")"
     fi
 
-    if [[ -n $check_tmpfs ]]; then
+    if [[ -n $check_tmpfs && -z $pretend_mode ]]; then
         check_all_tmpfs && exit
         vexit "No tmpfs mounts were found"
     fi
@@ -444,8 +450,7 @@ main() {
         echo -e "directory: $script_dir\n"
     } >> "$log_file"
 
-    # Always start out with a clean slate, except when previewing signing.
-    if [[ -z $sign_only || -z $pretend_mode ]]; then
+    if [[ -z $pretend_mode ]]; then
         rm -f "$exit_file" "$sign_off_file"
     fi
 
@@ -467,8 +472,6 @@ main() {
             [[ "$DISTRO_NAME" = antiX ]] && sign_iso="$sign_iso-$ISO_FLAV"
             sign_iso=$iso_file_dir/$sign_iso${ISO_SUFFIX:+_$ISO_SUFFIX}.iso
         fi
-        # No build resources were acquired during a signing preview.
-        [[ -z $pretend_mode ]] || trap - EXIT
         if [[ -z $sign_iso ]]; then
             _say_ "No successfully mastered ISO recorded. Use --sign-only=FILE."
             exit 1
@@ -499,16 +502,17 @@ main() {
         my_exit 0
     fi
 
-    update_template_file basic-applications.list basic-package.list
-    update_template_file pesky-packages.list     pesky-package.list
+    if [[ -z $pretend_mode ]]; then
+        update_template_file basic-applications.list basic-package.list
+        update_template_file pesky-packages.list     pesky-package.list
+        : > "$did_stage_file"
+    fi
 
     [[ -n $update_mode ]] && say "update mode: skipping parts $(pq "$SKIP_PART")"
 
     # shellcheck disable=SC2086
     expand_parts $part_env $stage_env
 
-    # Clear out the did-stage file
-    : > "$did_stage_file"
     # We only advance to the next stage if the previous stages all completed and wrote
     # stage-N.out output files. These files are also used for passing information on
     # from one stage to the next.
@@ -542,11 +546,12 @@ main() {
 
         local initrd_dir="$work_dir/initrd"
 
-        # Ensure convenience links are correct for current build
-        convenience_link "$work_dir"   work
-        convenience_link "$sqfs_dir"   sqfs
-        convenience_link "$iso_dir"    iso
-        convenience_link "$initrd_dir" initrd
+        if [[ -z $pretend_mode ]]; then
+            convenience_link "$work_dir"   work
+            convenience_link "$sqfs_dir"   sqfs
+            convenience_link "$iso_dir"    iso
+            convenience_link "$initrd_dir" initrd
+        fi
 
         local chroot_cache_opts="chroot $work_name $sqfs_dir"
         local deboot_cache_opts
@@ -568,7 +573,7 @@ main() {
         local manual_selections_template=$template/COMMON/$manual_selections
 
         # Do weird modes here after variables are set
-        [[ -n $chroot_mode ]] && do_chroot && exit
+        [[ -n $chroot_mode && -z $pretend_mode ]] && do_chroot && exit
 
         if [[ -n $start_from ]]; then
             (( stage < start_from )) \
@@ -577,8 +582,8 @@ main() {
             clear_outputs "$start_from" "$pretend_mode" "$delete_mode" || exit
             start_from=
         fi
-        [[ -n $save_mode    ]] && do_save    && exit
         [[ -n $pretend_mode ]] && do_pretend && exit
+        [[ -n $save_mode    ]] && do_save    && exit
         [[ -n $stats_mode   ]] && do_stats   && exit
         [[ -n $UPDATE_mode  ]] && update_add_remove_lists && exit
 
@@ -6024,7 +6029,7 @@ clear_outputs() {
 
 my_exit() {
     local ret=${1:-0}
-    echo "$ret" > "$exit_file"
+    [[ -z $exit_file ]] || echo "$ret" > "$exit_file"
     exit "$ret"
 }
 
