@@ -542,8 +542,6 @@ main() {
             deboot_cache_opts="pacstrap $ARCH $sqfs_dir"
         elif [[ ${DISTRO_FAMILY:-debian} = fedora ]]; then
             deboot_cache_opts="dnf_bootstrap $ARCH $sqfs_dir"
-        else
-            deboot_cache_opts="debootstrap $ARCH-$DEBIAN_RELEASE $sqfs_dir"
         fi
 
         # Select template root for all stages (not just Stage 0).
@@ -1166,17 +1164,20 @@ do_stage_2() {
         return
     fi
 
-    # shellcheck disable=SC2086
-    if ! restore_cache $deboot_cache_opts; then
+    local include_list exclude_list bootstrap_hash
+    include_list=$(gather_join include-debootstrap)
+    exclude_list=$(gather_join exclude-debootstrap)
+    bootstrap_hash=$(printf '%s\n' "$include_list" "$exclude_list" | sha256sum) \
+        || fatal "Cannot hash debootstrap package lists"
+    local -a bootstrap_cache=(debootstrap "$ARCH-$DEBIAN_RELEASE-${bootstrap_hash%% *}" "$sqfs_dir")
+    if ! restore_cache "${bootstrap_cache[@]}"; then
 
         say "debootstrap for $(pq "$ARCH" "$DEBIAN_RELEASE") from local mirror $(pq "$LOCAL_MIRROR") ..."
         umount_chroot
         mount_deb_cache
 
-        local args cnt exclude_list include_list keyring url
+        local args cnt keyring url
         args="--arch=$ARCH"
-        exclude_list=$(gather_join exclude-debootstrap)
-        include_list=$(gather_join include-debootstrap)
         cnt=$(echo "$exclude_list" | tr ',' '\n' | wc -l)
         psay "$cnt" "Exclude $(pqn %n) package%s"
         keyring="$template/$ISO_RESPIN_OF/keyring.gpg"
@@ -1236,8 +1237,7 @@ do_stage_2() {
 
     report_size "$sqfs_dir"
 
-    # shellcheck disable=SC2086
-    create_cache $deboot_cache_opts
+    create_cache "${bootstrap_cache[@]}"
 
     say "Customize live system for antiX"
     $SUDO rm -f "$sqfs_dir/etc/apt/sources.list"
