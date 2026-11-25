@@ -2757,9 +2757,20 @@ do_stage_5() {
     say "Clean out log files and other files"
     : "${sqfs_dir:?"sqfs_dir not set"}"
     [[ "$sqfs_dir" = "/" ]] && fatal "sqfs_dir cannot be /"
-    for f in $(gather delete-files); do
-        $SUDO rm -rf "${sqfs_dir:?}"/"$f" 2>/dev/null
-    done
+    gather delete-files | $SUDO chroot "$sqfs_dir" /bin/bash -c '
+        shopt -s nullglob
+        # Disable word splitting while expanding one pathname pattern per line.
+        IFS=
+        while read -r pattern; do
+            [[ -n $pattern ]] || continue
+            case /$pattern/ in
+                //*|*/../*) exit 1 ;;
+            esac
+            for path in $pattern; do
+                case ${path##*/} in .|..) continue ;; esac
+                rm -rf -- "$path" || exit 1
+            done
+        done' || fatal "Could not clean files from squashfs"
 
     if [[ ${DISTRO_FAMILY:-debian} = debian ]]; then
         $SUDO mkdir -p "$sqfs_dir"/var/log/apt
