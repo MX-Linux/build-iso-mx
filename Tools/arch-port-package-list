@@ -10,9 +10,7 @@ optional Debian->Arch mapping, then optionally verifies existence via pacman.
 
 Options:
   -o, --out FILE         Write converted list to FILE (default: stdout)
-  --out FILE            Write converted list to FILE (default: stdout)
   -m, --missing FILE     Write missing/unknown packages to FILE (default: stderr)
-  --missing FILE        Write missing/unknown packages to FILE (default: stderr)
   --map FILE            Mapping file (default: Input/arch/debian-to-arch.map)
   --no-verify           Skip pacman verification
   --pacman-root DIR     Pass --root DIR to pacman (useful outside chroot)
@@ -33,24 +31,29 @@ pacman_conf=""
 
 say() { printf '%s\n' "$*" >&2; }
 
+in_file=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h|--help) usage; exit 0 ;;
-    -o|--out) out_file="${2:-}"; shift 2 ;;
-    --out) out_file="${2:-}"; shift 2 ;;
-    -m|--missing) missing_file="${2:-}"; shift 2 ;;
-    --missing) missing_file="${2:-}"; shift 2 ;;
-    --map) map_file="${2:-}"; shift 2 ;;
+    -o|--out|-m|--missing|--map|--pacman-root|--pacman-conf)
+      [[ -n ${2:-} && $2 != -* ]] || { say "Missing value for $1"; exit 2; }
+      case "$1" in
+        -o|--out) out_file=$2 ;;
+        -m|--missing) missing_file=$2 ;;
+        --map) map_file=$2 ;;
+        --pacman-root) pacman_root=$2 ;;
+        --pacman-conf) pacman_conf=$2 ;;
+      esac
+      shift 2 ;;
     --no-verify) verify=0; shift ;;
-    --pacman-root) pacman_root="${2:-}"; shift 2 ;;
-    --pacman-conf) pacman_conf="${2:-}"; shift 2 ;;
-    --*) echo "Unknown option: $1" >&2; usage; exit 2 ;;
-    *) break ;;
+    -*) say "Unknown option: $1"; usage; exit 2 ;;
+    *)
+      [[ -z $in_file ]] || { say "Expected one input file"; exit 2; }
+      in_file=$1; shift ;;
   esac
 done
 
-[[ $# -eq 1 ]] || { usage; exit 2; }
-in_file="$1"
+[[ -n $in_file ]] || { usage; exit 2; }
 [[ -r "$in_file" ]] || { echo "Missing input file: $in_file" >&2; exit 2; }
 
 declare -A map=()
