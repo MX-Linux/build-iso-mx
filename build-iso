@@ -5600,7 +5600,7 @@ _cache_() {
             if [[ -e $file ]]; then
                 chmod --reference="$file" -- "$tmp" || exit 1
             else
-                chmod =rw -- "$tmp" || exit 1
+                chmod '=rw' -- "$tmp" || exit 1
             fi
             mv -fT -- "$tmp" "$file"
         ) || fatal "Could not create cache $file"
