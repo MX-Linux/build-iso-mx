@@ -1348,6 +1348,9 @@ do_stage_3() {
 
     check_errors_strict
 
+    # dkms signing key for the modules built in the chroot (Debian only)
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && harden_dkms_key
+
     say "Run $(pq "$ME") in chroot"
     # shellcheck disable=SC2086
     $SUDO chroot "$sqfs_dir" "$build_dir/$ME" $args || chroot_status=$?
@@ -2772,6 +2775,9 @@ do_stage_5() {
     say "Write initrd_release file"
     write_initrd_release "$sqfs_dir" $SUDO
 
+    # dkms signing key: check it, keep mok.pub only when dkms signed modules with it
+    [[ ${DISTRO_FAMILY:-debian} = debian ]] && check_dkms_key
+
     say "Clean out log files and other files"
     : "${sqfs_dir:?"sqfs_dir not set"}"
     [[ "$sqfs_dir" = "/" ]] && fatal "sqfs_dir cannot be /"
@@ -3426,6 +3432,8 @@ do_stage_7() {
         mksquash_opts+=(-e Build)
     else
         linuxfs_file=$iso_dir/antiX/linuxfs
+        # dkms private signing key: stays in the work chroot, not in the ISO
+        mksquash_opts+=(-e var/lib/dkms/mok.key)
     fi
     rm -f "$linuxfs_file"
 
@@ -4654,6 +4662,83 @@ make_uefi_iso() {
     echo "${cmd[*]}"
     "${cmd[@]}" 2>&1 || fatal "Could not create ISO $(pq "$file")"
     isohybrid --uefi "$file" || fatal "isohybrid failed for $(pq "$file")"
+}
+
+#------------------------------------------------------------------------------
+# dkms MOK signing key for the modules built in the chroot (Debian builds).
+# Created before stage 4 on the host (openssl may not be in the chroot yet),
+# limited to module signing (extendedKeyUsage 1.3.6.1.4.1.2312.16.1.2); dkms
+# then uses it instead of making its own. The private key stays in the work
+# chroot (update builds reuse the pair) and is left out of the squashfs;
+# mok.pub stays for the prebuilt modules. An existing pair or a key set in
+# /etc/dkms/framework.conf(.d) is left alone.
+#------------------------------------------------------------------------------
+harden_dkms_key() {
+    local dir=$sqfs_dir/var/lib/dkms conf tmp
+    [[ -f $dir/mok.key && -f $dir/mok.pub ]] && return 0
+    for conf in "$sqfs_dir"/etc/dkms/framework.conf "$sqfs_dir"/etc/dkms/framework.conf.d/*.conf; do
+        [[ -r $conf ]] && grep -Eq '^[[:space:]]*(mok_signing_key|mok_certificate)=' "$conf" && return 0
+    done
+    if ! command -v openssl >/dev/null; then
+        warn "openssl not found on the host: dkms in the chroot makes its own (not hardened) signing key"
+        return 0
+    fi
+    tmp=$(mktemp -d) || fatal "Could not create a temporary directory"
+    ( umask 077
+      openssl req -new -x509 -nodes -days 36500 -subj "/CN=DKMS module signing key" \
+          -newkey rsa:2048 -keyout "$tmp/mok.key" \
+          -addext "extendedKeyUsage=codeSigning,1.3.6.1.4.1.2312.16.1.2" \
+          -outform DER -out "$tmp/mok.pub" >/dev/null 2>&1 ) \
+        || { rm -rf -- "$tmp"; fatal "Could not create the dkms signing key"; }
+    $SUDO install -d -m 0755 "$dir" \
+        && $SUDO install -m 0600 -o root -g root "$tmp/mok.key" "$dir/mok.key" \
+        && $SUDO install -m 0644 -o root -g root "$tmp/mok.pub" "$dir/mok.pub" \
+        || { rm -rf -- "$tmp"; fatal "Could not install the dkms signing key into the chroot"; }
+    rm -rf -- "$tmp"
+    say "Created the dkms signing key (module signing only) in the chroot"
+}
+
+#------------------------------------------------------------------------------
+# Before the squashfs (Debian builds):
+# - a signing key set in /etc/dkms/framework.conf(.d) must not be inside the
+#   chroot (only /var/lib/dkms/mok.key is left out of the squashfs)
+# - the signed dkms modules must match mok.pub
+# - no signed dkms module (e.g. a kernel without module signing): remove the
+#   unused pair
+#------------------------------------------------------------------------------
+check_dkms_key() {
+    local dir=$sqfs_dir/var/lib/dkms conf key='' line m k serial='' signed=''
+    for conf in "$sqfs_dir"/etc/dkms/framework.conf "$sqfs_dir"/etc/dkms/framework.conf.d/*.conf; do
+        [[ -r $conf ]] || continue
+        line=$(sed -nE 's/^[[:space:]]*(export[[:space:]]+)?mok_signing_key=//p' "$conf" | tail -n 1)
+        [[ -n $line ]] || continue
+        line=${line%%#*}; line=${line%"${line##*[![:space:]]}"}
+        line=${line#[\"\']}; key=${line%[\"\']}
+    done
+    if [[ -n $key && $key != pkcs11:* && $key != /var/lib/dkms/mok.key ]]; then
+        [[ -e $sqfs_dir/${key#/} ]] && fatal "The dkms signing key $key (set in /etc/dkms/framework.conf*) is inside the chroot and would be in the squashfs"
+    fi
+
+    [[ -f $dir/mok.pub ]] || return 0
+    command -v modinfo >/dev/null || return 0
+    if command -v openssl >/dev/null; then
+        serial=$(openssl x509 -inform DER -in "$dir/mok.pub" -noout -serial 2>/dev/null)
+        serial=${serial#serial=}; serial=${serial^^}
+        while [[ $serial == 0?* ]]; do serial=${serial#0}; done
+    fi
+    for m in "$sqfs_dir"/usr/lib/modules/*/updates/dkms/*.ko*; do
+        [[ -f $m ]] || continue
+        k=$(modinfo -F sig_key "$m" 2>/dev/null) || k=
+        [[ -n $k ]] || continue
+        signed=1
+        k=${k//:/}; k=${k^^}
+        while [[ $k == 0?* ]]; do k=${k#0}; done
+        [[ -z $serial || $k == "$serial" ]] \
+            || fatal "dkms module ${m##*/} is not signed with /var/lib/dkms/mok.pub (start with a fresh chroot)"
+    done
+    [[ -n $signed ]] && return 0
+    $SUDO rm -f -- "$dir/mok.pub" "$dir/mok.key" || fatal "Could not remove the unused dkms signing key"
+    say "No signed dkms modules: removed the unused dkms signing key"
 }
 
 # Check the host's ISOLINUX MBR and optionally store its path in the named variable.
