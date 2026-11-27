@@ -4670,12 +4670,19 @@ make_uefi_iso() {
 # limited to module signing (extendedKeyUsage 1.3.6.1.4.1.2312.16.1.2); dkms
 # then uses it instead of making its own. The private key stays in the work
 # chroot (update builds reuse the pair) and is left out of the squashfs;
-# mok.pub stays for the prebuilt modules. An existing pair or a key set in
-# /etc/dkms/framework.conf(.d) is left alone.
+# mok.pub stays for the prebuilt modules. Reuse an existing pair only if its
+# certificate has the module-signing OID.
 #------------------------------------------------------------------------------
 harden_dkms_key() {
-    local dir=$sqfs_dir/var/lib/dkms conf tmp
-    [[ -f $dir/mok.key && -f $dir/mok.pub ]] && return 0
+    local dir=$sqfs_dir/var/lib/dkms conf tmp usage
+    local module_signing_oid=1.3.6.1.4.1.2312.16.1.2
+    if [[ -f $dir/mok.key && -f $dir/mok.pub ]]; then
+        usage=$(openssl x509 -inform DER -in "$dir/mok.pub" -noout -ext extendedKeyUsage) \
+            || fatal "Could not check the existing dkms certificate with openssl. Check openssl on the host and start with a fresh work tree."
+        [[ $usage =~ (^|[[:space:],])"$module_signing_oid"([[:space:],]|$) ]] \
+            || fatal "The existing dkms certificate lacks the module-signing OID. Start with a fresh work tree."
+        return 0
+    fi
     for conf in "$sqfs_dir"/etc/dkms/framework.conf "$sqfs_dir"/etc/dkms/framework.conf.d/*.conf; do
         [[ -r $conf ]] && grep -Eq '^[[:space:]]*(mok_signing_key|mok_certificate)=' "$conf" && return 0
     done
@@ -4687,7 +4694,7 @@ harden_dkms_key() {
     ( umask 077
       openssl req -new -x509 -nodes -days 36500 -subj "/CN=DKMS module signing key" \
           -newkey rsa:2048 -keyout "$tmp/mok.key" \
-          -addext "extendedKeyUsage=codeSigning,1.3.6.1.4.1.2312.16.1.2" \
+          -addext "extendedKeyUsage=codeSigning,$module_signing_oid" \
           -outform DER -out "$tmp/mok.pub" >/dev/null 2>&1 ) \
         || { rm -rf -- "$tmp"; fatal "Could not create the dkms signing key"; }
     $SUDO install -d -m 0755 "$dir" \
