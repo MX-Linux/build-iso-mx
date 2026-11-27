@@ -88,6 +88,7 @@ var/lib/apt/lists/*
 var/lib/apt/periodic/*
 var/lib/dbus/machine-id
 var/lib/dhcp/*
+var/lib/dkms/mok.key
 var/lib/dpkg/*-old
 #var/lib/systemd
 var/log/*.log
